@@ -12,7 +12,7 @@
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
-proc c_memcpy(a, b: pointer, size: csize_t): pointer {.importc: "memcpy", header: "<string.h>", discardable.}
+from system/ansi_c import c_memcpy
 
 proc addCstringN(result: var string, buf: cstring; buflen: int) =
   # no nimvm support needed, so it doesn't need to be fast here either

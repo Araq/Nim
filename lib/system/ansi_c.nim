@@ -27,6 +27,8 @@ proc c_strcmp*(a, b: cstring): cint {.
   importc: "strcmp", header: "<string.h>", noSideEffect.}
 proc c_strlen*(a: cstring): csize_t {.
   importc: "strlen", header: "<string.h>", noSideEffect.}
+proc c_strstr*(haystack, needle: cstring): cstring {.
+    importc: "strstr", header: "<string.h>", noSideEffect.}
 proc c_abort*() {.
   importc: "abort", header: "<stdlib.h>", noSideEffect, noreturn.}
 
