@@ -507,12 +507,14 @@ type
     nkAsgn,
     nkFrom,
     nkFromItemPair,
+    nkJoin,
+    nkNaturalJoin,
+    nkUsing,
     nkGroup,
     nkLimit,
     nkOffset,
     nkHaving,
     nkOrder,
-    nkJoin,
     nkDesc,
     nkUnion,
     nkIntersect,
@@ -936,6 +938,24 @@ proc parseWhere(p: var SqlParser): SqlNode =
   result = newNode(nkWhere)
   result.add(parseExpr(p))
 
+proc parseJoinType(p: var SqlParser): SqlNode =
+  ## parse [ INNER ] JOIN | ( LEFT | RIGHT | FULL ) [ OUTER ] JOIN
+  if isKeyw(p, "inner"):
+    getTok(p)
+    eat(p, "join")
+    return newNode(nkIdent, "inner")
+  elif isKeyw(p, "join"):
+    getTok(p)
+    return newNode(nkIdent, "")
+  elif isKeyw(p, "left") or isKeyw(p, "full") or isKeyw(p, "right"):
+    var joinType = newNode(nkIdent, p.tok.literal.toLowerAscii())
+    getTok(p)
+    optKeyw(p, "outer")
+    eat(p, "join")
+    return joinType
+  else:
+    sqlError(p, "join type expected")
+
 proc parseFromItem(p: var SqlParser): SqlNode =
   result = newNode(nkFromItemPair)
   if p.tok.kind == tkParLe:
@@ -948,6 +968,41 @@ proc parseFromItem(p: var SqlParser): SqlNode =
   if isKeyw(p, "as"):
     getTok(p)
     result.add(parseExpr(p))
+  while true:
+    if isKeyw(p, "cross"):
+      var join = newNode(nkJoin)
+      join.add(newNode(nkIdent, "cross"))
+      join.add(result)
+      getTok(p)
+      eat(p, "join")
+      join.add(parseFromItem(p))
+      result = join
+    elif isKeyw(p, "natural"):
+      var join = newNode(nkNaturalJoin)
+      getTok(p)
+      join.add(parseJoinType(p))
+      join.add(result)
+      join.add(parseFromItem(p))
+      result = join
+    elif isKeyw(p, "inner") or isKeyw(p, "join") or isKeyw(p, "left") or
+        iskeyw(p, "full") or isKeyw(p, "right"):
+      var join = newNode(nkJoin)
+      join.add(parseJoinType(p))
+      join.add(result)
+      join.add(parseFromItem(p))
+      if isKeyw(p, "on"):
+        getTok(p)
+        join.add(parseExpr(p))
+      elif isKeyw(p, "using"):
+        getTok(p)
+        var n = newNode(nkUsing)
+        parseParIdentList(p, n)
+        join.add n
+      else:
+        sqlError(p, "ON or USING expected")
+      result = join
+    else:
+      break
 
 proc parseIndexDef(p: var SqlParser): SqlNode =
   result = parseIfNotExists(p, nkCreateIndex)
@@ -1109,19 +1164,6 @@ proc parseSelect(p: var SqlParser): SqlNode =
   elif isKeyw(p, "except"):
     result.add(newNode(nkExcept))
     getTok(p)
-  if isKeyw(p, "join") or isKeyw(p, "inner") or isKeyw(p, "outer") or isKeyw(p, "cross"):
-    var join = newNode(nkJoin)
-    result.add(join)
-    if isKeyw(p, "join"):
-      join.add(newNode(nkIdent, ""))
-      getTok(p)
-    else:
-      join.add(newNode(nkIdent, p.tok.literal.toLowerAscii()))
-      getTok(p)
-      eat(p, "join")
-    join.add(parseFromItem(p))
-    eat(p, "on")
-    join.add(parseExpr(p))
   if isKeyw(p, "limit"):
     getTok(p)
     var l = newNode(nkLimit)
@@ -1388,6 +1430,24 @@ proc ra(n: SqlNode, s: var SqlWriter) =
   of nkFrom:
     s.addKeyw("from")
     s.addMulti(n)
+  of nkJoin, nkNaturalJoin:
+    var joinType = n.sons[0].strVal
+    if joinType == "":
+      joinType = "join"
+    else:
+      joinType &= " " & "join"
+    if n.kind == nkNaturalJoin:
+      joinType = "natural " & joinType
+    ra(n.sons[1], s)
+    s.addKeyw(joinType)
+    ra(n.sons[2], s)
+    if n.sons.len > 3:
+      if n.sons[3].kind != nkUsing:
+        s.addKeyw("on")
+      ra(n.sons[3], s)
+  of nkUsing:
+    s.addKeyw("using")
+    rs(n, s)
   of nkGroup:
     s.addKeyw("group by")
     s.addMulti(n)
@@ -1403,16 +1463,6 @@ proc ra(n: SqlNode, s: var SqlWriter) =
   of nkOrder:
     s.addKeyw("order by")
     s.addMulti(n)
-  of nkJoin:
-    var joinType = n.sons[0].strVal
-    if joinType == "":
-      joinType = "join"
-    else:
-      joinType &= " " & "join"
-    s.addKeyw(joinType)
-    ra(n.sons[1], s)
-    s.addKeyw("on")
-    ra(n.sons[2], s)
   of nkDesc:
     ra(n.sons[0], s)
     s.addKeyw("desc")
