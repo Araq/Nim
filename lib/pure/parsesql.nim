@@ -958,14 +958,18 @@ proc parseJoinType(p: var SqlParser): SqlNode =
 
 proc parseFromItem(p: var SqlParser): SqlNode =
   result = newNode(nkFromItemPair)
+  var expectAs = true
   if p.tok.kind == tkParLe:
     getTok(p)
-    var select = parseSelect(p)
-    result.add(select)
+    if isKeyw(p, "select"):
+      result.add(parseSelect(p))
+    else:
+      result = parseFromItem(p)
+      expectAs = false
     eat(p, tkParRi)
   else:
     result.add(parseExpr(p))
-  if isKeyw(p, "as"):
+  if expectAs and isKeyw(p, "as"):
     getTok(p)
     result.add(parseExpr(p))
   while true:
@@ -1440,7 +1444,13 @@ proc ra(n: SqlNode, s: var SqlWriter) =
       joinType = "natural " & joinType
     ra(n.sons[1], s)
     s.addKeyw(joinType)
-    ra(n.sons[2], s)
+    # If the right part of the join is not leaf, parenthesize it
+    if n.sons[2].kind != nkFromItemPair:
+      s.add('(')
+      ra(n.sons[2], s)
+      s.add(')')
+    else:
+      ra(n.sons[2], s)
     if n.sons.len > 3:
       if n.sons[3].kind != nkUsing:
         s.addKeyw("on")
