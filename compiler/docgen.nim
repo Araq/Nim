@@ -21,6 +21,7 @@ import
   trees, types,
   typesrenderer, astalgo, lineinfos,
   pathutils, nimpaths, renderverbatim, packages
+from sigmatch {.all.} import extractDocComment
 import packages/docutils/rstast except FileIndex, TLineInfo
 
 import std/[os, strutils, strtabs, algorithm, json, osproc, tables, intsets, xmltree, sequtils]
@@ -1164,6 +1165,7 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
 proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): JsonItem =
   if not isVisible(d, nameNode): return
   var
+    plainDocs = n.getPlainDocstring()
     name = getNameEsc(d, nameNode)
     comm = genRecComment(d, n)
     r: TSrcGen
@@ -1176,9 +1178,12 @@ proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): 
                    "col": %n.info.col}
   )
   if comm != nil:
-    result.rst = comm
-    result.rstField = "description"
-  if r.buf.len > 0:
+    if optDocRaw in d.conf.options:
+        result.json["description"] = plainDocs
+    else:
+      result.rst = comm
+      result.rstField = "description"
+  elif r.buf.len > 0:
     result.json["code"] = %r.buf
   if k in routineKinds:
     result.json["signature"] = newJObject()
