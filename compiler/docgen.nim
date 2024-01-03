@@ -21,7 +21,6 @@ import
   trees, types,
   typesrenderer, astalgo, lineinfos,
   pathutils, nimpaths, renderverbatim, packages
-from sigmatch {.all.} import extractDocComment
 import packages/docutils/rstast except FileIndex, TLineInfo
 
 import std/[os, strutils, strtabs, algorithm, json, osproc, tables, intsets, xmltree, sequtils]
@@ -467,6 +466,14 @@ proc genRecComment(d: PDoc, n: PNode): PRstNode =
       result = genRecCommentAux(d, n[bodyPos])
     else:
       result = genRecCommentAux(d, n)
+
+proc findDocString(n: PNode): string =
+  result = ""
+  if n.comment != "":
+    result = n.comment
+  elif n.kind in {nkProcDef, nkFuncDef, nkMethodDef, nkIteratorDef,
+                  nkMacroDef, nkTemplateDef, nkConverterDef}:
+    result = findDocString(n[bodyPos])
 
 proc getPlainDocstring(n: PNode): string =
   ## Gets the plain text docstring of a node non destructively.
@@ -1165,7 +1172,7 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
 proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): JsonItem =
   if not isVisible(d, nameNode): return
   var
-    plainDocs = n.getPlainDocstring()
+    plainDocs = n.findDocString()
     name = getNameEsc(d, nameNode)
     comm = genRecComment(d, n)
     r: TSrcGen
@@ -1178,8 +1185,8 @@ proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): 
                    "col": %n.info.col}
   )
   if comm != nil:
-    if optDocRaw in d.conf.options:
-        result.json["description"] = plainDocs
+    if optDocRaw in d.conf.globalOptions:
+      result.json["description"] = %plainDocs
     else:
       result.rst = comm
       result.rstField = "description"
