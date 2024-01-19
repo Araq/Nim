@@ -9,7 +9,7 @@ float32
 """
 
 
-import tables
+import std/tables
 
 
 block tgeneric0:
@@ -166,3 +166,23 @@ type
 # bug #8295
 var x = AtomicContainer[int]()
 doAssert (ptr Block[int])(x.b) == nil
+
+
+# bug #23233
+type
+  JsonObjectType*[T: string or uint64] = Table[string, JsonValueRef[T]]
+
+  JsonValueRef*[T: string or uint64] = object
+    objVal*: JsonObjectType[T]
+
+proc scanValue[K](val: var K) =
+  var map: JsonObjectType[K.T]
+  var newVal: K
+  map["one"] = newVal
+
+block:
+  var a: JsonValueRef[uint64]
+  scanValue(a)
+
+  var b: JsonValueRef[string]
+  scanValue(b)

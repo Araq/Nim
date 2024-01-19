@@ -1247,7 +1247,7 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     let
       lhs = x.skipGenericAlias
       rhs = y.skipGenericAlias
-    if rhs.kind != tyGenericInst or lhs.base != rhs.base:
+    if rhs.kind != tyGenericInst or lhs.base != rhs.base or rhs.kidsLen != lhs.kidsLen:
       return false
     for i in 1..<lhs.len - 1:
       let ff = rhs[i]
