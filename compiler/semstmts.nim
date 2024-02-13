@@ -780,6 +780,24 @@ proc makeVarTupleSection(c: PContext, n, a, def: PNode, typ: PType, symkind: TSy
 proc semVarOrLet(c: PContext, n: PNode, symkind: TSymKind): PNode =
   var b: PNode
   result = copyNode(n)
+
+  # transform var x, y = 12 into var x = 12; var y = 12
+  # bug #18104; transformation should be finished before templates expansion
+  # TODO: move warnings for tuple here
+  var transformed = copyNode(n)
+  for i in 0..<n.len:
+    var a = n[i]
+    if a.kind == nkIdentDefs and a.len > 3 and a[^1].kind != nkEmpty:
+      for j in 0..<a.len-2:
+        var b = newNodeI(nkIdentDefs, a.info)
+        b.add a[j]
+        b.add a[^2]
+        b.add copyTree(a[^1])
+        transformed.add b
+    else:
+      transformed.add a
+  let n = transformed
+
   for i in 0..<n.len:
     var a = n[i]
     if c.config.cmd == cmdIdeTools: suggestStmt(c, a)
