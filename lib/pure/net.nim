@@ -2040,8 +2040,10 @@ proc dial*(address: string, port: Port,
   if success:
     result = newSocket(lastFd, domain, sockType, protocol, buffered)
   elif lastError != 0.OSErrorCode:
+    lastFd.close()
     raiseOSError(lastError)
   else:
+    lastFd.close()
     raise newException(IOError, "Couldn't resolve address: " & address)
 
 proc connect*(socket: Socket, address: string,
