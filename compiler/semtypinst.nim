@@ -437,7 +437,9 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
         propagateToOwner(header, x)
     elif x.kind in {tyStatic}:
       let y = lookupTypeVar(cl, x)
-      if y != nil:
+      # In templates the lookup can lead to concrete types like tyInt instead of tyStatic,
+      # which can't be handled like this.
+      if y != nil and y.kind == tyStatic:
         if header == t: header = instCopyType(cl, t)
         header[i] = y
         propagateToOwner(header, y)
