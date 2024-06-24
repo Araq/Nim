@@ -2054,12 +2054,14 @@ when not defined(js):
     proc cstringArrayToSeq*(a: cstringArray, len: Natural): seq[string] =
       ## Converts a `cstringArray` to a `seq[string]`. `a` is supposed to be
       ## of length `len`.
+      if a == nil: return @[]
       newSeq(result, len)
       for i in 0..len-1: result[i] = $a[i]
 
     proc cstringArrayToSeq*(a: cstringArray): seq[string] =
       ## Converts a `cstringArray` to a `seq[string]`. `a` is supposed to be
       ## terminated by `nil`.
+      if a == nil: return @[]
       var L = 0
       while a[L] != nil: inc(L)
       result = cstringArrayToSeq(a, L)
