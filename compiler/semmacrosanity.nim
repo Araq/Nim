@@ -51,6 +51,7 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
   of nkObjConstr:
     let x = t.skipTypes(abstractPtrs)
     n.typ = t
+    n[0].typ = t
     for i in 1..<n.len:
       var j = i-1
       let field = x.ithField(j)
