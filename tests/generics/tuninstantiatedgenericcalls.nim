@@ -145,3 +145,21 @@ block: # issue #23730
   proc test(M: static[int]): array[1 shl M, int] = discard
   doAssert len(test(3)) == 8
   doAssert len(test(5)) == 32
+
+block: # issue #19819
+  type
+    Example[N: static int] = distinct int
+    What[E: Example] = Example[E.N + E.N]
+
+block: # issue #23339
+  type
+    A = object
+    B = object
+  template aToB(t: typedesc[A]): typedesc = B
+  type
+    Inner[I] = object
+      innerField: I
+    Outer[O] = object
+      outerField: Inner[O.aToB]
+  var x: Outer[A]
+  doAssert typeof(x.outerField.innerField) is B

@@ -1220,10 +1220,15 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
 
   of tyFromExpr:
     if c.c.inGenericContext > 0:
-      # generic type bodies can sometimes compile call expressions
-      # prevent expressions with unresolved types from
-      # being passed as parameters
-      return isNone
+      if not c.isNoCall:
+        # generic type bodies can sometimes compile call expressions
+        # prevent expressions with unresolved types from
+        # being passed as parameters
+        return isNone
+      else:
+        # Foo[templateCall(T)] shouldn't fail early if Foo has a constraint
+        # and we can't evaluate `templateCall(T)` yet
+        return isGeneric
   else: discard
   case f.kind
   of tyEnum:
