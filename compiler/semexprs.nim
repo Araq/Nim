@@ -1850,6 +1850,8 @@ proc takeImplicitAddr(c: PContext, n: PNode; isLent: bool): PNode =
     else:
       localError(c.config, n.info, errExprHasNoAddress)
   result = newNodeIT(nkHiddenAddr, n.info, if n.typ.kind in {tyVar, tyLent}: n.typ else: makePtrType(c, n.typ))
+  if n.typ.kind in {tyVar, tyLent}:
+    n.typ = n.typ.elementType
   result.add(n)
 
 proc asgnToResultVar(c: PContext, n, le, ri: PNode) {.inline.} =
