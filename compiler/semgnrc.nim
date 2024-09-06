@@ -577,7 +577,8 @@ proc semGenericStmt(c: PContext, n: PNode,
       else:
         body = getBody(c.graph, s)
     else: body = n[bodyPos]
-    n[bodyPos] = semGenericStmtScope(c, body, flags, ctx)
+    let bodyFlags = if n.kind == nkTemplateDef: flags + {withinMixin} else: flags
+    n[bodyPos] = semGenericStmtScope(c, body, bodyFlags, ctx)
     closeScope(c)
   of nkPragma, nkPragmaExpr: discard
   of nkExprColonExpr, nkExprEqExpr:
