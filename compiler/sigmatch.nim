@@ -379,6 +379,7 @@ proc concreteType(c: TCandidate, t: PType; f: PType = nil): PType =
     else: result = t
   of tyGenericParam, tyAnything, tyConcept:
     result = t
+    if c.isNoCall: return
     while true:
       result = PType(idTableGet(c.bindings, t))
       if result == nil:
