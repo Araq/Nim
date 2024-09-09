@@ -134,7 +134,7 @@ type
   Dev* {.importc: "dev_t", header: "<sys/types.h>".} = int32
   Fsblkcnt* {.importc: "fsblkcnt_t", header: "<sys/types.h>".} = int
   Fsfilcnt* {.importc: "fsfilcnt_t", header: "<sys/types.h>".} = int
-  Gid* {.importc: "gid_t", header: "<sys/types.h>".} = int32
+  Gid* {.importc: "gid_t", header: "<sys/types.h>".} = uint32
   Id* {.importc: "id_t", header: "<sys/types.h>".} = int
   Ino* {.importc: "ino_t", header: "<sys/types.h>".} = int
   Key* {.importc: "key_t", header: "<sys/types.h>".} = int
@@ -171,7 +171,7 @@ type
   Trace_event_set* {.importc: "trace_event_set_t",
                       header: "<sys/types.h>".} = int
   Trace_id* {.importc: "trace_id_t", header: "<sys/types.h>".} = int
-  Uid* {.importc: "uid_t", header: "<sys/types.h>".} = int32
+  Uid* {.importc: "uid_t", header: "<sys/types.h>".} = uint32
   Useconds* {.importc: "useconds_t", header: "<sys/types.h>".} = int
 
   Utsname* {.importc: "struct utsname",
@@ -446,9 +446,9 @@ type
                    header: "<netinet/in.h>".} = object ## struct sockaddr_in6
     sin6_family*: TSa_Family ## AF_INET6.
     sin6_port*: InPort      ## Port number.
-    sin6_flowinfo*: int32    ## IPv6 traffic class and flow information.
+    sin6_flowinfo*: uint32    ## IPv6 traffic class and flow information.
     sin6_addr*: In6Addr     ## IPv6 address.
-    sin6_scope_id*: int32    ## Set of interfaces for a scope.
+    sin6_scope_id*: uint32    ## Set of interfaces for a scope.
 
   Tipv6_mreq* {.importc: "struct ipv6_mreq", pure, final,
                 header: "<netinet/in.h>".} = object ## struct ipv6_mreq
@@ -475,7 +475,7 @@ type
                              ## alternative network names, terminated by a
                              ## null pointer.
     n_addrtype*: cint        ## The address type of the network.
-    n_net*: int32            ## The network number, in host byte order.
+    n_net*: uint32            ## The network number, in host byte order.
 
   Protoent* {.importc: "struct protoent", pure, final,
               header: "<netdb.h>".} = object ## struct protoent
