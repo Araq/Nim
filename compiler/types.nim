@@ -1226,16 +1226,16 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     b = skipTypes(b[^1], {tyAlias})
   assert(a != nil)
   assert(b != nil)
-  if a.kind != b.kind:
-    case c.cmp
-    of dcEq: return false
-    of dcEqIgnoreDistinct:
-      a = a.skipTypes({tyDistinct, tyGenericInst})
-      b = b.skipTypes({tyDistinct, tyGenericInst})
-      if a.kind != b.kind: return false
-    of dcEqOrDistinctOf:
-      a = a.skipTypes({tyDistinct, tyGenericInst})
-      if a.kind != b.kind: return false
+  case c.cmp
+  of dcEq:
+    if a.kind != b.kind: return false
+  of dcEqIgnoreDistinct:
+    a = a.skipTypes({tyDistinct, tyGenericInst})
+    b = b.skipTypes({tyDistinct, tyGenericInst})
+    if a.kind != b.kind: return false
+  of dcEqOrDistinctOf:
+    a = a.skipTypes({tyDistinct, tyGenericInst})
+    if a.kind != b.kind: return false
 
   #[
     The following code should not run in the case either side is an generic alias,
@@ -1243,7 +1243,8 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     objects ie `type A[T] = SomeObject`
   ]#
   # this is required by tunique_type but makes no sense really:
-  if tyDistinct notin {x.kind, y.kind} and x.kind == tyGenericInst and IgnoreTupleFields notin c.flags:
+  if c.cmp == dcEq and x.kind == tyGenericInst and
+      IgnoreTupleFields notin c.flags and tyDistinct != y.kind:
     let
       lhs = x.skipGenericAlias
       rhs = y.skipGenericAlias
