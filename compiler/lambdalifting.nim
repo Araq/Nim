@@ -300,8 +300,8 @@ proc markAsClosure(g: ModuleGraph; owner: PSym; n: PNode) =
     localError(g.config, n.info,
       ("'$1' is of type <$2> which cannot be captured as it would violate memory" &
        " safety, declared here: $3; using '-d:nimNoLentIterators' helps in some cases." &
-       " Consider using a <ref $2> which can be captured.") %
-      [s.name.s, typeToString(s.typ), g.config$s.info])
+       " Consider using a <ref T> which can be captured.") %
+      [s.name.s, typeToString(s.typ.skipTypes({tyVar})), g.config$s.info])
   elif not (owner.typ.isClosure or owner.isNimcall and not owner.isExplicitCallConv or isEnv):
     localError(g.config, n.info, "illegal capture '$1' because '$2' has the calling convention: <$3>" %
       [s.name.s, owner.name.s, $owner.typ.callConv])
