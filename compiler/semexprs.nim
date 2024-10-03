@@ -722,29 +722,41 @@ proc arrayConstrType(c: PContext, n: PNode): PType =
 
 proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
   result = newNodeI(nkBracket, n.info)
-  result.typ = newTypeS(tyArray, c)
+  # nkBracket nodes can also be produced by the VM as seq constant nodes
+  # in which case, we cannot produce a new array type for the node,
+  # as this might lose type info even when the node has array type
+  let constructType = n.typ.isNil
   var expectedElementType, expectedIndexType: PType = nil
-  if expectedType != nil:
-    let expected = expectedType.skipTypes(abstractRange-{tyDistinct})
-    case expected.kind
+  var expectedBase: PType = nil
+  if constructType:
+    result.typ = newTypeS(tyArray, c)
+    rawAddSon(result.typ, nil)     # index type
+    if expectedType != nil:
+      expectedBase = expectedType.skipTypes(abstractRange-{tyDistinct})
+  else:
+    result.typ = n.typ
+    expectedBase = n.typ.skipTypes(abstractRange) # include tyDistinct this time
+  if expectedBase != nil:
+    case expectedBase.kind
     of tyArray:
-      expectedIndexType = expected[0]
-      expectedElementType = expected[1]
-    of tyOpenArray:
-      expectedElementType = expected[0]
+      expectedIndexType = expectedBase[0]
+      expectedElementType = expectedBase[1]
+    of tyOpenArray, tySequence:
+      # typed bracket expressions can also have seq type
+      expectedElementType = expectedBase[0]
     else: discard
-  rawAddSon(result.typ, nil)     # index type
   var
     firstIndex, lastIndex: Int128 = Zero
     indexType = getSysType(c.graph, n.info, tyInt)
     lastValidIndex = lastOrd(c.config, indexType)
   if n.len == 0:
-    rawAddSon(result.typ,
-      if expectedElementType != nil and
-          typeAllowed(expectedElementType, skLet, c) == nil:
-        expectedElementType
-      else:
-        newTypeS(tyEmpty, c)) # needs an empty basetype!
+    if constructType:
+      rawAddSon(result.typ,
+        if expectedElementType != nil and
+            typeAllowed(expectedElementType, skLet, c) == nil:
+          expectedElementType
+        else:
+          newTypeS(tyEmpty, c)) # needs an empty basetype!
     lastIndex = toInt128(-1)
   else:
     var x = n[0]
@@ -761,9 +773,13 @@ proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
         x = x[1]
 
     let yy = semExprWithType(c, x, {efTypeAllowed}, expectedElementType)
-    var typ = yy.typ
-    if expectedElementType == nil:
-      expectedElementType = typ
+    var typ: PType
+    if constructType:
+      typ = yy.typ
+      if expectedElementType == nil:
+        expectedElementType = typ
+    else:
+      typ = expectedElementType
     result.add yy
     #var typ = skipTypes(result[0].typ, {tyGenericInst, tyVar, tyLent, tyOrdinal})
     for i in 1..<n.len:
@@ -783,15 +799,20 @@ proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
 
       let xx = semExprWithType(c, x, {efTypeAllowed}, expectedElementType)
       result.add xx
-      typ = commonType(c, typ, xx.typ)
+      if constructType:
+        typ = commonType(c, typ, xx.typ)
       #n[i] = semExprWithType(c, x, {})
       #result.add fitNode(c, typ, n[i])
       inc(lastIndex)
-    addSonSkipIntLit(result.typ, typ, c.idgen)
+    if constructType:
+      addSonSkipIntLit(result.typ, typ, c.idgen)
     for i in 0..<result.len:
       result[i] = fitNode(c, typ, result[i], result[i].info)
-  result.typ.setIndexType makeRangeType(c, toInt64(firstIndex), toInt64(lastIndex), n.info,
-                                     indexType)
+  if constructType:
+    result.typ.setIndexType(
+      makeRangeType(c,
+        toInt64(firstIndex), toInt64(lastIndex),
+        n.info, indexType))
 
 proc fixAbstractType(c: PContext, n: PNode) =
   for i in 1..<n.len:
