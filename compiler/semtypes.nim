@@ -1372,14 +1372,25 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
           "either use ';' (semicolon) or explicitly write each default value")
         message(c.config, a.info, warnImplicitDefaultValue, msg)
       block determineType:
-        if kind == skTemplate and hasUnresolvedArgs(c, def):
-          # template default value depends on other parameter
-          # don't do any typechecking
-          def.typ = makeTypeFromExpr(c, def.copyTree)
-          break determineType
+        var canBeVoid = false
+        if kind == skTemplate:
+          if typ != nil and typ.kind == tyUntyped:
+            # don't do any typechecking or assign a type for
+            # `untyped` parameter default value
+            break determineType
+          elif hasUnresolvedArgs(c, def):
+            # template default value depends on other parameter
+            # don't do any typechecking
+            def.typ = makeTypeFromExpr(c, def.copyTree)
+            break determineType
+          elif typ != nil and typ.kind == tyTyped:
+            canBeVoid = true
         let isGeneric = isCurrentlyGeneric()
         inc c.inGenericContext, ord(isGeneric)
-        def = semExprWithType(c, def, {efDetermineType, efAllowSymChoice}, typ)
+        if canBeVoid:
+          def = semExpr(c, def, {efDetermineType, efAllowSymChoice}, typ)
+        else:
+          def = semExprWithType(c, def, {efDetermineType, efAllowSymChoice}, typ)
         dec c.inGenericContext, ord(isGeneric)
         if def.referencesAnotherParam(getCurrOwner(c)):
           def.flags.incl nfDefaultRefsParam
@@ -1399,7 +1410,7 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
           typ = newTypeS(tyTypeDesc, c, newTypeS(tyNone, c))
           typ.flags.incl tfCheckedForDestructor
 
-      elif def.typ.kind != tyFromExpr:
+      elif def.typ != nil and def.typ.kind != tyFromExpr: # def.typ can be void
         # if def.typ != nil and def.typ.kind != tyNone:
         # example code that triggers it:
         # proc sort[T](cmp: proc(a, b: T): int = cmp)
