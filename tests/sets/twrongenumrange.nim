@@ -45,7 +45,6 @@ block:
     TNoteKind = range[k1..k2]
   var notes: set[TNoteKind]
   notes = {k0} #[tt.Error
-           ^ cannot convert 'k0' to 'TNoteKind = range 1..2(TMsgKind)]#
+          ^ type mismatch: got <set[TMsgKind]> but expected 'set[TNoteKind]']#
   notes = {k0..k3} #[tt.Error
-           ^ cannot convert 'k0' to 'TNoteKind = range 1..2(TMsgKind)'; tt.Error
-               ^ cannot convert 'k3' to 'TNoteKind = range 1..2(TMsgKind)']#
+          ^ type mismatch: got <set[TMsgKind]> but expected 'set[TNoteKind]']#

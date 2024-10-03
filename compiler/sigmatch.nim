@@ -1561,11 +1561,12 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       else:
         result = typeRel(c, f[0], a[0], flags)
         if result < isGeneric:
-          if result <= isConvertible:
+          if tfIsConstructor notin a.flags:
+            # set['a'..'z'] and set[char] have different representations
             result = isNone
-          elif tfIsConstructor notin a.flags:
-            # set constructors are a bit special...
-            result = isNone
+          else:
+            # but we can convert individual elements of the constructor
+            result = isConvertible
   of tyPtr, tyRef:
     a = reduceToBase(a)
     if a.kind == f.kind:
@@ -2183,6 +2184,81 @@ proc implicitConv(kind: TNodeKind, f: PType, arg: PNode, m: TCandidate,
   else:
     result.add arg
 
+proc convertLiteral(kind: TNodeKind, c: PContext, m: TCandidate; n: PNode, newType: PType): PNode =
+  # based off changeType but generates implicit conversions instead
+  template addConsiderNil(s, node) =
+    let val = node
+    if val.isNil: return nil
+    s.add(val)
+  case n.kind
+  of nkCurly:
+    result = copyNode(n)
+    for i in 0..<n.len:
+      if n[i].kind == nkRange:
+        var x = copyNode(n[i])
+        x.addConsiderNil convertLiteral(kind, c, m, n[i][0], elemType(newType))
+        x.addConsiderNil convertLiteral(kind, c, m, n[i][1], elemType(newType))
+        result.add x
+      else:
+        result.addConsiderNil convertLiteral(kind, c, m, n[i], elemType(newType))
+    result.typ = newType
+    return
+  of nkBracket:
+    result = copyNode(n)
+    for i in 0..<n.len:
+      result.addConsiderNil convertLiteral(kind, c, m, n[i], elemType(newType))
+    result.typ = newType
+    return
+  of nkPar, nkTupleConstr:
+    let tup = newType.skipTypes({tyGenericInst, tyAlias, tySink, tyDistinct})
+    if tup.kind == tyTuple:
+      result = copyNode(n)
+      if n.len > 0 and n[0].kind == nkExprColonExpr:
+        # named tuple?
+        for i in 0..<n.len:
+          var name = n[i][0]
+          if name.kind != nkSym:
+            #globalError(c.config, name.info, "invalid tuple constructor")
+            return nil
+          if tup.n != nil:
+            var f = getSymFromList(tup.n, name.sym.name)
+            if f == nil:
+              #globalError(c.config, name.info, "unknown identifier: " & name.sym.name.s)
+              return nil
+            result.addConsiderNil convertLiteral(kind, c, m, n[i][1], f.typ)
+          else:
+            result.addConsiderNil convertLiteral(kind, c, m, n[i][1], tup[i])
+      else:
+        for i in 0..<n.len:
+          result.addConsiderNil convertLiteral(kind, c, m, n[i], tup[i])
+      result.typ = newType
+      return
+  of nkCharLit..nkUInt64Lit:
+    if n.kind != nkUInt64Lit and not sameTypeOrNil(n.typ, newType) and isOrdinalType(newType):
+      let value = n.intVal
+      if value < firstOrd(c.config, newType) or value > lastOrd(c.config, newType):
+        return nil
+      result = copyNode(n)
+      result.typ = newType
+      return
+  of nkFloatLit..nkFloat64Lit:
+    if newType.skipTypes(abstractVarRange-{tyTypeDesc}).kind == tyFloat:
+      if not floatRangeCheck(n.floatVal, newType):
+        return nil
+      result = copyNode(n)
+      result.typ = newType
+      return
+  of nkSym:
+    if n.sym.kind == skEnumField and not sameTypeOrNil(n.sym.typ, newType) and isOrdinalType(newType):
+      let value = n.sym.position
+      if value < firstOrd(c.config, newType) or value > lastOrd(c.config, newType):
+        return nil
+      result = copyNode(n)
+      result.typ = newType
+      return
+  else: discard
+  return implicitConv(kind, newType, n, m, c)
+
 proc isLValue(c: PContext; n: PNode, isOutParam = false): bool {.inline.} =
   let aa = isAssignable(nil, n)
   case aa
@@ -2394,7 +2470,20 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
     if f.skipTypes({tyRange}).kind in {tyInt, tyUInt}:
       inc(m.convMatches)
     inc(m.convMatches)
-    result = implicitConv(nkHiddenStdConv, f, arg, m, c)
+    if skipTypes(f, abstractVar-{tyTypeDesc}).kind == tySet:
+      if tfIsConstructor in a.flags and arg.kind == nkCurly:
+        # we marked the set as convertible only because the arg is a literal
+        # in which case we individually convert each element
+        let t =
+          if containsGenericType(f):
+            getInstantiatedType(c, arg, m, f).skipTypes({tySink})
+          else:
+            f.skipTypes({tySink})
+        result = convertLiteral(nkHiddenStdConv, c, m, arg, t)
+      else:
+        result = nil
+    else:
+      result = implicitConv(nkHiddenStdConv, f, arg, m, c)
   of isIntConv:
     # I'm too lazy to introduce another ``*matches`` field, so we conflate
     # ``isIntConv`` and ``isIntLit`` here:
