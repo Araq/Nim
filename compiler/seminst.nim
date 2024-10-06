@@ -371,7 +371,11 @@ proc generateInstance(c: PContext, fn: PSym, pt: LayeredIdTable,
   if c.instCounter > 50:
     globalError(c.config, info, "generic instantiation too nested")
   inc c.instCounter
-  defer: dec c.instCounter
+  let currentTypeofContext = c.inTypeofContext
+  c.inTypeofContext = 0
+  defer:
+    dec c.instCounter
+    c.inTypeofContext = currentTypeofContext
   # careful! we copy the whole AST including the possibly nil body!
   var n = copyTree(fn.ast)
   # NOTE: for access of private fields within generics from a different module
