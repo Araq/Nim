@@ -1899,8 +1899,11 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         else:
           result = isNone
   of tyConcept:
-    result = if concepts.conceptMatch(c.c, f, a, c.bindings, nil): isGeneric
-             else: isNone
+    if a.kind == tyConcept and sameType(f, a):
+      result = isGeneric
+    else:
+      result = if concepts.conceptMatch(c.c, f, a, c.bindings, nil): isGeneric
+               else: isNone
   of tyCompositeTypeClass:
     considerPreviousT:
       let roota = a.skipGenericAlias
