@@ -89,6 +89,11 @@ proc fitNodePostMatch(c: PContext, formal: PType, arg: PNode): PNode =
     changeType(c, x, formal, check=true)
   result = arg
   result = skipHiddenSubConv(result, c.graph, c.idgen)
+  # mark inserted converter as used:
+  var a = result
+  if a.kind == nkHiddenDeref: a = a[0]
+  if a.kind == nkHiddenCallConv and a[0].kind == nkSym:
+    markUsed(c, a.info, a[0].sym)
 
 
 proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =

@@ -645,6 +645,15 @@ proc instGenericConvertersSons*(c: PContext, n: PNode, x: TCandidate) =
     for i in 1..<n.len:
       instGenericConvertersArg(c, n[i], x)
 
+proc markConvertersUsed*(c: PContext, n: PNode) =
+  assert n.kind in nkCallKinds
+  for i in 1..<n.len:
+    var a = n[i]
+    if a == nil: continue
+    if a.kind == nkHiddenDeref: a = a[0]
+    if a.kind == nkHiddenCallConv and a[0].kind == nkSym:
+      markUsed(c, a.info, a[0].sym)
+
 proc indexTypesMatch(c: PContext, f, a: PType, arg: PNode): PNode =
   var m = newCandidate(c, f)
   result = paramTypesMatch(m, f, a, arg, nil)
@@ -809,6 +818,7 @@ proc semResolvedCall(c: PContext, x: var TCandidate,
 
   result = x.call
   instGenericConvertersSons(c, result, x)
+  markConvertersUsed(c, result)
   result[0] = newSymNode(finalCallee, getCallLineInfo(result[0]))
   if finalCallee.magic notin {mArrGet, mArrPut}:
     result.typ = finalCallee.typ.returnType
