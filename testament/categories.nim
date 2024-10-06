@@ -106,7 +106,8 @@ proc dllTests(r: var TResults, cat: Category, options: string) =
   runBasicDLLTest c, r, cat, options & " -d:release --mm:refc"
   runBasicDLLTest c, r, cat, options, isOrc = true
   runBasicDLLTest c, r, cat, options & " -d:release", isOrc = true
-  when not defined(windows):
+  when not defined(windows) and not defined(osx):
+    # boehm library linking broken on macos 13
     # still cannot find a recent Windows version of boehm.dll:
     runBasicDLLTest c, r, cat, options & " --gc:boehm"
     runBasicDLLTest c, r, cat, options & " -d:release --gc:boehm"
@@ -133,7 +134,8 @@ proc gcTests(r: var TResults, cat: Category, options: string) =
 
   template test(filename: untyped) =
     testWithoutBoehm filename
-    when not defined(windows) and not defined(android):
+    when not defined(windows) and not defined(android) and not defined(osx):
+      # boehm library linking broken on macos 13
       # AR: cannot find any boehm.dll on the net, right now, so disabled
       # for windows:
       testSpec r, makeTest("tests/gc" / filename, options &

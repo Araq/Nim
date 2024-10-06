@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-12]
+        os: [ubuntu-20.04, macos-13]
         cpu: [amd64]
         batch: ["allowed_failures", "0_3", "1_3", "2_3"] # list of `index_num`
     name: '${{ matrix.os }} (batch: ${{ matrix.batch }})'
@@ -48,6 +48,7 @@ jobs:
       - name: 'Install dependencies (macOS)'
         if: runner.os == 'macOS'
         run: brew install boehmgc make sfml gtk+3
+        # XXX can't find boehm and gtk on macos 13
       - name: 'Install dependencies (Windows)'
         if: runner.os == 'Windows'
         shell: bash

@@ -5169,7 +5169,7 @@ It is possible to raise/catch imported C++ exceptions. Types imported using
 `importcpp` can be raised or caught. Exceptions are raised by value and
 caught by reference. Example:
 
-  ```nim  test = "nim cpp -r $1"
+  ```nim
   type
     CStdException {.importcpp: "std::exception", header: "<exception>", inheritable.} = object
       ## does not inherit from `RootObj`, so we use `inheritable` instead
