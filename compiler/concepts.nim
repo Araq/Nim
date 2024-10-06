@@ -11,7 +11,7 @@
 ## for details. Note this is a first implementation and only the "Concept matching"
 ## section has been implemented.
 
-import ast, astalgo, semdata, lookups, lineinfos, idents, msgs, renderer, types
+import ast, semdata, lookups, lineinfos, idents, msgs, renderer, types, layeredtable
 
 import std/intsets
 
@@ -309,7 +309,7 @@ proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
     # error was reported earlier.
     result = false
 
-proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var TypeMapping; invocation: PType): bool =
+proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable; invocation: PType): bool =
   ## Entry point from sigmatch. 'concpt' is the concept we try to match (here still a PType but
   ## we extract its AST via 'concpt.n.lastSon'). 'arg' is the type that might fulfill the
   ## concept's requirements. If so, we return true and fill the 'bindings' with pairs of
@@ -328,16 +328,16 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var TypeMapping; i
           dest = existingBinding(m, dest)
           if dest == nil or dest.kind != tyGenericParam: break
         if dest != nil:
-          bindings.idTablePut(a, dest)
+          bindings.put(a, dest)
           when logBindings: echo "A bind ", a, " ", dest
       else:
-        bindings.idTablePut(a, b)
+        bindings.put(a, b)
         when logBindings: echo "B bind ", a, " ", b
     # we have a match, so bind 'arg' itself to 'concpt':
-    bindings.idTablePut(concpt, arg)
+    bindings.put(concpt, arg)
     # invocation != nil means we have a non-atomic concept:
     if invocation != nil and arg.kind == tyGenericInst and invocation.kidsLen == arg.kidsLen-1:
       # bind even more generic parameters
       assert invocation.kind == tyGenericInvocation
       for i in FirstGenericParamAt ..< invocation.kidsLen:
-        bindings.idTablePut(invocation[i], arg[i])
+        bindings.put(invocation[i], arg[i])

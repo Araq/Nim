@@ -15,8 +15,8 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 import
-  options, ast, astalgo, msgs, idents, renderer,
-  magicsys, vmdef, modulegraphs, lineinfos, pathutils
+  options, ast, msgs, idents, renderer,
+  magicsys, vmdef, modulegraphs, lineinfos, pathutils, layeredtable
 
 import ic / ic
 
@@ -136,10 +136,10 @@ type
     semOverloadedCall*: proc (c: PContext, n, nOrig: PNode,
                               filter: TSymKinds, flags: TExprFlags, expectedType: PType = nil): PNode {.nimcall.}
     semTypeNode*: proc(c: PContext, n: PNode, prev: PType): PType {.nimcall.}
-    semInferredLambda*: proc(c: PContext, pt: Table[ItemId, PType], n: PNode): PNode
-    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: Table[ItemId, PType],
+    semInferredLambda*: proc(c: PContext, pt: LayeredIdTable, n: PNode): PNode
+    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: LayeredIdTable,
                                 info: TLineInfo): PSym
-    instantiateOnlyProcType*: proc (c: PContext, pt: TypeMapping,
+    instantiateOnlyProcType*: proc (c: PContext, pt: LayeredIdTable,
                                     prc: PSym, info: TLineInfo): PType
       # used by sigmatch for explicit generic instantiations
     includedFiles*: IntSet    # used to detect recursive include files

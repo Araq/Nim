@@ -18,7 +18,7 @@ import
   evaltempl, patterns, parampatterns, sempass2, linter, semmacrosanity,
   lowerings, plugins/active, lineinfos, int128,
   isolation_check, typeallowed, modulegraphs, enumtostr, concepts, astmsgs,
-  extccomp
+  extccomp, layeredtable
 
 import vtables
 import std/[strtabs, math, tables, intsets, strutils, packedsets]
@@ -478,7 +478,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
         # e.g. template foo(T: typedesc): seq[T]
         # We will instantiate the return type here, because
         # we now know the supplied arguments
-        var paramTypes = initTypeMapping()
+        var paramTypes = initLayeredTypeMap()
         for param, value in genericParamsInMacroCall(s, call):
           var givenType = value.typ
           # the sym nodes used for the supplied generic arguments for
@@ -486,7 +486,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
           # in this case, get the type directly from the sym
           if givenType == nil and value.kind == nkSym and value.sym.typ != nil:
             givenType = value.sym.typ
-          idTablePut(paramTypes, param.typ, givenType)
+          put(paramTypes, param.typ, givenType)
 
         retType = generateTypeInstance(c, paramTypes,
                                        macroResult.info, retType)

@@ -34,7 +34,7 @@ proc pushProcCon*(c: PContext; owner: PSym) =
 const
   errCannotInstantiateX = "cannot instantiate: '$1'"
 
-iterator instantiateGenericParamList(c: PContext, n: PNode, pt: TypeMapping): PSym =
+iterator instantiateGenericParamList(c: PContext, n: PNode, pt: LayeredIdTable): PSym =
   internalAssert c.config, n.kind == nkGenericParams
   for a in n.items:
     internalAssert c.config, a.kind == nkSym
@@ -43,7 +43,7 @@ iterator instantiateGenericParamList(c: PContext, n: PNode, pt: TypeMapping): PS
       let symKind = if q.typ.kind == tyStatic: skConst else: skType
       var s = newSym(symKind, q.name, c.idgen, getCurrOwner(c), q.info)
       s.flags.incl {sfUsed, sfFromGeneric}
-      var t = idTableGet(pt, q.typ)
+      var t = lookup(pt, q.typ)
       if t == nil:
         if tfRetType in q.typ.flags:
           # keep the generic type and allow the return type to be bound
@@ -220,7 +220,7 @@ proc referencesAnotherParam(n: PNode, p: PSym): bool =
       if referencesAnotherParam(n[i], p): return true
     return false
 
-proc instantiateProcType(c: PContext, pt: TypeMapping,
+proc instantiateProcType(c: PContext, pt: LayeredIdTable,
                          prc: PSym, info: TLineInfo) =
   # XXX: Instantiates a generic proc signature, while at the same
   # time adding the instantiated proc params into the current scope.
@@ -237,7 +237,7 @@ proc instantiateProcType(c: PContext, pt: TypeMapping,
   # will need to use openScope, addDecl, etc.
   #addDecl(c, prc)
   pushInfoContext(c.config, info)
-  var typeMap = initLayeredTypeMap(pt)
+  var typeMap = shallowCopy(pt) # use previous bindings without writing to them
   var cl = initTypeVars(c, typeMap, info, nil)
   var result = instCopyType(cl, prc.typ)
   let originalParams = result.n
@@ -324,7 +324,7 @@ proc instantiateProcType(c: PContext, pt: TypeMapping,
   prc.typ = result
   popInfoContext(c.config)
 
-proc instantiateOnlyProcType(c: PContext, pt: TypeMapping, prc: PSym, info: TLineInfo): PType =
+proc instantiateOnlyProcType(c: PContext, pt: LayeredIdTable, prc: PSym, info: TLineInfo): PType =
   # instantiates only the type of a given proc symbol
   # used by sigmatch for explicit generics
   # wouldn't be needed if sigmatch could handle complex cases,
@@ -360,7 +360,7 @@ proc getLocalPassC(c: PContext, s: PSym): string =
     for p in n:
       extractPassc(p)
 
-proc generateInstance(c: PContext, fn: PSym, pt: TypeMapping,
+proc generateInstance(c: PContext, fn: PSym, pt: LayeredIdTable,
                       info: TLineInfo): PSym =
   ## Generates a new instance of a generic procedure.
   ## The `pt` parameter is a type-unsafe mapping table used to link generic

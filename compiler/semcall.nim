@@ -757,7 +757,7 @@ proc inheritBindings(c: PContext, x: var TCandidate, expectedType: PType) =
         if t[i] == nil or u[i] == nil: return
         stackPut(t[i], u[i])
     of tyGenericParam:
-      let prebound = x.bindings.idTableGet(t)
+      let prebound = x.bindings.lookup(t)
       if prebound != nil:
         continue # Skip param, already bound
 
@@ -769,7 +769,7 @@ proc inheritBindings(c: PContext, x: var TCandidate, expectedType: PType) =
       discard
   # update bindings
   for i in 0 ..< flatUnbound.len():
-    x.bindings.idTablePut(flatUnbound[i], flatBound[i])
+    x.bindings.put(flatUnbound[i], flatBound[i])
 
 proc semResolvedCall(c: PContext, x: var TCandidate,
                      n: PNode, flags: TExprFlags;
