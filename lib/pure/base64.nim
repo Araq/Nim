@@ -73,7 +73,7 @@ const
 const
   invalidChar = 255
 
-template encodeSize(size: int): int = (size * 4 div 3) + 6
+template encodeSize(size: int): int = (size div 3 + size) + 6
 
 template encodeInternal(s, alphabet: typed): untyped =
   ## encodes `s` into base64 representation.
