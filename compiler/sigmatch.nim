@@ -2523,9 +2523,15 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
       result = arg
     elif skipTypes(arg.typ, abstractVar-{tyTypeDesc}).kind == tyTuple or cmpInheritancePenalty(oldInheritancePenalty, m.inheritancePenalty) > 0:
       result = implicitConv(nkHiddenSubConv, f, arg, m, c)
-    elif arg.typ.isEmptyContainer:
+    elif arg.typ.isEmptyContainer or
+        # XXX `and not m.isNoCall` is a workaround
+        # passing an int to generic types converts it to the type `int`
+        # but this isn't done for int literal types, so we preserve the type
+        # i.e. works: `type Foo[T] = array[T, int]; var x: Foo[3]` (see t12938, t14193)
+        # doesn't work: `proc foo[T](): array[T, int] = ...; foo[3]()` (see #23204)
+        (arg.typ.isIntLit and not m.isNoCall):
       result = arg.copyTree
-      result.typ = getInstantiatedType(c, arg, m, f)
+      result.typ = getInstantiatedType(c, arg, m, f).skipTypes({tySink})
     else:
       result = arg
   of isBothMetaConvertible:
