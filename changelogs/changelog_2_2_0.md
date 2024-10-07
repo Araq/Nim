@@ -22,9 +22,9 @@
 
 - `bindMethod` in `std/jsffi` is deprecated, don't use it with closures.
 
-- JS backend now supports lambda lifting for closures. Use `--legacy:jsNoLambdaLifting` to emulate old behaviors.
+- The JS backend now supports lambda lifting for closures. Use `--legacy:jsNoLambdaLifting` to emulate old behaviors.
 
-- JS backend now supports closure iterators.
+- The JS backend now supports closure iterators.
 
 - `owner` in `std/macros` is deprecated.
 
@@ -125,7 +125,7 @@ is often an easy workaround.
 
 - `member` can be used to attach a procedure to a C++ type.
 
-- C++ `constructor` now reuses `result` instead creating `this`.
+- Inside a C++ constructor, `result` can be used to access the created object rather than `this`.
 
 - Tuple unpacking changes:
   - Tuple unpacking assignment now supports using underscores to discard values.
