@@ -87,20 +87,19 @@ available. This includes:
 * OS-specific operations
 * threading, coroutines
 * some modules of the standard library
-* proper 64-bit integer arithmetic
 
 To compensate, the standard library has modules [catered to the JS backend](
-lib.html#pure-libraries-modules-for-js-backend)
+lib.html#pure-libraries-modules-for-the-javascript-backend)
 and more support will come in the future (for instance, Node.js bindings
 to get OS info).
 
 To compile a Nim module into a ``.js`` file use the `js`:option: command; the
 default is a ``.js`` file that is supposed to be referenced in an ``.html``
 file. However, you can also run the code with `nodejs`:idx:
-(http://nodejs.org):
+(https://nodejs.org):
 
   ```cmd
-  nim js -d:nodejs -r examples/hallo.nim
+  nim js -r examples/hallo.nim
   ```
 
 If you experience errors saying that `globalThis` is not defined, be
