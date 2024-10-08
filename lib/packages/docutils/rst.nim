@@ -3364,7 +3364,7 @@ proc dirCodeBlock(p: var RstParser, nimExtension = false): PRstNode =
   ## description of ``parseDirective`` for further structure information.
   ##
   ## Code blocks can come in two forms, the standard `code directive
-  ## <http://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
+  ## <https://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
   ## the nim extension ``.. code-block::``. If the block is an extension, we
   ## want the default language syntax highlighting to be Nim, so we create a
   ## fake internal field to communicate with the generator. The field is named

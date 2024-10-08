@@ -157,7 +157,7 @@ proc close*(p: Process) {.rtl, extern: "nosp$1", raises: [IOError, OSError], tag
   ##
   ## .. warning:: If the process has not finished executing, this will forcibly
   ##   terminate the process. Doing so may result in zombie processes and
-  ##   `pty leaks <http://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
+  ##   `pty leaks <https://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
 
 proc suspend*(p: Process) {.rtl, extern: "nosp$1", tags: [].}
   ## Suspends the process `p`.

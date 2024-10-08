@@ -37,7 +37,7 @@ runnableExamples:
 ## PCRE has `some additional terms`_ that you must agree to in order to use
 ## this module.
 ##
-## .. _`some additional terms`: http://pcre.sourceforge.net/license.txt
+## .. _`some additional terms`: https://pcre.sourceforge.net/license.txt
 runnableExamples:
   import std/sugar
   let vowels = re"[aeoui]"
@@ -134,11 +134,11 @@ type
     ## -  `(*NO_STUDY)` - turn off studying; study is enabled by default
     ##
     ## For more details on the leading option groups, see the `Option
-    ## Setting <http://man7.org/linux/man-pages/man3/pcresyntax.3.html#OPTION_SETTING>`_
+    ## Setting <https://man7.org/linux/man-pages/man3/pcresyntax.3.html#OPTION_SETTING>`_
     ## and the `Newline
-    ## Convention <http://man7.org/linux/man-pages/man3/pcresyntax.3.html#NEWLINE_CONVENTION>`_
+    ## Convention <https://man7.org/linux/man-pages/man3/pcresyntax.3.html#NEWLINE_CONVENTION>`_
     ## sections of the `PCRE syntax
-    ## manual <http://man7.org/linux/man-pages/man3/pcresyntax.3.html>`_.
+    ## manual <https://man7.org/linux/man-pages/man3/pcresyntax.3.html>`_.
     ##
     ## Some of these options are not part of PCRE and are converted by nre
     ## into PCRE flags. These include `NEVER_UTF`, `ANCHORED`,

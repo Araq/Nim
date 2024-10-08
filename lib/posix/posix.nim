@@ -1133,7 +1133,7 @@ proc utimes*(path: cstring, times: ptr array[2, Timeval]): int {.
   ##
   ## Returns zero on success.
   ##
-  ## For more information read http://www.unix.com/man-page/posix/3/utimes/.
+  ## For more information read https://www.unix.com/man-page/posix/3/utimes/.
 
 proc handle_signal(sig: cint, handler: proc (a: cint) {.noconv.}) {.importc: "signal", header: "<signal.h>".}
 

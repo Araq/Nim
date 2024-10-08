@@ -484,7 +484,7 @@ proc toEpochDay(monthday: MonthdayRange, month: Month, year: int): int64 =
   ## Get the epoch day from a year/month/day date.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   assertValidDate monthday, month, year
   var (y, m, d) = (year, ord(month), monthday.int)
   if m <= 2:
@@ -501,7 +501,7 @@ proc fromEpochDay(epochday: int64):
   ## Get the year/month/day date from a epoch day.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   var z = epochday
   z.inc 719468
   let era = (if z >= 0: z else: z - 146096) div 146097

@@ -11,8 +11,8 @@
 ##
 ## Its implementation is based on the `xoroshiro128+`
 ## (xor/rotate/shift/rotate) library.
-## * More information: http://xoroshiro.di.unimi.it
-## * C implementation: http://xoroshiro.di.unimi.it/xoroshiro128plus.c
+## * More information: https://xoroshiro.di.unimi.it
+## * C implementation: https://xoroshiro.di.unimi.it/xoroshiro128plus.c
 ##
 ## **Do not use this module for cryptographic purposes!**
 ##

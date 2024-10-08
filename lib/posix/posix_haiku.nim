@@ -372,7 +372,7 @@ elif defined(haiku):
   # from sys/un.h
   const Sockaddr_un_path_length* = 126
 else:
-  # according to http://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
+  # according to https://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
   # this is >=92
   const Sockaddr_un_path_length* = 92
 

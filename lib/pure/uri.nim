@@ -382,7 +382,7 @@ func combine*(base: Uri, reference: Uri): Uri =
   ## Combines a base URI with a reference URI.
   ##
   ## This uses the algorithm specified in
-  ## `section 5.2.2 of RFC 3986 <http://tools.ietf.org/html/rfc3986#section-5.2.2>`_.
+  ## `section 5.2.2 of RFC 3986 <https://tools.ietf.org/html/rfc3986#section-5.2.2>`_.
   ##
   ## This means that the slashes inside the base URIs path as well as reference
   ## URIs path affect the resulting URI.

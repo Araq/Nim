@@ -418,7 +418,7 @@ elif defined(freertos) or defined(lwip):
   const Sockaddr_un_path_length* = 108
 else:
   const Sockaddr_max_length* = 255
-  # according to http://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
+  # according to https://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
   # this is >=92
   const Sockaddr_un_path_length* = 92
 

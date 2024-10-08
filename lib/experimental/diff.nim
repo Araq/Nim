@@ -10,7 +10,7 @@
 ## This module implements an algorithm to compute the
 ## `diff`:idx: between two sequences of lines.
 ##
-## - To learn more see `Diff on Wikipedia. <http://wikipedia.org/wiki/Diff>`_
+## - To learn more see `Diff on Wikipedia. <https://wikipedia.org/wiki/Diff>`_
 
 runnableExamples:
   assert diffInt(
@@ -37,7 +37,7 @@ jkl"""
 
 # code owner: Arne Döring
 #
-# This is based on C# code written by Matthias Hertel, http://www.mathertel.de
+# This is based on C# code written by Matthias Hertel, https://www.mathertel.de
 #
 # This Class implements the Difference Algorithm published in
 # "An O(ND) Difference Algorithm and its Variations" by Eugene Myers

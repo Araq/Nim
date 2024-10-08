@@ -26,7 +26,7 @@
 ## Each builds on top of the layers below it. The selectors module is an
 ## abstraction for the various system `select()` mechanisms such as epoll or
 ## kqueue. If you wish you can use it directly, and some people have done so
-## `successfully <http://goran.krampe.se/2014/10/25/nim-socketserver/>`_.
+## `successfully <https://goran.krampe.se/2014/10/25/nim-socketserver/>`_.
 ## But you must be aware that on Windows it only supports
 ## `select()`.
 ##

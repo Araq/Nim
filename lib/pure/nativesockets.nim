@@ -230,7 +230,7 @@ proc close*(socket: SocketHandle) =
   else:
     discard posix.close(socket)
   # TODO: These values should not be discarded. An OSError should be raised.
-  # http://stackoverflow.com/questions/12463473/what-happens-if-you-call-close-on-a-bsd-socket-multiple-times
+  # https://stackoverflow.com/questions/12463473/what-happens-if-you-call-close-on-a-bsd-socket-multiple-times
 
 when declared(setInheritable) or defined(nimdoc):
   proc setInheritable*(s: SocketHandle, inheritable: bool): bool {.inline.} =

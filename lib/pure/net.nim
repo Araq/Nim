@@ -598,7 +598,7 @@ when defineSsl:
       ctx.referencedData.incl(index)
     GC_ref(data)
 
-  # http://simplestcodings.blogspot.co.uk/2010/08/secure-server-client-using-openssl-in-c.html
+  # https://simplestcodings.blogspot.co.uk/2010/08/secure-server-client-using-openssl-in-c.html
   proc loadCertificates(ctx: SslCtx, certFile, keyFile: string) =
     if certFile != "" and not fileExists(certFile):
       raise newException(system.IOError,

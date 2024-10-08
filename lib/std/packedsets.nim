@@ -545,7 +545,7 @@ proc disjoint*[A](s1, s2: PackedSet[A]): bool =
 proc card*[A](s: PackedSet[A]): int {.inline.} =
   ## Alias for `len() <#len,PackedSet[A]>`_.
   ##
-  ## Card stands for the [cardinality](http://en.wikipedia.org/wiki/Cardinality)
+  ## Card stands for the [cardinality](https://en.wikipedia.org/wiki/Cardinality)
   ## of a set.
   result = s.len()
 

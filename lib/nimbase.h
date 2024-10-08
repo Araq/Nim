@@ -110,7 +110,7 @@ __EMSCRIPTEN__
 
 /*
   NIM_THREADVAR declaration based on
-  http://stackoverflow.com/questions/18298280/how-to-declare-a-variable-as-thread-local-portably
+  https://stackoverflow.com/questions/18298280/how-to-declare-a-variable-as-thread-local-portably
 */
 #if defined _WIN32
 #  if defined _MSC_VER || defined __BORLANDC__
