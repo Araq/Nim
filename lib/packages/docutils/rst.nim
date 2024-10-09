@@ -507,7 +507,7 @@ proc len(filenames: RstFileTable): int = filenames.idxToFilename.len
 proc addFilename*(s: PRstSharedState, file1: string): FileIndex =
   ## Returns index of filename, adding it if it has not been used before
   let nextIdx = s.filenames.len.FileIndex
-  result = getOrDefault(s.filenames.filenameToIdx, file1, default = nextIdx)
+  result = getOrDefault(s.filenames.filenameToIdx, file1, nextIdx)
   if result == nextIdx:
     s.filenames.filenameToIdx[file1] = result
     s.filenames.idxToFilename.add file1

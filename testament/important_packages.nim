@@ -149,7 +149,7 @@ pkg "polypbren"
 pkg "presto"
 pkg "prologue", "nimble tcompile"
 # remove fork after https://github.com/PMunch/combparser/pull/7 is merged:
-pkg "protobuf", "nimble install -y https://github.com/metagn/combparser@#HEAD; nim c -o:protobuff -r src/protobuf.nim"
+pkg "protobuf", "nimble uninstall -i -y combparser; nimble install -y https://github.com/metagn/combparser@#HEAD; nimble install --depsOnly -y; nim c -o:protobuff -r src/protobuf.nim"
 pkg "rbtree"
 pkg "react", "nimble example"
 pkg "regex", "nim c src/regex"
