@@ -53,7 +53,9 @@ iterator instantiateGenericParamList(c: PContext, n: PNode, pt: LayeredIdTable):
           if q.typ.kind != tyCompositeTypeClass:
             localError(c.config, a.info, errCannotInstantiateX % s.name.s)
           t = errorType(c)
-      elif t.kind in {tyGenericParam, tyConcept, tyFromExpr}:
+      elif t.kind in {tyGenericParam, tyConcept, tyFromExpr} or
+          # generic body types are accepted as typedesc arguments
+          (t.kind == tyGenericBody and q.typ.kind != tyTypeDesc):
         localError(c.config, a.info, errCannotInstantiateX % q.name.s)
         t = errorType(c)
       elif isUnresolvedStatic(t) and (q.typ.kind == tyStatic or
