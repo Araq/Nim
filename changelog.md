@@ -10,6 +10,8 @@ rounding guarantees (via the
 
 ## Standard library additions and changes
 
+[//]: # "Changes:"
+- `std/math` The `^` symbol now supports floating-point as exponent in addition to the Natural type.
 
 ## Language changes
 
