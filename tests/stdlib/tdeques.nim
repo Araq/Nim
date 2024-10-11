@@ -224,7 +224,7 @@ proc main() =
 
     block:
       var a, b = initDeque[int]()
-      for i in countDown(100, 1):
+      for i in countdown(100, 1):
         a.addFirst(i)
       for i in 1..100:
         b.addLast(i)
