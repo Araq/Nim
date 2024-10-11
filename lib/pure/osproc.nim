@@ -740,7 +740,8 @@ when defined(windows) and not defined(useNimRtl):
       if poInteractive in result.options: close(result)
       const errInvalidParameter = 87.int
       const errFileNotFound = 2.int
-      if lastError.int in {errInvalidParameter, errFileNotFound}:
+      case lastError.int
+      of errInvalidParameter, errFileNotFound:
         raiseOSError(lastError,
               "Requested command not found: '" & command & "'. OS error:")
       else:
