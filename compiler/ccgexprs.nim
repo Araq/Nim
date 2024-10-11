@@ -758,7 +758,10 @@ proc genDeref(p: BProc, e: PNode, d: var TLoc) =
     if typ.kind in {tyUserTypeClass, tyUserTypeClassInst} and typ.isResolvedUserTypeClass:
       typ = typ.last
     typ = typ.skipTypes(abstractInstOwned)
-    if typ.kind in {tyVar} and tfVarIsPtr notin typ.flags and p.module.compileToCpp and e[0].kind == nkHiddenAddr:
+    if typ.kind in {tyVar} and tfVarIsPtr notin typ.flags and
+        p.module.compileToCpp and e[0].kind == nkHiddenAddr and
+        # don't override existing location:
+        d.k == locNone:
       d = initLocExprSingleUse(p, e[0][0])
       return
     else:
