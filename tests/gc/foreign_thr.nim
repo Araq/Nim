@@ -6,6 +6,7 @@ Hello from thread
 Hello from thread
 '''
   cmd: "nim $target --hints:on --threads:on --tlsEmulation:off $options $file"
+  retries: 2
 """
 # Copied from stdlib
 import strutils

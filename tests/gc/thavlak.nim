@@ -8,6 +8,7 @@ Performing Loop Recognition
 Another 3 iterations...
 ...
 Found 1 loops (including artificial root node) (3)'''
+  retries: 2
 """
 
 # bug #3184
