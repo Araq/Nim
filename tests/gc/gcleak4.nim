@@ -1,5 +1,6 @@
 discard """
   outputsub: "no leak: "
+  retries: 2
 """
 
 type

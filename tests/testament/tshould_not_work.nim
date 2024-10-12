@@ -24,6 +24,8 @@ FAIL: tests/shouldfail/tnimout.nim
 Failure: reMsgsDiffer
 FAIL: tests/shouldfail/tnimoutfull.nim
 Failure: reMsgsDiffer
+FAIL: tests/shouldfail/tnotenoughretries.nim
+Failure: reExitcodesDiffer
 FAIL: tests/shouldfail/toutput.nim
 Failure: reOutputsDiffer
 FAIL: tests/shouldfail/toutputsub.nim
@@ -43,7 +45,7 @@ import stdtest/testutils
 
 proc main =
   const nim = getCurrentCompilerExe()
-  let testamentExe = "bin/testament"
+  let testamentExe = "testament/testament"
   let cmd = fmt"{testamentExe} --directory:testament --colors:off --backendLogging:off --nim:{nim} category shouldfail"
   let (outp, status) = execCmdEx(cmd)
   doAssert status == 1, $status
