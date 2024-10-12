@@ -1545,6 +1545,7 @@ template cannotEval(c: PCtx; n: PNode) =
   if c.config.cmd == cmdCheck:
     localError(c.config, n.info, "cannot evaluate at compile time: " & 
     n.renderTree)
+    c.cannotEval = true
     return
   globalError(c.config, n.info, "cannot evaluate at compile time: " &
     n.renderTree)
