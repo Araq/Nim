@@ -162,7 +162,11 @@ compiler vcc:
     linkerExe: "cl",
     linkTmpl: "$builddll$vccplatform /Fe$exefile $objfiles $buildgui /nologo $options",
     includeCmd: " /I",
-    linkDirCmd: " /LIBPATH:",
+    # HACK: we call `cl` so we have to pass `/link` for linker options,
+    # but users may still want to pass arguments to `cl` (see #14221)
+    # to deal with this, we add `/link` before each `/LIBPATH`,
+    # the linker ignores extra `/link`s since it's an unrecognized argument
+    linkDirCmd: " /link /LIBPATH:",
     linkLibCmd: " $1.lib",
     debug: " /RTC1 /Z7 ",
     pic: "",
