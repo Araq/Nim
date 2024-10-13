@@ -344,7 +344,22 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
 
 proc finishTest(r: var TResults, test: TTest, target: TTarget,
                 extraOptions, expected, given: string, successOrig: TResultEnum,
-                allowFailure = false, givenSpec: ptr TSpec = nil): bool =
+                allowFailure = false, givenSpec: ptr TSpec = nil) =
+  ## calculates duration of test, reports result
+  ## `retries` option in the test is ignored
+  let duration = epochTime() - test.startTime
+  let success = if test.spec.timeout > 0.0 and duration > test.spec.timeout: reTimeout
+                else: successOrig
+  addResult(r, test, target, extraOptions, expected, given, success, duration, allowFailure, givenSpec)
+
+proc finishTestRetryable(r: var TResults, test: TTest, target: TTarget,
+                         extraOptions, expected, given: string, successOrig: TResultEnum,
+                         allowFailure = false, givenSpec: ptr TSpec = nil): bool =
+  ## if test failed and has remaining retries, return `true`,
+  ## otherwise calculate duration and report result
+  ## 
+  ## warning: if `true` is returned, then the result is not reported,
+  ## it has to be retried or `finishTest` should be called instead 
   result = false
   let duration = epochTime() - test.startTime
   let success = if test.spec.timeout > 0.0 and duration > test.spec.timeout: reTimeout
@@ -383,22 +398,23 @@ proc nimoutCheck(expected, given: TSpec): bool =
 
 proc cmpMsgs(r: var TResults, expected, given: TSpec, test: TTest,
              target: TTarget, extraOptions: string): bool =
+  # result has to be checked for retry
   if not checkForInlineErrors(expected, given) or
     (not expected.nimoutFull and not nimoutCheck(expected, given)):
-      result = r.finishTest(test, target, extraOptions, expected.nimout & inlineErrorsMsgs(expected), given.nimout, reMsgsDiffer)
+      result = r.finishTestRetryable(test, target, extraOptions, expected.nimout & inlineErrorsMsgs(expected), given.nimout, reMsgsDiffer)
   elif strip(expected.msg) notin strip(given.msg):
-    result = r.finishTest(test, target, extraOptions, expected.msg, given.msg, reMsgsDiffer)
+    result = r.finishTestRetryable(test, target, extraOptions, expected.msg, given.msg, reMsgsDiffer)
   elif not nimoutCheck(expected, given):
-    result = r.finishTest(test, target, extraOptions, expected.nimout, given.nimout, reMsgsDiffer)
+    result = r.finishTestRetryable(test, target, extraOptions, expected.nimout, given.nimout, reMsgsDiffer)
   elif extractFilename(expected.file) != extractFilename(given.file) and
       "internal error:" notin expected.msg:
-    result = r.finishTest(test, target, extraOptions, expected.file, given.file, reFilesDiffer)
+    result = r.finishTestRetryable(test, target, extraOptions, expected.file, given.file, reFilesDiffer)
   elif expected.line != given.line and expected.line != 0 or
        expected.column != given.column and expected.column != 0:
-    result = r.finishTest(test, target, extraOptions, $expected.line & ':' & $expected.column,
+    result = r.finishTestRetryable(test, target, extraOptions, $expected.line & ':' & $expected.column,
                       $given.line & ':' & $given.column, reLinesDiffer)
   else:
-    result = r.finishTest(test, target, extraOptions, expected.msg, given.msg, reSuccess)
+    result = r.finishTestRetryable(test, target, extraOptions, expected.msg, given.msg, reSuccess)
     inc(r.passed)
 
 proc generatedFile(test: TTest, target: TTarget): string =
@@ -438,6 +454,7 @@ proc codegenCheck(test: TTest, target: TTarget, spec: TSpec, expectedMsg: var st
 
 proc compilerOutputTests(test: TTest, target: TTarget, extraOptions: string,
                          given: var TSpec, expected: TSpec; r: var TResults): bool =
+  # result has to be checked for retry
   var expectedmsg: string = ""
   var givenmsg: string = ""
   if given.err == reSuccess:
@@ -452,7 +469,7 @@ proc compilerOutputTests(test: TTest, target: TTarget, extraOptions: string,
   else:
     givenmsg = "$ " & given.cmd & '\n' & given.nimout
   if given.err == reSuccess: inc(r.passed)
-  result = r.finishTest(test, target, extraOptions, expectedmsg, givenmsg, given.err)
+  result = r.finishTestRetryable(test, target, extraOptions, expectedmsg, givenmsg, given.err)
 
 proc getTestSpecTarget(): TTarget =
   if getEnv("NIM_COMPILE_TO_CPP", "false") == "true":
@@ -469,6 +486,7 @@ proc equalModuloLastNewline(a, b: string): bool =
 proc testSpecHelper(r: var TResults, test: var TTest, expected: TSpec,
                     target: TTarget, extraOptions: string, nimcache: string) =
   template maybeRetry(x: bool) =
+    # if `x` is true, retries the test
     if x:
       test.spec.err = reRetry
       dec test.spec.retries
@@ -480,7 +498,7 @@ proc testSpecHelper(r: var TResults, test: var TTest, expected: TSpec,
     test.spec.err = reDisabled
 
   if test.spec.err in {reDisabled, reJoined}:
-    discard r.finishTest(test, target, extraOptions, "", "", test.spec.err)
+    r.finishTest(test, target, extraOptions, "", "", test.spec.err)
     inc(r.skipped)
     return
   var given = callNimCompiler(expected.getCmd, test.name, test.options, nimcache, target, extraOptions)
@@ -489,17 +507,17 @@ proc testSpecHelper(r: var TResults, test: var TTest, expected: TSpec,
     maybeRetry compilerOutputTests(test, target, extraOptions, given, expected, r)
   of actionRun:
     if given.err != reSuccess:
-      maybeRetry r.finishTest(test, target, extraOptions, "", "$ " & given.cmd & '\n' & given.nimout, given.err, givenSpec = given.addr)
+      maybeRetry r.finishTestRetryable(test, target, extraOptions, "", "$ " & given.cmd & '\n' & given.nimout, given.err, givenSpec = given.addr)
     else:
       let isJsTarget = target == targetJS
       var exeFile = changeFileExt(test.name, if isJsTarget: "js" else: ExeExt)
       if not fileExists(exeFile):
-        maybeRetry r.finishTest(test, target, extraOptions, expected.output,
+        maybeRetry r.finishTestRetryable(test, target, extraOptions, expected.output,
                     "executable not found: " & exeFile, reExeNotFound)
       else:
         let nodejs = if isJsTarget: findNodeJs() else: ""
         if isJsTarget and nodejs == "":
-          maybeRetry r.finishTest(test, target, extraOptions, expected.output, "nodejs binary not in PATH",
+          maybeRetry r.finishTestRetryable(test, target, extraOptions, expected.output, "nodejs binary not in PATH",
                       reExeNotFound)
         else:
           var exeCmd: string
@@ -531,19 +549,19 @@ proc testSpecHelper(r: var TResults, test: var TTest, expected: TSpec,
               buf
           if exitCode != expected.exitCode:
             given.err = reExitcodesDiffer
-            maybeRetry r.finishTest(test, target, extraOptions, "exitcode: " & $expected.exitCode,
+            maybeRetry r.finishTestRetryable(test, target, extraOptions, "exitcode: " & $expected.exitCode,
                               "exitcode: " & $exitCode & "\n\nOutput:\n" &
                               bufB, reExitcodesDiffer)
           elif (expected.outputCheck == ocEqual and not expected.output.equalModuloLastNewline(bufB)) or
               (expected.outputCheck == ocSubstr and expected.output notin bufB):
             given.err = reOutputsDiffer
-            maybeRetry r.finishTest(test, target, extraOptions, expected.output, bufB, reOutputsDiffer)
+            maybeRetry r.finishTestRetryable(test, target, extraOptions, expected.output, bufB, reOutputsDiffer)
           maybeRetry compilerOutputTests(test, target, extraOptions, given, expected, r)
   of actionReject:
     # Make sure its the compiler rejecting and not the system (e.g. segfault)
     maybeRetry cmpMsgs(r, expected, given, test, target, extraOptions)
     if given.exitCode != QuitFailure:
-      maybeRetry r.finishTest(test, target, extraOptions, "exitcode: " & $QuitFailure,
+      maybeRetry r.finishTestRetryable(test, target, extraOptions, "exitcode: " & $QuitFailure,
                         "exitcode: " & $given.exitCode & "\n\nOutput:\n" &
                         given.nimout, reExitcodesDiffer)
 
@@ -568,7 +586,7 @@ proc targetHelper(r: var TResults, test: TTest, expected: TSpec, extraOptions: s
   for target in expected.targets:
     inc(r.total)
     if target notin gTargets:
-      discard r.finishTest(test, target, extraOptions, "", "", reDisabled)
+      r.finishTest(test, target, extraOptions, "", "", reDisabled)
       inc(r.skipped)
     elif simulate:
       inc count
@@ -583,7 +601,7 @@ proc testSpec(r: var TResults, test: TTest, targets: set[TTarget] = {}) =
   var expected = test.spec
   if expected.parseErrors.len > 0:
     # targetC is a lie, but a parameter is required
-    discard r.finishTest(test, targetC, "", "", expected.parseErrors, reInvalidSpec)
+    r.finishTest(test, targetC, "", "", expected.parseErrors, reInvalidSpec)
     inc(r.total)
     return
 
