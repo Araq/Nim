@@ -331,3 +331,25 @@ block: # issue #24164, related regression
   template bar(x: untyped = nil) =
     foo(x)
   bar()
+
+block: # bug #24296
+  # Either changing the template to `proc`/`func` or using `$""`, not a string
+  # literal alone, allows any version of Nim 2.x to compile this.
+  template g(): string = ""
+
+  # Alternatively: don't retrieve the string through g(), but directly, also
+  # allows compilation across Nim 2.x versions.
+  const d: cstring = ""
+  const f: cstring = $""
+  const b = cstring g()
+  const m = cstring ""
+  const p = cstring $""
+
+  # But this does not compile across Nim 2.x/devel.
+  const c: cstring = g()
+  let e: cstring = g()
+
+block: # bug #24295
+  template g(_: int): string = ""
+  const c: cstring = 0.g()
+
