@@ -1311,10 +1311,11 @@ proc gsub(g: var TSrcGen, n: PNode, c: TContext, fromStmtList = false) =
       put(g, tkCustomLit, n[0].strVal)
       gsub(g, n, 1)
     else:
-      gsub(g, n, 0)
+      for i in 0..<n.len-1:
+        gsub(g, n, i)
       put(g, tkDot, ".")
-      assert n.len == 2, $n.len
-      accentedName(g, n[1])
+      if n.len > 1:
+        accentedName(g, n[^1])
   of nkBind:
     putWithSpace(g, tkBind, "bind")
     gsub(g, n, 0)
