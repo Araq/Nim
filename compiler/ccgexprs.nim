@@ -3312,8 +3312,12 @@ proc getNullValueAux(p: BProc; t: PType; obj, constOrNil: PNode,
                      isConst: bool, info: TLineInfo) =
   case obj.kind
   of nkRecList:
+    let isUnion = tfUnion in t.flags
     for it in obj.sons:
       getNullValueAux(p, t, it, constOrNil, result, count, isConst, info)
+      if isUnion:
+        # generate only 1 field for default value of union
+        return
   of nkRecCase:
     getNullValueAux(p, t, obj[0], constOrNil, result, count, isConst, info)
     var res = ""
