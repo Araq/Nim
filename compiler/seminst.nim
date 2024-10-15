@@ -111,7 +111,7 @@ proc freshGenSyms(c: PContext; n: PNode, owner, orig: PSym, symMap: var SymMappi
     elif s.owner == nil or s.owner.kind == skPackage:
       #echo "copied this ", s.name.s
       x = copySym(s, c.idgen)
-      x.owner = owner
+      x.owner() = owner
       idTablePut(symMap, s, x)
       n.sym = x
   else:
@@ -273,7 +273,7 @@ proc instantiateProcType(c: PContext, pt: LayeredIdTable,
     internalAssert c.config, originalParams[i].kind == nkSym
     let oldParam = originalParams[i].sym
     let param = copySym(oldParam, c.idgen)
-    param.owner = prc
+    param.owner() = prc
     param.typ = result[i]
 
     # The default value is instantiated and fitted against the final
@@ -395,9 +395,9 @@ proc generateInstance(c: PContext, fn: PSym, pt: LayeredIdTable,
     let passc = getLocalPassC(c, producer)
     if passc != "": #pass the local compiler options to the consumer module too
       extccomp.addLocalCompileOption(c.config, passc, toFullPathConsiderDirty(c.config, c.module.info.fileIndex))
-    result.owner = c.module
+    result.owner() = c.module
   else:
-    result.owner = fn
+    result.owner() = fn
   result.ast = n
   pushOwner(c, result)
 

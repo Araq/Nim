@@ -64,7 +64,7 @@ proc evalTemplateAux(templ, actual: PNode, c: var TemplCtx, result: PNode) =
         if x == nil:
           x = copySym(s, c.idgen)
           # sem'check needs to set the owner properly later, see bug #9476
-          x.owner = nil # c.genSymOwner
+          x.owner() = nil # c.genSymOwner
           #if x.kind == skParam and x.owner.kind == skModule:
           #  internalAssert c.config, false
           idTablePut(c.mapping, s, x)

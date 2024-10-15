@@ -25,7 +25,7 @@ template getModuleIdent(graph: ModuleGraph, filename: AbsoluteFile): PIdent =
 
 proc partialInitModule*(result: PSym; graph: ModuleGraph; fileIdx: FileIndex; filename: AbsoluteFile) =
   let packSym = getPackage(graph, fileIdx)
-  result.owner = packSym
+  result.owner() = packSym
   result.position = int fileIdx
 
 proc newModule*(graph: ModuleGraph; fileIdx: FileIndex): PSym =

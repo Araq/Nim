@@ -453,7 +453,7 @@ proc turnFinalizerIntoDestructor(c: PContext; orig: PSym; info: TLineInfo): PSym
   result = copySym(orig, c.idgen)
   result.info = info
   result.flags.incl sfFromGeneric
-  result.owner = orig
+  result.owner() = orig
   let origParamType = orig.typ.firstParamType
   let newParamType = makeVarType(result, origParamType.skipTypes(abstractPtrs), c.idgen)
   let oldParam = orig.typ.n[1].sym
@@ -524,7 +524,7 @@ proc semNewFinalize(c: PContext; n: PNode): PNode =
         discard "already turned this one into a finalizer"
       else:
         if fin.instantiatedFrom != nil and fin.instantiatedFrom != fin.owner: #undo move
-          fin.owner = fin.instantiatedFrom
+          fin.owner() = fin.instantiatedFrom
         let wrapperSym = newSym(skProc, getIdent(c.graph.cache, fin.name.s & "FinalizerWrapper"), c.idgen, fin.owner, fin.info)
         let selfSymNode = newSymNode(copySym(fin.ast[paramsPos][1][0].sym, c.idgen))
         selfSymNode.typ = fin.typ.firstParamType
@@ -539,7 +539,7 @@ proc semNewFinalize(c: PContext; n: PNode): PNode =
           genericParams = fin.ast[genericParamsPos], pragmas = fin.ast[pragmasPos], exceptions = fin.ast[miscPos]), {})
 
         var transFormedSym = turnFinalizerIntoDestructor(c, wrapperSym, wrapper.info)
-        transFormedSym.owner = fin
+        transFormedSym.owner() = fin
         if c.config.backend == backendCpp or sfCompileToCpp in c.module.flags:
           let origParamType = transFormedSym.ast[bodyPos][1].typ
           let selfSymbolType = makePtrType(c, origParamType.skipTypes(abstractPtrs))

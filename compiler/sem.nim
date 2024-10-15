@@ -256,7 +256,7 @@ proc newSymG*(kind: TSymKind, n: PNode, c: PContext): PSym =
     # when there is a nested proc inside a template, semtmpl
     # will assign a wrong owner during the first pass over the
     # template; we must fix it here: see #909
-    result.owner = getCurrOwner(c)
+    result.owner() = getCurrOwner(c)
   else:
     result = newSym(kind, considerQuotedIdent(c, n), c.idgen, getCurrOwner(c), n.info)
     if find(result.name.s, '`') >= 0:

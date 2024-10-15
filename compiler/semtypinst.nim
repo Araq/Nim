@@ -358,7 +358,7 @@ proc replaceTypeVarsS(cl: var TReplTypeVars, s: PSym, t: PType): PSym =
   result = copySym(s, cl.c.idgen)
   incl(result.flags, sfFromGeneric)
   #idTablePut(cl.symMap, s, result)
-  result.owner = s.owner
+  result.owner() = s.owner
   result.typ = t
   if result.kind != skType:
     result.ast = replaceTypeVarsN(cl, s.ast)

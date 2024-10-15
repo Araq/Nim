@@ -942,7 +942,7 @@ proc symBodyFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
     result.guard = loadSym(c, g, si, s.guard)
     result.bitsize = s.bitsize
     result.alignment = s.alignment
-  result.owner = loadSym(c, g, si, s.owner)
+  result.owner() = loadSym(c, g, si, s.owner)
   let externalName = g[si].fromDisk.strings[s.externalName]
   if externalName != "":
     result.loc.snippet = externalName
@@ -1062,7 +1062,7 @@ proc setupLookupTables(g: var PackedModuleGraph; conf: ConfigRef; cache: IdentCa
                   name: getIdent(cache, splitFile(filename).name),
                   info: newLineInfo(fileIdx, 1, 1),
                   position: int(fileIdx))
-  m.module.owner = getPackage(conf, cache, fileIdx)
+  m.module.owner() = getPackage(conf, cache, fileIdx)
   m.module.flags = m.fromDisk.moduleFlags
 
 proc loadToReplayNodes(g: var PackedModuleGraph; conf: ConfigRef; cache: IdentCache;

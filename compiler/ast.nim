@@ -706,7 +706,7 @@ type
     when defined(nimsuggest):
       endInfo*: TLineInfo
       hasUserSpecifiedType*: bool  # used for determining whether to display inlay type hints
-    owner*: PSym
+    ownerField: PSym
     flags*: TSymFlags
     ast*: PNode               # syntax tree of proc, iterator, etc.:
                               # the whole proc including header; this is used
@@ -813,6 +813,9 @@ type
     impUnknown, impNo, impYes
 
 template nodeId(n: PNode): int = cast[int](n)
+
+template owner*(s: PSym): PSym =
+  s.ownerField
 
 type Gconfig = object
   # we put comments in a side channel to avoid increasing `sizeof(TNode)`, which
@@ -1197,7 +1200,7 @@ proc newSym*(symKind: TSymKind, name: PIdent, idgen: IdGenerator; owner: PSym,
   assert not name.isNil
   let id = nextSymId idgen
   result = PSym(name: name, kind: symKind, flags: {}, info: info, itemId: id,
-                options: options, owner: owner, offset: defaultOffset,
+                options: options, ownerField: owner, offset: defaultOffset,
                 disamb: getOrDefault(idgen.disambTable, name).int32)
   idgen.disambTable.inc name
   when false:
@@ -1707,7 +1710,7 @@ proc transitionNoneToSym*(n: PNode) =
 template transitionSymKindCommon*(k: TSymKind) =
   let obj {.inject.} = s[]
   s[] = TSym(kind: k, itemId: obj.itemId, magic: obj.magic, typ: obj.typ, name: obj.name,
-             info: obj.info, owner: obj.owner, flags: obj.flags, ast: obj.ast,
+             info: obj.info, ownerField: obj.ownerField, flags: obj.flags, ast: obj.ast,
              options: obj.options, position: obj.position, offset: obj.offset,
              loc: obj.loc, annex: obj.annex, constraint: obj.constraint)
   when hasFFI:
