@@ -529,10 +529,11 @@ template localErrorNode*(c: PContext, n: PNode, arg: string): PNode =
   liMessage(c.config, n2.info, errGenerated, arg, doNothing, instLoc())
   errorNode(c, n2)
 
-proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
-  dest.kind = kind
-  dest.owner = getCurrOwner(c)
-  dest.size = - 1
+when false:
+  proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
+    dest.kind = kind
+    dest.owner = getCurrOwner(c)
+    dest.size = - 1
 
 proc makeRangeType*(c: PContext; first, last: BiggestInt;
                     info: TLineInfo; intType: PType = nil): PType =

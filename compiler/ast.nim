@@ -775,7 +775,7 @@ type
                               # formal param list
                               # for concepts, the concept body
                               # else: unused
-    owner*: PSym              # the 'owner' of the type
+    ownerField: PSym          # the 'owner' of the type
     sym*: PSym                # types have the sym associated with them
                               # it is used for converting types to strings
     size*: BiggestInt         # the size of the type in bytes
@@ -814,7 +814,7 @@ type
 
 template nodeId(n: PNode): int = cast[int](n)
 
-template owner*(s: PSym): PSym =
+template owner*(s: PSym|PType): PSym =
   s.ownerField
 
 type Gconfig = object
@@ -1506,7 +1506,7 @@ iterator signature*(t: PType): PType =
 
 proc newType*(kind: TTypeKind; idgen: IdGenerator; owner: PSym; son: sink PType = nil): PType =
   let id = nextTypeId idgen
-  result = PType(kind: kind, owner: owner, size: defaultSize,
+  result = PType(kind: kind, ownerField: owner, size: defaultSize,
                  align: defaultAlignment, itemId: id,
                  uniqueId: id, sons: @[])
   if son != nil: result.sons.add son
@@ -1561,7 +1561,7 @@ proc copyType*(t: PType, idgen: IdGenerator, owner: PSym): PType =
   result.sym = t.sym          # backend-info should not be copied
 
 proc exactReplica*(t: PType): PType =
-  result = PType(kind: t.kind, owner: t.owner, size: defaultSize,
+  result = PType(kind: t.kind, ownerField: t.owner, size: defaultSize,
                  align: defaultAlignment, itemId: t.itemId,
                  uniqueId: t.uniqueId)
   assignType(result, t)

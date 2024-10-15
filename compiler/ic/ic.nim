@@ -998,7 +998,7 @@ proc typeHeaderFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
 proc typeBodyFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
                         t: PackedType; si, item: int32; result: PType) =
   result.sym = loadSym(c, g, si, t.sym)
-  result.owner = loadSym(c, g, si, t.owner)
+  result.owner() = loadSym(c, g, si, t.owner)
   when false:
     for op, item in pairs t.attachedOps:
       result.attachedOps[op] = loadSym(c, g, si, item)
