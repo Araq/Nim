@@ -182,7 +182,7 @@ proc freshVar(c: PTransf; v: PSym): PNode =
   else:
     var newVar = copySym(v, c.idgen)
     incl(newVar.flags, sfFromGeneric)
-    newVar.owner() = owner
+    setOwner(newVar, owner)
     result = newSymNode(newVar)
 
 proc transformVarSection(c: PTransf, v: PNode): PNode =

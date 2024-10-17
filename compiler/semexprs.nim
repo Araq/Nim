@@ -2965,7 +2965,7 @@ proc semBlock(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = ni
     if sfGenSym notin labl.flags:
       addDecl(c, labl)
     elif labl.owner == nil:
-      labl.owner() = c.p.owner
+      setOwner(labl, c.p.owner)
     n[0] = newSymNode(labl, n[0].info)
     suggestSym(c.graph, n[0].info, labl, c.graph.usageSym)
     styleCheckDef(c, labl)

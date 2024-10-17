@@ -814,8 +814,11 @@ type
 
 template nodeId(n: PNode): int = cast[int](n)
 
-template owner*(s: PSym|PType): PSym =
-  s.ownerField
+proc owner*(s: PSym|PType): PSym {.inline.} =
+  result = s.ownerField
+
+proc setOwner*(s: PSym|PType, owner: PSym) {.inline.} =
+  s.ownerField = owner
 
 type Gconfig = object
   # we put comments in a side channel to avoid increasing `sizeof(TNode)`, which
