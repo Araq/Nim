@@ -2241,6 +2241,10 @@ Nim supports these `calling conventions`:idx:\:
     only a hint for the compiler: it may completely ignore it, and
     it may inline procedures that are not marked as `inline`.
 
+`noinline`:idx:
+:   The backend compiler may inline procedures that are not marked as `inline`.
+    The noinline convention prevents it.
+
 `fastcall`:idx:
 :   Fastcall means different things to different C compilers. One gets whatever
     the C `__fastcall` means.
@@ -8644,6 +8648,14 @@ is available and a literal dollar sign must be written as ``$$``.
 If the symbol should also be exported to a dynamic library, the `dynlib`
 pragma should be used in addition to the `exportc` pragma. See
 [Dynlib pragma for export].
+
+
+Exportcpp pragma
+----------------
+The `exportcpp` pragma works like the `exportc` pragma but it requires the `cpp` backend.
+When compiled with the `cpp` backend, the `exportc` pragma adds `export "C"` to
+the declaration in the generated code so that it can be called from both C and
+C++ code. `exportcpp` pragma doesn't add `export "C"`.
 
 
 Extern pragma
