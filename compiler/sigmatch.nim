@@ -200,6 +200,9 @@ proc matchGenericParams*(m: var TCandidate, binding: PNode, callee: PSym) =
     elif tfImplicitTypeParam in paramSym.typ.flags:
       # not a mismatch, but can't create sym
       m.state = csEmpty
+      m.firstMismatch.kind = kMissingGenericParam
+      m.firstMismatch.arg = i + 1
+      m.firstMismatch.formal = paramSym
       return
     else:
       m.state = csNoMatch

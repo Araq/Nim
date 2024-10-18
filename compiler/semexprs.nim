@@ -1724,27 +1724,15 @@ proc semDeref(c: PContext, n: PNode, flags: TExprFlags): PNode =
   else: result = nil
   #GlobalError(n[0].info, errCircumNeedsPointer)
 
-proc maybeInstantiateGeneric(c: PContext, n: PNode, s: PSym): PNode =
-  ## Instantiates generic if not lacking implicit generics,
-  ## otherwise returns n.
-  let
-    neededGenParams = s.ast[genericParamsPos].len
-    heldGenParams = n.len - 1
-  var implicitParams = 0
-  for x in s.ast[genericParamsPos]:
-    if tfImplicitTypeParam in x.typ.flags:
-      inc implicitParams
-  if heldGenParams != neededGenParams and implicitParams + heldGenParams == neededGenParams:
-    # This is an implicit + explicit generic procedure without all args passed,
-    # kicking back the sem'd symbol fixes #17212
-    # Uncertain the hackiness of this solution.
-    result = n
-  else:
-    result = explicitGenericInstantiation(c, n, s)
-    if result == n:
-      n[0] = copyTree(result[0])
+proc maybeInstantiateGeneric(c: PContext, n: PNode, s: PSym, doError: bool): PNode =
+  ## Attempts to instantiate generic proc symbol(s) with given parameters.
+  ## If instantiation causes errors; if `doError` is `true`, a type mismatch
+  ## error is given, otherwise `nil` is returned.
+  result = explicitGenericInstantiation(c, n, s, doError)
+  if result == n:
+    n[0] = copyTree(result[0])
 
-proc semSubscript(c: PContext, n: PNode, flags: TExprFlags): PNode =
+proc semSubscript(c: PContext, n: PNode, flags: TExprFlags, afterOverloading = false): PNode =
   ## returns nil if not a built-in subscript operator; also called for the
   ## checking of assignments
   result = nil
@@ -1768,7 +1756,7 @@ proc semSubscript(c: PContext, n: PNode, flags: TExprFlags): PNode =
       result.typ() = semStaticType(c, n[1], nil)
       return
     elif arr.n != nil:
-      return semSubscript(c, arr.n, flags)
+      return semSubscript(c, arr.n, flags, afterOverloading)
     else:
       arr = arr.base
 
@@ -1825,7 +1813,10 @@ proc semSubscript(c: PContext, n: PNode, flags: TExprFlags): PNode =
       of skProc, skFunc, skMethod, skConverter, skIterator:
         # type parameters: partial generic specialization
         n[0] = semSymGenericInstantiation(c, n[0], s)
-        result = maybeInstantiateGeneric(c, n, s)
+        result = maybeInstantiateGeneric(c, n, s, doError = afterOverloading)
+        if result != nil:
+          # check newly created sym/symchoice
+          result = semExpr(c, result, flags)
       of skMacro, skTemplate:
         if efInCall in flags:
           # We are processing macroOrTmpl[] in macroOrTmpl[](...) call.

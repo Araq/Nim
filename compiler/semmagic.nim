@@ -61,12 +61,12 @@ type
   SemAsgnMode = enum asgnNormal, noOverloadedSubscript, noOverloadedAsgn
 
 proc semAsgn(c: PContext, n: PNode; mode=asgnNormal): PNode
-proc semSubscript(c: PContext, n: PNode, flags: TExprFlags): PNode
+proc semSubscript(c: PContext, n: PNode, flags: TExprFlags, afterOverloading = false): PNode
 
 proc semArrGet(c: PContext; n: PNode; flags: TExprFlags): PNode =
   result = newNodeI(nkBracketExpr, n.info)
   for i in 1..<n.len: result.add(n[i])
-  result = semSubscript(c, result, flags)
+  result = semSubscript(c, result, flags, afterOverloading = true)
   if result.isNil:
     let x = copyTree(n)
     x[0] = newIdentNode(getIdent(c.cache, "[]"), n.info)
@@ -79,9 +79,20 @@ proc semArrGet(c: PContext; n: PNode; flags: TExprFlags): PNode =
           result.typ() = makeTypeFromExpr(c, copyTree(result))
           result.typ.flags.incl tfNonConstExpr
           return
-    bracketNotFoundError(c, x, flags)
-    #localError(c.config, n.info, "could not resolve: " & $n)
-    result = errorNode(c, n)
+    let s = # extract sym from first arg
+      if n.len > 1:
+        if n[1].kind == nkSym: n[1].sym
+        elif n[1].kind in nkSymChoices + {nkOpenSym} and n[1].len != 0:
+          n[1][0].sym
+        else: nil
+      else: nil
+    if s != nil and s.kind in routineKinds:
+      # this is a failed generic instantiation
+      # semSubscript should already error but this is better for cascading errors
+      result = explicitGenericInstError(c, n)
+    else:
+      bracketNotFoundError(c, x, flags)
+      result = errorNode(c, n)
 
 proc semArrPut(c: PContext; n: PNode; flags: TExprFlags): PNode =
   # rewrite `[]=`(a, i, x)  back to ``a[i] = x``.

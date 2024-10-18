@@ -864,7 +864,7 @@ proc explicitGenericInstError(c: PContext; n: PNode): PNode =
   localError(c.config, getCallLineInfo(n), errCannotInstantiateX % renderTree(n))
   result = n
 
-proc explicitGenericSym(c: PContext, n: PNode, s: PSym): PNode =
+proc explicitGenericSym(c: PContext, n: PNode, s: PSym, errors: var CandidateErrors, doError: bool): PNode =
   if s.kind in {skTemplate, skMacro}:
     internalError c.config, n.info, "cannot get explicitly instantiated symbol of " &
       (if s.kind == skTemplate: "template" else: "macro")
@@ -874,6 +874,11 @@ proc explicitGenericSym(c: PContext, n: PNode, s: PSym): PNode =
   if m.state != csMatch:
     # state is csMatch only if *all* generic params were matched,
     # including implicit parameters
+    if doError:
+      errors.add(CandidateError(
+        sym: s,
+        firstMismatch: m.firstMismatch,
+        diagnostics: m.diagnostics))
     return nil
   var newInst = generateInstance(c, s, m.bindings, n.info)
   newInst.typ.flags.excl tfUnresolved
@@ -897,42 +902,39 @@ proc setGenericParams(c: PContext, n, expectedParams: PNode) =
     else:
       n[i].typ() = e.typ.skipTypes({tyTypeDesc})
 
-proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym): PNode =
+proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym, doError: bool): PNode =
   assert n.kind == nkBracketExpr
   setGenericParams(c, n, s.ast[genericParamsPos])
   var s = s
   var a = n[0]
+  var errors: CandidateErrors = @[]
   if a.kind == nkSym:
     # common case; check the only candidate has the right
     # number of generic type parameters:
-    if s.ast[genericParamsPos].safeLen != n.len-1:
-      let expected = s.ast[genericParamsPos].safeLen
-      localError(c.config, getCallLineInfo(n), errGenerated, "cannot instantiate: '" & renderTree(n) &
-         "'; got " & $(n.len-1) & " typeof(s) but expected " & $expected)
-      return n
-    result = explicitGenericSym(c, n, s)
-    if result == nil: result = explicitGenericInstError(c, n)
+    result = explicitGenericSym(c, n, s, errors, doError)
+    if doError and result == nil:
+      notFoundError(c, n, errors)
   elif a.kind in {nkClosedSymChoice, nkOpenSymChoice}:
     # choose the generic proc with the proper number of type parameters.
-    # XXX I think this could be improved by reusing sigmatch.paramTypesMatch.
-    # It's good enough for now.
     result = newNodeI(a.kind, getCallLineInfo(n))
     for i in 0..<a.len:
       var candidate = a[i].sym
       if candidate.kind in {skProc, skMethod, skConverter,
                             skFunc, skIterator}:
-        # it suffices that the candidate has the proper number of generic
-        # type parameters:
-        if candidate.ast[genericParamsPos].safeLen == n.len-1:
-          let x = explicitGenericSym(c, n, candidate)
-          if x != nil: result.add(x)
+        let x = explicitGenericSym(c, n, candidate, errors, doError)
+        if x != nil: result.add(x)
     # get rid of nkClosedSymChoice if not ambiguous:
-    if result.len == 1 and a.kind == nkClosedSymChoice:
-      result = result[0]
-    elif result.len == 0: result = explicitGenericInstError(c, n)
-    # candidateCount != 1: return explicitGenericInstError(c, n)
+    if result.len == 0:
+      result = nil
+      if doError:
+        notFoundError(c, n, errors)
   else:
-    result = explicitGenericInstError(c, n)
+    # probably unreachable: we are trying to instantiate `a` which is not
+    # a sym/symchoice
+    if doError:
+      result = explicitGenericInstError(c, n)
+    else:
+      result = nil
 
 proc searchForBorrowProc(c: PContext, startScope: PScope, fn: PSym): tuple[s: PSym, state: TBorrowState] =
   # Searches for the fn in the symbol table. If the parameter lists are suitable
