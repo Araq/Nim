@@ -302,7 +302,7 @@ proc instantiateProcType(c: PContext, pt: LayeredIdTable,
         # the only way the default value might be inserted).
         param.ast = errorNode(c, def)
         # we know the node is empty, we need the actual type for error message
-        param.ast.typ = def.typ
+        param.ast.typ() = def.typ
       else:
         param.ast = fitNodePostMatch(c, typeToFit, converted)
       param.typ = result[i]

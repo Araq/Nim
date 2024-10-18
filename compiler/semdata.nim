@@ -195,29 +195,29 @@ proc getIntLitType*(c: PContext; literal: PNode): PType =
 proc setIntLitType*(c: PContext; result: PNode) =
   let i = result.intVal
   case c.config.target.intSize
-  of 8: result.typ = getIntLitType(c, result)
+  of 8: result.typ() = getIntLitType(c, result)
   of 4:
     if i >= low(int32) and i <= high(int32):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 2:
     if i >= low(int16) and i <= high(int16):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 1:
     # 8 bit CPUs are insane ...
     if i >= low(int8) and i <= high(int8):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int16) and i <= high(int16):
-      result.typ = getSysType(c.graph, result.info, tyInt16)
+      result.typ() = getSysType(c.graph, result.info, tyInt16)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   else:
     internalError(c.config, result.info, "invalid int size")
 
@@ -449,7 +449,7 @@ when false:
 proc makeStaticExpr*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkStaticExpr, n.info)
   result.sons = @[n]
-  result.typ = if n.typ != nil and n.typ.kind == tyStatic: n.typ
+  result.typ() = if n.typ != nil and n.typ.kind == tyStatic: n.typ
                else: newTypeS(tyStatic, c, n.typ)
 
 proc makeAndType*(c: PContext, t1, t2: PType): PType =
@@ -508,7 +508,7 @@ proc errorType*(c: PContext): PType =
 
 proc errorNode*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkEmpty, n.info)
-  result.typ = errorType(c)
+  result.typ() = errorType(c)
 
 # These mimic localError
 template localErrorNode*(c: PContext, n: PNode, info: TLineInfo, msg: TMsgKind, arg: string): PNode =
@@ -564,7 +564,7 @@ proc symFromType*(c: PContext; t: PType, info: TLineInfo): PSym =
 
 proc symNodeFromType*(c: PContext, t: PType, info: TLineInfo): PNode =
   result = newSymNode(symFromType(c, t, info), info)
-  result.typ = makeTypeDesc(c, t)
+  result.typ() = makeTypeDesc(c, t)
 
 proc markIndirect*(c: PContext, s: PSym) {.inline.} =
   if s.kind in {skProc, skFunc, skConverter, skMethod, skIterator}:

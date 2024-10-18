@@ -356,7 +356,7 @@ proc transformAsgn(c: PTransf, n: PNode): PNode =
     # given tuple type
     newTupleConstr[i] = def[0]
 
-  newTupleConstr.typ = rhs.typ
+  newTupleConstr.typ() = rhs.typ
 
   let asgnNode = newTransNode(nkAsgn, n.info, 2)
   asgnNode[0] = transform(c, n[0])
@@ -487,9 +487,9 @@ proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false)
       n[0][0] = m[0]
       result = n[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, c.idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, c.idgen)
   of nkHiddenStdConv, nkHiddenSubConv, nkConv:
     var m = n[0][1]
     if m.kind in kinds:
@@ -497,9 +497,9 @@ proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false)
       n[0][1] = m[0]
       result = n[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, c.idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, c.idgen)
   else:
     if n[0].kind in kinds and
         not (n[0][0].kind == nkSym and n[0][0].sym.kind == skForVar and
@@ -513,7 +513,7 @@ proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false)
       # addr ( deref ( x )) --> x
       result = n[0][0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
 
 proc generateThunk(c: PTransf; prc: PNode, dest: PType): PNode =
   ## Converts 'prc' into '(thunk, nil)' so that it's compatible with
@@ -572,7 +572,7 @@ proc transformConv(c: PTransf, n: PNode): PNode =
     else:
       result = transform(c, n[1])
       #result = transformSons(c, n)
-      result.typ = takeType(n.typ, n[1].typ, c.graph, c.idgen)
+      result.typ() = takeType(n.typ, n[1].typ, c.graph, c.idgen)
       #echo n.info, " came here and produced ", typeToString(result.typ),
       #   " from ", typeToString(n.typ), " and ", typeToString(n[1].typ)
   of tyCstring:
@@ -600,7 +600,7 @@ proc transformConv(c: PTransf, n: PNode): PNode =
         result[0] = transform(c, n[1])
       else:
         result = transform(c, n[1])
-        result.typ = n.typ
+        result.typ() = n.typ
     else:
       result = transformSons(c, n)
   of tyObject:
@@ -613,7 +613,7 @@ proc transformConv(c: PTransf, n: PNode): PNode =
       result[0] = transform(c, n[1])
     else:
       result = transform(c, n[1])
-      result.typ = n.typ
+      result.typ() = n.typ
   of tyGenericParam, tyOrdinal:
     result = transform(c, n[1])
     # happens sometimes for generated assignments, etc.
@@ -833,7 +833,7 @@ proc transformCase(c: PTransf, n: PNode): PNode =
         # as an expr
         let kind = if n.typ != nil: nkIfExpr else: nkIfStmt
         ifs = newTransNode(kind, it.info, 0)
-        ifs.typ = n.typ
+        ifs.typ() = n.typ
       ifs.add(e)
     of nkElse:
       if ifs == nil: result.add(e)
@@ -941,7 +941,7 @@ proc transformExceptBranch(c: PTransf, n: PNode): PNode =
     let convNode = newTransNode(nkHiddenSubConv, n[1].info, 2)
     convNode[0] = newNodeI(nkEmpty, n.info)
     convNode[1] = excCall
-    convNode.typ = excTypeNode.typ.toRef(c.idgen)
+    convNode.typ() = excTypeNode.typ.toRef(c.idgen)
     # -> let exc = ...
     let identDefs = newTransNode(nkIdentDefs, n[1].info, 3)
     identDefs[0] = n[0][2]
@@ -998,7 +998,7 @@ proc transformDerefBlock(c: PTransf, n: PNode): PNode =
   # We transform (block: x)[] to (block: x[])
   let e0 = n[0]
   result = shallowCopy(e0)
-  result.typ = n.typ
+  result.typ() = n.typ
   for i in 0 ..< e0.len - 1:
     result[i] = e0[i]
   result[e0.len-1] = newTreeIT(nkHiddenDeref, n.info, n.typ, e0[e0.len-1])
@@ -1202,7 +1202,7 @@ proc liftDeferAux(n: PNode) =
           tryStmt.add deferPart
           n[i] = tryStmt
           n.sons.setLen(i+1)
-          n.typ = tryStmt.typ
+          n.typ() = tryStmt.typ
           goOn = true
           break
   for i in 0..n.safeLen-1:

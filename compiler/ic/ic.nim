@@ -838,7 +838,7 @@ proc loadNodes*(c: var PackedDecoder; g: var PackedModuleGraph; thisModule: int;
   of nkSym:
     result.sym = loadSym(c, g, thisModule, PackedItemId(module: LitId(0), item: tree[n].soperand))
     if result.typ == nil:
-      result.typ = result.sym.typ
+      result.typ() = result.sym.typ
   of externIntLit:
     result.intVal = g[thisModule].fromDisk.numbers[n.litId]
   of nkStrLit..nkTripleStrLit:
@@ -852,7 +852,7 @@ proc loadNodes*(c: var PackedDecoder; g: var PackedModuleGraph; thisModule: int;
     transitionNoneToSym(result)
     result.sym = loadSym(c, g, thisModule, PackedItemId(module: n1.litId, item: tree[n2].soperand))
     if result.typ == nil:
-      result.typ = result.sym.typ
+      result.typ() = result.sym.typ
   else:
     for n0 in sonsReadonly(tree, n):
       result.addAllowNil loadNodes(c, g, thisModule, tree, n0)

@@ -591,7 +591,7 @@ type
   TNode*{.final, acyclic.} = object # on a 32bit machine, this takes 32 bytes
     when defined(useNodeIds):
       id*: int
-    typ*: PType
+    typField: PType
     info*: TLineInfo
     flags*: TNodeFlags
     case kind*: TNodeKind
@@ -813,6 +813,9 @@ type
     impUnknown, impNo, impYes
 
 template nodeId(n: PNode): int = cast[int](n)
+
+template typ*(n: PNode): PType =
+  n.typField
 
 proc owner*(s: PSym|PType): PSym {.inline.} =
   result = s.ownerField
@@ -1138,7 +1141,7 @@ proc newNodeIT*(kind: TNodeKind, info: TLineInfo, typ: PType): PNode =
   ## new node with line info, type, and no children
   result = newNode(kind)
   result.info = info
-  result.typ = typ
+  result.typ() = typ
 
 proc newNode*(kind: TNodeKind, info: TLineInfo): PNode =
   ## new node with line info, no type, and no children
@@ -1284,13 +1287,13 @@ proc newIdentNode*(ident: PIdent, info: TLineInfo): PNode =
 proc newSymNode*(sym: PSym): PNode =
   result = newNode(nkSym)
   result.sym = sym
-  result.typ = sym.typ
+  result.typ() = sym.typ
   result.info = sym.info
 
 proc newSymNode*(sym: PSym, info: TLineInfo): PNode =
   result = newNode(nkSym)
   result.sym = sym
-  result.typ = sym.typ
+  result.typ() = sym.typ
   result.info = info
 
 proc newOpenSym*(n: PNode): PNode {.inline.} =
@@ -1370,7 +1373,7 @@ proc newIntTypeNode*(intVal: BiggestInt, typ: PType): PNode =
     result = newNode(nkIntLit)
   else: raiseAssert $kind
   result.intVal = intVal
-  result.typ = typ
+  result.typ() = typ
 
 proc newIntTypeNode*(intVal: Int128, typ: PType): PNode =
   # XXX: introduce range check
@@ -1672,7 +1675,7 @@ proc copyNode*(src: PNode): PNode =
     return nil
   result = newNode(src.kind)
   result.info = src.info
-  result.typ = src.typ
+  result.typ() = src.typ
   result.flags = src.flags * PersistentNodeFlags
   result.comment = src.comment
   when defined(useNodeIds):
@@ -1690,7 +1693,7 @@ proc copyNode*(src: PNode): PNode =
 
 template transitionNodeKindCommon(k: TNodeKind) =
   let obj {.inject.} = n[]
-  n[] = TNode(kind: k, typ: obj.typ, info: obj.info, flags: obj.flags)
+  n[] = TNode(kind: k, typField: n.typ, info: obj.info, flags: obj.flags)
   # n.comment = obj.comment # shouldn't be needed, the address doesnt' change
   when defined(useNodeIds):
     n.id = obj.id
@@ -1741,7 +1744,7 @@ template copyNodeImpl(dst, src, processSonsStmt) =
   dst.info = src.info
   when defined(nimsuggest):
     result.endInfo = src.endInfo
-  dst.typ = src.typ
+  dst.typ() = src.typ
   dst.flags = src.flags * PersistentNodeFlags
   dst.comment = src.comment
   when defined(useNodeIds):

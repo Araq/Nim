@@ -609,7 +609,7 @@ proc rawClosureCreation(owner: PSym;
       let unowned = c.unownedEnvVars[owner.id]
       assert unowned != nil
       let env2 = copyTree(env)
-      env2.typ = unowned.typ
+      env2.typ() = unowned.typ
       result.add newAsgnStmt(unowned, env2, env.info)
       createTypeBoundOpsLL(d.graph, unowned.typ, env.info, d.idgen, owner)
 
@@ -786,7 +786,7 @@ proc liftCapturedVars(n: PNode; owner: PSym; d: var DetectionPass;
       let oldInContainer = c.inContainer
       c.inContainer = 0
       let m = newSymNode(n[namePos].sym)
-      m.typ = n.typ
+      m.typ() = n.typ
       result = liftCapturedVars(m, owner, d, c)
       c.inContainer = oldInContainer
   of nkHiddenStdConv:

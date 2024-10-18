@@ -1685,7 +1685,7 @@ proc skipHidden*(n: PNode): PNode =
 
 proc skipConvTakeType*(n: PNode): PNode =
   result = n.skipConv
-  result.typ = n.typ
+  result.typ() = n.typ
 
 proc isEmptyContainer*(t: PType): bool =
   case t.kind
@@ -1725,7 +1725,7 @@ proc skipHiddenSubConv*(n: PNode; g: ModuleGraph; idgen: IdGenerator): PNode =
       result = n
     else:
       result = copyTree(result)
-      result.typ = dest
+      result.typ() = dest
   else:
     result = n
 

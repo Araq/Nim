@@ -1626,7 +1626,7 @@ proc genSeqConstr(p: BProc, n: PNode, d: var TLoc) =
 proc genArrToSeq(p: BProc, n: PNode, d: var TLoc) =
   var elem, arr: TLoc
   if n[1].kind == nkBracket:
-    n[1].typ = n.typ
+    n[1].typ() = n.typ
     genSeqConstr(p, n[1], d)
     return
   if d.k == locNone:
@@ -3077,7 +3077,7 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
       # addr ( deref ( x )) --> x
       var x = n[0][0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        x.typ = n.typ
+        x.typ() = n.typ
       expr(p, x, d)
       return
     genAddr(p, n, d)

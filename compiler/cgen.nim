@@ -97,7 +97,7 @@ proc t(a: TLoc): PType {.inline.} =
 
 proc lodeTyp(t: PType): PNode =
   result = newNode(nkEmpty)
-  result.typ = t
+  result.typ() = t
 
 proc isSimpleConst(typ: PType): bool =
   let t = skipTypes(typ, abstractVar)

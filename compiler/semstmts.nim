@@ -112,11 +112,11 @@ proc semWhile(c: PContext, n: PNode; flags: TExprFlags): PNode =
   dec(c.p.nestedLoopCounter)
   closeScope(c)
   if n[1].typ == c.enforceVoidContext:
-    result.typ = c.enforceVoidContext
+    result.typ() = c.enforceVoidContext
   elif efInTypeof in flags:
-    result.typ = n[1].typ
+    result.typ() = n[1].typ
   elif implicitlyDiscardable(n[1]):
-    result[1].typ = c.enforceVoidContext
+    result[1].typ() = c.enforceVoidContext
 
 proc semProc(c: PContext, n: PNode): PNode
 
@@ -275,7 +275,7 @@ proc fixNilType(c: PContext; n: PNode) =
   elif n.kind in {nkStmtList, nkStmtListExpr}:
     n.transitionSonsKind(nkStmtList)
     for it in n: fixNilType(c, it)
-  n.typ = nil
+  n.typ() = nil
 
 proc discardCheck(c: PContext, result: PNode, flags: TExprFlags) =
   if c.matchedConcept != nil or efInTypeof in flags: return
@@ -331,14 +331,14 @@ proc semIf(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil):
     for it in n: discardCheck(c, it.lastSon, flags)
     result.transitionSonsKind(nkIfStmt)
     # propagate any enforced VoidContext:
-    if typ == c.enforceVoidContext: result.typ = c.enforceVoidContext
+    if typ == c.enforceVoidContext: result.typ() = c.enforceVoidContext
   else:
     for it in n:
       let j = it.len-1
       if not endsInNoReturn(it[j]):
         it[j] = fitNode(c, typ, it[j], it[j].info)
     result.transitionSonsKind(nkIfExpr)
-    result.typ = typ
+    result.typ() = typ
 
 proc semTry(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil): PNode =
   var check = initIntSet()
@@ -438,7 +438,7 @@ proc semTry(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil)
     discardCheck(c, n[0], flags)
     for i in 1..<n.len: discardCheck(c, n[i].lastSon, flags)
     if typ == c.enforceVoidContext:
-      result.typ = c.enforceVoidContext
+      result.typ() = c.enforceVoidContext
   else:
     if n.lastSon.kind == nkFinally: discardCheck(c, n.lastSon.lastSon, flags)
     if not endsInNoReturn(n[0]):
@@ -448,7 +448,7 @@ proc semTry(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil)
       let j = it.len-1
       if not endsInNoReturn(it[j]):
         it[j] = fitNode(c, typ, it[j], it[j].info)
-    result.typ = typ
+    result.typ() = typ
 
 proc fitRemoveHiddenConv(c: PContext, typ: PType, n: PNode): PNode =
   result = fitNode(c, typ, n, n.info)
@@ -457,7 +457,7 @@ proc fitRemoveHiddenConv(c: PContext, typ: PType, n: PNode): PNode =
     if r1.kind in {nkCharLit..nkUInt64Lit} and typ.skipTypes(abstractRange).kind in {tyFloat..tyFloat128}:
       result = newFloatNode(nkFloatLit, BiggestFloat r1.intVal)
       result.info = n.info
-      result.typ = typ
+      result.typ() = typ
       if not floatRangeCheck(result.floatVal, typ):
         localError(c.config, n.info, errFloatToString % [$result.floatVal, typeToString(typ)])
     elif r1.kind == nkSym and typ.skipTypes(abstractRange).kind == tyCstring:
@@ -605,7 +605,7 @@ proc fillPartialObject(c: PContext; n: PNode; typ: PType) =
       obj.n.add newSymNode(field)
       n[0] = makeDeref x
       n[1] = newSymNode(field)
-      n.typ = field.typ
+      n.typ() = field.typ
     else:
       localError(c.config, n.info, "implicit object field construction " &
         "requires a .partial object, but got " & typeToString(obj))
@@ -1291,9 +1291,9 @@ proc semFor(c: PContext, n: PNode; flags: TExprFlags): PNode =
     result = semForVars(c, n, flags)
   # propagate any enforced VoidContext:
   if n[^1].typ == c.enforceVoidContext:
-    result.typ = c.enforceVoidContext
+    result.typ() = c.enforceVoidContext
   elif efInTypeof in flags:
-    result.typ = result.lastSon.typ
+    result.typ() = result.lastSon.typ
   closeScope(c)
 
 proc semCase(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil): PNode =
@@ -1373,14 +1373,14 @@ proc semCase(c: PContext, n: PNode; flags: TExprFlags; expectedType: PType = nil
     for i in 1..<n.len: discardCheck(c, n[i].lastSon, flags)
     # propagate any enforced VoidContext:
     if typ == c.enforceVoidContext:
-      result.typ = c.enforceVoidContext
+      result.typ() = c.enforceVoidContext
   else:
     for i in 1..<n.len:
       var it = n[i]
       let j = it.len-1
       if not endsInNoReturn(it[j]):
         it[j] = fitNode(c, typ, it[j], it[j].info)
-    result.typ = typ
+    result.typ() = typ
 
 proc semRaise(c: PContext, n: PNode): PNode =
   result = n
@@ -2002,7 +2002,7 @@ proc semInferredLambda(c: PContext, pt: LayeredIdTable, n: PNode): PNode =
   popOwner(c)
   closeScope(c)
   if optOwnedRefs in c.config.globalOptions and result.typ != nil:
-    result.typ = makeVarType(c, result.typ, tyOwned)
+    result.typ() = makeVarType(c, result.typ, tyOwned)
   # alternative variant (not quite working):
   # var prc = arg[0].sym
   # let inferred = c.semGenerateInstance(c, prc, m.bindings, arg.info)
@@ -2608,9 +2608,9 @@ proc semProcAux(c: PContext, n: PNode, kind: TSymKind,
     c.patterns.add(s)
   if isAnon:
     n.transitionSonsKind(nkLambda)
-    result.typ = s.typ
+    result.typ() = s.typ
     if optOwnedRefs in c.config.globalOptions:
-      result.typ = makeVarType(c, result.typ, tyOwned)
+      result.typ() = makeVarType(c, result.typ, tyOwned)
   elif isTopLevel(c) and s.kind != skIterator and s.typ.callConv == ccClosure:
     localError(c.config, s.info, "'.closure' calling convention for top level routines is invalid")
 
@@ -2650,7 +2650,7 @@ proc semIterator(c: PContext, n: PNode): PNode =
   if n[bodyPos].kind == nkEmpty and s.magic == mNone and c.inConceptDecl == 0:
     localError(c.config, n.info, errImplOfXexpected % s.name.s)
   if optOwnedRefs in c.config.globalOptions and result.typ != nil:
-    result.typ = makeVarType(c, result.typ, tyOwned)
+    result.typ() = makeVarType(c, result.typ, tyOwned)
     result.typ.callConv = ccClosure
 
 proc semProc(c: PContext, n: PNode): PNode =
@@ -2781,7 +2781,7 @@ proc semPragmaBlock(c: PContext, n: PNode; expectedType: PType = nil): PNode =
   n[1] = semExpr(c, n[1], expectedType = expectedType)
   dec c.inUncheckedAssignSection, inUncheckedAssignSection
   result = n
-  result.typ = n[1].typ
+  result.typ() = n[1].typ
   for i in 0..<pragmaList.len:
     case whichPragma(pragmaList[i])
     of wLine: setInfoRecursive(result, pragmaList[i].info)
@@ -2866,14 +2866,14 @@ proc semStmtList(c: PContext, n: PNode, flags: TExprFlags, expectedType: PType =
       else: discard
     if n[i].typ == c.enforceVoidContext: #or usesResult(n[i]):
       voidContext = true
-      n.typ = c.enforceVoidContext
+      n.typ() = c.enforceVoidContext
     if i == last and (n.len == 1 or ({efWantValue, efInTypeof} * flags != {})):
-      n.typ = n[i].typ
+      n.typ() = n[i].typ
       if not isEmptyType(n.typ): n.transitionSonsKind(nkStmtListExpr)
     elif i != last or voidContext:
       discardCheck(c, n[i], flags)
     else:
-      n.typ = n[i].typ
+      n.typ() = n[i].typ
       if not isEmptyType(n.typ): n.transitionSonsKind(nkStmtListExpr)
     var m = n[i]
     while m.kind in {nkStmtListExpr, nkStmtList} and m.len > 0: # from templates

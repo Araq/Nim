@@ -1473,9 +1473,9 @@ proc canElimAddr(n: PNode; idgen: IdGenerator): PNode =
       result = copyNode(n[0])
       result.add m[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
   of nkHiddenStdConv, nkHiddenSubConv, nkConv:
     var m = n[0][1]
     if m.kind in {nkDerefExpr, nkHiddenDeref}:
@@ -1484,9 +1484,9 @@ proc canElimAddr(n: PNode; idgen: IdGenerator): PNode =
       result.add n[0][0]
       result.add m[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
   else:
     if n[0].kind in {nkDerefExpr, nkHiddenDeref}:
       # addr ( deref ( x )) --> x
@@ -1679,7 +1679,7 @@ proc genAsgn(c: PCtx; le, ri: PNode; requiresCopy: bool) =
 
 proc genTypeLit(c: PCtx; t: PType; dest: var TDest) =
   var n = newNode(nkType)
-  n.typ = t
+  n.typ() = t
   genLit(c, n, dest)
 
 proc isEmptyBody(n: PNode): bool =
@@ -1848,7 +1848,7 @@ proc genCheckedObjAccessAux(c: PCtx; n: PNode; dest: var TDest; flags: TGenFlags
   let fieldName = $accessExpr[1]
   let msg = genFieldDefect(c.config, fieldName, disc.sym)
   let strLit = newStrNode(msg, accessExpr[1].info)
-  strLit.typ = strType
+  strLit.typ() = strType
   c.genLit(strLit, msgReg)
   c.gABC(n, opcInvalidField, msgReg, discVal)
   c.freeTemp(discVal)

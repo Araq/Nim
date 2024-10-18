@@ -102,7 +102,7 @@ proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
                renderTree(arg, {renderNoComments}))
     # error correction:
     result = copyTree(arg)
-    result.typ = formal
+    result.typ() = formal
   elif arg.kind in nkSymChoices and formal.skipTypes(abstractInst).kind == tyEnum:
     # Pick the right 'sym' from the sym choice by looking at 'formal' type:
     result = nil
@@ -116,7 +116,7 @@ proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
       typeMismatch(c.config, info, formal, arg.typ, arg)
       # error correction:
       result = copyTree(arg)
-      result.typ = formal
+      result.typ() = formal
     else:
       result = fitNodePostMatch(c, formal, result)
 
@@ -470,7 +470,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
                    renderTree(result, {renderNoComments}))
         result = newSymNode(errorSym(c, result))
       else:
-        result.typ = makeTypeDesc(c, typ)
+        result.typ() = makeTypeDesc(c, typ)
       #result = symNodeFromType(c, typ, n.info)
     else:
       if s.ast[genericParamsPos] != nil and retType.isMetaType:
@@ -612,7 +612,7 @@ proc defaultFieldsForTuple(c: PContext, recNode: PNode, hasDefault: var bool, ch
                       newNodeIT(nkType, recNode.info, asgnType)
                     )
       asgnExpr.flags.incl nfSkipFieldChecking
-      asgnExpr.typ = recNode.typ
+      asgnExpr.typ() = recNode.typ
       result.add newTree(nkExprColonExpr, recNode, asgnExpr)
   else:
     raiseAssert "unreachable"
@@ -634,7 +634,7 @@ proc defaultFieldsForTheUninitialized(c: PContext, recNode: PNode, checkDefault:
       if checkDefault: # don't add defaults when checking whether a case branch has default fields
         return
       defaultValue = newIntNode(nkIntLit#[c.graph]#, 0)
-      defaultValue.typ = discriminator.typ
+      defaultValue.typ() = discriminator.typ
     selectedBranch = recNode.pickCaseBranchIndex defaultValue
     defaultValue.flags.incl nfSkipFieldChecking
     result.add newTree(nkExprColonExpr, discriminator, defaultValue)
@@ -647,7 +647,7 @@ proc defaultFieldsForTheUninitialized(c: PContext, recNode: PNode, checkDefault:
     elif recType.kind in {tyObject, tyArray, tyTuple}:
       let asgnExpr = defaultNodeField(c, recNode, recNode.typ, checkDefault)
       if asgnExpr != nil:
-        asgnExpr.typ = recNode.typ
+        asgnExpr.typ() = recNode.typ
         asgnExpr.flags.incl nfSkipFieldChecking
         result.add newTree(nkExprColonExpr, recNode, asgnExpr)
   else:
@@ -660,7 +660,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
     let child = defaultFieldsForTheUninitialized(c, aTypSkip.n, checkDefault)
     if child.len > 0:
       var asgnExpr = newTree(nkObjConstr, newNodeIT(nkType, a.info, aTyp))
-      asgnExpr.typ = aTyp
+      asgnExpr.typ() = aTyp
       asgnExpr.sons.add child
       result = semExpr(c, asgnExpr)
     else:
@@ -675,7 +675,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
               semExprWithType(c, child),
               node
                 ))
-      result.typ = aTyp
+      result.typ() = aTyp
     else:
       result = nil
   of tyTuple:
@@ -684,7 +684,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
       let children = defaultFieldsForTuple(c, aTypSkip.n, hasDefault, checkDefault)
       if hasDefault and children.len > 0:
         result = newNodeI(nkTupleConstr, a.info)
-        result.typ = aTyp
+        result.typ() = aTyp
         result.sons.add children
         result = semExpr(c, result)
       else:

@@ -1592,7 +1592,7 @@ proc genAddr(p: PProc, n: PNode, r: var TCompRes) =
       if n.kind == nkHiddenAddr:
         x = n[0][0]
         if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-          x.typ = n.typ
+          x.typ() = n.typ
       gen(p, x, r)
     of nkHiddenAddr:
       gen(p, n[0], r)

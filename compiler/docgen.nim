@@ -1320,7 +1320,7 @@ proc documentEffect(cache: IdentCache; n, x: PNode, effectType: TSpecialWord, id
       if t.startsWith("ref "): t = substr(t, 4)
       effects[i] = newIdentNode(getIdent(cache, t), n.info)
       # set the type so that the following analysis doesn't screw up:
-      effects[i].typ = real[i].typ
+      effects[i].typ() = real[i].typ
 
     result = newTreeI(nkExprColonExpr, n.info,
       newIdentNode(getIdent(cache, $effectType), n.info), effects)

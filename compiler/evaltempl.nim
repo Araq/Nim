@@ -182,7 +182,7 @@ proc wrapInComesFrom*(info: TLineInfo; sym: PSym; res: PNode): PNode =
     d.add newSymNode(sym, info)
     result.add d
     result.add res
-    result.typ = res.typ
+    result.typ() = res.typ
 
 proc evalTemplate*(n: PNode, tmpl, genSymOwner: PSym;
                    conf: ConfigRef;
