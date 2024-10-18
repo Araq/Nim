@@ -56,7 +56,6 @@ type
     contSyms, breakSyms: seq[PSym]  # to transform 'continue' and 'break'
     deferDetected, tooEarly: bool
     isIntroducingNewLocalVars: bool  # true if we are in `introducingNewLocalVars` (don't transform yields)
-    inAddr: bool
     flags: TransformFlags
     graph: ModuleGraph
     idgen: IdGenerator
@@ -103,12 +102,12 @@ proc newTemp(c: PTransf, typ: PType, info: TLineInfo): PNode =
   else:
     result = newSymNode(r)
 
-proc transform(c: PTransf, n: PNode): PNode
+proc transform(c: PTransf, n: PNode, noConstFold = false): PNode
 
-proc transformSons(c: PTransf, n: PNode): PNode =
+proc transformSons(c: PTransf, n: PNode, noConstFold = false): PNode =
   result = newTransNode(n)
   for i in 0..<n.len:
-    result[i] = transform(c, n[i])
+    result[i] = transform(c, n[i], noConstFold)
 
 proc newAsgnStmt(c: PTransf, kind: TNodeKind, le: PNode, ri: PNode; isFirstWrite: bool): PNode =
   result = newTransNode(kind, ri.info, 2)
@@ -481,8 +480,8 @@ proc transformYield(c: PTransf, n: PNode): PNode =
     result.add(introduceNewLocalVars(c, c.transCon.forLoopBody))
     c.isIntroducingNewLocalVars = false
 
-proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds): PNode =
-  result = transformSons(c, n)
+proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false): PNode =
+  result = transformSons(c, n, noConstFold = isAddr)
   # inlining of 'var openarray' iterators; bug #19977
   if n.typ.kind != tyOpenArray and (c.graph.config.backend == backendCpp or sfCompileToCpp in c.module.flags): return
   var n = result
@@ -1010,7 +1009,7 @@ proc transformDerefBlock(c: PTransf, n: PNode): PNode =
     result[i] = e0[i]
   result[e0.len-1] = newTreeIT(nkHiddenDeref, n.info, n.typ, e0[e0.len-1])
 
-proc transform(c: PTransf, n: PNode): PNode =
+proc transform(c: PTransf, n: PNode, noConstFold = false): PNode =
   when false:
     var oldDeferAnchor: PNode
     if n.kind in {nkElifBranch, nkOfBranch, nkExceptBranch, nkElifExpr,
@@ -1077,12 +1076,9 @@ proc transform(c: PTransf, n: PNode): PNode =
   of nkCallKinds:
     result = transformCall(c, n)
   of nkHiddenAddr:
-    result = transformAddrDeref(c, n, {nkHiddenDeref})
+    result = transformAddrDeref(c, n, {nkHiddenDeref}, isAddr = true)
   of nkAddr:
-    let oldInAddr = c.inAddr
-    c.inAddr = true
-    result = transformAddrDeref(c, n, {nkDerefExpr, nkHiddenDeref})
-    c.inAddr = oldInAddr
+    result = transformAddrDeref(c, n, {nkDerefExpr, nkHiddenDeref}, isAddr = true)
   of nkDerefExpr:
     result = transformAddrDeref(c, n, {nkAddr, nkHiddenAddr})
   of nkHiddenDeref:
@@ -1162,7 +1158,7 @@ proc transform(c: PTransf, n: PNode): PNode =
   let exprIsPointerCast = n.kind in {nkCast, nkConv, nkHiddenStdConv} and
                           n.typ != nil and
                           n.typ.kind == tyPointer
-  if not exprIsPointerCast and not c.inAddr:
+  if not exprIsPointerCast and not noConstFold:
     var cnst = getConstExpr(c.module, result, c.idgen, c.graph)
     # we inline constants if they are not complex constants:
     if cnst != nil and not dontInlineConstant(n, cnst):
