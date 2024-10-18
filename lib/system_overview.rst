@@ -9,6 +9,7 @@ is in separate files:
 * `assertions <assertions.html>`_
 * `dollars <dollars.html>`_
 * `ctypes <ctypes.html>`_
+* `repr_v2 <repr_v2.html>`_
 
 
 Here is a short overview of the most commonly used functions from the
