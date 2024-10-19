@@ -14,6 +14,11 @@ rounding guarantees (via the
 
 ## Standard library additions and changes
 
+[//]: # "Additions:"
+- `setutils.symmetricDifference` along with its operator version
+  `` setutils.`-+-` `` and in-place version `setutils.toggle` have been added
+  to more efficiently calculate the symmetric difference of bitsets.
+
 [//]: # "Changes:"
 - `std/math` The `^` symbol now supports floating-point as exponent in addition to the Natural type.
 

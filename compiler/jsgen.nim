@@ -2458,6 +2458,7 @@ proc genMagic(p: PProc, n: PNode, r: var TCompRes) =
   of mMulSet: binaryExpr(p, n, r, "SetMul", "SetMul($1, $2)")
   of mPlusSet: binaryExpr(p, n, r, "SetPlus", "SetPlus($1, $2)")
   of mMinusSet: binaryExpr(p, n, r, "SetMinus", "SetMinus($1, $2)")
+  of mXorSet: binaryExpr(p, n, r, "SetXor", "SetXor($1, $2)")
   of mIncl: binaryExpr(p, n, r, "", "$1[$2] = true")
   of mExcl: binaryExpr(p, n, r, "", "delete $1[$2]")
   of mInSet:

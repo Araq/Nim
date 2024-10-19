@@ -2044,7 +2044,7 @@ proc genInOp(p: BProc, e: PNode, d: var TLoc) =
 
 proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   const
-    lookupOpr: array[mLeSet..mMinusSet, string] = [
+    lookupOpr: array[mLeSet..mXorSet, string] = [
       "for ($1 = 0; $1 < $2; $1++) { $n" &
       "  $3 = (($4[$1] & ~ $5[$1]) == 0);$n" &
       "  if (!$3) break;}$n",
@@ -2054,7 +2054,8 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       "if ($3) $3 = (#nimCmpMem($4, $5, $2) != 0);$n",
       "&",
       "|",
-      "& ~"]
+      "& ~",
+      "^"]
   var a, b: TLoc
   var i: TLoc
   var setType = skipTypes(e[1].typ, abstractVar)
@@ -2085,6 +2086,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     of mMulSet: binaryExpr(p, e, d, "($1 & $2)")
     of mPlusSet: binaryExpr(p, e, d, "($1 | $2)")
     of mMinusSet: binaryExpr(p, e, d, "($1 & ~ $2)")
+    of mXorSet: binaryExpr(p, e, d, "($1 ^ $2)")
     of mInSet:
       genInOp(p, e, d)
     else: internalError(p.config, e.info, "genSetOp()")
@@ -2112,7 +2114,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       var a = initLocExpr(p, e[1])
       var b = initLocExpr(p, e[2])
       putIntoDest(p, d, e, ropecg(p.module, "(#nimCmpMem($1, $2, $3)==0)", [a.rdCharLoc, b.rdCharLoc, size]))
-    of mMulSet, mPlusSet, mMinusSet:
+    of mMulSet, mPlusSet, mMinusSet, mXorSet:
       # we inline the simple for loop for better code generation:
       i = getTemp(p, getSysType(p.module.g.graph, unknownLineInfo, tyInt)) # our counter
       a = initLocExpr(p, e[1])
@@ -2548,7 +2550,7 @@ proc genMagicExpr(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   of mSetLengthStr: genSetLengthStr(p, e, d)
   of mSetLengthSeq: genSetLengthSeq(p, e, d)
   of mIncl, mExcl, mCard, mLtSet, mLeSet, mEqSet, mMulSet, mPlusSet, mMinusSet,
-     mInSet:
+     mInSet, mXorSet:
     genSetOp(p, e, d, op)
   of mNewString, mNewStringOfCap, mExit, mParseBiggestFloat:
     var opr = e[0].sym

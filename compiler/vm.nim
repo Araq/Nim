@@ -1276,6 +1276,11 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       createSet(regs[ra])
       move(regs[ra].node.sons,
            nimsets.diffSets(c.config, regs[rb].node, regs[rc].node).sons)
+    of opcXorSet:
+      decodeBC(rkNode)
+      createSet(regs[ra])
+      move(regs[ra].node.sons,
+           nimsets.symdiffSets(c.config, regs[rb].node, regs[rc].node).sons)
     of opcConcatStr:
       decodeBC(rkNode)
       createStr regs[ra]

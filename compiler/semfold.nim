@@ -302,6 +302,9 @@ proc evalOp(m: TMagic, n, a, b, c: PNode; idgen: IdGenerator; g: ModuleGraph): P
   of mMinusSet:
     result = nimsets.diffSets(g.config, a, b)
     result.info = n.info
+  of mXorSet:
+    result = nimsets.symdiffSets(g.config, a, b)
+    result.info = n.info
   of mConStrStr: result = newStrNodeT(getStrOrChar(a) & getStrOrChar(b), n, g)
   of mInSet: result = newIntNodeT(toInt128(ord(inSet(a, b))), n, idgen, g)
   of mRepr:

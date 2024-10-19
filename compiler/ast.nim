@@ -491,7 +491,7 @@ type
     mAnd, mOr,
     mImplies, mIff, mExists, mForall, mOld,
     mEqStr, mLeStr, mLtStr,
-    mEqSet, mLeSet, mLtSet, mMulSet, mPlusSet, mMinusSet,
+    mEqSet, mLeSet, mLtSet, mMulSet, mPlusSet, mMinusSet, mXorSet,
     mConStrStr, mSlice,
     mDotDot, # this one is only necessary to give nice compile time warnings
     mFields, mFieldPairs, mOmpParFor,
@@ -559,7 +559,7 @@ const
     mStrToStr, mEnumToStr,
     mAnd, mOr,
     mEqStr, mLeStr, mLtStr,
-    mEqSet, mLeSet, mLtSet, mMulSet, mPlusSet, mMinusSet,
+    mEqSet, mLeSet, mLtSet, mMulSet, mPlusSet, mMinusSet, mXorSet,
     mConStrStr, mAppendStrCh, mAppendStrStr, mAppendSeqElem,
     mInSet, mRepr, mOpenArrayToSeq}
 
