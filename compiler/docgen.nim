@@ -830,7 +830,7 @@ proc getName(n: PNode): string =
   of nkAccQuoted:
     result = "`"
     for i in 0..<n.len: result.add(getName(n[i]))
-    result = "`"
+    result.add('`')
   of nkOpenSymChoice, nkClosedSymChoice, nkOpenSym:
     result = getName(n[0])
   else:
