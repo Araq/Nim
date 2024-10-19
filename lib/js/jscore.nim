@@ -77,10 +77,10 @@ proc newDate*(): DateTime {.
 proc newDate*(date: int|string): DateTime {.
   importcpp: "new Date(#)".}
 
-whenJsNoBigInt64:
+when jsNoBigInt64:
   proc newDate*(date: int64): DateTime {.
     importcpp: "new Date(#)".}
-do:
+else:
   proc newDate*(date: int64): DateTime {.
     importcpp: "new Date(Number(#))".}
 
