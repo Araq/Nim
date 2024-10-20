@@ -1095,7 +1095,21 @@ proc setprotoent*(a1: cint) {.importc, header: "<netdb.h>".}
 proc setservent*(a1: cint) {.importc, header: "<netdb.h>".}
 
 when not defined(lwip):
-  proc poll*(a1: ptr TPollfd, a2: Tnfds, a3: int): cint {.
+  # Linux and Haiku emulate SVR4, which used unsigned long.
+  # Meanwhile, BSD derivatives had used unsigned int; we will use this
+  # for the else case, because it is more widely cloned than SVR4's
+  # behavior.
+  when defined(linux) or defined(haiku):
+    type
+      Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = culong
+  elif defined(zephyr):
+    type
+      Tnfds* = distinct cint
+  else:
+    type
+      Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = cuint
+
+  proc poll*(a1: ptr TPollfd, a2: Tnfds, a3: cint): cint {.
     importc, header: "<poll.h>", sideEffect.}
 
 proc realpath*(name, resolved: cstring): cstring {.
