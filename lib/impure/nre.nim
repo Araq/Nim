@@ -74,7 +74,14 @@ when defined(nimPreviewSlimSystem):
 export options
 
 type
-  Regex* = ref object
+  RegexDesc* = object
+    pattern*: string
+    pcreObj: ptr pcre.Pcre  ## not nil
+    pcreExtra: ptr pcre.ExtraData  ## nil
+
+    captureNameToId: Table[string, int]
+
+  Regex* = ref RegexDesc
     ## Represents the pattern that things are matched against, constructed with
     ## `re(string)`. Examples: `re"foo"`, `re(r"(*ANYCRLF)(?x)foo #
     ## comment".`
@@ -145,11 +152,6 @@ type
     ## `DOLLAR_ENDONLY`, `FIRSTLINE`, `NO_AUTO_CAPTURE`,
     ## `JAVASCRIPT_COMPAT`, `U`, `NO_STUDY`. In other PCRE wrappers, you
     ## will need to pass these as separate flags to PCRE.
-    pattern*: string
-    pcreObj: ptr pcre.Pcre  ## not nil
-    pcreExtra: ptr pcre.ExtraData  ## nil
-
-    captureNameToId: Table[string, int]
 
   RegexMatch* = object
     ## Usually seen as Option[RegexMatch], it represents the result of an
@@ -216,12 +218,28 @@ type
     ## for whatever reason. The message contains the error
     ## code.
 
-proc destroyRegex(pattern: Regex) =
-  `=destroy`(pattern.pattern)
-  pcre.free_substring(cast[cstring](pattern.pcreObj))
-  if pattern.pcreExtra != nil:
-    pcre.free_study(pattern.pcreExtra)
-  `=destroy`(pattern.captureNameToId)
+when defined(gcDestructors):
+  when defined(nimAllowNonVarDestructor) and defined(nimPreviewNonVarDestructor):
+    proc `=destroy`(pattern: RegexDesc) =
+      `=destroy`(pattern.pattern)
+      pcre.free_substring(cast[cstring](pattern.pcreObj))
+      if pattern.pcreExtra != nil:
+        pcre.free_study(pattern.pcreExtra)
+      `=destroy`(pattern.captureNameToId)
+  else:
+    proc `=destroy`(pattern: var RegexDesc) =
+      `=destroy`(pattern.pattern)
+      pcre.free_substring(cast[cstring](pattern.pcreObj))
+      if pattern.pcreExtra != nil:
+        pcre.free_study(pattern.pcreExtra)
+      `=destroy`(pattern.captureNameToId)
+else:
+  proc destroyRegex(pattern: Regex) =
+    `=destroy`(pattern.pattern)
+    pcre.free_substring(cast[cstring](pattern.pcreObj))
+    if pattern.pcreExtra != nil:
+      pcre.free_study(pattern.pcreExtra)
+    `=destroy`(pattern.captureNameToId)
 
 proc getinfo[T](pattern: Regex, opt: cint): T =
   let retcode = pcre.fullinfo(pattern.pcreObj, pattern.pcreExtra, opt, addr result)
@@ -251,7 +269,10 @@ proc getNameToNumberTable(pattern: Regex): Table[string, int] =
     result[name] = num
 
 proc initRegex(pattern: string, flags: int, study = true): Regex =
-  new(result, destroyRegex)
+  when defined(gcDestructors):
+    result = Regex()
+  else:
+    new(result, destroyRegex)
   result.pattern = pattern
 
   var errorMsg: cstring
