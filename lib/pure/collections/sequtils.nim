@@ -823,7 +823,6 @@ template toSeq1(s: not iterator): untyped =
 
 template toSeq2(iter: iterator): untyped =
   # overload for iterator
-  # ????
   evalOnceAs(iter2, iter(), false)
   when compiles(iter2.len):
     var i = 0
