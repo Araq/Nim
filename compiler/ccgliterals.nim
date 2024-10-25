@@ -48,7 +48,7 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
         var seqInit: StructInitializer
         res.addStructInitializer(seqInit, kind = siOrderedStruct):
           res.addField(seqInit, name = "len"):
-            res.add(rope(s.len))
+            res.addIntValue(s.len)
           res.addField(seqInit, name = "reserved"):
             res.add(cCast("NI", bitOr(cCast("NU", rope(s.len)), "NIM_STRLIT_FLAG")))
       res.addField(strInit, name = "data"):
@@ -109,7 +109,7 @@ proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Rope) =
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
       res.addField(strInit, name = "len"):
-        res.add(rope(n.strVal.len))
+        res.addIntValue(n.strVal.len)
       res.addField(strInit, name = "p"):
         res.add(cCast(ptrType("NimStrPayload"), cAddr(litName)))
   m.s[cfsStrData].add(res)
@@ -128,7 +128,7 @@ proc genStringLiteralV2Const(m: BModule; n: PNode; isConst: bool; result: var Ro
   var strInit: StructInitializer
   result.addStructInitializer(strInit, kind = siOrderedStruct):
     result.addField(strInit, name = "len"):
-      result.add(rope(n.strVal.len))
+      result.addIntValue(n.strVal.len)
     result.addField(strInit, name = "p"):
       result.add(cCast(ptrType("NimStrPayload"), cAddr(pureLit)))
 

@@ -3536,7 +3536,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
   var resultInit: StructInitializer
   result.addStructInitializer(resultInit, kind = siOrderedStruct):
     result.addField(resultInit, name = "len"):
-      result.add(rope(n.len))
+      result.addIntValue(n.len)
     result.addField(resultInit, name = "p"):
       result.add cCast(typ = ptrType(getSeqPayloadType(p.module, t)), value = cAddr(payload))
 
@@ -3610,7 +3610,7 @@ proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; resul
         result.addField(openArrInit, name = "Field0"):
           result.add(cCast(typ = ptrType(ctype), value = cAddr(payload)))
         result.addField(openArrInit, name = "Field1"):
-          result.add(rope arrLen)
+          result.addIntValue(arrLen)
 
     of tyObject:
       genConstObjConstr(p, n, isConst, result)

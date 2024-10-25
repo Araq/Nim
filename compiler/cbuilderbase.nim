@@ -8,6 +8,9 @@ template newBuilder(s: string): Builder =
 proc addIntValue(builder: var Builder, val: int | int64 | uint64) =
   builder.addInt(val)
 
+proc addIntValue(builder: var Builder, val: Int128) =
+  builder.addInt128(val)
+
 template addIntValue(builder: var Builder, val: static int) =
   builder.add(static($val))
 

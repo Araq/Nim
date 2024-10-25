@@ -1370,14 +1370,14 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
           m.s[cfsTypeInit3].add(cAddr(tmp2))
         genObjectFields(m, typ, origType, n[i], tmp2, info)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
-        m.s[cfsTypeInit3].add(rope(n.len))
+        m.s[cfsTypeInit3].addIntValue(n.len)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
         m.s[cfsTypeInit3].addIntValue(2)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "sons"):
         m.s[cfsTypeInit3].add(cAddr(subscript(tmp, cIntValue(0))))
     else:
       m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
-        m.s[cfsTypeInit3].add(rope(n.len))
+        m.s[cfsTypeInit3].addIntValue(n.len)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
         m.s[cfsTypeInit3].addIntValue(2)
   of nkRecCase:
@@ -1467,14 +1467,14 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
           "$1.name = \"Field$3\";$n",
            [tmp2, getTypeDesc(m, origType, dkVar), rope(i), genTypeInfoV1(m, a, info)])
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
-      m.s[cfsTypeInit3].add(rope(typ.kidsLen))
+      m.s[cfsTypeInit3].addIntValue(typ.kidsLen)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
       m.s[cfsTypeInit3].addIntValue(2)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "sons"):
       m.s[cfsTypeInit3].add(cAddr(subscript(tmp, cIntValue(0))))
   else:
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
-      m.s[cfsTypeInit3].add(rope(typ.kidsLen))
+      m.s[cfsTypeInit3].addIntValue(typ.kidsLen)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
       m.s[cfsTypeInit3].addIntValue(2)
   m.s[cfsTypeInit3].addFieldAssignment(tiNameForHcr(m, name), "node"):
@@ -1506,7 +1506,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
           enumNames.add(makeCString(field.ast.strVal))
       if field.position != i or tfEnumHasHoles in typ.flags:
         specialCases.addFieldAssignment(elemNode, "offset"):
-          specialCases.add(rope(field.position))
+          specialCases.addIntValue(field.position)
         hasHoles = true
   var enumArray = getTempName(m)
   var counter = getTempName(m)
@@ -1524,7 +1524,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   m.s[cfsTypeInit3].add(specialCases)
   let n = getNimNode(m)
   m.s[cfsTypeInit3].addFieldAssignment(n, "len"):
-    m.s[cfsTypeInit3].add(rope(typ.n.len))
+    m.s[cfsTypeInit3].addIntValue(typ.n.len)
   m.s[cfsTypeInit3].addFieldAssignment(n, "kind"):
     m.s[cfsTypeInit3].addIntValue(0)
   m.s[cfsTypeInit3].addFieldAssignment(n, "sons"):
@@ -1540,7 +1540,7 @@ proc genSetInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   genTypeInfoAux(m, typ, typ, name, info)
   var tmp = getNimNode(m)
   m.s[cfsTypeInit3].addFieldAssignment(tmp, "len"):
-    m.s[cfsTypeInit3].add(rope(firstOrd(m.config, typ)))
+    m.s[cfsTypeInit3].addIntValue(firstOrd(m.config, typ))
   m.s[cfsTypeInit3].addFieldAssignment(tmp, "kind"):
     m.s[cfsTypeInit3].addIntValue(0)
   m.s[cfsTypeInit3].addFieldAssignment(tiNameForHcr(m, name), "node"):
@@ -1746,7 +1746,7 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
         len = objDepth + 1,
         initializer = objDisplay)
     typeEntry.addFieldAssignment(name, "display"):
-      typeEntry.add(rope(objDisplayStore))
+      typeEntry.add(objDisplayStore)
 
   let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
   if dispatchMethods.len > 0:
