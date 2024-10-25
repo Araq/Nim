@@ -1314,7 +1314,8 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
     cgsym(m, "nimTypeRoot")
     m.s[cfsTypeInit3].addFieldAssignment(nameHcr, "nextType"):
       m.s[cfsTypeInit3].add("nimTypeRoot")
-    m.s[cfsTypeInit3].addAssignment("nimTypeRoot", cAddr(nameHcr))
+    m.s[cfsTypeInit3].addAssignment("nimTypeRoot"):
+      m.s[cfsTypeInit3].add(cAddr(nameHcr))
 
   if m.hcrOn:
     m.s[cfsStrData].addVar(kind = Global, name = name, typ = ptrType("TNimType"))
@@ -1365,7 +1366,7 @@ proc discriminatorTableDecl(m: BModule; objtype: PType, d: PSym): Rope =
   var tmp = discriminatorTableName(m, objtype, d)
   result = "TNimNode* $1[$2];$n" % [tmp, rope(lengthOrd(m.config, d.typ)+1)]
 
-proc genTNimNodeArray(m: BModule; name: Rope, size: Rope) =
+proc genTNimNodeArray(m: BModule; name: Rope, size: int) =
   if m.hcrOn:
     m.s[cfsData].addVar(kind = Global, name = name, typ = ptrType(ptrType("TNimNode")))
     var registerHcr: CallBuilder
@@ -1394,7 +1395,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
       genObjectFields(m, typ, origType, n[0], expr, info)
     elif n.len > 0:
       var tmp = getTempName(m) & "_" & $n.len
-      genTNimNodeArray(m, tmp, rope(n.len))
+      genTNimNodeArray(m, tmp, n.len)
       for i in 0..<n.len:
         var tmp2 = getNimNode(m)
         m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
@@ -1423,7 +1424,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
     m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
       m.s[cfsTypeInit3].add("3")
     m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
-      m.s[cfsTypeInit3].addOffsetOf(getTypeDesc(m, origType, dkVar), field.loc.snippet)
+      m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
       m.s[cfsTypeInit3].add(genTypeInfoV1(m, field.typ, info))
     m.s[cfsTypeInit3].addFieldAssignment(expr, "name"):
@@ -1433,7 +1434,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
       m.s[cfsTypeInit3].add(rope(L))
     m.s[cfsData].addArrayVar(kind = Local, name = tmp,
-      elementType = ptrType("TNimNode"), len = rope(L+1))
+      elementType = ptrType("TNimNode"), len = toInt(L)+1)
     for i in 1..<n.len:
       var b = n[i]           # branch
       var tmp2 = getNimNode(m)
@@ -1468,7 +1469,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
       m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
         m.s[cfsTypeInit3].add("1")
       m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
-        m.s[cfsTypeInit3].addOffsetOf(getTypeDesc(m, origType, dkVar), field.loc.snippet)
+        m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
         m.s[cfsTypeInit3].add(genTypeInfoV1(m, field.typ, info))
       m.s[cfsTypeInit3].addFieldAssignment(expr, "name"):
@@ -1497,7 +1498,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
   var expr = getNimNode(m)
   if not typ.isEmptyTupleType:
     var tmp = getTempName(m) & "_" & $typ.kidsLen
-    genTNimNodeArray(m, tmp, rope(typ.kidsLen))
+    genTNimNodeArray(m, tmp, typ.kidsLen)
     for i, a in typ.ikids:
       var tmp2 = getNimNode(m)
       m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
@@ -1505,7 +1506,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "kind"):
         m.s[cfsTypeInit3].add("1")
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "offset"):
-        m.s[cfsTypeInit3].addOffsetOf(getTypeDesc(m, origType, dkVar), "Field" & $i)
+        m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), "Field" & $i)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "typ"):
         m.s[cfsTypeInit3].add(genTypeInfoV1(m, a, info))
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "name"):
@@ -1531,7 +1532,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   # positions will be reset after the loop.
   genTypeInfoAux(m, typ, typ, name, info)
   var nodePtrs = getTempName(m) & "_" & $typ.n.len
-  genTNimNodeArray(m, nodePtrs, rope(typ.n.len))
+  genTNimNodeArray(m, nodePtrs, typ.n.len)
   var enumNames = newBuilder("")
   var enumNamesInit: StructInitializer
   var specialCases = newBuilder("")
@@ -1612,7 +1613,7 @@ proc genDeepCopyProc(m: BModule; s: PSym; result: Rope) =
 proc declareNimType(m: BModule; name: string; str: Rope, module: int) =
   let nr = rope(name)
   if m.hcrOn:
-    m.s[cfsStrData].addArrayVar(kind = Global, name = str, typ = ptrType(nr))
+    m.s[cfsStrData].addVar(kind = Global, name = str, typ = ptrType(nr))
     m.s[cfsTypeInit1].add('\t')
     m.s[cfsTypeInit1].addAssignment(str):
       m.s[cfsTypeInit1].addCast(typ = ptrType(nr)):

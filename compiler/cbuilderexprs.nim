@@ -57,7 +57,7 @@ proc initCallBuilder(builder: var Builder, call: out CallBuilder, callee: Snippe
   builder.add(callee)
   builder.add("(")
 
-template addArgument(builder: var Buidler, call: var CallBuilder, valueBody: typed) =
+template addArgument(builder: var Builder, call: var CallBuilder, valueBody: typed) =
   if call.needsComma:
     builder.add(", ")
   else:
