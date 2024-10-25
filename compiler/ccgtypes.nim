@@ -1627,7 +1627,7 @@ proc declareNimType(m: BModule; name: string; str: Rope, module: int) =
           m.s[cfsTypeInit1].addArgument(hcrGlobal):
             m.s[cfsTypeInit1].add(getModuleDllPath(m, module))
           m.s[cfsTypeInit1].addArgument(hcrGlobal):
-            m.s[cfsTypeInit1].add("\"" & nr & "\"")
+            m.s[cfsTypeInit1].add("\"" & str & "\"")
   else:
     m.s[cfsStrData].addf("extern $2 $1;$n", [str, nr])
 
