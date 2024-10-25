@@ -507,7 +507,9 @@ proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false)
         ) and not (n[0][0].kind == nkSym and n[0][0].sym.kind == skParam and
           n.typ.kind == tyVar and
           n.typ.skipTypes(abstractVar).kind == tyOpenArray and
-          n[0][0].typ.skipTypes(abstractVar).kind == tyString)
+          n[0][0].typ.skipTypes(abstractVar).kind == tyString) and
+          not (isAddr and n.typ.kind == tyVar and n[0][0].typ.kind == tyRef and
+              n[0][0].kind == nkObjConstr)
         : # elimination is harmful to `for tuple unpack` because of newTupleAccess
           # it is also harmful to openArrayLoc (var openArray) for strings
       # addr ( deref ( x )) --> x
@@ -1075,9 +1077,7 @@ proc transform(c: PTransf, n: PNode, noConstFold = false): PNode =
   of nkBreakStmt: result = transformBreak(c, n)
   of nkCallKinds:
     result = transformCall(c, n)
-  of nkHiddenAddr:
-    result = transformAddrDeref(c, n, {nkHiddenDeref}, isAddr = true)
-  of nkAddr:
+  of nkAddr, nkHiddenAddr:
     result = transformAddrDeref(c, n, {nkDerefExpr, nkHiddenDeref}, isAddr = true)
   of nkDerefExpr:
     result = transformAddrDeref(c, n, {nkAddr, nkHiddenAddr})
