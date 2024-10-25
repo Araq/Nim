@@ -48,3 +48,53 @@ proc derefField(a, b: Snippet): Snippet =
 
 proc bitOr(a, b: Snippet): Snippet =
   "(" & a & " | " & b & ")"
+
+type CallBuilder = object
+  needsComma: bool
+
+proc initCallBuilder(builder: var Builder, call: out CallBuilder, callee: Snippet) =
+  call = CallBuilder(needsComma: false)
+  builder.add(callee)
+  builder.add("(")
+
+template addArgument(builder: var Buidler, call: var CallBuilder, valueBody: typed) =
+  if call.needsComma:
+    builder.add(", ")
+  else:
+    call.needsComma = true
+  valueBody
+
+proc finishCallBuilder(builder: var Builder, call: CallBuilder) =
+  builder.add(")")
+
+template addCall(builder: var Builder, call: out CallBuilder, callee: Snippet, body: typed) =
+  initCallBuilder(builder, call, callee)
+  body
+  finishCallBuilder(builder, call)
+
+proc addNullaryCall(builder: var Builder, callee: Snippet) =
+  builder.add(callee)
+  builder.add("()")
+
+proc addUnaryCall(builder: var Builder, callee: Snippet, arg: Snippet) =
+  builder.add(callee)
+  builder.add("(")
+  builder.add(arg)
+  builder.add(")")
+
+proc addSizeof(builder: var Builder, val: Snippet) =
+  builder.add("sizeof(")
+  builder.add(val)
+  builder.add(")")
+
+proc addAlignof(builder: var Builder, val: Snippet) =
+  builder.add("NIM_ALIGNOF(")
+  builder.add(val)
+  builder.add(")")
+
+proc addOffsetof(builder: var Builder, val, member: Snippet) =
+  builder.add("offsetof(")
+  builder.add(val)
+  builder.add(", ")
+  builder.add(member)
+  builder.add(")")
