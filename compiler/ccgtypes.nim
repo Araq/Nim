@@ -1321,18 +1321,19 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
     m.s[cfsStrData].addVar(kind = Global, name = name, typ = ptrType("TNimType"))
     m.hcrCreateTypeInfosProc.add('\t')
     var registerHcr: CallBuilder
-    m.hcrCreateTypeInfosProc.addCall(registerHcr, callee = "hcrRegisterGlobal"):
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add(getModuleDllPath(m, m.module))
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add(makeCString(name))
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.addSizeof("TNimType")
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add("NULL")
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.addCast(typ = "void**"):
-          m.hcrCreateTypeInfosProc.add(cAddr(name))
+    m.hcrCreateTypeInfosProc.addStmt():
+      m.hcrCreateTypeInfosProc.addCall(registerHcr, callee = "hcrRegisterGlobal"):
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add(getModuleDllPath(m, m.module))
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add(makeCString(name))
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.addSizeof("TNimType")
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add("NULL")
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.addCast(typ = "void**"):
+            m.hcrCreateTypeInfosProc.add(cAddr(name))
   else:
     m.s[cfsStrData].addf("N_LIB_PRIVATE TNimType $1;$n", [name])
 
@@ -1370,19 +1371,20 @@ proc genTNimNodeArray(m: BModule; name: Rope, size: int) =
   if m.hcrOn:
     m.s[cfsData].addVar(kind = Global, name = name, typ = ptrType(ptrType("TNimNode")))
     var registerHcr: CallBuilder
-    m.hcrCreateTypeInfosProc.addCall(registerHcr, callee = "hcrRegisterGlobal"):
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add(getModuleDllPath(m, m.module))
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add(makeCString(name))
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        # XXX use cbuilder here
-        m.hcrCreateTypeInfosProc.add("sizeof(TNimNode*) * " & $size)
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.add("NULL")
-      m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-        m.hcrCreateTypeInfosProc.addCast(typ = "void**"):
-          m.hcrCreateTypeInfosProc.add(cAddr(name))
+    m.hcrCreateTypeInfosProc.addStmt():
+      m.hcrCreateTypeInfosProc.addCall(registerHcr, callee = "hcrRegisterGlobal"):
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add(getModuleDllPath(m, m.module))
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add(makeCString(name))
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          # XXX use cbuilder here
+          m.hcrCreateTypeInfosProc.add("sizeof(TNimNode*) * " & $size)
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.add("NULL")
+        m.hcrCreateTypeInfosProc.addArgument(registerHcr):
+          m.hcrCreateTypeInfosProc.addCast(typ = "void**"):
+            m.hcrCreateTypeInfosProc.add(cAddr(name))
   else:
     m.s[cfsTypeInit1].addArrayVar(kind = Global, name = name,
       elementType = ptrType("TNimNode"), len = size)

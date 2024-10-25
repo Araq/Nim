@@ -21,3 +21,8 @@ template addSubscriptAssignment(builder: var Builder, lhs: Snippet, index: Snipp
   builder.add("[" & index & "] = ")
   valueBody
   builder.add(";\n")
+
+template addStmt(builder: var Builder, stmtBody: typed) =
+  ## makes an expression built by `stmtBody` into a statement
+  stmtBody
+  builder.add(";\n")
