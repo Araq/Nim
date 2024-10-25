@@ -61,7 +61,7 @@ proc addArrayVar(builder: var Builder, kind: VarKind = Local, name: string, elem
   builder.add(" ")
   builder.add(name)
   builder.add("[")
-  builder.addInt(len)
+  builder.addIntValue(len)
   builder.add("]")
   if initializer.len != 0:
     builder.add(" = ")
@@ -75,7 +75,7 @@ template addArrayVarWithInitializer(builder: var Builder, kind: VarKind = Local,
   builder.add(" ")
   builder.add(name)
   builder.add("[")
-  builder.addInt(len)
+  builder.addIntValue(len)
   builder.add("] = ")
   body
   builder.add(";\n")
@@ -97,7 +97,7 @@ template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, ty
   builder.add(" ")
   builder.add(name)
   builder.add("[")
-  builder.addInt(len)
+  builder.addIntValue(len)
   builder.add("];\n")
 
 type
@@ -173,7 +173,7 @@ proc addArrayField(obj: var Builder; name, elementType: Snippet; len: int; initi
   obj.add(" ")
   obj.add(name)
   obj.add("[")
-  obj.addInt(len)
+  obj.addIntValue(len)
   obj.add("]")
   if initializer.len != 0:
     obj.add(initializer)
@@ -184,7 +184,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
   obj.add('\t')
   if field.alignment > 0:
     obj.add("NIM_ALIGN(")
-    obj.addInt(field.alignment)
+    obj.addIntValue(field.alignment)
     obj.add(") ")
   obj.add(typ)
   if sfNoalias in field.flags:
@@ -195,7 +195,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
     obj.add("[SEQ_DECL_SIZE]")
   if field.bitsize != 0:
     obj.add(":")
-    obj.addInt(field.bitsize)
+    obj.addIntValue(field.bitsize)
   if initializer.len != 0:
     obj.add(initializer)
   obj.add(";\n")
