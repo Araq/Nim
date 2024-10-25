@@ -52,8 +52,8 @@ proc bitOr(a, b: Snippet): Snippet =
 type CallBuilder = object
   needsComma: bool
 
-proc initCallBuilder(builder: var Builder, call: out CallBuilder, callee: Snippet) =
-  call = CallBuilder(needsComma: false)
+proc initCallBuilder(builder: var Builder, callee: Snippet): CallBuilder =
+  result = CallBuilder(needsComma: false)
   builder.add(callee)
   builder.add("(")
 
@@ -68,7 +68,7 @@ proc finishCallBuilder(builder: var Builder, call: CallBuilder) =
   builder.add(")")
 
 template addCall(builder: var Builder, call: out CallBuilder, callee: Snippet, body: typed) =
-  initCallBuilder(builder, call, callee)
+  call = initCallBuilder(builder, callee)
   body
   finishCallBuilder(builder, call)
 
