@@ -5,7 +5,13 @@ type
 template newBuilder(s: string): Builder =
   s
 
-proc addIntValue(builder: var Builder, val: int | int64 | uint64) =
+proc addIntValue(builder: var Builder, val: int) =
+  builder.addInt(val)
+
+proc addIntValue(builder: var Builder, val: int64) =
+  builder.addInt(val)
+
+proc addIntValue(builder: var Builder, val: uint64) =
   builder.addInt(val)
 
 proc addIntValue(builder: var Builder, val: Int128) =
@@ -20,7 +26,15 @@ template addIntValue(builder: var Builder, val: static int64) =
 template addIntValue(builder: var Builder, val: static uint64) =
   builder.add(static($val))
 
-proc cIntValue(val: int | int64 | uint64): Snippet =
+proc cIntValue(val: int): Snippet =
+  result = ""
+  result.addInt(val)
+
+proc cIntValue(val: int64): Snippet =
+  result = ""
+  result.addInt(val)
+
+proc cIntValue(val: uint64): Snippet =
   result = ""
   result.addInt(val)
 
