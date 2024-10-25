@@ -1935,3 +1935,67 @@ proc isCharArrayPtr*(t: PType; allowPointerToChar: bool): bool =
       result = false
   else:
     result = false
+
+proc nominalRoot*(t: PType): PType =
+  ## the "name" type of a given instance of a nominal type,
+  ## i.e. the type directly associated with the symbol where the root
+  ## nominal type of `t` was defined, skipping things like generic instances,
+  ## aliases, `var`/`sink`/`typedesc` modifiers
+  ## 
+  ## instead of returning the uninstantiated body of a generic type,
+  ## returns the type of the symbol instead (with tyGenericBody type)
+  result = nil
+  case t.kind
+  of tyAlias, tyVar, tySink:
+    # varargs?
+    result = nominalRoot(t.skipModifier)
+  of tyTypeDesc:
+    # for proc foo(_: type T)
+    result = nominalRoot(t.skipModifier)
+  of tyGenericInvocation, tyGenericInst:
+    result = t
+    # skip aliases, so this works in the same module but not in another module:
+    # type Foo[T] = object
+    # type Bar[T] = Foo[T]
+    # proc foo[T](x: Bar[T]) = ... # attached to type
+    while result.skipModifier.kind in {tyGenericInvocation, tyGenericInst}:
+      result = result.skipModifier
+    result = nominalRoot(result[0])
+  of tyGenericBody:
+    result = t
+    # this time skip the aliases but take the generic body
+    while result.skipModifier.kind in {tyGenericInvocation, tyGenericInst}:
+      result = result.skipModifier[0]
+    let val = result.skipModifier
+    if val.kind in {tyDistinct, tyEnum, tyObject} or
+        (val.kind in {tyRef, tyPtr} and tfRefsAnonObj in val.flags):
+      # atomic nominal types, this generic body is attached to them
+      discard
+    else:
+      result = nominalRoot(val)
+  of tyCompositeTypeClass:
+    # parameter with type Foo
+    result = nominalRoot(t.skipModifier)
+  of tyGenericParam:
+    if t.genericParamHasConstraints:
+      # T: Foo
+      result = nominalRoot(t.genericConstraint)
+    else:
+      result = nil
+  of tyDistinct, tyEnum, tyObject:
+    result = t
+  of tyPtr, tyRef:
+    if tfRefsAnonObj in t.flags:
+      # in the case that we have `type Foo = ref object` etc
+      result = t
+    else:
+      # we could allow this in general, but there's things like `seq[Foo]`
+      #result = nominalRoot(t.skipModifier)
+      result = nil
+  of tyStatic:
+    # ?
+    result = nil
+  else:
+    # skips all typeclasses
+    # is this correct for `concept`?
+    result = nil

@@ -24,6 +24,40 @@ rounding guarantees (via the
 
 ## Language changes
 
+- An experimental option `--experimental:typeBoundOps` has been added that
+  implements the RFC https://github.com/nim-lang/RFCs/issues/380.
+  This makes the behavior of interfaces like `hash`, `$`, `==` etc. more
+  reliable for nominal types across indirect/restricted imports.
+
+  ```nim
+  # objs.nim
+  import std/hashes
+
+  type
+    Obj* = object
+      x*, y*: int
+      z*: string # to be ignored for equality
+
+  proc `==`*(a, b: Obj): bool =
+    a.x == b.x and a.y == b.y
+
+  proc hash*(a: Obj): Hash =
+    $!(hash(a.x) &! hash(a.y))
+  ```
+
+  ```nim
+  # main.nim
+  {.experimental: "typeBoundOps".}
+  from objs import Obj # objs.hash, objs.`==` not imported
+  import std/tables
+
+  var t: Table[Obj, int]
+  t[Obj(x: 3, y: 4, z: "debug")] = 34
+  echo t[Obj(x: 3, y: 4, z: "ignored")] # 34
+  ```
+
+  See the [experimental manual](https://nim-lang.github.io/Nim/manual_experimental.html#typeminusbound-overloads)
+  for more information.
 
 ## Compiler changes
 

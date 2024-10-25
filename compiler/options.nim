@@ -229,6 +229,7 @@ type
     # alternative to above:
     genericsOpenSym
     vtables
+    typeBoundOps
 
   LegacyFeature* = enum
     allowSemcheckedAstModification,
