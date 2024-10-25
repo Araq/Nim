@@ -1265,7 +1265,7 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = false)
 
 proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope
 proc getNimNode(m: BModule): Rope =
-  result = subscript(m.typeNodesName, rope(m.typeNodes))
+  result = subscript(m.typeNodesName, cIntValue(m.typeNodes))
   inc(m.typeNodes)
 
 proc tiNameForHcr(m: BModule; name: Rope): Rope =
@@ -1366,7 +1366,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
       genTNimNodeArray(m, tmp, rope(n.len))
       for i in 0..<n.len:
         var tmp2 = getNimNode(m)
-        m.s[cfsTypeInit3].addSubscriptAssignment(tmp, rope(i)):
+        m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
           m.s[cfsTypeInit3].add(cAddr(tmp2))
         genObjectFields(m, typ, origType, n[i], tmp2, info)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
@@ -1410,14 +1410,14 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
             var x = toInt(getOrdValue(b[j][0]))
             var y = toInt(getOrdValue(b[j][1]))
             while x <= y:
-              m.s[cfsTypeInit3].addSubscriptAssignment(tmp, rope(x)):
+              m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(x)):
                 m.s[cfsTypeInit3].add(cAddr(tmp2))
               inc(x)
           else:
-            m.s[cfsTypeInit3].addSubscriptAssignment(tmp, rope(getOrdValue(b[j]))):
+            m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(getOrdValue(b[j]))):
               m.s[cfsTypeInit3].add(cAddr(tmp2))
       of nkElse:
-        m.s[cfsTypeInit3].addSubscriptAssignment(tmp, rope(L)):
+        m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(L)):
           m.s[cfsTypeInit3].add(cAddr(tmp2))
       else: internalError(m.config, n.info, "genObjectFields(nkRecCase)")
   of nkSym:
@@ -1459,7 +1459,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
     genTNimNodeArray(m, tmp, rope(typ.kidsLen))
     for i, a in typ.ikids:
       var tmp2 = getNimNode(m)
-      m.s[cfsTypeInit3].addSubscriptAssignment(tmp, rope(i)):
+      m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
         m.s[cfsTypeInit3].add(cAddr(tmp2))
       m.s[cfsTypeInit3].addf("$1.kind = 1;$n" &
           "$1.offset = offsetof($2, Field$3);$n" &

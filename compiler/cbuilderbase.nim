@@ -18,6 +18,10 @@ proc cIntValue(val: int | int64 | uint64): Snippet =
   result = ""
   result.addInt(val)
 
+proc cIntValue(val: Int128): Snippet =
+  result = ""
+  result.addInt128(val)
+
 template cIntValue(val: static int): Snippet =
   (static($val))
 
