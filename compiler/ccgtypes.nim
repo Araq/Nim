@@ -1421,12 +1421,13 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
     if field.loc.snippet == "": fillObjectFields(m, typ)
     if field.loc.t == nil:
       internalError(m.config, n.info, "genObjectFields")
+    let fieldTypInfo = genTypeInfoV1(m, field.typ, info)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
       m.s[cfsTypeInit3].add("3")
     m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
       m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
-      m.s[cfsTypeInit3].add(genTypeInfoV1(m, field.typ, info))
+      m.s[cfsTypeInit3].add(fieldTypInfo)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "name"):
       m.s[cfsTypeInit3].add(makeCString(field.name.s))
     m.s[cfsTypeInit3].addFieldAssignment(expr, "sons"):
@@ -1466,12 +1467,13 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
       if field.loc.snippet == "": fillObjectFields(m, typ)
       if field.loc.t == nil:
         internalError(m.config, n.info, "genObjectFields")
+      let fieldTypInfo = genTypeInfoV1(m, field.typ, info)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
         m.s[cfsTypeInit3].add("1")
       m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
         m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
-        m.s[cfsTypeInit3].add(genTypeInfoV1(m, field.typ, info))
+        m.s[cfsTypeInit3].add(fieldTypInfo)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "name"):
         m.s[cfsTypeInit3].add(makeCString(field.name.s))
   else: internalError(m.config, n.info, "genObjectFields")
@@ -1501,6 +1503,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
     genTNimNodeArray(m, tmp, typ.kidsLen)
     for i, a in typ.ikids:
       var tmp2 = getNimNode(m)
+      let fieldTypInfo = genTypeInfoV1(m, a, info)
       m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
         m.s[cfsTypeInit3].add(cAddr(tmp2))
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "kind"):
@@ -1508,7 +1511,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "offset"):
         m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), "Field" & $i)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "typ"):
-        m.s[cfsTypeInit3].add(genTypeInfoV1(m, a, info))
+        m.s[cfsTypeInit3].add(fieldTypInfo)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "name"):
         m.s[cfsTypeInit3].add("\"Field" & $i & "\"")
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
