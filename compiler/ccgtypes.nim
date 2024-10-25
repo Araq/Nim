@@ -1488,28 +1488,35 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   genTypeInfoAux(m, typ, typ, name, info)
   var nodePtrs = getTempName(m) & "_" & $typ.n.len
   genTNimNodeArray(m, nodePtrs, rope(typ.n.len))
-  var enumNames, specialCases: Rope = ""
+  var enumNames = newBuilder("")
+  var enumNamesInit: StructInitializer
+  var specialCases = newBuilder("")
   var firstNimNode = m.typeNodes
   var hasHoles = false
-  for i in 0..<typ.n.len:
-    assert(typ.n[i].kind == nkSym)
-    var field = typ.n[i].sym
-    var elemNode = getNimNode(m)
-    if field.ast == nil:
-      # no explicit string literal for the enum field, so use field.name:
-      enumNames.add(makeCString(field.name.s))
-    else:
-      enumNames.add(makeCString(field.ast.strVal))
-    if i < typ.n.len - 1: enumNames.add(", \L")
-    if field.position != i or tfEnumHasHoles in typ.flags:
-      specialCases.addFieldAssignment(elemNode, "offset"):
-        specialCases.add(rope(field.position))
-      hasHoles = true
+  enumNames.addStructInitializer(enumNamesInit, kind = siArray):
+    for i in 0..<typ.n.len:
+      assert(typ.n[i].kind == nkSym)
+      var field = typ.n[i].sym
+      var elemNode = getNimNode(m)
+      enumNames.addField(enumNamesInit, name = ""):
+        if field.ast == nil:
+          # no explicit string literal for the enum field, so use field.name:
+          enumNames.add(makeCString(field.name.s))
+        else:
+          enumNames.add(makeCString(field.ast.strVal))
+      if field.position != i or tfEnumHasHoles in typ.flags:
+        specialCases.addFieldAssignment(elemNode, "offset"):
+          specialCases.add(rope(field.position))
+        hasHoles = true
   var enumArray = getTempName(m)
   var counter = getTempName(m)
-  m.s[cfsTypeInit1].addf("NI $1;$n", [counter])
-  m.s[cfsTypeInit1].addf("static char* NIM_CONST $1[$2] = {$n$3};$n",
-       [enumArray, rope(typ.n.len), enumNames])
+  m.s[cfsTypeInit1].addVar(kind = Local, name = counter, typ = "NI")
+  m.s[cfsTypeInit1].addArrayVarWithInitializer(
+      kind = Global,
+      name = enumArray,
+      elementType = "char* NIM_CONST", # XXX maybe do this in `addVar`
+      len = typ.n.len):
+    m.s[cfsTypeInit1].add(enumNames)
   m.s[cfsTypeInit3].addf("for ($1 = 0; $1 < $2; $1++) {$n" &
       "$3[$1+$4].kind = 1;$n" & "$3[$1+$4].offset = $1;$n" &
       "$3[$1+$4].name = $5[$1];$n" & "$6[$1] = &$3[$1+$4];$n" & "}$n", [counter,
