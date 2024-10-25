@@ -14,6 +14,12 @@ proc addIntValue(builder: var Builder, val: Int128) =
 template addIntValue(builder: var Builder, val: static int) =
   builder.add(static($val))
 
+template addIntValue(builder: var Builder, val: static int64) =
+  builder.add(static($val))
+
+template addIntValue(builder: var Builder, val: static uint64) =
+  builder.add(static($val))
+
 proc cIntValue(val: int | int64 | uint64): Snippet =
   result = ""
   result.addInt(val)
@@ -23,6 +29,12 @@ proc cIntValue(val: Int128): Snippet =
   result.addInt128(val)
 
 template cIntValue(val: static int): Snippet =
+  (static($val))
+
+template cIntValue(val: static int64): Snippet =
+  (static($val))
+
+template cIntValue(val: static uint64): Snippet =
   (static($val))
 
 import std/formatfloat
