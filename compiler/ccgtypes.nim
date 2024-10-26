@@ -1292,7 +1292,7 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
   m.s[cfsTypeInit3].addFieldAssignment(nameHcr, "align"):
     m.s[cfsTypeInit3].addAlignof(size)
   m.s[cfsTypeInit3].addFieldAssignment(nameHcr, "kind"):
-    m.s[cfsTypeInit3].add(rope(nimtypeKind))
+    m.s[cfsTypeInit3].addIntValue(nimtypeKind)
   m.s[cfsTypeInit3].addFieldAssignment(nameHcr, "base"):
     m.s[cfsTypeInit3].add(base)
   # compute type flags for GC optimization
@@ -1302,7 +1302,7 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
   #else echo("can contain a cycle: " & typeToString(typ))
   if flags != 0:
     m.s[cfsTypeInit3].addFieldAssignment(nameHcr, "flags"):
-      m.s[cfsTypeInit3].add(rope(flags))
+      m.s[cfsTypeInit3].addIntValue(flags)
   cgsym(m, "TNimType")
   if isDefined(m.config, "nimTypeNames"):
     var typename = typeToString(if origType.typeInst != nil: origType.typeInst
@@ -1425,7 +1425,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
       internalError(m.config, n.info, "genObjectFields")
     let fieldTypInfo = genTypeInfoV1(m, field.typ, info)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
-      m.s[cfsTypeInit3].add("3")
+      m.s[cfsTypeInit3].addIntValue(3)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
       m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
     m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
@@ -1435,7 +1435,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
     m.s[cfsTypeInit3].addFieldAssignment(expr, "sons"):
       m.s[cfsTypeInit3].add(cAddr(subscript(tmp, "0")))
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len"):
-      m.s[cfsTypeInit3].add(rope(L))
+      m.s[cfsTypeInit3].addIntValue(L)
     m.s[cfsData].addArrayVar(kind = Local, name = tmp,
       elementType = ptrType("TNimNode"), len = toInt(L)+1)
     for i in 1..<n.len:
@@ -1471,7 +1471,7 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
         internalError(m.config, n.info, "genObjectFields")
       let fieldTypInfo = genTypeInfoV1(m, field.typ, info)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "kind"):
-        m.s[cfsTypeInit3].add("1")
+        m.s[cfsTypeInit3].addIntValue(1)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "offset"):
         m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), field.loc.snippet)
       m.s[cfsTypeInit3].addFieldAssignment(expr, "typ"):
@@ -1509,7 +1509,7 @@ proc genTupleInfo(m: BModule; typ, origType: PType, name: Rope; info: TLineInfo)
       m.s[cfsTypeInit3].addSubscriptAssignment(tmp, cIntValue(i)):
         m.s[cfsTypeInit3].add(cAddr(tmp2))
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "kind"):
-        m.s[cfsTypeInit3].add("1")
+        m.s[cfsTypeInit3].addIntValue(1)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "offset"):
         m.s[cfsTypeInit3].addOffsetof(getTypeDesc(m, origType, dkVar), "Field" & $i)
       m.s[cfsTypeInit3].addFieldAssignment(tmp2, "typ"):
@@ -1798,9 +1798,9 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
     typeEntry.addCast(typ = "NI16"):
       typeEntry.addAlignof(sizeTyp)
   typeEntry.addFieldAssignment(name, "depth"):
-    typeEntry.add(rope(objDepth))
+    typeEntry.addIntValue(objDepth)
   typeEntry.addFieldAssignment(name, "flags"):
-    typeEntry.add(rope(flags))
+    typeEntry.addIntValue(flags)
 
   if objDepth >= 0:
     let objDisplay = genDisplay(m, t, objDepth)
