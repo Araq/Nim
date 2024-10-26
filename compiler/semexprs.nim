@@ -1006,9 +1006,9 @@ proc evalAtCompileTime(c: PContext, n: PNode): PNode =
       n.typ.flags.incl tfUnresolved
 
   # optimization pass: not necessary for correctness of the semantic pass
-  if callee.kind == skConst or
+  if (callee.kind == skConst or
      {sfNoSideEffect, sfCompileTime} * callee.flags != {} and
-     {sfForward, sfImportc} * callee.flags == {} and n.typ != nil:
+     {sfForward, sfImportc} * callee.flags == {}) and n.typ != nil:
 
     if callee.kind != skConst and
        sfCompileTime notin callee.flags and
