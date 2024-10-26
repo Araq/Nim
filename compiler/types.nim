@@ -1993,8 +1993,7 @@ proc nominalRoot*(t: PType): PType =
       #result = nominalRoot(t.skipModifier)
       result = nil
   of tyStatic:
-    # ?
-    result = nil
+    result = nominalRoot(t.base)
   else:
     # skips all typeclasses
     # is this correct for `concept`?
