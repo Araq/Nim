@@ -144,10 +144,10 @@ types, as well as their subtypes.
 =====================     =======================================
 Proc                      Usage
 =====================     =======================================
-`succ<#succ,T,int>`_      Successor of the value
-`pred<#pred,T,int>`_      Predecessor of the value
-`inc<#inc,T,int>`_        Increment the ordinal
-`dec<#dec,T,int>`_        Decrement the ordinal
+succ_                     Successor of the value
+pred_                     Predecessor of the value
+inc_                      Increment the ordinal
+dec_                      Decrement the ordinal
 `high<#high,T>`_          Return the highest possible value
 `low<#low,T>`_            Return the lowest possible value
 `ord<#ord,T>`_            Return `int` value of an ordinal value
