@@ -1543,7 +1543,9 @@ proc setSlot(c: PCtx; v: PSym) =
     v.position = getFreeRegister(c, if v.kind == skLet: slotFixedLet else: slotFixedVar, start = 1)
 
 template cannotEval(c: PCtx; n: PNode) =
-  if c.config.cmd == cmdCheck:
+  if c.config.cmd == cmdCheck and c.config.m.errorOutputs != {}:
+    # nim check command with no error outputs doesn't need to cascade here,
+    # includes `tryConstExpr` case which should not continue generating code
     localError(c.config, n.info, "cannot evaluate at compile time: " & 
     n.renderTree)
     c.cannotEval = true
