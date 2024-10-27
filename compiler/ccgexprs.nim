@@ -2998,7 +2998,7 @@ proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
       typ = ptrType(getTypeDesc(q, sym.loc.t, dkVar)))
     # register it (but ignore the boolean result of hcrRegisterGlobal)
     q.initProc.procSec(cpsLocals).add('\t')
-    q.initProc(procSec).addStmt():
+    q.initProc.procSec(cpsLocals).addStmt():
       var registerCall: CallBuilder
       q.initProc.procSec(cpsLocals).addCall(registerCall, "hcrRegisterGlobal"):
         q.initProc.procSec(cpsLocals).addArgument(registerCall):
@@ -3015,7 +3015,7 @@ proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
     # always copy over the contents of the actual constant with the _const
     # suffix ==> this means that the constant is reloadable & updatable!
     q.initProc.procSec(cpsLocals).add('\t')
-    q.initProc(procSec).addStmt():
+    q.initProc.procSec(cpsLocals).addStmt():
       var copyCall: CallBuilder
       q.initProc.procSec(cpsLocals).addCall(copyCall, cgsymValue(q, "nimCopyMem")):
         q.initProc.procSec(cpsLocals).addArgument(copyCall):
