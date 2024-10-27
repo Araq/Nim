@@ -1335,7 +1335,8 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
           m.hcrCreateTypeInfosProc.addCast(typ = "void**"):
             m.hcrCreateTypeInfosProc.add(cAddr(name))
   else:
-    m.s[cfsStrData].addf("N_LIB_PRIVATE TNimType $1;$n", [name])
+    m.s[cfsStrData].addDeclWithVisibility(Private):
+      m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimType")
 
 proc genTypeInfoAux(m: BModule; typ, origType: PType, name: Rope;
                     info: TLineInfo) =
@@ -1764,7 +1765,8 @@ proc genVTable(seqs: seq[PSym]): string =
 
 proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLineInfo) =
   cgsym(m, "TNimTypeV2")
-  m.s[cfsStrData].addf("N_LIB_PRIVATE TNimTypeV2 $1;$n", [name])
+  m.s[cfsStrData].addDeclWithVisibility(Private):
+    m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimTypeV2")
 
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
@@ -1833,54 +1835,72 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
 
 proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineInfo) =
   cgsym(m, "TNimTypeV2")
-  m.s[cfsStrData].addf("N_LIB_PRIVATE TNimTypeV2 $1;$n", [name])
+  m.s[cfsStrData].addDeclWithVisibility(Private):
+    m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimTypeV2")
 
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
 
   var typeEntry = newRopeAppender()
-  addf(typeEntry, "N_LIB_PRIVATE TNimTypeV2 $1 = {", [name])
-  add(typeEntry, ".destructor = (void*)")
-  genHook(m, t, info, attachedDestructor, typeEntry)
+  typeEntry.addDeclWithVisibility(Private):
+    typeEntry.addVarWithTypeAndInitializer(kind = Local, name = name):
+      typeEntry.add("TNimTypeV2")
+    do:
+      var typeInit: StructInitializer
+      typeEntry.addStructInitializer(typeInit, kind = siNamedStruct):
+        typeEntry.addField(typeInit, name = "destructor"):
+          typeEntry.addCast("void*"):
+            genHook(m, t, info, attachedDestructor, typeEntry)
 
-  let objDepth = if t.kind == tyObject: getObjDepth(t) else: -1
+        let objDepth = if t.kind == tyObject: getObjDepth(t) else: -1
 
-  if t.kind in {tyObject, tyDistinct} and incompleteType(t):
-    localError(m.config, info, "request for RTTI generation for incomplete object: " &
-              typeToString(t))
+        if t.kind in {tyObject, tyDistinct} and incompleteType(t):
+          localError(m.config, info, "request for RTTI generation for incomplete object: " &
+                    typeToString(t))
 
-  addf(typeEntry, ", .size = sizeof($1), .align = (NI16) NIM_ALIGNOF($1), .depth = $2",
-    [getTypeDesc(m, t), rope(objDepth)])
+        let sizeType = getTypeDesc(m, t)
+        typeEntry.addField(typeInit, name = "size"):
+          typeEntry.addSizeof(sizeType)
+        typeEntry.addField(typeInit, name = "align"):
+          typeEntry.addCast("NI16"):
+            typeEntry.addAlignof(sizeType)
+        typeEntry.addField(typeInit, name = "depth"):
+          typeEntry.addIntValue(objDepth)
 
-  if objDepth >= 0:
-    let objDisplay = genDisplay(m, t, objDepth)
-    let objDisplayStore = getTempName(m)
-    m.s[cfsVars].addArrayVar(kind = Const,
-        name = objDisplayStore,
-        elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
-        len = objDepth + 1,
-        initializer = objDisplay)
-    addf(typeEntry, ", .display = $1", [rope(objDisplayStore)])
-  if isDefined(m.config, "nimTypeNames"):
-    var typeName: Rope
-    if t.kind in {tyObject, tyDistinct}:
-      typeName = genTypeInfo2Name(m, t)
-    else:
-      typeName = rope("NIM_NIL")
-    addf(typeEntry, ", .name = $1", [typeName])
-  add(typeEntry, ", .traceImpl = (void*)")
-  genHook(m, t, info, attachedTrace, typeEntry)
+        if objDepth >= 0:
+          let objDisplay = genDisplay(m, t, objDepth)
+          let objDisplayStore = getTempName(m)
+          m.s[cfsVars].addArrayVar(kind = Const,
+              name = objDisplayStore,
+              elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
+              len = objDepth + 1,
+              initializer = objDisplay)
+          typeEntry.addField(typeInit, name = "display"):
+            typeEntry.add(objDisplayStore)
+        if isDefined(m.config, "nimTypeNames"):
+          var typeName: Rope
+          if t.kind in {tyObject, tyDistinct}:
+            typeName = genTypeInfo2Name(m, t)
+          else:
+            typeName = rope("NIM_NIL")
+          typeEntry.addField(typeInit, name = "name"):
+            typeEntry.add(typeName)
+        typeEntry.addField(typeInit, name = "traceImpl"):
+          typeEntry.addCast("void*"):
+            genHook(m, t, info, attachedTrace, typeEntry)
 
-  let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
-  if dispatchMethods.len > 0:
-    addf(typeEntry, ", .flags = $1", [rope(flags)])
-    for i in dispatchMethods:
-      genProcPrototype(m, i)
-    addf(typeEntry, ", .vTable = $1};$n", [genVTable(dispatchMethods)])
-    m.s[cfsVars].add typeEntry
-  else:
-    addf(typeEntry, ", .flags = $1};$n", [rope(flags)])
-    m.s[cfsVars].add typeEntry
+        let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
+        if dispatchMethods.len > 0:
+          typeEntry.addField(typeInit, name = "flags"):
+            typeEntry.addIntValue(flags)
+          for i in dispatchMethods:
+            genProcPrototype(m, i)
+          typeEntry.addField(typeInit, name = "vtable"):
+            typeEntry.add(genVTable(dispatchMethods))
+        else:
+          typeEntry.addField(typeInit, name = "flags"):
+            typeEntry.addIntValue(flags)
+  m.s[cfsVars].add typeEntry
 
   if t.kind == tyObject and t.baseClass != nil and optEnableDeepCopy in m.config.globalOptions:
     discard genTypeInfoV1(m, t, info)

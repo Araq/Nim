@@ -2962,13 +2962,22 @@ proc genConstHeader(m, q: BModule; p: BProc, sym: PSym) =
     if not genConstSetup(p, sym): return
   assert(sym.loc.snippet != "", $sym.name.s & $sym.itemId)
   if m.hcrOn:
-    m.s[cfsVars].addf("static $1* $2;$n", [getTypeDesc(m, sym.loc.t, dkVar), sym.loc.snippet]);
-    m.initProc.procSec(cpsLocals).addf(
-      "\t$1 = ($2*)hcrGetGlobal($3, \"$1\");$n", [sym.loc.snippet,
-      getTypeDesc(m, sym.loc.t, dkVar), getModuleDllPath(q, sym)])
+    m.s[cfsVars].addVar(kind = Global, name = sym.loc.snippet,
+      typ = ptrType(getTypeDesc(m, sym.loc.t, dkVar)))
+    m.initProc.procSec(cpsLocals).add('\t')
+    m.initProc.procSec(cpsLocals).addAssignment(sym.loc.snippet):
+      m.initProc.procSec(cpsLocals).addCast(ptrType(getTypeDesc(m, sym.loc.t, dkVar))):
+        var getGlobalCall: CallBuilder
+        m.initProc.procSec(cpsLocals).addCall(getGlobalCall, "hcrGetGlobal"):
+          m.initProc.procSec(cpsLocals).addArgument(getGlobalCall):
+            m.initProc.procSec(cpsLocals).add(getModuleDllPath(q, sym))
+          m.initProc.procSec(cpsLocals).addArgument(getGlobalCall):
+            m.initProc.procSec(cpsLocals).add('"' & sym.loc.snippet & '"')
   else:
-    let headerDecl = "extern NIM_CONST $1 $2;$n" %
-        [getTypeDesc(m, sym.loc.t, dkVar), sym.loc.snippet]
+    var headerDecl = newBuilder("")
+    headerDecl.addDeclWithVisibility(Extern):
+      headerDecl.addVar(kind = Local, name = sym.loc.snippet,
+        typ = constType(getTypeDesc(m, sym.loc.t, dkVar)))
     m.s[cfsData].add(headerDecl)
     if sfExportc in sym.flags and p.module.g.generatedHeader != nil:
       p.module.g.generatedHeader.s[cfsData].add(headerDecl)
@@ -2977,23 +2986,42 @@ proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
   # add a suffix for hcr - will later init the global pointer with this data
   let actualConstName = if q.hcrOn: sym.loc.snippet & "_const" else: sym.loc.snippet
   var data = newRopeAppender()
-  data.addf("N_LIB_PRIVATE NIM_CONST $1 $2 = ",
-           [getTypeDesc(q, sym.typ), actualConstName])
-  genBracedInit(q.initProc, sym.astdef, isConst = true, sym.typ, data)
-  data.addf(";$n", [])
+  data.addDeclWithVisibility(Private):
+    data.addVarWithTypeAndInitializer(Local, actualConstName):
+      data.add(constType(getTypeDesc(q, sym.typ)))
+    do:
+      genBracedInit(q.initProc, sym.astdef, isConst = true, sym.typ, data)
   q.s[cfsData].add data
   if q.hcrOn:
     # generate the global pointer with the real name
-    q.s[cfsVars].addf("static $1* $2;$n", [getTypeDesc(q, sym.loc.t, dkVar), sym.loc.snippet])
+    q.s[cfsVars].addVar(kind = Global, name = sym.loc.snippet,
+      typ = ptrType(getTypeDesc(q, sym.loc.t, dkVar)))
     # register it (but ignore the boolean result of hcrRegisterGlobal)
-    q.initProc.procSec(cpsLocals).addf(
-      "\thcrRegisterGlobal($1, \"$2\", sizeof($3), NULL, (void**)&$2);$n",
-      [getModuleDllPath(q, sym), sym.loc.snippet, rdLoc(sym.loc)])
+    q.initProc.procSec(cpsLocals).add('\t')
+    var registerCall: CallBuilder
+    q.initProc.procSec(cpsLocals).addCall(registerCall, "hcrRegisterGlobal"):
+      q.initProc.procSec(cpsLocals).addArgument(registerCall):
+        q.initProc.procSec(cpsLocals).add(getModuleDllPath(q, sym))
+      q.initProc.procSec(cpsLocals).addArgument(registerCall):
+        q.initProc.procSec(cpsLocals).add('"' & sym.loc.snippet & '"')
+      q.initProc.procSec(cpsLocals).addArgument(registerCall):
+        q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
+      q.initProc.procSec(cpsLocals).addArgument(registerCall):
+        q.initProc.procSec(cpsLocals).add("NULL")
+      q.initProc.procSec(cpsLocals).addArgument(registerCall):
+        q.initProc.procSec(cpsLocals).addCast("void**"):
+          q.initProc.procSec(cpsLocals).add(cAddr(sym.loc.snippet))
     # always copy over the contents of the actual constant with the _const
     # suffix ==> this means that the constant is reloadable & updatable!
-    q.initProc.procSec(cpsLocals).add(ropecg(q,
-      "\t#nimCopyMem((void*)$1, (NIM_CONST void*)&$2, sizeof($3));$n",
-      [sym.loc.snippet, actualConstName, rdLoc(sym.loc)]))
+    q.initProc.procSec(cpsLocals).add('\t')
+    var copyCall: CallBuilder
+    q.initProc.procSec(cpsLocals).addCall(copyCall, cgsymValue(q, "nimCopyMem")):
+      q.initProc.procSec(cpsLocals).addArgument(copyCall):
+        q.initProc.procSec(cpsLocals).add(cCast("void*", sym.loc.snippet))
+      q.initProc.procSec(cpsLocals).addArgument(copyCall):
+        q.initProc.procSec(cpsLocals).add(cCast(constType("void*"), cAddr(actualConstName)))
+      q.initProc.procSec(cpsLocals).addArgument(copyCall):
+        q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
 
 proc genConstStmt(p: BProc, n: PNode) =
   # This code is only used in the new DCE implementation.

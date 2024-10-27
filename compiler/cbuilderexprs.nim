@@ -1,6 +1,9 @@
 # XXX make complex ones like bitOr use builder instead
 # XXX add stuff like NI, NIM_NIL as constants
 
+proc constType(t: Snippet): Snippet =
+  "NIM_CONST " & t
+
 proc ptrType(t: Snippet): Snippet =
   t & "*"
 

@@ -347,3 +347,25 @@ template addAnonUnion(obj: var Builder; body: typed) =
   obj.add "union{\n"
   body
   obj.add("};\n")
+
+type DeclVisibility = enum
+  Extern
+  ImportLib
+  ExportLib
+  ExportLibVar
+  Private
+
+template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility, declBody: typed) =
+  ## adds a declaration as in `declBody` with the given visibility
+  case visibility
+  of Extern:
+    builder.add("extern ")
+  of ImportLib:
+    builder.add("N_LIB_IMPORT ")
+  of ExportLib:
+    builder.add("N_LIB_EXPORT ")
+  of ExportLibVar:
+    builder.add("N_LIB_EXPORT_VAR ")
+  of Private:
+    builder.add("N_LIB_PRIVATE ")
+  declBody
