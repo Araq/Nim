@@ -2998,30 +2998,32 @@ proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
       typ = ptrType(getTypeDesc(q, sym.loc.t, dkVar)))
     # register it (but ignore the boolean result of hcrRegisterGlobal)
     q.initProc.procSec(cpsLocals).add('\t')
-    var registerCall: CallBuilder
-    q.initProc.procSec(cpsLocals).addCall(registerCall, "hcrRegisterGlobal"):
-      q.initProc.procSec(cpsLocals).addArgument(registerCall):
-        q.initProc.procSec(cpsLocals).add(getModuleDllPath(q, sym))
-      q.initProc.procSec(cpsLocals).addArgument(registerCall):
-        q.initProc.procSec(cpsLocals).add('"' & sym.loc.snippet & '"')
-      q.initProc.procSec(cpsLocals).addArgument(registerCall):
-        q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
-      q.initProc.procSec(cpsLocals).addArgument(registerCall):
-        q.initProc.procSec(cpsLocals).add("NULL")
-      q.initProc.procSec(cpsLocals).addArgument(registerCall):
-        q.initProc.procSec(cpsLocals).addCast("void**"):
-          q.initProc.procSec(cpsLocals).add(cAddr(sym.loc.snippet))
+    q.initProc(procSec).addStmt():
+      var registerCall: CallBuilder
+      q.initProc.procSec(cpsLocals).addCall(registerCall, "hcrRegisterGlobal"):
+        q.initProc.procSec(cpsLocals).addArgument(registerCall):
+          q.initProc.procSec(cpsLocals).add(getModuleDllPath(q, sym))
+        q.initProc.procSec(cpsLocals).addArgument(registerCall):
+          q.initProc.procSec(cpsLocals).add('"' & sym.loc.snippet & '"')
+        q.initProc.procSec(cpsLocals).addArgument(registerCall):
+          q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
+        q.initProc.procSec(cpsLocals).addArgument(registerCall):
+          q.initProc.procSec(cpsLocals).add("NULL")
+        q.initProc.procSec(cpsLocals).addArgument(registerCall):
+          q.initProc.procSec(cpsLocals).addCast("void**"):
+            q.initProc.procSec(cpsLocals).add(cAddr(sym.loc.snippet))
     # always copy over the contents of the actual constant with the _const
     # suffix ==> this means that the constant is reloadable & updatable!
     q.initProc.procSec(cpsLocals).add('\t')
-    var copyCall: CallBuilder
-    q.initProc.procSec(cpsLocals).addCall(copyCall, cgsymValue(q, "nimCopyMem")):
-      q.initProc.procSec(cpsLocals).addArgument(copyCall):
-        q.initProc.procSec(cpsLocals).add(cCast("void*", sym.loc.snippet))
-      q.initProc.procSec(cpsLocals).addArgument(copyCall):
-        q.initProc.procSec(cpsLocals).add(cCast(constType("void*"), cAddr(actualConstName)))
-      q.initProc.procSec(cpsLocals).addArgument(copyCall):
-        q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
+    q.initProc(procSec).addStmt():
+      var copyCall: CallBuilder
+      q.initProc.procSec(cpsLocals).addCall(copyCall, cgsymValue(q, "nimCopyMem")):
+        q.initProc.procSec(cpsLocals).addArgument(copyCall):
+          q.initProc.procSec(cpsLocals).add(cCast("void*", sym.loc.snippet))
+        q.initProc.procSec(cpsLocals).addArgument(copyCall):
+          q.initProc.procSec(cpsLocals).add(cCast(constType("void*"), cAddr(actualConstName)))
+        q.initProc.procSec(cpsLocals).addArgument(copyCall):
+          q.initProc.procSec(cpsLocals).addSizeof(rdLoc(sym.loc))
 
 proc genConstStmt(p: BProc, n: PNode) =
   # This code is only used in the new DCE implementation.
