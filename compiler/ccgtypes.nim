@@ -1895,7 +1895,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
             typeEntry.addIntValue(flags)
           for i in dispatchMethods:
             genProcPrototype(m, i)
-          typeEntry.addField(typeInit, name = "vtable"):
+          typeEntry.addField(typeInit, name = "vTable"):
             typeEntry.add(genVTable(dispatchMethods))
         else:
           typeEntry.addField(typeInit, name = "flags"):
