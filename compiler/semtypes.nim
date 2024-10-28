@@ -263,20 +263,24 @@ proc fitDefaultNode(c: PContext, n: PNode): PType =
   n[^1] = semConstExpr(c, n[^1], expectedType = expectedType)
   let oldType = n[^1].typ
   n[^1].flags.incl nfSem
-  if n[^2].kind != nkEmpty:
-    if expectedType != nil and oldType != expectedType:
-      n[^1] = fitNodeConsiderViewType(c, expectedType, n[^1], n[^1].info)
-      changeType(c, n[^1], expectedType, true) # infer types for default fields value
-        # bug #22926; be cautious that it uses `semConstExpr` to
-        # evaulate the default fields; it's only natural to use
-        # `changeType` to infer types for constant values
-        # that's also the reason why we don't use `semExpr` to check
-        # the type since two overlapping error messages might be produced
-    result = n[^1].typ
+  if n[^2].kind != nkEmpty and expectedType != nil:
+    if expectedType.kind == tyGenericParam:
+      n[^1].typ = expectedType
+      result = n[^1].typ
+    else:
+      if oldType != expectedType:
+        n[^1] = fitNodeConsiderViewType(c, expectedType, n[^1], n[^1].info)
+        changeType(c, n[^1], expectedType, true) # infer types for default fields value
+          # bug #22926; be cautious that it uses `semConstExpr` to
+          # evaulate the default fields; it's only natural to use
+          # `changeType` to infer types for constant values
+          # that's also the reason why we don't use `semExpr` to check
+          # the type since two overlapping error messages might be produced
+      result = n[^1].typ
   else:
     result = n[^1].typ
   # xxx any troubles related to defaults fields, consult `semConst` for a potential answer
-  if n[^1].kind != nkNilLit:
+  if n[^1].kind != nkNilLit and expectedType.kind != tyGenericParam:
     typeAllowedCheck(c, n.info, result, skConst, {taProcContextIsNotMacro, taIsDefaultField})
   dec c.inStaticContext
 
