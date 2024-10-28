@@ -170,8 +170,9 @@ proc addOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet
 proc addOp(builder: var Builder, unOp: TypedUnaryOp, t: Snippet, a: Snippet) =
   builder.add('(')
   builder.add(typedUnaryOperators[unOp])
+  builder.add('(')
   builder.add(a)
-  builder.add(')')
+  builder.add("))")
 
 proc addOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
   builder.add('(')
@@ -185,20 +186,21 @@ proc addOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
 proc addOp(builder: var Builder, unOp: UntypedUnaryOp, a: Snippet) =
   builder.add('(')
   builder.add(untypedUnaryOperators[unOp])
+  builder.add('(')
   builder.add(a)
-  builder.add(')')
+  builder.add("))")
 
 template cOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
   '(' & a & ' ' & typedBinaryOperators[binOp] & ' ' & b & ')'
 
 template cOp(binOp: TypedUnaryOp, t: Snippet, a: Snippet): Snippet =
-  '(' & typedUnaryOperators[binOp] & a & ')'
+  '(' & typedUnaryOperators[binOp] & '(' & a & "))"
 
 template cOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   '(' & a & ' ' & untypedBinaryOperators[binOp] & ' ' & b & ')'
 
 template cOp(binOp: UntypedUnaryOp, a: Snippet): Snippet =
-  '(' & untypedUnaryOperators[binOp] & a & ')'
+  '(' & untypedUnaryOperators[binOp] & '(' & a & "))"
 
 template cIfExpr(cond, a, b: Snippet): Snippet =
   # XXX used for `min` and `max`, maybe add nifc primitives for these
