@@ -678,7 +678,7 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   of mShlI:
     let t = getType()
     let at = "NU" & $s
-    res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(at, rb)))
+    res = cCast(t, cOp(Shl, at, cCast(at, ra), cCast(at, rb)))
   of mAshrI:
     let t = getType()
     let at = "NI" & $s
