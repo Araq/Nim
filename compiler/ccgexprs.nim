@@ -677,12 +677,12 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(bt, rb)))
   of mShlI:
     let t = getType()
-    let at = "NU" & $k
+    let at = "NU" & $s
     res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(at, rb)))
   of mAshrI:
     let t = getType()
-    let at = "NI" & $k
-    let bt = "NU" & $k
+    let at = "NI" & $s
+    let bt = "NU" & $s
     res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(bt, rb)))
   of mBitandI:
     let t = getType()
@@ -699,23 +699,23 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     res = cIfExpr(cOp(GreaterEqual, ra, rb), ra, rb)
   of mAddU:
     let t = getType()
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cCast(t, cOp(Add, ot, cCast(ot, ra), cCast(ot, rb)))
   of mSubU:
     let t = getType()
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cCast(t, cOp(Sub, ot, cCast(ot, ra), cCast(ot, rb)))
   of mMulU:
     let t = getType()
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cCast(t, cOp(Mul, ot, cCast(ot, ra), cCast(ot, rb)))
   of mDivU:
     let t = getType()
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cCast(t, cOp(Div, ot, cCast(ot, ra), cCast(ot, rb)))
   of mModU:
     let t = getType()
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cCast(t, cOp(Mod, ot, cCast(ot, ra), cCast(ot, rb)))
   of mEqI:
     res = cOp(Equal, ra, rb)
@@ -730,10 +730,10 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   of mLtF64:
     res = cOp(LessThan, ra, rb)
   of mLeU:
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cOp(LessEqual, cCast(ot, ra), cCast(ot, rb))
   of mLtU:
-    let ot = "NU" & $k
+    let ot = "NU" & $s
     res = cOp(LessThan, cCast(ot, ra), cCast(ot, rb))
   of mEqEnum:
     res = cOp(Equal, ra, rb)
