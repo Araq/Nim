@@ -1379,8 +1379,7 @@ proc genTNimNodeArray(m: BModule; name: Rope, size: int) =
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
           m.hcrCreateTypeInfosProc.add(makeCString(name))
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-          # XXX use cbuilder here
-          m.hcrCreateTypeInfosProc.add("sizeof(TNimNode*) * " & $size)
+          m.hcrCreateTypeInfosProc.addOp(Mul, "NI", cSizeof(ptrType("TNimNode")), cIntValue(size))
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
           m.hcrCreateTypeInfosProc.add("NULL")
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):

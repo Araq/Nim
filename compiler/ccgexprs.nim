@@ -651,53 +651,119 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   s = max(getSize(p.config, a.t), getSize(p.config, b.t)) * 8
   k = getSize(p.config, a.t) * 8
 
-  template applyFormat(frmt: untyped) =
-    putIntoDest(p, d, e, frmt % [
-      rdLoc(a), rdLoc(b), rope(s),
-      getSimpleTypeDesc(p.module, e.typ), rope(k)]
-    )
+  var res = ""
+  template getType(): untyped =
+    getSimpleTypeDesc(p.module, e.typ)
+  let ra = rdLoc(a)
+  let rb = rdLoc(b)
 
   case op
-  of mAddF64: applyFormat("(($4)($1) + ($4)($2))")
-  of mSubF64: applyFormat("(($4)($1) - ($4)($2))")
-  of mMulF64: applyFormat("(($4)($1) * ($4)($2))")
-  of mDivF64: applyFormat("(($4)($1) / ($4)($2))")
-  of mShrI: applyFormat("($4)((NU$5)($1) >> (NU$3)($2))")
-  of mShlI: applyFormat("($4)((NU$3)($1) << (NU$3)($2))")
-  of mAshrI: applyFormat("($4)((NI$3)($1) >> (NU$3)($2))")
-  of mBitandI: applyFormat("($4)($1 & $2)")
-  of mBitorI: applyFormat("($4)($1 | $2)")
-  of mBitxorI: applyFormat("($4)($1 ^ $2)")
-  of mMinI: applyFormat("(($1 <= $2) ? $1 : $2)")
-  of mMaxI: applyFormat("(($1 >= $2) ? $1 : $2)")
-  of mAddU: applyFormat("($4)((NU$3)($1) + (NU$3)($2))")
-  of mSubU: applyFormat("($4)((NU$3)($1) - (NU$3)($2))")
-  of mMulU: applyFormat("($4)((NU$3)($1) * (NU$3)($2))")
-  of mDivU: applyFormat("($4)((NU$3)($1) / (NU$3)($2))")
-  of mModU: applyFormat("($4)((NU$3)($1) % (NU$3)($2))")
-  of mEqI: applyFormat("($1 == $2)")
-  of mLeI: applyFormat("($1 <= $2)")
-  of mLtI: applyFormat("($1 < $2)")
-  of mEqF64: applyFormat("($1 == $2)")
-  of mLeF64: applyFormat("($1 <= $2)")
-  of mLtF64: applyFormat("($1 < $2)")
-  of mLeU: applyFormat("((NU$3)($1) <= (NU$3)($2))")
-  of mLtU: applyFormat("((NU$3)($1) < (NU$3)($2))")
-  of mEqEnum: applyFormat("($1 == $2)")
-  of mLeEnum: applyFormat("($1 <= $2)")
-  of mLtEnum: applyFormat("($1 < $2)")
-  of mEqCh: applyFormat("((NU8)($1) == (NU8)($2))")
-  of mLeCh: applyFormat("((NU8)($1) <= (NU8)($2))")
-  of mLtCh: applyFormat("((NU8)($1) < (NU8)($2))")
-  of mEqB: applyFormat("($1 == $2)")
-  of mLeB: applyFormat("($1 <= $2)")
-  of mLtB: applyFormat("($1 < $2)")
-  of mEqRef: applyFormat("($1 == $2)")
-  of mLePtr: applyFormat("($1 <= $2)")
-  of mLtPtr: applyFormat("($1 < $2)")
-  of mXor: applyFormat("($1 != $2)")
+  of mAddF64:
+    let t = getType()
+    res = cOp(Add, t, cCast(t, ra), cCast(t, rb))
+  of mSubF64:
+    let t = getType()
+    res = cOp(Sub, t, cCast(t, ra), cCast(t, rb))
+  of mMulF64:
+    let t = getType()
+    res = cOp(Mul, t, cCast(t, ra), cCast(t, rb))
+  of mDivF64:
+    let t = getType()
+    res = cOp(Div, t, cCast(t, ra), cCast(t, rb))
+  of mShrI:
+    let t = getType()
+    let at = "NU" & $k
+    let bt = "NU" & $s
+    res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(bt, rb)))
+  of mShlI:
+    let t = getType()
+    let at = "NU" & $k
+    res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(at, rb)))
+  of mAshrI:
+    let t = getType()
+    let at = "NI" & $k
+    let bt = "NU" & $k
+    res = cCast(t, cOp(Shr, at, cCast(at, ra), cCast(bt, rb)))
+  of mBitandI:
+    let t = getType()
+    res = cCast(t, cOp(BitAnd, t, ra, rb))
+  of mBitorI:
+    let t = getType()
+    res = cCast(t, cOp(BitOr, t, ra, rb))
+  of mBitxorI:
+    let t = getType()
+    res = cCast(t, cOp(BitXor, t, ra, rb))
+  of mMinI:
+    res = cIfExpr(cOp(LessEqual, ra, rb), ra, rb)
+  of mMaxI:
+    res = cIfExpr(cOp(GreaterEqual, ra, rb), ra, rb)
+  of mAddU:
+    let t = getType()
+    let ot = "NU" & $k
+    res = cCast(t, cOp(Add, ot, cCast(ot, ra), cCast(ot, rb)))
+  of mSubU:
+    let t = getType()
+    let ot = "NU" & $k
+    res = cCast(t, cOp(Sub, ot, cCast(ot, ra), cCast(ot, rb)))
+  of mMulU:
+    let t = getType()
+    let ot = "NU" & $k
+    res = cCast(t, cOp(Mul, ot, cCast(ot, ra), cCast(ot, rb)))
+  of mDivU:
+    let t = getType()
+    let ot = "NU" & $k
+    res = cCast(t, cOp(Div, ot, cCast(ot, ra), cCast(ot, rb)))
+  of mModU:
+    let t = getType()
+    let ot = "NU" & $k
+    res = cCast(t, cOp(Mod, ot, cCast(ot, ra), cCast(ot, rb)))
+  of mEqI:
+    res = cOp(Equal, ra, rb)
+  of mLeI:
+    res = cOp(LessEqual, ra, rb)
+  of mLtI:
+    res = cOp(LessThan, ra, rb)
+  of mEqF64:
+    res = cOp(Equal, ra, rb)
+  of mLeF64:
+    res = cOp(LessEqual, ra, rb)
+  of mLtF64:
+    res = cOp(LessThan, ra, rb)
+  of mLeU:
+    let ot = "NU" & $k
+    res = cOp(LessEqual, cCast(ot, ra), cCast(ot, rb))
+  of mLtU:
+    let ot = "NU" & $k
+    res = cOp(LessThan, cCast(ot, ra), cCast(ot, rb))
+  of mEqEnum:
+    res = cOp(Equal, ra, rb)
+  of mLeEnum:
+    res = cOp(LessEqual, ra, rb)
+  of mLtEnum:
+    res = cOp(LessThan, ra, rb)
+  of mEqCh:
+    res = cOp(Equal, cCast("NU8", ra), cCast("NU8", rb))
+  of mLeCh:
+    res = cOp(LessEqual, cCast("NU8", ra), cCast("NU8", rb))
+  of mLtCh:
+    res = cOp(LessThan, cCast("NU8", ra), cCast("NU8", rb))
+  of mEqB:
+    res = cOp(Equal, ra, rb)
+  of mLeB:
+    res = cOp(LessEqual, ra, rb)
+  of mLtB:
+    res = cOp(LessThan, ra, rb)
+  of mEqRef:
+    res = cOp(Equal, ra, rb)
+  of mLePtr:
+    res = cOp(LessEqual, ra, rb)
+  of mLtPtr:
+    res = cOp(LessThan, ra, rb)
+  of mXor:
+    res = cOp(NotEqual, ra, rb)
   else:
     assert(false, $op)
+  putIntoDest(p, d, e, res)
 
 proc genEqProc(p: BProc, e: PNode, d: var TLoc) =
   assert(e[1].typ != nil)
@@ -724,22 +790,25 @@ proc unaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
   var a = initLocExpr(p, e[1])
   t = skipTypes(e.typ, abstractRange)
 
-  template applyFormat(frmt: untyped) =
-    putIntoDest(p, d, e, frmt % [rdLoc(a), rope(getSize(p.config, t) * 8),
-                getSimpleTypeDesc(p.module, e.typ)])
+  var res = ""
+  let ra = rdLoc(a)
+
   case op
   of mNot:
-    applyFormat("!($1)")
+    res = cOp(Not, ra)
   of mUnaryPlusI:
-    applyFormat("$1")
+    res = ra
   of mBitnotI:
-    applyFormat("($3)((NU$2) ~($1))")
+    let at = "NU" & $(getSize(p.config, t) * 8)
+    let t = getSimpleTypeDesc(p.module, e.typ)
+    res = cCast(t, cCast(at, cOp(BitNot, t, ra)))
   of mUnaryPlusF64:
-    applyFormat("$1")
+    res = ra
   of mUnaryMinusF64:
-    applyFormat("-($1)")
+    res = cOp(Neg, getSimpleTypeDesc(p.module, e.typ), ra)
   else:
     assert false, $op
+  putIntoDest(p, d, e, res)
 
 proc isCppRef(p: BProc; typ: PType): bool {.inline.} =
   result = p.module.compileToCpp and

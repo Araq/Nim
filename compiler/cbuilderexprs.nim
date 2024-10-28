@@ -101,3 +101,105 @@ proc addOffsetof(builder: var Builder, val, member: Snippet) =
   builder.add(", ")
   builder.add(member)
   builder.add(")")
+
+template cSizeof(val: Snippet): Snippet =
+  "sizeof(" & val & ")"
+
+template cAlignof(val: Snippet): Snippet =
+  "NIM_ALIGNOF(" & val & ")"
+
+template cOffsetof(val, member: Snippet): Snippet =
+  "offsetof(" & val & ", " & member & ")"
+
+type TypedBinaryOp = enum
+  Add, Sub, Mul, Div, Mod
+  Shr, Shl, BitAnd, BitOr, BitXor
+
+const typedBinaryOperators: array[TypedBinaryOp, string] = [
+  Add: "+",
+  Sub: "-",
+  Mul: "*",
+  Div: "/",
+  Mod: "%",
+  Shr: ">>",
+  Shl: "<<",
+  BitAnd: "&",
+  BitOr: "|",
+  BitXor: "^"
+]
+
+type TypedUnaryOp = enum
+  Neg, BitNot
+
+const typedUnaryOperators: array[TypedUnaryOp, string] = [
+  Neg: "-",
+  BitNot: "~",
+]
+
+type UntypedBinaryOp = enum
+  LessEqual, LessThan, GreaterEqual, GreaterThan, Equal, NotEqual
+  And, Or
+
+const untypedBinaryOperators: array[UntypedBinaryOp, string] = [
+  LessEqual: "<=",
+  LessThan: "<",
+  GreaterEqual: ">=",
+  GreaterThan: ">",
+  Equal: "==",
+  NotEqual: "!=",
+  And: "&&",
+  Or: "||"
+]
+
+type UntypedUnaryOp = enum
+  Not
+
+const untypedUnaryOperators: array[UntypedUnaryOp, string] = [
+  Not: "!"
+]
+
+proc addOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet) =
+  builder.add('(')
+  builder.add(a)
+  builder.add(' ')
+  builder.add(typedBinaryOperators[binOp])
+  builder.add(' ')
+  builder.add(b)
+  builder.add(')')
+
+proc addOp(builder: var Builder, unOp: TypedUnaryOp, t: Snippet, a: Snippet) =
+  builder.add('(')
+  builder.add(typedUnaryOperators[unOp])
+  builder.add(a)
+  builder.add(')')
+
+proc addOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
+  builder.add('(')
+  builder.add(a)
+  builder.add(' ')
+  builder.add(untypedBinaryOperators[binOp])
+  builder.add(' ')
+  builder.add(b)
+  builder.add(')')
+
+proc addOp(builder: var Builder, unOp: UntypedUnaryOp, a: Snippet) =
+  builder.add('(')
+  builder.add(untypedUnaryOperators[unOp])
+  builder.add(a)
+  builder.add(')')
+
+template cOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
+  '(' & a & ' ' & typedBinaryOperators[binOp] & ' ' & b & ')'
+
+template cOp(binOp: TypedUnaryOp, t: Snippet, a: Snippet): Snippet =
+  '(' & typedUnaryOperators[binOp] & a & ')'
+
+template cOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
+  '(' & a & ' ' & untypedBinaryOperators[binOp] & ' ' & b & ')'
+
+template cOp(binOp: UntypedUnaryOp, a: Snippet): Snippet =
+  '(' & untypedUnaryOperators[binOp] & a & ')'
+
+template cIfExpr(cond, a, b: Snippet): Snippet =
+  # XXX used for `min` and `max`, maybe add nifc primitives for these
+  cond & " ? " & a & " : " & b
