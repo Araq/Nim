@@ -516,14 +516,14 @@ proc semTuple(c: PContext, n: PNode, prev: PType): PType =
     checkMinSonsLen(a, 3, c.config)
     var hasDefaultField = a[^1].kind != nkEmpty
     if hasDefaultField:
-      typ = if n[^2].kind != nkEmpty: semTypeNode(c, n[^2], nil) else: nil
+      typ = if a[^2].kind != nkEmpty: semTypeNode(c, a[^2], nil) else: nil
       if c.inGenericContext > 0:
-        n[^1] = semExprWithType(c, n[^1], {efDetermineType, efAllowSymChoice}, typ)
+        a[^1] = semExprWithType(c, a[^1], {efDetermineType, efAllowSymChoice}, typ)
         if typ == nil:
-          typ = n[^1].typ
+          typ = a[^1].typ
       else:
-        fitDefaultNode(c, n[^1], typ)
-        typ = n[^1].typ
+        fitDefaultNode(c, a[^1], typ)
+        typ = a[^1].typ
     elif a[^2].kind != nkEmpty:
       typ = semTypeNode(c, a[^2], nil)
       if c.graph.config.isDefined("nimPreviewRangeDefault") and typ.skipTypes(abstractInst).kind == tyRange:
