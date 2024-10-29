@@ -733,6 +733,7 @@ proc preparePContext*(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PCo
   result.semInferredLambda = semInferredLambda
   result.semGenerateInstance = generateInstance
   result.instantiateOnlyProcType = instantiateOnlyProcType
+  result.fitDefaultNode = fitDefaultNode
   result.semTypeNode = semTypeNode
   result.instTypeBoundOp = sigmatch.instTypeBoundOp
   result.hasUnresolvedArgs = hasUnresolvedArgs
