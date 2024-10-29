@@ -363,7 +363,6 @@ proc lenField(p: BProc, val: Rope): Rope {.inline.} =
     result = derefField(val, "len")
   else:
     result = dotField(derefField(val, "Sup"), "len")
-  result = rope(if p.module.compileToCpp: "len" else: "Sup.len")
 
 proc lenExpr(p: BProc; a: TLoc): Rope =
   if optSeqDestructors in p.config.globalOptions:
