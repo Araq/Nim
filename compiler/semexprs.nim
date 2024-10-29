@@ -1492,6 +1492,8 @@ proc semSym(c: PContext, n: PNode, sym: PSym, flags: TExprFlags): PNode =
     if n.kind != nkDotExpr: # dotExpr is already checked by builtinFieldAccess
       markUsed(c, n.info, s)
     onUse(n.info, s)
+    if s.typ == nil:
+      return localErrorNode(c, n, "symbol '$1' has no type" % [s.name.s])
     if s.typ.kind == tyStatic and s.typ.base.kind != tyNone and s.typ.n != nil:
       return s.typ.n
     result = newSymNode(s, n.info)
