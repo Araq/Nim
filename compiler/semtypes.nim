@@ -257,6 +257,22 @@ proc isRecursiveType(t: PType, cycleDetector: var IntSet): bool =
   else:
     return false
 
+proc annotateClosureConv(n: PNode) =
+  case n.kind
+  of {nkNone..nkNilLit}:
+    discard
+  of nkTupleConstr:
+    if n.typ.kind == tyProc and n.typ.callConv == ccClosure and
+        n[0].typ.kind == tyProc and n[0].typ.callConv != ccClosure:
+      # restores `transf.generateThunk`
+      n[0] = newTreeIT(nkHiddenSubConv, n[0].info, n.typ,
+                       newNodeI(nkEmpty, n[0].info), n[0])
+      n.transitionSonsKind(nkClosure)
+      n.flags.incl nfTransf
+  else:
+    for i in 0..<n.len:
+      annotateClosureConv(n[i])
+
 proc fitDefaultNode(c: PContext, n: PNode): PType =
   inc c.inStaticContext
   let expectedType = if n[^2].kind != nkEmpty: semTypeNode(c, n[^2], nil) else: nil
@@ -272,6 +288,7 @@ proc fitDefaultNode(c: PContext, n: PNode): PType =
         # `changeType` to infer types for constant values
         # that's also the reason why we don't use `semExpr` to check
         # the type since two overlapping error messages might be produced
+    annotateClosureConv(n)
     result = n[^1].typ
   else:
     result = n[^1].typ
