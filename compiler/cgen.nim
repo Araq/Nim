@@ -400,20 +400,20 @@ template mapTypeChooser(a: TLoc): TSymKind = mapTypeChooser(a.lode)
 
 proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Rope) =
   if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result.add "(&" & a.snippet & ")"
+    result.add wrapPar(cAddr(a.snippet))
   else:
     result.add a.snippet
 
 proc addrLoc(conf: ConfigRef; a: TLoc): Rope =
   if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result = cAddr(a.snippet)
+    result = wrapPar(cAddr(a.snippet))
   else:
     result = a.snippet
 
 proc byRefLoc(p: BProc; a: TLoc): Rope =
   if lfIndirect notin a.flags and mapType(p.config, a.t, mapTypeChooser(a) == skParam) != ctArray and not
       p.module.compileToCpp:
-    result = cAddr(a.snippet)
+    result = wrapPar(cAddr(a.snippet))
   else:
     result = a.snippet
 
