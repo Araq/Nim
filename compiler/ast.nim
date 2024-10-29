@@ -1641,7 +1641,7 @@ proc propagateToOwner*(owner, elem: PType; propagateHasAsgn = true) =
   if elem.isMetaType:
     owner.flags.incl tfHasMeta
 
-  let mask = elem.flags * {tfHasAsgn, tfHasOwned}
+  let mask = elem.skipTypes({tyGenericInst, tyAlias, tySink}).flags * {tfHasAsgn, tfHasOwned}
   if mask != {} and propagateHasAsgn:
     let o2 = owner.skipTypes({tyGenericInst, tyAlias, tySink})
     if o2.kind in {tyTuple, tyObject, tyArray,
