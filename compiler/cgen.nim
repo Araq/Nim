@@ -337,31 +337,44 @@ proc getTempName(m: BModule): Rope =
   result = m.tmpBase & rope(m.labels)
   inc m.labels
 
+include cbuilderbase
+include cbuilderexprs
+include cbuilderdecls
+include cbuilderstmts
+
 proc rdLoc(a: TLoc): Rope =
   # 'read' location (deref if indirect)
   if lfIndirect in a.flags:
-    result = "(*" & a.snippet & ")"
+    result = cDeref(a.snippet)
   else:
     result = a.snippet
 
 proc addRdLoc(a: TLoc; result: var Rope) =
   if lfIndirect in a.flags:
-    result.add "(*" & a.snippet & ")"
+    result.add cDeref(a.snippet)
   else:
     result.add a.snippet
 
 proc lenField(p: BProc): Rope {.inline.} =
   result = rope(if p.module.compileToCpp: "len" else: "Sup.len")
 
+proc lenField(p: BProc, val: Rope): Rope {.inline.} =
+  if p.module.compileToCpp:
+    result = derefField(val, "len")
+  else:
+    result = dotField(derefField(val, "Sup"), "len")
+  result = rope(if p.module.compileToCpp: "len" else: "Sup.len")
+
 proc lenExpr(p: BProc; a: TLoc): Rope =
   if optSeqDestructors in p.config.globalOptions:
-    result = rdLoc(a) & ".len"
+    result = dotField(rdLoc(a), "len")
   else:
-    result = "($1 ? $1->$2 : 0)" % [rdLoc(a), lenField(p)]
+    let ra = rdLoc(a)
+    result = cIfExpr(ra, lenField(p, ra), cIntValue(0))
 
 proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
   if optSeqDestructors in p.config.globalOptions:
-    result = "(" & sym & ").p"
+    result = dotField(wrapPar(sym), "p")
   else:
     result = sym
 
@@ -371,12 +384,11 @@ proc dataField(p: BProc): Rope =
   else:
     result = rope"->data"
 
+proc dataField(p: BProc, val: Rope): Rope {.inline.} =
+  result = derefField(dataFieldAccessor(p, val), "data")
+
 proc genProcPrototype(m: BModule, sym: PSym)
 
-include cbuilderbase
-include cbuilderexprs
-include cbuilderdecls
-include cbuilderstmts
 include ccgliterals
 include ccgtypes
 
@@ -395,14 +407,14 @@ proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Rope) =
 
 proc addrLoc(conf: ConfigRef; a: TLoc): Rope =
   if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result = "(&" & a.snippet & ")"
+    result = cAddr(a.snippet)
   else:
     result = a.snippet
 
 proc byRefLoc(p: BProc; a: TLoc): Rope =
   if lfIndirect notin a.flags and mapType(p.config, a.t, mapTypeChooser(a) == skParam) != ctArray and not
       p.module.compileToCpp:
-    result = "(&" & a.snippet & ")"
+    result = cAddr(a.snippet)
   else:
     result = a.snippet
 
@@ -410,7 +422,7 @@ proc rdCharLoc(a: TLoc): Rope =
   # read a location that may need a char-cast:
   result = rdLoc(a)
   if skipTypes(a.t, abstractRange).kind == tyChar:
-    result = "((NU8)($1))" % [result]
+    result = cCast("NU8", result)
 
 type
   TAssignmentFlag = enum
@@ -756,7 +768,6 @@ proc genStmts(p: BProc, t: PNode)
 proc expr(p: BProc, n: PNode, d: var TLoc)
 
 proc putLocIntoDest(p: BProc, d: var TLoc, s: TLoc)
-proc intLiteral(i: BiggestInt; result: var Rope)
 proc genLiteral(p: BProc, n: PNode; result: var Rope)
 proc genOtherArg(p: BProc; ri: PNode; i: int; typ: PType; result: var Rope; argsCounter: var int)
 proc raiseExit(p: BProc)

@@ -2,7 +2,14 @@
 # XXX add stuff like NI, NIM_NIL as constants
 
 proc constType(t: Snippet): Snippet =
+  # needs manipulation of `t` in nifc
   "NIM_CONST " & t
+
+proc constPtrType(t: Snippet): Snippet =
+  t & "* NIM_CONST"
+
+proc ptrConstType(t: Snippet): Snippet =
+  "NIM_CONST " & t & "*"
 
 proc ptrType(t: Snippet): Snippet =
   t & "*"
