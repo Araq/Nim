@@ -402,3 +402,26 @@ when true: # Odd bug where alias can seep inside of `distinctBase`
   proc `$`*[T: AdtChild](adtChild: T): string = ""
 
   check 10 is int
+
+
+block: # bug #24378
+  macro forked(body: typed): untyped = # typed or untyped does not matter
+    result = quote do:
+      type Win = typeof(`body`)
+      doAssert not supportsCopyMem((int, Win))
+      doAssert not supportsCopyMem(tuple[a: int, b: Win])
+
+      type WIn2[T] = typeof(`body`)
+      doAssert not supportsCopyMem((int, Win2[int]))
+      doAssert not supportsCopyMem(tuple[a: int, b: Win2[int]])
+  forked:
+    "foobar"
+
+
+  type Win111 = typeof("foobar")
+  doAssert not supportsCopyMem((int, Win111))
+  doAssert not supportsCopyMem(tuple[a: int, b: Win111])
+
+  type Win222[T] = typeof("foobar")
+  doAssert not supportsCopyMem((int, Win222[int]))
+  doAssert not supportsCopyMem(tuple[a: int, b: Win222[int]])
