@@ -187,7 +187,7 @@ proc genRefAssign(p: BProc, dest, src: TLoc) =
     let rs = rdLoc(src)
     var asgnCall: CallBuilder
     p.s(cpsStmts).addStmt():
-      p.s(cpsStmts).addCall(asgnCall, cgsymValue(p.module, fnName)):
+      p.s(cpsStmts).addCall(asgnCall, fnName):
         p.s(cpsStmts).addArgument(asgnCall):
           p.s(cpsStmts).addCast("void**"):
             p.s(cpsStmts).add(rad)
@@ -830,7 +830,7 @@ proc binaryArithOverflow(p: BProc, e: PNode, d: var TLoc, m: TMagic) =
       if e[2].kind in {nkIntLit..nkInt64Lit}:
         needsOverflowCheck = e[2].intVal == -1
       if canBeZero:
-        p.s(cpsStmts).addSingleIfStmt(cOp(Equal, rdLoc(b), cIntValue(0))):
+        p.s(cpsStmts).addSingleIfStmt(removeSinglePar(cOp(Equal, rdLoc(b), cIntValue(0)))):
           p.s(cpsStmts).addStmt():
             p.s(cpsStmts).addNullaryCall(cgsymValue(p.module, "raiseDivByZero"))
           raiseInstr(p, p.s(cpsStmts))
@@ -851,7 +851,7 @@ proc unaryArithOverflow(p: BProc, e: PNode, d: var TLoc, m: TMagic) =
   let ra = rdLoc(a)
   if optOverflowCheck in p.options:
     let first = cIntLiteral(firstOrd(p.config, t))
-    p.s(cpsStmts).addSingleIfStmt(cOp(Equal, ra, first)):
+    p.s(cpsStmts).addSingleIfStmt(removeSinglePar(cOp(Equal, ra, first))):
       p.s(cpsStmts).addStmt():
         p.s(cpsStmts).addNullaryCall(cgsymValue(p.module, "raiseOverflow"))
       raiseInstr(p, p.s(cpsStmts))

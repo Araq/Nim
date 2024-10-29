@@ -33,6 +33,11 @@ proc wrapPar(value: Snippet): Snippet =
   # used for expression group, no-op on sexp
   "(" & value & ")"
 
+proc removeSinglePar(value: Snippet): Snippet =
+  # removes a single paren layer expected to exist, to silence Wparentheses-equality
+  assert value[0] == '(' and value[^1] == ')'
+  value[1..^2]
+
 template addCast(builder: var Builder, typ: Snippet, valueBody: typed) =
   ## adds a cast to `typ` with value built by `valueBody`
   builder.add "(("
