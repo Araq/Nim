@@ -187,7 +187,7 @@ proc genRefAssign(p: BProc, dest, src: TLoc) =
     let rs = rdLoc(src)
     var asgnCall: CallBuilder
     p.s(cpsStmts).addStmt():
-      p.s(cpsStmts).addCall(asgnCall, cgsymValue(p.module, "asgnRef")):
+      p.s(cpsStmts).addCall(asgnCall, cgsymValue(p.module, fnName)):
         p.s(cpsStmts).addArgument(asgnCall):
           p.s(cpsStmts).addCast("void**"):
             p.s(cpsStmts).add(rad)
