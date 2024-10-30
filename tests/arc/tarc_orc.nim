@@ -99,7 +99,7 @@ type
 
 proc imageCopy*(image: Image): Image {.nodestroy.}
 
-proc `=destroy`*(x: var Image) =
+proc `=destroy`*(x: Image) =
   discard
 proc `=sink`*(dest: var Image; source: Image) =
   `=destroy`(dest)
@@ -111,7 +111,7 @@ proc `=dup`*(source: Image): Image {.nodestroy.} =
 proc `=copy`*(dest: var Image; source: Image) =
   dest = imageCopy(source) # calls =sink implicitly
 
-proc `=destroy`*(x: var EmbeddedImage) = discard
+proc `=destroy`*(x: EmbeddedImage) = discard
 
 proc `=dup`*(source: EmbeddedImage): EmbeddedImage {.nodestroy.} = source
 
@@ -184,3 +184,32 @@ block: # bug #24147
   let oo = OO(val: "hello world")
   var ooCopy : OO
   `=copy`(ooCopy, oo)
+
+block:
+  type MyObj {.byref.} = object
+    value: int
+
+  proc `=copy`(a: var MyObj, b: MyObj) {.error.}
+  proc `=sink`(a: var MyObj, b: MyObj) {.error.}
+
+  proc createMyObj(value: int): MyObj =
+    result.value = value
+
+  var x: MyObj
+  x = createMyObj(3)
+
+block:
+  type MyObj {.byref.} = object
+    value: int
+
+  proc `=copy`(a: var MyObj, b: MyObj) {.error.}
+  proc `=sink`(a: var MyObj, b: MyObj) {.error.}
+
+  proc createMyObj(value: int): MyObj =
+    result.value = value
+
+  proc foo =
+    var x: MyObj
+    x = createMyObj(3)
+
+  foo()

@@ -275,13 +275,16 @@ proc deepAliases(dest, ri: PNode): bool =
     return aliases(dest, ri) != no
 
 proc genSink(c: var Con; s: var Scope; dest, ri: PNode; flags: set[MoveOrCopyFlag] = {}): PNode =
+  let t = dest.typ.skipTypes({tyGenericInst, tyAlias, tySink})
   if (c.inLoopCond == 0 and (isUnpackedTuple(dest) or IsDecl in flags or
       (isAnalysableFieldAccess(dest, c.owner) and isFirstWrite(dest, c)))) or
-      isNoInit(dest) or IsReturn in flags:
+      isNoInit(dest) or IsReturn in flags or
+      (tfByRef in dest.typ.flags and getAttachedOp(c.graph, t, attachedSink) != nil and
+      sfError in getAttachedOp(c.graph, t, attachedSink).flags
+      ):
     # optimize sink call into a bitwise memcopy
     result = newTree(nkFastAsgn, dest, ri)
   else:
-    let t = dest.typ.skipTypes({tyGenericInst, tyAlias, tySink})
     if getAttachedOp(c.graph, t, attachedSink) != nil:
       result = c.genOp(t, attachedSink, dest, ri)
       result.add ri

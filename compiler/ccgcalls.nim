@@ -84,7 +84,8 @@ proc cleanupTemp(p: BProc; returnType: PType, tmp: TLoc): bool =
     let dtor = getAttachedOp(p.module.g.graph, returnType, attachedDestructor)
     var op = initLocExpr(p, newSymNode(dtor))
     var callee = rdLoc(op)
-    let destroy = if dtor.typ.firstParamType.kind == tyVar:
+    let destroy = if dtor.typ.firstParamType.kind == tyVar or
+          tfByRef in dtor.typ.firstParamType.flags:
         callee & "(&" & rdLoc(tmp) & ")"
       else:
         callee & "(" & rdLoc(tmp) & ")"
