@@ -576,7 +576,7 @@ proc binaryStmtAddr(p: BProc, e: PNode, d: var TLoc, cpname: string) =
   var b = initLocExpr(p, e[2])
   let bra = byRefLoc(p, a)
   let rb = rdLoc(b)
-  p.s(cpsStmts).addCallStmt(cgsymValue(p.module, cpname), bra, rb):
+  p.s(cpsStmts).addCallStmt(cgsymValue(p.module, cpname), bra, rb)
 
 template unaryStmt(p: BProc, e: PNode, d: var TLoc, frmt: string) =
   if d.k != locNone: internalError(p.config, e.info, "unaryStmt")
