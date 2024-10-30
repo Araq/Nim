@@ -500,7 +500,7 @@ proc semAnonTuple(c: PContext, n: PNode, prev: PType): PType =
   result = newOrPrevType(tyTuple, prev, c)
   for it in n:
     let t = semTypeNode(c, it, nil)
-    addSonSkipIntLitChecked(c, result, t.skipTypes({tyAlias}), it, c.idgen)
+    addSonSkipIntLitChecked(c, result, t, it, c.idgen)
 
 proc firstRange(config: ConfigRef, t: PType): PNode =
   if t.skipModifier().kind in tyFloat..tyFloat64:
@@ -543,7 +543,7 @@ proc semTuple(c: PContext, n: PNode, prev: PType): PType =
           fSym.sym.ast = a[^1]
           fSym.sym.ast.flags.incl nfSkipFieldChecking
         result.n.add fSym
-        addSonSkipIntLit(result, typ.skipTypes({tyAlias}), c.idgen)
+        addSonSkipIntLit(result, typ, c.idgen)
       styleCheckDef(c, a[j].info, field)
       onDef(field.info, field)
   if result.n.len == 0: result.n = nil
