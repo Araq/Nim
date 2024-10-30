@@ -20,7 +20,7 @@ jobs:
   strategy:
     matrix:
       Linux_amd64:
-        vmImage: 'ubuntu-20.04'
+        vmImage: 'ubuntu-24.04'
         CPU: amd64
       # regularly breaks, refs bug #17325
 #       Linux_i386:
