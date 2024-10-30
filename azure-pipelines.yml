@@ -80,10 +80,12 @@ jobs:
     - bash: |
         set -e
         . ci/funs.sh
+        echo_run sudo add-apt-repository universe
         echo_run sudo apt-get update -qq
         DEBIAN_FRONTEND='noninteractive' \
           echo_run sudo apt-get install --no-install-recommends -yq \
-            libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev valgrind libc6-dbg
+            gcc-14 g++-14 libpcre3 liblapack-dev libpcre3 liblapack-dev libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev valgrind libc6-dbg
+        echo_run sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14
       displayName: 'Install dependencies (amd64 Linux)'
       condition: and(succeeded(), eq(variables['skipci'], 'false'), eq(variables['Agent.OS'], 'Linux'), eq(variables['CPU'], 'amd64'))
 
@@ -101,16 +103,14 @@ jobs:
         EOF
 
         # echo_run sudo apt-get update -qq
-        echo_run sudo add-apt-repository universe
         echo_run sudo apt-get update -qq || echo "failed, see bug #17343"
         # `:i386` (e.g. in `libffi-dev:i386`) is needed otherwise you may get:
         # `could not load: libffi.so` during dynamic loading.
         DEBIAN_FRONTEND='noninteractive' \
           echo_run sudo apt-get install --no-install-recommends --allow-downgrades -yq \
-            gcc-14 g++-14 libpcre3 liblapack-dev libpcre3 liblapack-dev g++-multilib gcc-multilib libcurl4-openssl-dev:i386 libgc-dev:i386 \
+            g++-multilib gcc-multilib libcurl4-openssl-dev:i386 libgc-dev:i386 \
             libsdl1.2-dev:i386 libsfml-dev:i386 libglib2.0-dev:i386 libffi-dev:i386
 
-        echo_run sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14
 
         cat << EOF > bin/gcc
         #!/bin/bash
