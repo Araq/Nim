@@ -87,15 +87,25 @@ template addCall(builder: var Builder, call: out CallBuilder, callee: Snippet, b
   body
   finishCallBuilder(builder, call)
 
-proc addNullaryCall(builder: var Builder, callee: Snippet) =
-  builder.add(callee)
-  builder.add("()")
-
-proc addUnaryCall(builder: var Builder, callee: Snippet, arg: Snippet) =
+proc addCall(builder: var Builder, callee: Snippet, args: varargs[Snippet]) =
   builder.add(callee)
   builder.add("(")
-  builder.add(arg)
+  if args.len != 0:
+    builder.add(args[0])
+    for i in 1 ..< args.len:
+      builder.add(", ")
+      builder.add(args[i])
   builder.add(")")
+
+proc cCall(callee: Snippet, args: varargs[Snippet]): Snippet =
+  result = callee
+  result.add("(")
+  if args.len != 0:
+    result.add(args[0])
+    for i in 1 ..< args.len:
+      result.add(", ")
+      result.add(args[i])
+  result.add(")")
 
 proc addSizeof(builder: var Builder, val: Snippet) =
   builder.add("sizeof(")

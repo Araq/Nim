@@ -1,31 +1,56 @@
-template addAssignment(builder: var Builder, lhs: Snippet, valueBody: typed) =
+template addAssignmentWithValue(builder: var Builder, lhs: Snippet, valueBody: typed) =
   builder.add(lhs)
   builder.add(" = ")
   valueBody
   builder.add(";\n")
 
-template addFieldAssignment(builder: var Builder, lhs: Snippet, name: string, valueBody: typed) =
+template addFieldAssignmentWithValue(builder: var Builder, lhs: Snippet, name: string, valueBody: typed) =
   builder.add(lhs)
   builder.add("." & name & " = ")
   valueBody
   builder.add(";\n")
 
-template addDerefFieldAssignment(builder: var Builder, lhs: Snippet, name: string, valueBody: typed) =
+template addAssignment(builder: var Builder, lhs, rhs: Snippet) =
+  builder.addAssignmentWithValue(lhs):
+    builder.add(rhs)
+
+template addFieldAssignment(builder: var Builder, lhs: Snippet, name: string, rhs: Snippet) =
+  builder.addFieldAssignmentWithValue(lhs, name):
+    builder.add(rhs)
+
+template addMutualFieldAssignment(builder: var Builder, lhs, rhs: Snippet, name: string) =
+  builder.addFieldAssignmentWithValue(lhs, name):
+    builder.add(rhs)
+    builder.add("." & name)
+
+template addAssignment(builder: var Builder, lhs: Snippet, rhs: int | int64 | uint64 | Int128) =
+  builder.addAssignmentWithValue(lhs):
+    builder.addIntValue(rhs)
+
+template addFieldAssignment(builder: var Builder, lhs: Snippet, name: string, rhs: int | int64 | uint64 | Int128) =
+  builder.addFieldAssignmentWithValue(lhs, name):
+    builder.addIntValue(rhs)
+
+template addDerefFieldAssignment(builder: var Builder, lhs: Snippet, name: string, rhs: Snippet) =
   builder.add(lhs)
   builder.add("->" & name & " = ")
-  valueBody
+  builder.add(rhs)
   builder.add(";\n")
 
-template addSubscriptAssignment(builder: var Builder, lhs: Snippet, index: Snippet, valueBody: typed) =
+template addSubscriptAssignment(builder: var Builder, lhs: Snippet, index: Snippet, rhs: Snippet) =
   builder.add(lhs)
   builder.add("[" & index & "] = ")
-  valueBody
+  builder.add(rhs)
   builder.add(";\n")
 
 template addStmt(builder: var Builder, stmtBody: typed) =
   ## makes an expression built by `stmtBody` into a statement
   stmtBody
   builder.add(";\n")
+
+proc addCallStmt(builder: var Builder, callee: Snippet, args: varargs[Snippet]) =
+  builder.addStmt():
+    builder.addCall(callee, args)
 
 # XXX blocks need indent tracker in `Builder` object
 
