@@ -1,3 +1,7 @@
+discard """
+  joinable: false
+"""
+
 import typetraits
 import macros
 
@@ -411,7 +415,7 @@ block: # bug #24378
       doAssert not supportsCopyMem((int, Win))
       doAssert not supportsCopyMem(tuple[a: int, b: Win])
 
-      type WIn2[T] = typeof(`body`)
+      type Win2[T] = typeof(`body`)
       doAssert not supportsCopyMem((int, Win2[int]))
       doAssert not supportsCopyMem(tuple[a: int, b: Win2[int]])
   forked:
