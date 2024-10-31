@@ -1070,7 +1070,7 @@ proc genFieldCheck(p: BProc, e: PNode, obj: Rope, field: PSym) =
 
     ## discriminant check
     let rt = rdLoc(test)
-    let cond = if op.magic == mNot: cOp(Not, rt) else: rt
+    let cond = if op.magic == mNot: rt else: cOp(Not, rt)
     p.s(cpsStmts).addSingleIfStmt(cond):
       ## call raiseFieldError2 on failure
       var discIndex = newRopeAppender()
