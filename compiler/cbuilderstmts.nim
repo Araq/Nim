@@ -98,7 +98,7 @@ template addScope(builder: var Builder, body: typed) =
   body
   builder.add("\t}")
 
-proc addLabel(builder: var Builder, name: string) =
+proc addLabel(builder: var Builder, name: TLabel) =
   builder.add(name)
   builder.add(": ;\n")
 
