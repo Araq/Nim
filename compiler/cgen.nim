@@ -762,7 +762,7 @@ proc getLabel(p: BProc): TLabel =
   result = "LA" & rope(p.labels) & "_"
 
 proc fixLabel(p: BProc, labl: TLabel) =
-  p.s(cpsStmts).add("$1: ;$n" % [labl])
+  p.s(cpsStmts).addLabel(labl)
 
 proc genVarPrototype(m: BModule, n: PNode)
 proc requestConstImpl(p: BProc, sym: PSym)
