@@ -1531,13 +1531,20 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   m.s[cfsTypeInit1].addArrayVarWithInitializer(
       kind = Global,
       name = enumArray,
-      elementType = "char* NIM_CONST", # XXX maybe do this in `addVar`
+      elementType = constPtrType("char"),
       len = typ.n.len):
     m.s[cfsTypeInit1].add(enumNames)
-  m.s[cfsTypeInit3].addf("for ($1 = 0; $1 < $2; $1++) {$n" &
-      "$3[$1+$4].kind = 1;$n" & "$3[$1+$4].offset = $1;$n" &
-      "$3[$1+$4].name = $5[$1];$n" & "$6[$1] = &$3[$1+$4];$n" & "}$n", [counter,
-      rope(typ.n.len), m.typeNodesName, rope(firstNimNode), enumArray, nodePtrs])
+  m.s[cfsTypeInit3].addForRangeExclusive(i = counter,
+      start = cIntValue(0),
+      bound = cIntValue(typ.n.len)):
+    let nodeLoc = subscript(m.typeNodesName,
+      cOp(Add, "NI", counter, cIntValue(firstNimNode)))
+    m.s[cfsTypeInit3].addFieldAssignment(nodeLoc, "kind", cIntValue(1))
+    m.s[cfsTypeInit3].addFieldAssignment(nodeLoc, "offset", counter)
+    m.s[cfsTypeInit3].addFieldAssignment(nodeLoc, "name",
+      subscript(enumArray, counter))
+    m.s[cfsTypeInit3].addSubscriptAssignment(nodePtrs, counter,
+      cAddr(nodeLoc))
   m.s[cfsTypeInit3].add(specialCases)
   let n = getNimNode(m)
   m.s[cfsTypeInit3].addFieldAssignment(n, "len", typ.n.len)
@@ -1546,8 +1553,9 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
     cAddr(subscript(nodePtrs, cIntValue(0))))
   m.s[cfsTypeInit3].addFieldAssignment(tiNameForHcr(m, name), "node", cAddr(n))
   if hasHoles:
-    # 1 << 2 is {ntfEnumHole}
-    m.s[cfsTypeInit3].addf("$1.flags = 1<<2;$n", [tiNameForHcr(m, name)])
+    m.s[cfsTypeInit3].addFieldAssignment(tiNameForHcr(m, name), "flags",
+      # 1 << 2 is {ntfEnumHole}
+      cOp(Shl, "NU8", cIntValue(1), cIntValue(2)))
 
 proc genSetInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   assert(typ.elementType != nil)
