@@ -81,7 +81,6 @@ proc fillBackendName(m: BModule; s: PSym) =
       result.add '_'
       result.add(idOrSig(s, m.module.name.s.mangle, m.sigConflicts, m.config))
     s.loc.snippet = result
-    writeMangledName(m.ndi, s, m.config)
 
 proc fillParamName(m: BModule; s: PSym) =
   if s.loc.snippet == "":
@@ -105,7 +104,6 @@ proc fillParamName(m: BModule; s: PSym) =
     # That would lead to either needing to reload `proxy` or to overwrite the
     # executable file for the main module, which is running (or both!) -> error.
     s.loc.snippet = res.rope
-    writeMangledName(m.ndi, s, m.config)
 
 proc fillLocalName(p: BProc; s: PSym) =
   assert s.kind in skLocalVars+{skTemp}
@@ -121,7 +119,6 @@ proc fillLocalName(p: BProc; s: PSym) =
       result.add "_" & rope(counter+1)
     p.sigConflicts.inc(key)
     s.loc.snippet = result
-    if s.kind != skTemp: writeMangledName(p.module.ndi, s, p.config)
 
 proc scopeMangledParam(p: BProc; param: PSym) =
   ## parameter generation only takes BModule, not a BProc, so we have to
