@@ -1359,8 +1359,9 @@ proc genProcPrototype(m: BModule, sym: PSym) =
     var visibility: DeclVisibility = None
     genProcHeader(m, sym, header, visibility, asPtr = asPtr, addAttributes = true)
     if asPtr:
-      # genProcHeader would give variable declaration, add it directly
-      m.s[cfsProcHeaders].add(header)
+      m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+        # genProcHeader would give variable declaration, add it directly
+        m.s[cfsProcHeaders].add(header)
     else:
       let extraVis =
         if sym.typ.callConv != ccInline and requiresExternC(m, sym):
