@@ -1238,7 +1238,7 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var Decl
     elif sfImportc notin prc.flags:
       visibility = Private
     if asPtr:
-      result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar)
+      result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar, ignoreAttributes = true)
     else:
       result.addProcHeader(m, prc, name, params, rettype, addAttributes)
   else:
