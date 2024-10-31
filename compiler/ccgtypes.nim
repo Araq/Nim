@@ -1219,7 +1219,6 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var Decl
   genProcParams(m, prc.typ, rettype, params, check, true, false)
   # handle the 2 options for hotcodereloading codegen - function pointer
   # (instead of forward declaration) or header for function body with "_actual" postfix
-  let asPtrStr = rope(if asPtr: "_PTR" else: "")
   var name = prc.loc.snippet
   if not asPtr and isReloadable(m, prc):
     name.add("_actual")
@@ -1238,7 +1237,6 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var Decl
       visibility = StaticProc
     elif sfImportc notin prc.flags:
       visibility = Private
-    let noreturn = isNoReturn(m, prc)
     if asPtr:
       result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar)
     else:

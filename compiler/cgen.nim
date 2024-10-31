@@ -1285,11 +1285,12 @@ proc genProcAux*(m: BModule, prc: PSym) =
         generatedProc.add(p.s(cpsStmts))
     else:
       if m.hcrOn and isReloadable(m, prc):
-        # Add forward declaration for "_actual"-suffixed functions defined in the same module (or inline).
-        # This fixes the use of methods and also the case when 2 functions within the same module
-        # call each other using directly the "_actual" versions (an optimization) - see issue #11608
-        m.s[cfsProcHeaders].add(header)
-        m.s[cfsProcHeaders].finishProcHeaderAsProto()
+        m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+          # Add forward declaration for "_actual"-suffixed functions defined in the same module (or inline).
+          # This fixes the use of methods and also the case when 2 functions within the same module
+          # call each other using directly the "_actual" versions (an optimization) - see issue #11608
+          m.s[cfsProcHeaders].add(header)
+          m.s[cfsProcHeaders].finishProcHeaderAsProto()
       generatedProc.add(header)
       generatedProc.finishProcHeaderWithBody():
         if optStackTrace in prc.options:
