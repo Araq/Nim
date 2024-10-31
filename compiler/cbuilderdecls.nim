@@ -459,7 +459,7 @@ template addProcParams(builder: var Builder, params: out ProcParamBuilder, body:
   body
   finishProcParamBuilder(builder, params)
 
-proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet) =
+proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool) =
   # on nifc should build something like (proc name params type pragmas
   # with no body given
   let noreturn = isNoReturn(m, prc)
@@ -474,10 +474,11 @@ proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, pa
   builder.add(name)
   builder.add(")")
   builder.add(params)
-  if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-    builder.add(" __attribute__((naked))")
-  if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-    builder.add(" __attribute__((noreturn))")
+  if addAttributes:
+    if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((naked))")
+    if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((noreturn))")
 
 proc finishProcHeaderAsProto(builder: var Builder) =
   builder.add(";\n")

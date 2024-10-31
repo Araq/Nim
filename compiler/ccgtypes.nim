@@ -1209,7 +1209,7 @@ proc genMemberProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = 
         [rope(CallingConvToStr[prc.typ.callConv]), asPtrStr, rettype, name,
         params, fnConst, override, superCall])
 
-proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var DeclVisibility, asPtr: bool = false) =
+proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var DeclVisibility, asPtr: bool, addAttributes: bool) =
   # using static is needed for inline procs
   var check = initIntSet()
   fillBackendName(m, prc)
@@ -1242,7 +1242,7 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var Decl
     if asPtr:
       result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar)
     else:
-      result.addProcHeader(m, prc, name, params, rettype)
+      result.addProcHeader(m, prc, name, params, rettype, addAttributes)
   else:
     let asPtrStr = if asPtr: (rope("(*") & name & ")") else: name
     result.add runtimeFormat(prc.cgDeclFrmt, [rettype, asPtrStr, params])

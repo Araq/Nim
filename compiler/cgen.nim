@@ -1207,7 +1207,7 @@ proc genProcAux*(m: BModule, prc: PSym) =
   if isCppMember:
     genMemberProcHeader(m, prc, header)
   else:
-    genProcHeader(m, prc, header, visibility)
+    genProcHeader(m, prc, header, visibility, asPtr = false, addAttributes = false)
   var returnStmt: Rope = ""
   assert(prc.ast != nil)
 
@@ -1357,7 +1357,7 @@ proc genProcPrototype(m: BModule, sym: PSym) =
     let asPtr = isReloadable(m, sym)
     var header = newRopeAppender()
     var visibility: DeclVisibility = None
-    genProcHeader(m, sym, header, visibility, asPtr)
+    genProcHeader(m, sym, header, visibility, asPtr = asPtr, addAttributes = true)
     if asPtr:
       # genProcHeader would give variable declaration, add it directly
       m.s[cfsProcHeaders].add(header)
