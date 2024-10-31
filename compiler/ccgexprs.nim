@@ -1449,7 +1449,7 @@ proc genStrConcat(p: BProc, e: PNode, d: var TLoc) =
   var tmp: TLoc = getTemp(p, e.typ)
   var L = 0
   var appends = newBuilder("")
-  var lens = cIntValue(L)
+  var lens: seq[Snippet] = @[]
   for i in 0..<e.len - 1:
     # compute the length expression:
     a = initLocExpr(p, e[i + 1])
@@ -1464,12 +1464,15 @@ proc genStrConcat(p: BProc, e: PNode, d: var TLoc) =
       if e[i + 1].kind in {nkStrLit..nkTripleStrLit}:
         inc(L, e[i + 1].strVal.len)
       else:
-        lens = cOp(Add, "NI", lenExpr(p, a), lens)
+        lens.add(lenExpr(p, a))
       appends.addCallStmt(cgsymValue(p.module, "appendString"),
         rstmp,
         ra)
+  var exprL = cIntValue(L)
+  for len in lens:
+    exprL = cOp(Add, "NI", exprL, len)
   p.s(cpsStmts).addAssignmentWithValue(tmp.snippet):
-    p.s(cpsStmts).addCall(cgsymValue(p.module, "rawNewString"), lens)
+    p.s(cpsStmts).addCall(cgsymValue(p.module, "rawNewString"), exprL)
   p.s(cpsStmts).add appends
   if d.k == locNone:
     d = tmp
@@ -1494,7 +1497,7 @@ proc genStrAppend(p: BProc, e: PNode, d: var TLoc) =
     appends = newBuilder("")
   assert(d.k == locNone)
   var L = 0
-  var lens = cIntValue(L)
+  var lens: seq[Snippet] = @[]
   var dest = initLocExpr(p, e[1])
   let rsd = strLoc(p, dest)
   for i in 0..<e.len - 2:
@@ -1510,22 +1513,25 @@ proc genStrAppend(p: BProc, e: PNode, d: var TLoc) =
       if e[i + 2].kind in {nkStrLit..nkTripleStrLit}:
         inc(L, e[i + 2].strVal.len)
       else:
-        lens = cOp(Add, "NI", lenExpr(p, a), lens)
+        lens.add(lenExpr(p, a))
       appends.addCallStmt(cgsymValue(p.module, "appendString"),
         rsd,
         ra)
+  var exprL = cIntValue(L)
+  for len in lens:
+    exprL = cOp(Add, "NI", exprL, len)
   if optSeqDestructors in p.config.globalOptions:
     let brd = byRefLoc(p, dest)
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "prepareAdd"),
       brd,
-      lens)
+      exprL)
   else:
     call = initLoc(locCall, e, OnHeap)
     var callRes = newBuilder("")
     let rd = rdLoc(dest)
     callRes.addCall(cgsymValue(p.module, "resizeString"),
       rd,
-      lens)
+      exprL)
     call.snippet = callRes
     genAssignment(p, dest, call, {})
     gcUsage(p.config, e)
