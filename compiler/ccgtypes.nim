@@ -511,9 +511,6 @@ proc multiFormat*(frmt: var string, chars: static openArray[char], args: openArr
         res.add(substr(frmt, start, i - 1))
     frmt = res
 
-template cgDeclFrmt*(s: PSym): string =
-  s.constraint.strVal
-
 proc genMemberProcParams(m: BModule; prc: PSym, superCall, rettype, name, params: var string,
                    check: var IntSet, declareEnvironment=true;
                    weakDep=false;) =
@@ -590,79 +587,65 @@ proc genMemberProcParams(m: BModule; prc: PSym, superCall, rettype, name, params
       params.delete(params.len()-1..params.len()-1)
     params.add("...)")
 
-proc genProcParams(m: BModule; t: PType, rettype, params: var Rope,
+proc genProcParams(m: BModule; t: PType, rettype: var Rope, params: var Builder,
                    check: var IntSet, declareEnvironment=true;
                    weakDep=false;) =
-  params = "("
   if t.returnType == nil or isInvalidReturnType(m.config, t):
     rettype = "void"
   else:
     rettype = getTypeDescAux(m, t.returnType, check, dkResult)
-  for i in 1..<t.n.len:
-    if t.n[i].kind != nkSym: internalError(m.config, t.n.info, "genProcParams")
-    var param = t.n[i].sym
-    var descKind = dkParam
-    if m.config.backend == backendCpp and optByRef in param.options:
-      if param.typ.kind == tyGenericInst:
-        descKind = dkRefGenericParam
+  var paramBuilder: ProcParamBuilder
+  params.addProcParams(paramBuilder):
+    for i in 1..<t.n.len:
+      if t.n[i].kind != nkSym: internalError(m.config, t.n.info, "genProcParams")
+      var param = t.n[i].sym
+      var descKind = dkParam
+      if m.config.backend == backendCpp and optByRef in param.options:
+        if param.typ.kind == tyGenericInst:
+          descKind = dkRefGenericParam
+        else:
+          descKind = dkRefParam
+      if isCompileTimeOnly(param.typ): continue
+      fillParamName(m, param)
+      fillLoc(param.loc, locParam, t.n[i],
+              param.paramStorageLoc)
+      var typ: Rope
+      if ccgIntroducedPtr(m.config, param, t.returnType) and descKind == dkParam:
+        typ = ptrType(getTypeDescWeak(m, param.typ, check, descKind))
+        incl(param.loc.flags, lfIndirect)
+        param.loc.storage = OnUnknown
+      elif weakDep:
+        typ = (getTypeDescWeak(m, param.typ, check, descKind))
       else:
-        descKind = dkRefParam
-    if isCompileTimeOnly(param.typ): continue
-    if params != "(": params.add(", ")
-    fillParamName(m, param)
-    fillLoc(param.loc, locParam, t.n[i],
-            param.paramStorageLoc)
-    var typ: Rope
-    if ccgIntroducedPtr(m.config, param, t.returnType) and descKind == dkParam:
-      typ = (getTypeDescWeak(m, param.typ, check, descKind))
-      typ.add("*")
-      incl(param.loc.flags, lfIndirect)
-      param.loc.storage = OnUnknown
-    elif weakDep:
-      typ = (getTypeDescWeak(m, param.typ, check, descKind))
-    else:
-      typ = (getTypeDescAux(m, param.typ, check, descKind))
-    typ.add(" ")
-    if sfNoalias in param.flags:
-      typ.add("NIM_NOALIAS ")
-    if sfCodegenDecl notin param.flags:
-      params.add(typ)
-      params.add(param.loc.snippet)
-    else:
-      params.add runtimeFormat(param.cgDeclFrmt, [typ, param.loc.snippet])
-    # declare the len field for open arrays:
-    var arr = param.typ.skipTypes({tyGenericInst})
-    if arr.kind in {tyVar, tyLent, tySink}: arr = arr.elementType
-    var j = 0
-    while arr.kind in {tyOpenArray, tyVarargs}:
-      # this fixes the 'sort' bug:
-      if param.typ.kind in {tyVar, tyLent}: param.loc.storage = OnUnknown
-      # need to pass hidden parameter:
-      params.addf(", NI $1Len_$2", [param.loc.snippet, j.rope])
-      inc(j)
-      arr = arr[0].skipTypes({tySink})
-  if t.returnType != nil and isInvalidReturnType(m.config, t):
-    var arr = t.returnType
-    if params != "(": params.add(", ")
-    if mapReturnType(m.config, arr) != ctArray:
-      if isHeaderFile in m.flags:
-        # still generates types for `--header`
-        params.add(getTypeDescAux(m, arr, check, dkResult))
-        params.add("*")
+        typ = (getTypeDescAux(m, param.typ, check, descKind))
+      params.addParam(paramBuilder, param, typ = typ)
+      # declare the len field for open arrays:
+      var arr = param.typ.skipTypes({tyGenericInst})
+      if arr.kind in {tyVar, tyLent, tySink}: arr = arr.elementType
+      var j = 0
+      while arr.kind in {tyOpenArray, tyVarargs}:
+        # this fixes the 'sort' bug:
+        if param.typ.kind in {tyVar, tyLent}: param.loc.storage = OnUnknown
+        # need to pass hidden parameter:
+        params.addParam(paramBuilder, name = param.loc.snippet & "Len_" & $j, typ = "NI")
+        inc(j)
+        arr = arr[0].skipTypes({tySink})
+    if t.returnType != nil and isInvalidReturnType(m.config, t):
+      var arr = t.returnType
+      var typ: Snippet
+      if mapReturnType(m.config, arr) != ctArray:
+        if isHeaderFile in m.flags:
+          # still generates types for `--header`
+          typ = ptrType(getTypeDescAux(m, arr, check, dkResult))
+        else:
+          typ = ptrType(getTypeDescWeak(m, arr, check, dkResult))
       else:
-        params.add(getTypeDescWeak(m, arr, check, dkResult))
-        params.add("*")
-    else:
-      params.add(getTypeDescAux(m, arr, check, dkResult))
-    params.addf(" Result", [])
-  if t.callConv == ccClosure and declareEnvironment:
-    if params != "(": params.add(", ")
-    params.add("void* ClE_0")
-  if tfVarargs in t.flags:
-    if params != "(": params.add(", ")
-    params.add("...")
-  if params == "(": params.add("void)")
-  else: params.add(")")
+        typ = getTypeDescAux(m, arr, check, dkResult)
+      params.addParam(paramBuilder, name = "Result", typ = typ)
+    if t.callConv == ccClosure and declareEnvironment:
+      params.addParam(paramBuilder, name = "ClE_0", typ = "void*")
+    if tfVarargs in t.flags:
+      params.addVarargsParam(paramBuilder)
 
 proc mangleRecFieldName(m: BModule; field: PSym): Rope =
   if {sfImportc, sfExportc} * field.flags != {}:
@@ -959,18 +942,17 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
   of tyProc:
     result = getTypeName(m, origTyp, sig)
     m.typeCache[sig] = result
-    var rettype, desc: Rope = ""
+    var rettype: Snippet = ""
+    var desc = newBuilder("")
     genProcParams(m, t, rettype, desc, check, true, true)
     if not isImportedType(t):
       var typedef = newBuilder("")
       if t.callConv != ccClosure: # procedure vars may need a closure!
-        typedef.addTypedef(name = desc):
-          typedef.add(procPtrType(t.callConv, rettype = rettype, name = result))
+        typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = desc)
       else:
         typedef.addTypedef(name = result):
           typedef.addSimpleStruct(m, name = "", baseType = ""):
-            typedef.addField(name = desc, typ =
-              procPtrType(ccNimCall, rettype = rettype, name = "ClP_0"))
+            typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = desc)
             typedef.addField(name = "ClE_0", typ = "void*")
       m.s[cfsTypes].add(typedef)
   of tySequence:
@@ -1124,18 +1106,17 @@ proc getClosureType(m: BModule; t: PType, kind: TClosureTypeKind): Rope =
   assert t.kind == tyProc
   var check = initIntSet()
   result = getTempName(m)
-  var rettype, desc: Rope = ""
+  var rettype: Snippet = ""
+  var desc = newBuilder("")
   genProcParams(m, t, rettype, desc, check, declareEnvironment=kind != clHalf)
   if not isImportedType(t):
     var typedef = newBuilder("")
     if t.callConv != ccClosure or kind != clFull:
-      typedef.addTypedef(name = desc):
-        typedef.add(procPtrType(t.callConv, rettype = rettype, name = result))
+      typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = desc)
     else:
       typedef.addTypedef(name = result):
         typedef.addSimpleStruct(m, name = "", baseType = ""):
-          typedef.addField(name = desc, typ =
-            procPtrType(ccNimCall, rettype = rettype, name = "ClP_0"))
+          typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = desc)
           typedef.addField(name = "ClE_0", typ = "void*")
     m.s[cfsTypes].add(typedef)
 
@@ -1228,12 +1209,13 @@ proc genMemberProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = 
         [rope(CallingConvToStr[prc.typ.callConv]), asPtrStr, rettype, name,
         params, fnConst, override, superCall])
 
-proc genProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = false) =
+proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var DeclVisibility, asPtr: bool = false) =
   # using static is needed for inline procs
   var check = initIntSet()
   fillBackendName(m, prc)
   fillLoc(prc.loc, locProc, prc.ast[namePos], OnUnknown)
-  var rettype, params: Rope = ""
+  var rettype: Snippet = ""
+  var params = newBuilder("")
   genProcParams(m, prc.typ, rettype, params, check, true, false)
   # handle the 2 options for hotcodereloading codegen - function pointer
   # (instead of forward declaration) or header for function body with "_actual" postfix
@@ -1244,18 +1226,23 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = false)
   # careful here! don't access ``prc.ast`` as that could reload large parts of
   # the object graph!
   if sfCodegenDecl notin prc.flags:
+    var isStaticVar = false
     if lfExportLib in prc.loc.flags:
       if isHeaderFile in m.flags:
-        result.add "N_LIB_IMPORT "
+        visibility = ImportLib
       else:
-        result.add "N_LIB_EXPORT "
-    elif prc.typ.callConv == ccInline or asPtr or isNonReloadable(m, prc):
-      result.add "static "
+        visibility = ExportLib
+    elif asPtr:
+      isStaticVar = true
+    elif prc.typ.callConv == ccInline or isNonReloadable(m, prc):
+      visibility = StaticProc
     elif sfImportc notin prc.flags:
-      result.add "N_LIB_PRIVATE "
-    result.addf("$1$2($3, $4)$5",
-         [rope(CallingConvToStr[prc.typ.callConv]), asPtrStr, rettype, name,
-         params])
+      visibility = Private
+    let noreturn = isNoReturn(m, prc)
+    if asPtr:
+      result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar)
+    else:
+      result.addProcHeader(m, prc, name, params, rettype)
   else:
     let asPtrStr = if asPtr: (rope("(*") & name & ")") else: name
     result.add runtimeFormat(prc.cgDeclFrmt, [rettype, asPtrStr, params])

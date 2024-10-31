@@ -23,8 +23,8 @@ const
     "N_NOCONV" #ccMember is N_NOCONV
     ]
 
-proc procPtrType(conv: TCallingConvention, rettype: Snippet, name: string): Snippet =
-  CallingConvToStr[conv] & "_PTR(" & rettype & ", " & name & ")"
+proc procPtrTypeUnnamed(rettype, params: Snippet): Snippet =
+  rettype & "(*)" & params
 
 proc cCast(typ, value: Snippet): Snippet =
   "((" & typ & ") " & value & ")"

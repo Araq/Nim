@@ -92,3 +92,20 @@ template addElseBranch(builder: var Builder, stmt: var IfStmt, body: typed) =
   builder.add(" else {\n")
   body
   builder.add("}")
+
+template addScope(builder: var Builder, body: typed) =
+  builder.add("{")
+  body
+  builder.add("\t}")
+
+proc addLabel(builder: var Builder, name: string) =
+  builder.add(name)
+  builder.add(": ;\n")
+
+proc addReturn(builder: var Builder) =
+  builder.add("return;\n")
+
+proc addReturn(builder: var Builder, value: string) =
+  builder.add("return ")
+  builder.add(value)
+  builder.add(";\n")
