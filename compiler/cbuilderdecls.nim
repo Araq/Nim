@@ -89,6 +89,17 @@ template addTypedef(builder: var Builder, name: string, typeBody: typed) =
   builder.add(name)
   builder.add(";\n")
 
+proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+  builder.add("typedef ")
+  builder.add(CallingConvToStr[callConv])
+  builder.add("_PTR(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(")")
+  builder.add(params)
+  builder.add(";\n")
+
 template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, typeBody: typed) =
   ## adds an array typedef declaration to the builder with name `name`,
   ## length `len`, and element type as built in `typeBody`
@@ -198,6 +209,16 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
     obj.addIntValue(field.bitsize)
   if initializer.len != 0:
     obj.add(initializer)
+  obj.add(";\n")
+
+proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+  obj.add(CallingConvToStr[callConv])
+  obj.add("_PTR(")
+  obj.add(rettype)
+  obj.add(", ")
+  obj.add(name)
+  obj.add(")")
+  obj.add(params)
   obj.add(";\n")
 
 type
@@ -349,17 +370,23 @@ template addAnonUnion(obj: var Builder; body: typed) =
   obj.add("};\n")
 
 type DeclVisibility = enum
+  None
   Extern
+  ExternC
   ImportLib
   ExportLib
   ExportLibVar
   Private
+  StaticProc
 
 template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility, declBody: typed) =
   ## adds a declaration as in `declBody` with the given visibility
   case visibility
+  of None: discard
   of Extern:
     builder.add("extern ")
+  of ExternC:
+    builder.add("extern \"C\" ")
   of ImportLib:
     builder.add("N_LIB_IMPORT ")
   of ExportLib:
@@ -368,4 +395,121 @@ template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility,
     builder.add("N_LIB_EXPORT_VAR ")
   of Private:
     builder.add("N_LIB_PRIVATE ")
+  of StaticProc:
+    builder.add("static ")
   declBody
+
+type ProcParamBuilder = object
+  needsComma: bool
+
+proc initProcParamBuilder(builder: var Builder): ProcParamBuilder =
+  result = ProcParamBuilder(needsComma: false)
+  builder.add("(")
+
+proc finishProcParamBuilder(builder: var Builder, params: ProcParamBuilder) =
+  if params.needsComma:
+    builder.add(")")
+  else:
+    builder.add("void)")
+
+template cgDeclFrmt*(s: PSym): string =
+  s.constraint.strVal
+
+proc addParam(builder: var Builder, params: var ProcParamBuilder, name: string, typ: Snippet) =
+  if params.needsComma:
+    builder.add(", ")
+  else:
+    params.needsComma = true
+  builder.add(typ)
+  builder.add(" ")
+  builder.add(name)
+
+proc addParam(builder: var Builder, params: var ProcParamBuilder, param: PSym, typ: Snippet) =
+  if params.needsComma:
+    builder.add(", ")
+  else:
+    params.needsComma = true
+  var modifiedTyp = typ
+  if sfNoalias in param.flags:
+    modifiedTyp.add(" NIM_NOALIAS")
+  if sfCodegenDecl notin param.flags:
+    builder.add(modifiedTyp)
+    builder.add(" ")
+    builder.add(param.loc.snippet)
+  else:
+    builder.add runtimeFormat(param.cgDeclFrmt, [modifiedTyp, param.loc.snippet])
+
+proc addUnnamedParam(builder: var Builder, params: var ProcParamBuilder, typ: Snippet) =
+  if params.needsComma:
+    builder.add(", ")
+  else:
+    params.needsComma = true
+  builder.add(typ)
+
+proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
+  # does not exist in NIFC, needs to be proc pragma
+  if params.needsComma:
+    builder.add(", ")
+  else:
+    params.needsComma = true
+  builder.add("...")
+
+template addProcParams(builder: var Builder, params: out ProcParamBuilder, body: typed) =
+  params = initProcParamBuilder(builder)
+  body
+  finishProcParamBuilder(builder, params)
+
+proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool) =
+  # on nifc should build something like (proc name params type pragmas
+  # with no body given
+  let noreturn = isNoReturn(m, prc)
+  if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+    builder.add("__declspec(naked) ")
+  if noreturn and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+    builder.add("__declspec(noreturn) ")
+  builder.add(CallingConvToStr[prc.typ.callConv])
+  builder.add("(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(")")
+  builder.add(params)
+  if addAttributes:
+    if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((naked))")
+    if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((noreturn))")
+
+proc finishProcHeaderAsProto(builder: var Builder) =
+  builder.add(";\n")
+
+template finishProcHeaderWithBody(builder: var Builder, body: typed) =
+  builder.add(" {\n")
+  body
+  builder.add("}\n\n")
+
+proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet,
+                isStatic = false, ignoreAttributes = false) =
+  # on nifc, builds full variable
+  if isStatic:
+    builder.add("static ")
+  let noreturn = isNoReturn(m, prc)
+  if not ignoreAttributes:
+    if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+      builder.add("__declspec(naked) ")
+    if noreturn and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+      builder.add("__declspec(noreturn) ")
+  builder.add(CallingConvToStr[prc.typ.callConv])
+  builder.add("_PTR(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(")")
+  builder.add(params)
+  if not ignoreAttributes:
+    if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((naked))")
+    if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+      builder.add(" __attribute__((noreturn))")
+  # ensure we are just adding a variable:
+  builder.add(";\n")

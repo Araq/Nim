@@ -337,6 +337,9 @@ proc getTempName(m: BModule): Rope =
   result = m.tmpBase & rope(m.labels)
   inc m.labels
 
+proc isNoReturn(m: BModule; s: PSym): bool {.inline.} =
+  sfNoReturn in s.flags and m.config.exc != excGoto
+
 include cbuilderbase
 include cbuilderexprs
 include cbuilderdecls
@@ -759,7 +762,7 @@ proc getLabel(p: BProc): TLabel =
   result = "LA" & rope(p.labels) & "_"
 
 proc fixLabel(p: BProc, labl: TLabel) =
-  p.s(cpsStmts).add("$1: ;$n" % [labl])
+  p.s(cpsStmts).addLabel(labl)
 
 proc genVarPrototype(m: BModule, n: PNode)
 proc requestConstImpl(p: BProc, sym: PSym)
@@ -1181,29 +1184,30 @@ proc allPathsAsgnResult(p: BProc; n: PNode): InitResultEnum =
 proc getProcTypeCast(m: BModule, prc: PSym): Rope =
   result = getTypeDesc(m, prc.loc.t)
   if prc.typ.callConv == ccClosure:
-    var rettype, params: Rope = ""
+    var rettype: Snippet = ""
+    var params = newBuilder("")
     var check = initIntSet()
     genProcParams(m, prc.typ, rettype, params, check)
-    result = "$1(*)$2" % [rettype, params]
+    result = procPtrTypeUnnamed(rettype = rettype, params = params)
 
 proc genProcBody(p: BProc; procBody: PNode) =
   genStmts(p, procBody) # modifies p.locals, p.init, etc.
   if {nimErrorFlagAccessed, nimErrorFlagDeclared, nimErrorFlagDisabled} * p.flags == {nimErrorFlagAccessed}:
     p.flags.incl nimErrorFlagDeclared
-    p.blocks[0].sections[cpsLocals].add(ropecg(p.module, "NIM_BOOL* nimErr_;$n", []))
-    p.blocks[0].sections[cpsInit].add(ropecg(p.module, "nimErr_ = #nimErrorFlag();$n", []))
-
-proc isNoReturn(m: BModule; s: PSym): bool {.inline.} =
-  sfNoReturn in s.flags and m.config.exc != excGoto
+    p.blocks[0].sections[cpsLocals].addVar(kind = Local,
+      name = "nimErr_", typ = ptrType("NIM_BOOL"))
+    p.blocks[0].sections[cpsInit].addAssignmentWithValue("nimErr_"):
+      p.blocks[0].sections[cpsInit].addCall(cgsymValue(p.module, "nimErrorFlag"))
 
 proc genProcAux*(m: BModule, prc: PSym) =
   var p = newProc(prc, m)
   var header = newRopeAppender()
   let isCppMember = m.config.backend == backendCpp and sfCppMember * prc.flags != {}
+  var visibility: DeclVisibility = None
   if isCppMember:
     genMemberProcHeader(m, prc, header)
   else:
-    genProcHeader(m, prc, header)
+    genProcHeader(m, prc, header, visibility, asPtr = false, addAttributes = false)
   var returnStmt: Rope = ""
   assert(prc.ast != nil)
 
@@ -1224,7 +1228,8 @@ proc genProcAux*(m: BModule, prc: PSym) =
       if sfNoInit in prc.flags and p.module.compileToCpp and (let val = easyResultAsgn(procBody); val != nil):
         var decl = localVarDecl(p, resNode)
         var a: TLoc = initLocExprSingleUse(p, val)
-        linefmt(p, cpsStmts, "$1 = $2;$n", [decl, rdLoc(a)])
+        let ra = rdLoc(a)
+        p.s(cpsStmts).addAssignment(decl, ra)
       else:
         # declare the result symbol:
         assignLocalVar(p, resNode)
@@ -1236,7 +1241,9 @@ proc genProcAux*(m: BModule, prc: PSym) =
           discard "result init optimized out"
         else:
           initLocalVar(p, res, immediateAsgn=false)
-      returnStmt = ropecg(p.module, "\treturn $1;$n", [rdLoc(res.loc)])
+      returnStmt = "\t"
+      let rres = rdLoc(res.loc)
+      returnStmt.addReturn(rres)
     elif sfConstructor in prc.flags:
       resNode.sym.loc.flags.incl lfIndirect
       fillLoc(resNode.sym.loc, locParam, resNode, "this", OnHeap)
@@ -1267,45 +1274,56 @@ proc genProcAux*(m: BModule, prc: PSym) =
 
   prc.info = tmpInfo
 
-  var generatedProc: Rope = ""
+  var generatedProc = newBuilder("")
   generatedProc.genCLineDir prc.info, m.config
-  if isNoReturn(p.module, prc):
-    if hasDeclspec in extccomp.CC[p.config.cCompiler].props and not isCppMember:
-      header = "__declspec(noreturn) " & header
-  if sfPure in prc.flags:
-    if hasDeclspec in extccomp.CC[p.config.cCompiler].props and not isCppMember:
-      header = "__declspec(naked) " & header
-    generatedProc.add ropecg(p.module, "$1 {$n$2$3$4}$N$N",
-                         [header, p.s(cpsLocals), p.s(cpsInit), p.s(cpsStmts)])
-  else:
-    if m.hcrOn and isReloadable(m, prc):
-      # Add forward declaration for "_actual"-suffixed functions defined in the same module (or inline).
-      # This fixes the use of methods and also the case when 2 functions within the same module
-      # call each other using directly the "_actual" versions (an optimization) - see issue #11608
-      m.s[cfsProcHeaders].addf("$1;\n", [header])
-    generatedProc.add ropecg(p.module, "$1 {$n", [header])
-    if optStackTrace in prc.options:
-      generatedProc.add(p.s(cpsLocals))
-      var procname = makeCString(prc.name.s)
-      generatedProc.add(initFrame(p, procname, quotedFilename(p.config, prc.info)))
+  generatedProc.addDeclWithVisibility(visibility):
+    if sfPure in prc.flags:
+      generatedProc.add(header)
+      generatedProc.finishProcHeaderWithBody():
+        generatedProc.add(p.s(cpsLocals))
+        generatedProc.add(p.s(cpsInit))
+        generatedProc.add(p.s(cpsStmts))
     else:
-      generatedProc.add(p.s(cpsLocals))
-    if optProfiler in prc.options:
-      # invoke at proc entry for recursion:
-      appcg(p, cpsInit, "\t#nimProfile();$n", [])
-    # this pair of {} is required for C++ (C++ is weird with its
-    # control flow integrity checks):
-    if beforeRetNeeded in p.flags: generatedProc.add("{")
-    generatedProc.add(p.s(cpsInit))
-    generatedProc.add(p.s(cpsStmts))
-    if beforeRetNeeded in p.flags: generatedProc.add("\t}BeforeRet_: ;\n")
-    if optStackTrace in prc.options: generatedProc.add(deinitFrame(p))
-    generatedProc.add(returnStmt)
-    generatedProc.add("}\n")
+      if m.hcrOn and isReloadable(m, prc):
+        m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+          # Add forward declaration for "_actual"-suffixed functions defined in the same module (or inline).
+          # This fixes the use of methods and also the case when 2 functions within the same module
+          # call each other using directly the "_actual" versions (an optimization) - see issue #11608
+          m.s[cfsProcHeaders].add(header)
+          m.s[cfsProcHeaders].finishProcHeaderAsProto()
+      generatedProc.add(header)
+      generatedProc.finishProcHeaderWithBody():
+        if optStackTrace in prc.options:
+          generatedProc.add(p.s(cpsLocals))
+          var procname = makeCString(prc.name.s)
+          generatedProc.add(initFrame(p, procname, quotedFilename(p.config, prc.info)))
+        else:
+          generatedProc.add(p.s(cpsLocals))
+        if optProfiler in prc.options:
+          # invoke at proc entry for recursion:
+          p.s(cpsInit).add('\t')
+          p.s(cpsInit).addCallStmt(cgsymValue(m, "nimProfile"))
+        if beforeRetNeeded in p.flags:
+          # this pair of {} is required for C++ (C++ is weird with its
+          # control flow integrity checks):
+          generatedProc.addScope():
+            generatedProc.add(p.s(cpsInit))
+            generatedProc.add(p.s(cpsStmts))
+          generatedProc.addLabel("BeforeRet_")
+        else:
+          generatedProc.add(p.s(cpsInit))
+          generatedProc.add(p.s(cpsStmts))
+        if optStackTrace in prc.options: generatedProc.add(deinitFrame(p))
+        generatedProc.add(returnStmt)
   m.s[cfsProcs].add(generatedProc)
   if isReloadable(m, prc):
-    m.s[cfsDynLibInit].addf("\t$1 = ($3) hcrRegisterProc($4, \"$1\", (void*)$2);$n",
-         [prc.loc.snippet, prc.loc.snippet & "_actual", getProcTypeCast(m, prc), getModuleDllPath(m, prc)])
+    m.s[cfsDynLibInit].add('\t')
+    m.s[cfsDynLibInit].addAssignmentWithValue(prc.loc.snippet):
+      m.s[cfsDynLibInit].addCast(getProcTypeCast(m, prc)):
+        m.s[cfsDynLibInit].addCall("hcrRegisterProc",
+          getModuleDllPath(m, prc),
+          '"' & prc.loc.snippet & '"',
+          cCast("void*", prc.loc.snippet & "_actual"))
 
 proc requiresExternC(m: BModule; sym: PSym): bool {.inline.} =
   result = (sfCompileToCpp in m.module.flags and
@@ -1322,26 +1340,39 @@ proc genProcPrototype(m: BModule, sym: PSym) =
   if lfDynamicLib in sym.loc.flags:
     if sym.itemId.module != m.module.position and
         not containsOrIncl(m.declaredThings, sym.id):
-      m.s[cfsVars].add(ropecg(m, "$1 $2 $3;$n",
-                        [(if isReloadable(m, sym): "static" else: "extern"),
-                        getTypeDesc(m, sym.loc.t), mangleDynLibProc(sym)]))
+      let vis = if isReloadable(m, sym): StaticProc else: Extern
+      let name = mangleDynLibProc(sym)
+      let t = getTypeDesc(m, sym.loc.t)
+      m.s[cfsVars].addDeclWithVisibility(vis):
+        m.s[cfsVars].addVar(kind = Local,
+          name = name,
+          typ = t)
       if isReloadable(m, sym):
-        m.s[cfsDynLibInit].addf("\t$1 = ($2) hcrGetProc($3, \"$1\");$n",
-             [mangleDynLibProc(sym), getTypeDesc(m, sym.loc.t), getModuleDllPath(m, sym)])
+        m.s[cfsDynLibInit].add('\t')
+        m.s[cfsDynLibInit].addAssignmentWithValue(name):
+          m.s[cfsDynLibInit].addCast(t):
+            m.s[cfsDynLibInit].addCall("hcrGetProc",
+              getModuleDllPath(m, sym),
+              '"' & name & '"')
   elif not containsOrIncl(m.declaredProtos, sym.id):
     let asPtr = isReloadable(m, sym)
     var header = newRopeAppender()
-    genProcHeader(m, sym, header, asPtr)
-    if not asPtr:
-      if isNoReturn(m, sym) and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
-        header = "__declspec(noreturn) " & header
-      if sym.typ.callConv != ccInline and requiresExternC(m, sym):
-        header = "extern \"C\" " & header
-      if sfPure in sym.flags and hasAttribute in CC[m.config.cCompiler].props:
-        header.add(" __attribute__((naked))")
-      if isNoReturn(m, sym) and hasAttribute in CC[m.config.cCompiler].props:
-        header.add(" __attribute__((noreturn))")
-    m.s[cfsProcHeaders].add(ropecg(m, "$1;$N", [header]))
+    var visibility: DeclVisibility = None
+    genProcHeader(m, sym, header, visibility, asPtr = asPtr, addAttributes = true)
+    if asPtr:
+      m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+        # genProcHeader would give variable declaration, add it directly
+        m.s[cfsProcHeaders].add(header)
+    else:
+      let extraVis =
+        if sym.typ.callConv != ccInline and requiresExternC(m, sym):
+          ExternC
+        else:
+          None
+      m.s[cfsProcHeaders].addDeclWithVisibility(extraVis):
+        m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+          m.s[cfsProcHeaders].add(header)
+          m.s[cfsProcHeaders].finishProcHeaderAsProto()
 
 # TODO: figure out how to rename this - it DOES generate a forward declaration
 proc genProcNoForward(m: BModule, prc: PSym) =
