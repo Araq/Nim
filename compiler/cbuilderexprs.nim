@@ -26,6 +26,9 @@ const
 proc procPtrTypeUnnamed(rettype, params: Snippet): Snippet =
   rettype & "(*)" & params
 
+proc procPtrTypeUnnamedNimCall(rettype, params: Snippet): Snippet =
+  rettype & "(N_RAW_NIMCALL*)" & params
+
 proc cCast(typ, value: Snippet): Snippet =
   "((" & typ & ") " & value & ")"
 

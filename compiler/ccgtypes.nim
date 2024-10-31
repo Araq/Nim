@@ -1560,8 +1560,13 @@ include ccgtrav
 
 proc genDeepCopyProc(m: BModule; s: PSym; result: Rope) =
   genProc(m, s)
-  m.s[cfsTypeInit3].addf("$1.deepcopy =(void* (N_RAW_NIMCALL*)(void*))$2;$n",
-     [result, s.loc.snippet])
+  var params = newBuilder("")
+  var paramBuilder: ProcParamBuilder
+  params.addProcParams(paramBuilder):
+    params.addUnnamedParam(paramBuilder, typ = "void*")
+  let pt = procPtrTypeUnnamedNimCall(rettype = "void*", params = params)
+  m.s[cfsTypeInit3].addFieldAssignmentWithValue(result, "deepcopy"):
+    m.s[cfsTypeInit3].add(cCast(pt, s.loc.snippet))
 
 proc declareNimType(m: BModule; name: string; str: Rope, module: int) =
   let nr = rope(name)
@@ -1577,7 +1582,8 @@ proc declareNimType(m: BModule; name: string; str: Rope, module: int) =
           m.s[cfsTypeInit1].addArgument(hcrGlobal):
             m.s[cfsTypeInit1].add("\"" & str & "\"")
   else:
-    m.s[cfsStrData].addf("extern $2 $1;$n", [str, nr])
+    m.s[cfsStrData].addDeclWithVisibility(Extern):
+      m.s[cfsStrData].addVar(kind = Local, name = str, typ = nr)
 
 proc genTypeInfo2Name(m: BModule; t: PType): Rope =
   var it = t

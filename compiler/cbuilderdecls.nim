@@ -439,6 +439,13 @@ proc addParam(builder: var Builder, params: var ProcParamBuilder, param: PSym, t
   else:
     builder.add runtimeFormat(param.cgDeclFrmt, [modifiedTyp, param.loc.snippet])
 
+proc addUnnamedParam(builder: var Builder, params: var ProcParamBuilder, typ: Snippet) =
+  if params.needsComma:
+    builder.add(", ")
+  else:
+    params.needsComma = true
+  builder.add(typ)
+
 proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
   # does not exist in NIFC, needs to be proc pragma
   if params.needsComma:
