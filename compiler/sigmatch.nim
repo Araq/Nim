@@ -2538,6 +2538,8 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
         (arg.typ.isIntLit and not m.isNoCall):
       result = arg.copyTree
       result.typ() = getInstantiatedType(c, arg, m, f).skipTypes({tySink})
+      if result.typ.isEmptyContainer and m.magic != mArrToSeq:
+        result = nil
     else:
       result = arg
   of isBothMetaConvertible:
