@@ -621,7 +621,7 @@ proc genComputedGoto(p: BProc; n: PNode) =
   var a: TLoc = initLocExpr(p, caseStmt[0])
   let ra = a.rdLoc
   # first goto:
-  p.s(cpsStmts).addGoto(cDeref(subscript(tmp, ra)))
+  p.s(cpsStmts).addComputedGoto(subscript(tmp, ra))
 
   for i in 1..<caseStmt.len:
     startBlock(p)
@@ -658,7 +658,7 @@ proc genComputedGoto(p: BProc; n: PNode) =
 
     var a: TLoc = initLocExpr(p, caseStmt[0])
     let ra = a.rdLoc
-    p.s(cpsStmts).addGoto(cDeref(subscript(tmp, ra)))
+    p.s(cpsStmts).addComputedGoto(subscript(tmp, ra))
     endBlock(p)
 
   for j in casePos+1..<n.len:
