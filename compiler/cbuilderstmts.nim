@@ -136,3 +136,15 @@ proc addReturn(builder: var Builder, value: string) =
   builder.add(value)
   builder.add(";\n")
 
+template addGoto(builder: var Builder, label: TLabel) =
+  builder.add("goto ")
+  builder.add(label)
+  builder.add(";\n")
+
+template addIncr(builder: var Builder, val: Snippet) =
+  builder.add(val)
+  builder.add("++;\n")
+
+template addDecr(builder: var Builder, val: Snippet) =
+  builder.add(val)
+  builder.add("--;\n")
