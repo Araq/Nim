@@ -14,7 +14,7 @@ import
   nversion, nimsets, msgs, bitsets, idents, types,
   ccgutils, ropes, wordrecg, treetab, cgmeth,
   rodutils, renderer, cgendata, aliases,
-  lowerings, ndi, lineinfos, pathutils, transf,
+  lowerings, lineinfos, pathutils, transf,
   injectdestructors, astmsgs, modulepaths, pushpoppragmas,
   mangleutils
 
@@ -2085,9 +2085,6 @@ proc rawNewModule(g: BModuleList; module: PSym, filename: AbsoluteFile): BModule
   if sfSystemModule in module.flags:
     incl result.flags, preventStackTrace
     excl(result.preInitProc.options, optStackTrace)
-  let ndiName = if optCDebug in g.config.globalOptions: changeFileExt(completeCfilePath(g.config, filename), "ndi")
-                else: AbsoluteFile""
-  open(result.ndi, ndiName, g.config)
 
 proc rawNewModule(g: BModuleList; module: PSym; conf: ConfigRef): BModule =
   result = rawNewModule(g, module, AbsoluteFile toFullPath(conf, module.position.FileIndex))
@@ -2217,7 +2214,6 @@ proc shouldRecompile(m: BModule; code: Rope, cfile: Cfile): bool =
 # it would generate multiple 'main' procs, for instance.
 
 proc writeModule(m: BModule, pending: bool) =
-  template onExit() = close(m.ndi, m.config)
   let cfile = getCFile(m)
   if moduleHasChanged(m.g.graph, m.module):
     genInitCode(m)
@@ -2235,12 +2231,10 @@ proc writeModule(m: BModule, pending: bool) =
     when hasTinyCBackend:
       if m.config.cmd == cmdTcc:
         tccgen.compileCCode($code, m.config)
-        onExit()
         return
 
     if not shouldRecompile(m, code, cf): cf.flags = {CfileFlag.Cached}
     addFileToCompile(m.config, cf)
-  onExit()
 
 proc updateCachedModule(m: BModule) =
   let cfile = getCFile(m)
