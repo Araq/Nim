@@ -778,8 +778,6 @@ const
 proc getrusage*(who: cint, rusage: ptr Rusage): cint
   {.importc, header: "<sys/resource.h>", discardable.}
 
-proc bsd_signal*(a1: cint, a2: proc (x: pointer) {.noconv.}) {.
-  importc, header: "<signal.h>".}
 proc kill*(a1: Pid, a2: cint): cint {.importc, header: "<signal.h>", sideEffect.}
 proc killpg*(a1: Pid, a2: cint): cint {.importc, header: "<signal.h>", sideEffect.}
 proc pthread_kill*(a1: Pthread, a2: cint): cint {.importc, header: "<signal.h>".}
@@ -801,8 +799,8 @@ proc sighold*(a1: cint): cint {.importc, header: "<signal.h>".}
 proc sigignore*(a1: cint): cint {.importc, header: "<signal.h>".}
 proc siginterrupt*(a1, a2: cint): cint {.importc, header: "<signal.h>".}
 proc sigismember*(a1: var Sigset, a2: cint): cint {.importc, header: "<signal.h>".}
-proc signal*(a1: cint, a2: Sighandler) {.
-  importc, header: "<signal.h>".}
+proc signal*(a1: cint, a2: Sighandler): Sighandler {.
+  importc, discardable, header: "<signal.h>".}
 proc sigpause*(a1: cint): cint {.importc, header: "<signal.h>".}
 proc sigpending*(a1: var Sigset): cint {.importc, header: "<signal.h>".}
 proc sigprocmask*(a1: cint, a2, a3: var Sigset): cint {.
