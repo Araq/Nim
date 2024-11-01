@@ -428,7 +428,7 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
     # put it in the locals section - mainly because of loops which
     # use the var in a call to resetLoc() in the statements section
     let rv = rdLoc(v.loc)
-    p.s(cpsLocals).addCall("hcrRegisterGlobal",
+    p.s(cpsLocals).addCallStmt("hcrRegisterGlobal",
       getModuleDllPath(p.module, v),
       '"' & v.loc.snippet & '"',
       cSizeof(rv),

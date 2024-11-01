@@ -85,9 +85,9 @@ proc cleanupTemp(p: BProc; returnType: PType, tmp: TLoc): bool =
     var op = initLocExpr(p, newSymNode(dtor))
     var callee = rdLoc(op)
     let destroy = if dtor.typ.firstParamType.kind == tyVar:
-        callee & "(&" & rdLoc(tmp) & ")"
+        callee & "(&" & rdLoc(tmp) & ");"
       else:
-        callee & "(" & rdLoc(tmp) & ")"
+        callee & "(" & rdLoc(tmp) & ");"
     raiseExitCleanup(p, destroy)
     result = true
   else:
