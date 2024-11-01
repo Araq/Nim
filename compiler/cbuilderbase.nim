@@ -29,16 +29,16 @@ proc addFloatValue(builder: var Builder, val: float) =
 
 template cFloatValue(val: float): Snippet = $val
 
-proc int64Literal(i: BiggestInt; result: var Builder) =
+proc addInt64Literal(result: var Builder; i: BiggestInt) =
   if i > low(int64):
     result.add "IL64($1)" % [rope(i)]
   else:
     result.add "(IL64(-9223372036854775807) - IL64(1))"
 
-proc uint64Literal(i: uint64; result: var Builder) =
+proc addUint64Literal(result: var Builder; i: uint64) =
   result.add rope($i & "ULL")
 
-proc intLiteral(i: BiggestInt; result: var Builder) =
+proc addIntLiteral(result: var Builder; i: BiggestInt) =
   if i > low(int32) and i <= high(int32):
     result.addIntValue(i)
   elif i == low(int32):
@@ -49,8 +49,20 @@ proc intLiteral(i: BiggestInt; result: var Builder) =
   else:
     result.add "(IL64(-9223372036854775807) - IL64(1))"
 
+proc addIntLiteral(result: var Builder; i: Int128) =
+  addIntLiteral(result, toInt64(i))
+
+proc int64Literal(i: BiggestInt; result: var Builder) =
+  result.addInt64Literal(i)
+
+proc uint64Literal(i: uint64; result: var Builder) =
+  result.addUint64Literal(i)
+
+proc intLiteral(i: BiggestInt; result: var Builder) =
+  result.addIntLiteral(i)
+
 proc intLiteral(i: Int128; result: var Builder) =
-  intLiteral(toInt64(i), result)
+  result.addIntLiteral(i)
 
 proc cInt64Literal(i: BiggestInt): Snippet =
   if i > low(int64):

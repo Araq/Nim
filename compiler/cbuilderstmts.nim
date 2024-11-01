@@ -93,6 +93,23 @@ template addElseBranch(builder: var Builder, stmt: var IfStmt, body: typed) =
   body
   builder.add("}")
 
+template addSwitchStmt(builder: var Builder, val: Snippet, body: typed) =
+  builder.add("switch (")
+  builder.add(val)
+  builder.add(") {\n")
+  body
+  builder.add("}\n")
+
+template addSwitchCase(builder: var Builder, val: Snippet, body: typed) =
+  builder.add("case ")
+  builder.add(val)
+  builder.add(":\n")
+  body
+
+template addSwitchElse(builder: var Builder, body: typed) =
+  builder.add("default:\n")
+  body
+
 template addScope(builder: var Builder, body: typed) =
   builder.add("{")
   body
@@ -115,6 +132,9 @@ template addGoto(builder: var Builder, label: TLabel) =
   builder.add(label)
   builder.add(";\n")
 
+template addBreak(builder: var Builder) =
+  builder.add("break;")
+
 template addIncr(builder: var Builder, val: Snippet) =
   builder.add(val)
   builder.add("++;\n")
@@ -122,3 +142,19 @@ template addIncr(builder: var Builder, val: Snippet) =
 template addDecr(builder: var Builder, val: Snippet) =
   builder.add(val)
   builder.add("--;\n")
+
+proc addInPlaceOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet) =
+  builder.add(a)
+  builder.add(' ')
+  builder.add(typedBinaryOperators[binOp])
+  builder.add("= ")
+  builder.add(b)
+  builder.add(";\n")
+
+proc addInPlaceOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
+  builder.add(a)
+  builder.add(' ')
+  builder.add(untypedBinaryOperators[binOp])
+  builder.add("= ")
+  builder.add(b)
+  builder.add(";\n")

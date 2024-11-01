@@ -52,6 +52,9 @@ template addCast(builder: var Builder, typ: Snippet, valueBody: typed) =
 proc cAddr(value: Snippet): Snippet =
   "&" & value
 
+proc cLabelAddr(value: TLabel): Snippet =
+  "&&" & value
+
 proc cDeref(value: Snippet): Snippet =
   "(*" & value & ")"
 
@@ -230,3 +233,6 @@ template cOp(binOp: UntypedUnaryOp, a: Snippet): Snippet =
 template cIfExpr(cond, a, b: Snippet): Snippet =
   # XXX used for `min` and `max`, maybe add nifc primitives for these
   "(" & cond & " ? " & a & " : " & b & ")"
+
+template cUnlikely(val: Snippet): Snippet =
+  "NIM_UNLIKELY(" & val & ")"
