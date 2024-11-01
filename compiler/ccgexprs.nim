@@ -1385,23 +1385,31 @@ proc genEcho(p: BProc, n: PNode) =
   internalAssert p.config, n.kind == nkBracket
   if p.config.target.targetOS == osGenode:
     # echo directly to the Genode LOG session
-    var args: Rope = ""
-    var a: TLoc
-    for i, it in n.sons:
-      if it.skipConv.kind == nkNilLit:
-        args.add(", \"\"")
-      elif n.len != 0:
-        a = initLocExpr(p, it)
-        if i > 0:
-          args.add(", ")
-        case detectStrVersion(p.module)
-        of 2:
-          args.add(ropecg(p.module, "Genode::Cstring($1.p->data, $1.len)", [a.rdLoc]))
-        else:
-          args.add(ropecg(p.module, "Genode::Cstring($1->data, $1->len)", [a.rdLoc]))
     p.module.includeHeader("<base/log.h>")
     p.module.includeHeader("<util/string.h>")
-    linefmt(p, cpsStmts, """Genode::log($1);$n""", [args])
+    var a: TLoc
+    let logName = "Genode::log"
+    var logCall: CallBuilder
+    p.s(cpsStmts).addStmt():
+      p.s(cpsStmts).addCall(logCall, logName):
+        for it in n.sons:
+          if it.skipConv.kind == nkNilLit:
+            p.s(cpsStmts).addArgument(logCall):
+              p.s(cpsStmts).add("\"\"")
+          elif n.len != 0:
+            a = initLocExpr(p, it)
+            let ra = a.rdLoc
+            let fnName = "Genode::Cstring"
+            p.s(cpsStmts).addArgument(logCall):
+              case detectStrVersion(p.module)
+              of 2:
+                p.s(cpsStmts).addCall(fnName,
+                  dotField(derefField(ra, "p"), "data"),
+                  dotField(ra, "len"))
+              else:
+                p.s(cpsStmts).addCall(fnName,
+                  derefField(ra, "data"),
+                  derefField(ra, "len"))
   else:
     if n.len == 0:
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "echoBinSafe"),
