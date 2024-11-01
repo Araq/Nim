@@ -137,6 +137,7 @@ proc genVarTuple(p: BProc, n: PNode) =
       p.s(cpsLocals).addInPlaceOp(BitOr, "NIM_BOOL",
         hcrCond,
         cCall("hcrRegisterGlobal",
+          getModuleDllPath(p.module, n[0].sym),
           '"' & curr.loc.snippet & '"',
           cSizeof(rc),
           curr.tp,
@@ -609,11 +610,9 @@ proc genComputedGoto(p: BProc; n: PNode) =
       len = arraySize):
     var labelsInit: StructInitializer
     p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray):
-      for i in 1..arraySize-1:
+      for i in 1..arraySize:
         p.s(cpsStmts).addField(labelsInit, ""):
           p.s(cpsStmts).add(cLabelAddr("TMP" & $(id+i) & "_"))
-      p.s(cpsStmts).addField(labelsInit, ""):
-        p.s(cpsStmts).add(cLabelAddr("TMP" & $(id+arraySize) & "_"))
 
   for j in 0..<casePos:
     genStmts(p, n[j])
@@ -688,9 +687,9 @@ proc genWhileStmt(p: BProc, t: PNode) =
       p.blocks[p.breakIdx].isLoop = true
       a = initLocExpr(p, t[0])
       if (t[0].kind != nkIntLit) or (t[0].intVal == 0):
+        let ra = a.rdLoc
         var label: TLabel = ""
         assignLabel(p.blocks[p.breakIdx], label)
-        let ra = a.rdLoc
         p.s(cpsStmts).addSingleIfStmt(cOp(Not, ra)):
           p.s(cpsStmts).addGoto(label)
       genStmts(p, loopBody)
@@ -1098,7 +1097,6 @@ proc genRestoreFrameAfterException(p: BProc) =
       p.procSec(cpsInit).add('\t')
       p.procSec(cpsInit).addAssignmentWithValue("_nimCurFrame"):
         p.procSec(cpsInit).addCall(cgsymValue(p.module, "getFrame"))
-    p.s(cpsStmts).add('\t')
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "setFrame"), "_nimCurFrame")
 
 proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
