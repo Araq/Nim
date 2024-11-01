@@ -1505,7 +1505,7 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
   if not quirkyExceptions:
     safePoint = getTempName(p.module)
     p.s(cpsLocals).addVar(name = safePoint, typ = cgsymValue(p.module, "TSafePoint"))
-    p.s(cpsLocals).addCallStmt(cgsymValue(p.module, "pushSafePoint"), cAddr(safePoint))
+    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "pushSafePoint"), cAddr(safePoint))
     if isDefined(p.config, "nimStdSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
         p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
