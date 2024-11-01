@@ -267,6 +267,9 @@ template addGoto(builder: var Builder, label: TLabel) =
   builder.add(label)
   builder.add(";\n")
 
+template addBreak(builder: var Builder) =
+  builder.add("break;")
+
 template addIncr(builder: var Builder, val: Snippet) =
   builder.add(val)
   builder.add("++;\n")

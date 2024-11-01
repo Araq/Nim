@@ -1329,10 +1329,13 @@ proc discriminatorTableName(m: BModule; objtype: PType, d: PSym): Rope =
 
 proc rope(arg: Int128): Rope = rope($arg)
 
-proc discriminatorTableDecl(m: BModule; objtype: PType, d: PSym): Rope =
+proc discriminatorTableDecl(m: BModule; objtype: PType, d: PSym, result: var Builder) =
   cgsym(m, "TNimNode")
   var tmp = discriminatorTableName(m, objtype, d)
-  result = "TNimNode* $1[$2];$n" % [tmp, rope(lengthOrd(m.config, d.typ)+1)]
+  result.addArrayVar(kind = Local,
+    name = tmp,
+    elementType = ptrType("TNimNode"),
+    len = toInt(lengthOrd(m.config, d.typ)) + 1)
 
 proc genTNimNodeArray(m: BModule; name: Rope, size: int) =
   if m.hcrOn:

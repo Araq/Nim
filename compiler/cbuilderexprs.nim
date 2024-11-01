@@ -55,6 +55,9 @@ template addCast(builder: var Builder, typ: Snippet, valueBody: typed) =
 proc cAddr(value: Snippet): Snippet =
   "&" & value
 
+proc cLabelAddr(value: TLabel): Snippet =
+  "&&" & value
+
 proc cDeref(value: Snippet): Snippet =
   "(*" & value & ")"
 
