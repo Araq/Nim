@@ -2966,7 +2966,9 @@ when notJSnotNims and not defined(nimSeqsV2):
 proc arrayWith*[T](y: T, size: static int): array[size, T] {.raises: [].} =
   ## Creates a new array filled with `y`.
   for i in 0..size-1:
-    when nimvm:
-      result[i] = y
-    else:
-      result[i] = `=dup`(y)
+    result[i] = y
+
+proc arrayWithDefault*[T](size: static int): array[size, T] {.raises: [].} =
+  ## Creates a new array filled with `default(T)`.
+  for i in 0..size-1:
+    result[i] = default(T)
