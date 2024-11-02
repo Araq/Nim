@@ -8,7 +8,7 @@ type
 template newBuilder*(s: string): Builder =
   Builder(buf: s)
 
-proc extract*(builder: Builder): string =
+proc extract*(builder: Builder): Snippet =
   builder.buf
 
 proc add*(builder: var Builder, s: string) =

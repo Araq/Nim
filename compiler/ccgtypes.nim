@@ -427,11 +427,9 @@ proc getTypeDescWeak(m: BModule; t: PType; check: var IntSet; kind: TypeDescKind
       if cacheGetType(m.typeCache, sig) == "":
         m.typeCache[sig] = result
         #echo "adding ", sig, " ", typeToString(t), " ", m.module.name.s
-        var struct = newBuilder("")
-        struct.addSimpleStruct(m, name = result, baseType = ""):
-          struct.addField(name = "len", typ = "NI")
-          struct.addField(name = "p", typ = ptrType(result & "_Content"))
-        m.s[cfsTypes].add(extract(struct))
+        m.s[cfsTypes].addSimpleStruct(m, name = result, baseType = ""):
+          m.s[cfsTypes].addField(name = "len", typ = "NI")
+          m.s[cfsTypes].addField(name = "p", typ = ptrType(result & "_Content"))
         pushType(m, t)
     else:
       result = getTypeForward(m, t, sig) & seqStar(m)
@@ -450,13 +448,12 @@ proc seqV2ContentType(m: BModule; t: PType; check: var IntSet) =
   if result == "":
     discard getTypeDescAux(m, t, check, dkVar)
   else:
-    var struct = newBuilder("")
-    struct.addSimpleStruct(m, name = result & "_Content", baseType = ""):
-      struct.addField(name = "cap", typ = "NI")
-      struct.addField(name = "data",
-        typ = getTypeDescAux(m, t.skipTypes(abstractInst)[0], check, dkVar),
+    let dataTyp = getTypeDescAux(m, t.skipTypes(abstractInst)[0], check, dkVar)
+    m.s[cfsTypes].addSimpleStruct(m, name = result & "_Content", baseType = ""):
+      m.s[cfsTypes].addField(name = "cap", typ = "NI")
+      m.s[cfsTypes].addField(name = "data",
+        typ = dataTyp,
         isFlexArray = true)
-    m.s[cfsTypes].add(extract(struct))
 
 proc paramStorageLoc(param: PSym): TStorageLoc =
   if param.typ.skipTypes({tyVar, tyLent, tyTypeDesc}).kind notin {
@@ -743,14 +740,13 @@ proc addRecordFields(result: var Builder; m: BModule; typ: PType, check: var Int
     let procs = m.g.graph.memberProcsPerType[typ.itemId]
     var isDefaultCtorGen, isCtorGen: bool = false
     for prc in procs:
-      var header = newBuilder("")
       if sfConstructor in prc.flags:
         isCtorGen = true
         if prc.typ.n.len == 1:
           isDefaultCtorGen = true
       if lfNoDecl in prc.loc.flags: continue
-      genMemberProcHeader(m, prc, header, false, true)
-      result.addf "$1;$n", [extract(header)]
+      result.addStmt():
+        genMemberProcHeader(m, prc, result, false, true)
     if isCtorGen and not isDefaultCtorGen:
       var ch: IntSet = default(IntSet)
       result.addf "$1() = default;$n", [getTypeDescAux(m, typ, ch, dkOther)]
@@ -829,12 +825,10 @@ proc getOpenArrayDesc(m: BModule; t: PType, check: var IntSet; kind: TypeDescKin
       result = getTypeName(m, t, sig)
       m.typeCache[sig] = result
       let elemType = getTypeDescWeak(m, t.elementType, check, kind)
-      var typedef = newBuilder("")
-      typedef.addTypedef(name = result):
-        typedef.addSimpleStruct(m, name = "", baseType = ""):
-          typedef.addField(name = "Field0", typ = ptrType(elemType))
-          typedef.addField(name = "Field1", typ = "NI")
-      m.s[cfsTypes].add(extract(typedef))
+      m.s[cfsTypes].addTypedef(name = result):
+        m.s[cfsTypes].addSimpleStruct(m, name = "", baseType = ""):
+          m.s[cfsTypes].addField(name = "Field0", typ = ptrType(elemType))
+          m.s[cfsTypes].addField(name = "Field1", typ = "NI")
 
 proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDescKind): Rope =
   # returns only the type's name
@@ -906,28 +900,26 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
           (sfImportc in t.sym.flags and t.sym.magic == mNone)):
         m.typeCache[sig] = result
         var size: int
-        var typedef = newBuilder("")
         if firstOrd(m.config, t) < 0:
-          typedef.addTypedef(name = result):
-            typedef.add("NI32")
+          m.s[cfsTypes].addTypedef(name = result):
+            m.s[cfsTypes].add("NI32")
           size = 4
         else:
           size = int(getSize(m.config, t))
           case size
           of 1:
-            typedef.addTypedef(name = result):
-              typedef.add("NU8")
+            m.s[cfsTypes].addTypedef(name = result):
+              m.s[cfsTypes].add("NU8")
           of 2:
-            typedef.addTypedef(name = result):
-              typedef.add("NU16")
+            m.s[cfsTypes].addTypedef(name = result):
+              m.s[cfsTypes].add("NU16")
           of 4:
-            typedef.addTypedef(name = result):
-              typedef.add("NI32")
+            m.s[cfsTypes].addTypedef(name = result):
+              m.s[cfsTypes].add("NI32")
           of 8:
-            typedef.addTypedef(name = result):
-              typedef.add("NI64")
+            m.s[cfsTypes].addTypedef(name = result):
+              m.s[cfsTypes].add("NI64")
           else: internalError(m.config, t.sym.info, "getTypeDescAux: enum")
-        m.s[cfsTypes].add(extract(typedef))
         when false:
           let owner = hashOwner(t.sym)
           if not gDebugInfo.hasEnum(t.sym.name.s, t.sym.info.line, owner):
@@ -946,15 +938,13 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     genProcParams(m, t, rettype, desc, check, true, true)
     let params = extract(desc)
     if not isImportedType(t):
-      var typedef = newBuilder("")
       if t.callConv != ccClosure: # procedure vars may need a closure!
-        typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
+        m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
       else:
-        typedef.addTypedef(name = result):
-          typedef.addSimpleStruct(m, name = "", baseType = ""):
-            typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
-            typedef.addField(name = "ClE_0", typ = "void*")
-      m.s[cfsTypes].add(extract(typedef))
+        m.s[cfsTypes].addTypedef(name = result):
+          m.s[cfsTypes].addSimpleStruct(m, name = "", baseType = ""):
+            m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
+            m.s[cfsTypes].addField(name = "ClE_0", typ = "void*")
   of tySequence:
     if optSeqDestructors in m.config.globalOptions:
       result = getTypeDescWeak(m, t, check, kind)
@@ -971,14 +961,13 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       m.typeCache[sig] = result & seqStar(m)
       if not isImportedType(t):
         if skipTypes(t.elementType, typedescInst).kind != tyEmpty:
-          var struct = newBuilder("")
+          let et = getTypeDescAux(m, t.elementType, check, kind)
           let baseType = cgsymValue(m, "TGenericSeq")
-          struct.addSimpleStruct(m, name = result, baseType = baseType):
-            struct.addField(
+          m.s[cfsSeqTypes].addSimpleStruct(m, name = result, baseType = baseType):
+            m.s[cfsSeqTypes].addField(
               name = "data",
-              typ = getTypeDescAux(m, t.elementType, check, kind),
+              typ = et,
               isFlexArray = true)
-          m.s[cfsSeqTypes].add extract(struct)
         else:
           result = rope("TGenericSeq")
       result.add(seqStar(m))
@@ -986,11 +975,9 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     result = getTypeName(m, origTyp, sig)
     m.typeCache[sig] = result
     if not isImportedType(t):
-      let foo = getTypeDescAux(m, t.elementType, check, kind)
-      var typedef = newBuilder("")
-      typedef.addArrayTypedef(name = result, len = 1):
-        typedef.add(foo)
-      m.s[cfsTypes].add(extract(typedef))
+      let et = getTypeDescAux(m, t.elementType, check, kind)
+      m.s[cfsTypes].addArrayTypedef(name = result, len = 1):
+        m.s[cfsTypes].add(et)
   of tyArray:
     var n: BiggestInt = toInt64(lengthOrd(m.config, t))
     if n <= 0: n = 1   # make an array of at least one element
@@ -998,10 +985,8 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     m.typeCache[sig] = result
     if not isImportedType(t):
       let e = getTypeDescAux(m, t.elementType, check, kind)
-      var typedef = newBuilder("")
-      typedef.addArrayTypedef(name = result, len = n):
-        typedef.add(e)
-      m.s[cfsTypes].add(extract(typedef))
+      m.s[cfsTypes].addArrayTypedef(name = result, len = n):
+        m.s[cfsTypes].add(e)
   of tyObject, tyTuple:
     let tt = origTyp.skipTypes({tyDistinct})
     if isImportedCppType(t) and tt.kind == tyGenericInst:
@@ -1111,15 +1096,13 @@ proc getClosureType(m: BModule; t: PType, kind: TClosureTypeKind): Rope =
   genProcParams(m, t, rettype, desc, check, declareEnvironment=kind != clHalf)
   let params = extract(desc)
   if not isImportedType(t):
-    var typedef = newBuilder("")
     if t.callConv != ccClosure or kind != clFull:
-      typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
+      m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
     else:
-      typedef.addTypedef(name = result):
-        typedef.addSimpleStruct(m, name = "", baseType = ""):
-          typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
-          typedef.addField(name = "ClE_0", typ = "void*")
-    m.s[cfsTypes].add(extract(typedef))
+      m.s[cfsTypes].addTypedef(name = result):
+        m.s[cfsTypes].addSimpleStruct(m, name = "", baseType = ""):
+          m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
+          m.s[cfsTypes].addField(name = "ClE_0", typ = "void*")
 
 proc finishTypeDescriptions(m: BModule) =
   var i = 0
@@ -1792,9 +1775,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
 
   var typeEntry = newBuilder("")
   typeEntry.addDeclWithVisibility(Private):
-    typeEntry.addVarWithTypeAndInitializer(kind = Local, name = name):
-      typeEntry.add("TNimTypeV2")
-    do:
+    typeEntry.addVarWithInitializer(kind = Local, name = name, typ = "TNimTypeV2"):
       var typeInit: StructInitializer
       typeEntry.addStructInitializer(typeInit, kind = siNamedStruct):
         typeEntry.addField(typeInit, name = "destructor"):

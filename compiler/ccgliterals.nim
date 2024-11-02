@@ -101,11 +101,10 @@ proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Builder
   let tmp = getTempName(m)
   result.add tmp
   var res = newBuilder("")
-  res.addVarWithTypeAndInitializer(
+  res.addVarWithInitializer(
       if isConst: AlwaysConst else: Global,
-      name = tmp):
-    res.add("NimStringV2")
-  do:
+      name = tmp,
+      typ = "NimStringV2"):
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
       res.addField(strInit, name = "len"):

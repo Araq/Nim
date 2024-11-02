@@ -1220,7 +1220,7 @@ proc genProcAux*(m: BModule, prc: PSym) =
     genMemberProcHeader(m, prc, header)
   else:
     genProcHeader(m, prc, header, visibility, asPtr = false, addAttributes = false)
-  var returnStmt = newBuilder("")
+  var returnStmt: Snippet = ""
   assert(prc.ast != nil)
 
   var procBody = transformBody(m.g.graph, m.idgen, prc, {})
@@ -1253,9 +1253,10 @@ proc genProcAux*(m: BModule, prc: PSym) =
           discard "result init optimized out"
         else:
           initLocalVar(p, res, immediateAsgn=false)
-      returnStmt = newBuilder("\t")
+      var returnBuilder = newBuilder("\t")
       let rres = rdLoc(res.loc)
-      returnStmt.addReturn(rres)
+      returnBuilder.addReturn(rres)
+      returnStmt = extract(returnBuilder)
     elif sfConstructor in prc.flags:
       resNode.sym.loc.flags.incl lfIndirect
       fillLoc(resNode.sym.loc, locParam, resNode, "this", OnHeap)
@@ -1326,7 +1327,7 @@ proc genProcAux*(m: BModule, prc: PSym) =
           generatedProc.add(extract(p.s(cpsInit)))
           generatedProc.add(extract(p.s(cpsStmts)))
         if optStackTrace in prc.options: generatedProc.add(deinitFrame(p))
-        generatedProc.add(extract(returnStmt))
+        generatedProc.add(returnStmt)
   m.s[cfsProcs].add(extract(generatedProc))
   if isReloadable(m, prc):
     m.s[cfsDynLibInit].add('\t')

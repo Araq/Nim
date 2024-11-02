@@ -42,6 +42,18 @@ template addVarWithType(builder: var Builder, kind: VarKind = Local, name: strin
   builder.add(name)
   builder.add(";\n")
 
+template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string,
+                               typ: Snippet, initializerBody: typed) =
+  ## adds a variable declaration to the builder, with
+  ## `initializerBody` building the initializer. initializer must be provided
+  builder.addVarHeader(kind)
+  builder.add(typ)
+  builder.add(" ")
+  builder.add(name)
+  builder.add(" = ")
+  initializerBody
+  builder.add(";\n")
+
 template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                       typeBody, initializerBody: typed) =
   ## adds a variable declaration to the builder, with `typeBody` building the type, and
