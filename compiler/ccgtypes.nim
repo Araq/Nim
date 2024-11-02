@@ -431,7 +431,7 @@ proc getTypeDescWeak(m: BModule; t: PType; check: var IntSet; kind: TypeDescKind
         struct.addSimpleStruct(m, name = result, baseType = ""):
           struct.addField(name = "len", typ = "NI")
           struct.addField(name = "p", typ = ptrType(result & "_Content"))
-        m.s[cfsTypes].add(struct)
+        m.s[cfsTypes].add(extract(struct))
         pushType(m, t)
     else:
       result = getTypeForward(m, t, sig) & seqStar(m)
@@ -456,7 +456,7 @@ proc seqV2ContentType(m: BModule; t: PType; check: var IntSet) =
       struct.addField(name = "data",
         typ = getTypeDescAux(m, t.skipTypes(abstractInst)[0], check, dkVar),
         isFlexArray = true)
-    m.s[cfsTypes].add(struct)
+    m.s[cfsTypes].add(extract(struct))
 
 proc paramStorageLoc(param: PSym): TStorageLoc =
   if param.typ.skipTypes({tyVar, tyLent, tyTypeDesc}).kind notin {
@@ -685,7 +685,7 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
     genRecordFieldsAux(m, n[0], rectype, check, result, unionPrefix)
     # prefix mangled name with "_U" to avoid clashes with other field names,
     # since identifiers are not allowed to start with '_'
-    var unionBody: Rope = ""
+    var unionBody = newBuilder("")
     for i in 1..<n.len:
       case n[i].kind
       of nkOfBranch, nkElse:
@@ -694,16 +694,16 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
           let structName = "_" & mangleRecFieldName(m, n[0].sym) & "_" & $i
           var a = newBuilder("")
           genRecordFieldsAux(m, k, rectype, check, a, unionPrefix & $structName & ".")
-          if a.len != 0:
+          if a.buf.len != 0:
             unionBody.addFieldWithStructType(m, rectype, structName):
-              unionBody.add(a)
+              unionBody.add(extract(a))
         else:
           genRecordFieldsAux(m, k, rectype, check, unionBody, unionPrefix)
       else: internalError(m.config, "genRecordFieldsAux(record case branch)")
-    if unionBody.len != 0:
+    if unionBody.buf.len != 0:
       result.addAnonUnion:
         # XXX this has to be a named field for NIFC
-        result.add(unionBody)
+        result.add(extract(unionBody))
   of nkSym:
     let field = n.sym
     if field.typ.kind == tyVoid: return
@@ -735,7 +735,7 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
       result.addField(field, sname, typ, isFlexArray, initializer)
   else: internalError(m.config, n.info, "genRecordFieldsAux()")
 
-proc genMemberProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = false, isFwdDecl:bool = false)
+proc genMemberProcHeader(m: BModule; prc: PSym; result: var Builder; asPtr: bool = false, isFwdDecl:bool = false)
 
 proc addRecordFields(result: var Builder; m: BModule; typ: PType, check: var IntSet) =
   genRecordFieldsAux(m, typ.n, typ, check, result)
@@ -743,14 +743,14 @@ proc addRecordFields(result: var Builder; m: BModule; typ: PType, check: var Int
     let procs = m.g.graph.memberProcsPerType[typ.itemId]
     var isDefaultCtorGen, isCtorGen: bool = false
     for prc in procs:
-      var header: Rope = ""
+      var header = newBuilder("")
       if sfConstructor in prc.flags:
         isCtorGen = true
         if prc.typ.n.len == 1:
           isDefaultCtorGen = true
       if lfNoDecl in prc.loc.flags: continue
       genMemberProcHeader(m, prc, header, false, true)
-      result.addf "$1;$n", [header]
+      result.addf "$1;$n", [extract(header)]
     if isCtorGen and not isDefaultCtorGen:
       var ch: IntSet = default(IntSet)
       result.addf "$1() = default;$n", [getTypeDescAux(m, typ, ch, dkOther)]
@@ -771,22 +771,24 @@ proc getRecordDesc(m: BModule; typ: PType, name: Rope,
   if typ.baseClass != nil:
     baseType = getTypeDescAux(m, typ.baseClass.skipTypes(skipPtrs), check, dkField)
   if typ.sym == nil or sfCodegenDecl notin typ.sym.flags:
-    result = newBuilder("")
-    result.addStruct(m, typ, name, baseType):
-      result.addRecordFields(m, typ, check)
+    var res = newBuilder("")
+    res.addStruct(m, typ, name, baseType):
+      res.addRecordFields(m, typ, check)
+    result = extract(res)
   else:
     var desc = newBuilder("")
     desc.addRecordFields(m, typ, check)
-    result = runtimeFormat(typ.sym.cgDeclFrmt, [name, desc, baseType])
+    result = runtimeFormat(typ.sym.cgDeclFrmt, [name, extract(desc), baseType])
 
 proc getTupleDesc(m: BModule; typ: PType, name: Rope,
                   check: var IntSet): Rope =
-  result = newBuilder("")
-  result.addStruct(m, typ, name, ""):
+  var res = newBuilder("")
+  res.addStruct(m, typ, name, ""):
     for i, a in typ.ikids:
-      result.addField(
+      res.addField(
         name = "Field" & $i,
         typ = getTypeDescAux(m, a, check, dkField))
+  result = extract(res)
 
 proc scanCppGenericSlot(pat: string, cursor, outIdx, outStars: var int): bool =
   # A helper proc for handling cppimport patterns, involving numeric
@@ -832,7 +834,7 @@ proc getOpenArrayDesc(m: BModule; t: PType, check: var IntSet; kind: TypeDescKin
         typedef.addSimpleStruct(m, name = "", baseType = ""):
           typedef.addField(name = "Field0", typ = ptrType(elemType))
           typedef.addField(name = "Field1", typ = "NI")
-      m.s[cfsTypes].add(typedef)
+      m.s[cfsTypes].add(extract(typedef))
 
 proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDescKind): Rope =
   # returns only the type's name
@@ -925,7 +927,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
             typedef.addTypedef(name = result):
               typedef.add("NI64")
           else: internalError(m.config, t.sym.info, "getTypeDescAux: enum")
-        m.s[cfsTypes].add(typedef)
+        m.s[cfsTypes].add(extract(typedef))
         when false:
           let owner = hashOwner(t.sym)
           if not gDebugInfo.hasEnum(t.sym.name.s, t.sym.info.line, owner):
@@ -942,16 +944,17 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     var rettype: Snippet = ""
     var desc = newBuilder("")
     genProcParams(m, t, rettype, desc, check, true, true)
+    let params = extract(desc)
     if not isImportedType(t):
       var typedef = newBuilder("")
       if t.callConv != ccClosure: # procedure vars may need a closure!
-        typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = desc)
+        typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
       else:
         typedef.addTypedef(name = result):
           typedef.addSimpleStruct(m, name = "", baseType = ""):
-            typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = desc)
+            typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
             typedef.addField(name = "ClE_0", typ = "void*")
-      m.s[cfsTypes].add(typedef)
+      m.s[cfsTypes].add(extract(typedef))
   of tySequence:
     if optSeqDestructors in m.config.globalOptions:
       result = getTypeDescWeak(m, t, check, kind)
@@ -975,7 +978,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
               name = "data",
               typ = getTypeDescAux(m, t.elementType, check, kind),
               isFlexArray = true)
-          m.s[cfsSeqTypes].add struct
+          m.s[cfsSeqTypes].add extract(struct)
         else:
           result = rope("TGenericSeq")
       result.add(seqStar(m))
@@ -987,7 +990,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       var typedef = newBuilder("")
       typedef.addArrayTypedef(name = result, len = 1):
         typedef.add(foo)
-      m.s[cfsTypes].add(typedef)
+      m.s[cfsTypes].add(extract(typedef))
   of tyArray:
     var n: BiggestInt = toInt64(lengthOrd(m.config, t))
     if n <= 0: n = 1   # make an array of at least one element
@@ -998,7 +1001,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       var typedef = newBuilder("")
       typedef.addArrayTypedef(name = result, len = n):
         typedef.add(e)
-      m.s[cfsTypes].add(typedef)
+      m.s[cfsTypes].add(extract(typedef))
   of tyObject, tyTuple:
     let tt = origTyp.skipTypes({tyDistinct})
     if isImportedCppType(t) and tt.kind == tyGenericInst:
@@ -1106,16 +1109,17 @@ proc getClosureType(m: BModule; t: PType, kind: TClosureTypeKind): Rope =
   var rettype: Snippet = ""
   var desc = newBuilder("")
   genProcParams(m, t, rettype, desc, check, declareEnvironment=kind != clHalf)
+  let params = extract(desc)
   if not isImportedType(t):
     var typedef = newBuilder("")
     if t.callConv != ccClosure or kind != clFull:
-      typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = desc)
+      typedef.addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
     else:
       typedef.addTypedef(name = result):
         typedef.addSimpleStruct(m, name = "", baseType = ""):
-          typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = desc)
+          typedef.addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
           typedef.addField(name = "ClE_0", typ = "void*")
-    m.s[cfsTypes].add(typedef)
+    m.s[cfsTypes].add(extract(typedef))
 
 proc finishTypeDescriptions(m: BModule) =
   var i = 0
@@ -1158,7 +1162,7 @@ proc parseVFunctionDecl(val: string; name, params, retType, superCall: var strin
 
   params = "(" & params & ")"
 
-proc genMemberProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = false, isFwdDecl: bool = false) =
+proc genMemberProcHeader(m: BModule; prc: PSym; result: var Builder; asPtr: bool = false, isFwdDecl: bool = false) =
   assert sfCppMember * prc.flags != {}
   let isCtor = sfConstructor in prc.flags
   var check = initIntSet()
@@ -1206,14 +1210,15 @@ proc genMemberProcHeader(m: BModule; prc: PSym; result: var Rope; asPtr: bool = 
         [rope(CallingConvToStr[prc.typ.callConv]), asPtrStr, rettype, name,
         params, fnConst, override, superCall])
 
-proc genProcHeader(m: BModule; prc: PSym; result: var Rope; visibility: var DeclVisibility, asPtr: bool, addAttributes: bool) =
+proc genProcHeader(m: BModule; prc: PSym; result: var Builder; visibility: var DeclVisibility, asPtr: bool, addAttributes: bool) =
   # using static is needed for inline procs
   var check = initIntSet()
   fillBackendName(m, prc)
   fillLoc(prc.loc, locProc, prc.ast[namePos], OnUnknown)
   var rettype: Snippet = ""
-  var params = newBuilder("")
-  genProcParams(m, prc.typ, rettype, params, check, true, false)
+  var desc = newBuilder("")
+  genProcParams(m, prc.typ, rettype, desc, check, true, false)
+  let params = extract(desc)
   # handle the 2 options for hotcodereloading codegen - function pointer
   # (instead of forward declaration) or header for function body with "_actual" postfix
   var name = prc.loc.snippet
@@ -1515,12 +1520,12 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
       name = enumArray,
       elementType = "char* NIM_CONST", # XXX maybe do this in `addVar`
       len = typ.n.len):
-    m.s[cfsTypeInit1].add(enumNames)
+    m.s[cfsTypeInit1].add(extract(enumNames))
   m.s[cfsTypeInit3].addf("for ($1 = 0; $1 < $2; $1++) {$n" &
       "$3[$1+$4].kind = 1;$n" & "$3[$1+$4].offset = $1;$n" &
       "$3[$1+$4].name = $5[$1];$n" & "$6[$1] = &$3[$1+$4];$n" & "}$n", [counter,
       rope(typ.n.len), m.typeNodesName, rope(firstNimNode), enumArray, nodePtrs])
-  m.s[cfsTypeInit3].add(specialCases)
+  m.s[cfsTypeInit3].add(extract(specialCases))
   let n = getNimNode(m)
   m.s[cfsTypeInit3].addFieldAssignment(n, "len", typ.n.len)
   m.s[cfsTypeInit3].addFieldAssignment(n, "kind", 0)
@@ -1555,10 +1560,11 @@ include ccgtrav
 
 proc genDeepCopyProc(m: BModule; s: PSym; result: Rope) =
   genProc(m, s)
-  var params = newBuilder("")
+  var desc = newBuilder("")
   var paramBuilder: ProcParamBuilder
-  params.addProcParams(paramBuilder):
-    params.addUnnamedParam(paramBuilder, typ = "void*")
+  desc.addProcParams(paramBuilder):
+    desc.addUnnamedParam(paramBuilder, typ = "void*")
+  let params = extract(desc)
   let pt = procPtrTypeUnnamedNimCall(rettype = "void*", params = params)
   m.s[cfsTypeInit3].addFieldAssignmentWithValue(result, "deepcopy"):
     m.s[cfsTypeInit3].add(cCast(pt, s.loc.snippet))
@@ -1643,7 +1649,7 @@ proc generateRttiDestructor(g: ModuleGraph; typ: PType; owner: PSym; kind: TType
   incl result.flags, sfFromGeneric
   incl result.flags, sfGeneratedOp
 
-proc genHook(m: BModule; t: PType; info: TLineInfo; op: TTypeAttachedOp; result: var Rope) =
+proc genHook(m: BModule; t: PType; info: TLineInfo; op: TTypeAttachedOp; result: var Builder) =
   let theProc = getAttachedOp(m.g.graph, t, op)
   if theProc != nil and not isTrivialProc(m.g.graph, theProc):
     # the prototype of a destructor is ``=destroy(x: var T)`` and that of a
@@ -1719,7 +1725,7 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
 
-  var typeEntry = newRopeAppender()
+  var typeEntry = newBuilder("")
   typeEntry.addFieldAssignmentWithValue(name, "destructor"):
     typeEntry.addCast("void*"):
       genHook(m, t, info, attachedDestructor, typeEntry)
@@ -1771,7 +1777,7 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
       genProcPrototype(m, i)
     typeEntry.addFieldAssignment(name, "vTable", vTablePointerName)
 
-  m.s[cfsTypeInit3].add typeEntry
+  m.s[cfsTypeInit3].add extract(typeEntry)
 
   if t.kind == tyObject and t.baseClass != nil and optEnableDeepCopy in m.config.globalOptions:
     discard genTypeInfoV1(m, t, info)
@@ -1784,7 +1790,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
 
-  var typeEntry = newRopeAppender()
+  var typeEntry = newBuilder("")
   typeEntry.addDeclWithVisibility(Private):
     typeEntry.addVarWithTypeAndInitializer(kind = Local, name = name):
       typeEntry.add("TNimTypeV2")
@@ -1843,7 +1849,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
         else:
           typeEntry.addField(typeInit, name = "flags"):
             typeEntry.addIntValue(flags)
-  m.s[cfsVars].add typeEntry
+  m.s[cfsVars].add extract(typeEntry)
 
   if t.kind == tyObject and t.baseClass != nil and optEnableDeepCopy in m.config.globalOptions:
     discard genTypeInfoV1(m, t, info)

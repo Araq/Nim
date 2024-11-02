@@ -51,7 +51,7 @@ proc generateThreadLocalStorage(m: BModule) =
     typedef.addTypedef(name = "NimThreadVars"):
       typedef.addSimpleStruct(m, name = "", baseType = ""):
         typedef.add(m.g.nimtv)
-    m.s[cfsSeqTypes].add(typedef)
+    m.s[cfsSeqTypes].add(extract(typedef))
 
 proc generateThreadVarsSize(m: BModule) =
   if m.g.nimtv != "":

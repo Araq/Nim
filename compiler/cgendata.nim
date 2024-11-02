@@ -11,7 +11,7 @@
 
 import
   ast, ropes, options,
-  lineinfos, pathutils, modulegraphs
+  lineinfos, pathutils, modulegraphs, cbuilderbase
 
 import std/[intsets, tables, sets]
 
@@ -43,12 +43,12 @@ type
     ctUInt, ctUInt8, ctUInt16, ctUInt32, ctUInt64,
     ctArray, ctPtrToArray, ctStruct, ctPtr, ctNimStr, ctNimSeq, ctProc,
     ctCString
-  TCFileSections* = array[TCFileSection, Rope] # represents a generated C file
+  TCFileSections* = array[TCFileSection, Builder] # represents a generated C file
   TCProcSection* = enum       # the sections a generated C proc consists of
     cpsLocals,                # section of local variables for C proc
     cpsInit,                  # section for init of variables for C proc
     cpsStmts                  # section of local statements for C proc
-  TCProcSections* = array[TCProcSection, Rope] # represents a generated C proc
+  TCProcSections* = array[TCProcSection, Builder] # represents a generated C proc
   BModule* = ref TCGen
   BProc* = ref TCProc
   TBlock* = object
@@ -161,7 +161,7 @@ type
     typeInfoMarkerV2*: TypeCache
     initProc*: BProc          # code for init procedure
     preInitProc*: BProc       # code executed before the init proc
-    hcrCreateTypeInfosProc*: Rope # type info globals are in here when HCR=on
+    hcrCreateTypeInfosProc*: Builder # type info globals are in here when HCR=on
     inHcrInitGuard*: bool     # We are currently within a HCR reloading guard.
     typeStack*: TTypeSeq      # used for type generation
     dataCache*: TNodeTable
@@ -181,18 +181,18 @@ proc includeHeader*(this: BModule; header: string) =
   if not this.headerFiles.contains header:
     this.headerFiles.add header
 
-proc s*(p: BProc, s: TCProcSection): var Rope {.inline.} =
+proc s*(p: BProc, s: TCProcSection): var Builder {.inline.} =
   # section in the current block
   result = p.blocks[^1].sections[s]
 
-proc procSec*(p: BProc, s: TCProcSection): var Rope {.inline.} =
+proc procSec*(p: BProc, s: TCProcSection): var Builder {.inline.} =
   # top level proc sections
   result = p.blocks[0].sections[s]
 
 proc initBlock*(): TBlock =
   result = TBlock()
   for i in low(result.sections)..high(result.sections):
-    result.sections[i] = newRopeAppender()
+    result.sections[i] = newBuilder("")
 
 proc newProc*(prc: PSym, module: BModule): BProc =
   result = BProc(

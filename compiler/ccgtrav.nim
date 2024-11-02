@@ -76,12 +76,11 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType) =
     let arraySize = lengthOrd(c.p.config, typ.indexType)
     var i: TLoc = getTemp(p, getSysType(c.p.module.g.graph, unknownLineInfo, tyInt))
     var oldCode = p.s(cpsStmts)
-    freeze oldCode
     linefmt(p, cpsStmts, "for ($1 = 0; $1 < $2; $1++) {$n",
             [i.snippet, arraySize])
-    let oldLen = p.s(cpsStmts).len
+    let oldLen = p.s(cpsStmts).buf.len
     genTraverseProc(c, ropecg(c.p.module, "$1[$2]", [accessor, i.snippet]), typ.elementType)
-    if p.s(cpsStmts).len == oldLen:
+    if p.s(cpsStmts).buf.len == oldLen:
       # do not emit dummy long loops for faster debug builds:
       p.s(cpsStmts) = oldCode
     else:
@@ -119,14 +118,13 @@ proc genTraverseProcSeq(c: TTraversalClosure, accessor: Rope, typ: PType) =
   assert typ.kind == tySequence
   var i = getTemp(p, getSysType(c.p.module.g.graph, unknownLineInfo, tyInt))
   var oldCode = p.s(cpsStmts)
-  freeze oldCode
   var a = TLoc(snippet: accessor)
 
   lineF(p, cpsStmts, "for ($1 = 0; $1 < $2; $1++) {$n",
       [i.snippet, lenExpr(c.p, a)])
-  let oldLen = p.s(cpsStmts).len
+  let oldLen = p.s(cpsStmts).buf.len
   genTraverseProc(c, "$1$3[$2]" % [accessor, i.snippet, dataField(c.p)], typ.elementType)
-  if p.s(cpsStmts).len == oldLen:
+  if p.s(cpsStmts).buf.len == oldLen:
     # do not emit dummy long loops for faster debug builds:
     p.s(cpsStmts) = oldCode
   else:
@@ -160,7 +158,7 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
       genTraverseProc(c, "(*a)".rope, typ.elementType)
 
   let generatedProc = "$1 {$n$2$3$4}\n" %
-        [header, p.s(cpsLocals), p.s(cpsInit), p.s(cpsStmts)]
+        [header, extract(p.s(cpsLocals)), extract(p.s(cpsInit)), extract(p.s(cpsStmts))]
 
   m.s[cfsProcHeaders].addf("$1;\n", [header])
   m.s[cfsProcs].add(generatedProc)
@@ -189,7 +187,7 @@ proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
   genTraverseProc(c, sLoc, s.loc.t)
 
   let generatedProc = "$1 {$n$2$3$4}$n" %
-        [header, p.s(cpsLocals), p.s(cpsInit), p.s(cpsStmts)]
+        [header, extract(p.s(cpsLocals)), extract(p.s(cpsInit)), extract(p.s(cpsStmts))]
 
   m.s[cfsProcHeaders].addf("$1;$n", [header])
   m.s[cfsProcs].add(generatedProc)
