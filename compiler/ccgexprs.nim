@@ -1744,11 +1744,13 @@ proc rawConstExpr(p: BProc, n: PNode; d: var TLoc) =
     # expression not found in the cache:
     inc(p.module.labels)
     let td = getTypeDesc(p.module, t)
-    p.module.s[cfsData].addVarWithInitializer(kind = Const, name = d.snippet, typ = td):
+    var data = newBuilder("")
+    data.addVarWithInitializer(kind = Const, name = d.snippet, typ = td):
       # bug #23627; when generating const object fields, it's likely that
       # we need to generate type infos for the object, which may be an object with
       # custom hooks. We need to generate potential consts in the hooks first.
-      genBracedInit(p, n, isConst = true, t, p.module.s[cfsData])
+      genBracedInit(p, n, isConst = true, t, data)
+    p.module.s[cfsData].add(extract(data))
 
 proc handleConstExpr(p: BProc, n: PNode, d: var TLoc): bool =
   if d.k == locNone and n.len > ord(n.kind == nkObjConstr) and n.isDeepConstExpr:
@@ -3012,8 +3014,10 @@ proc genClosure(p: BProc, n: PNode, d: var TLoc) =
     inc(p.module.labels)
     var tmp = "CNSTCLOSURE" & rope(p.module.labels)
     let td = getTypeDesc(p.module, n.typ)
-    p.module.s[cfsData].addVarWithInitializer(kind = Const, name = tmp, typ = td):
-      genBracedInit(p, n, isConst = true, n.typ, p.module.s[cfsData])
+    var data = newBuilder("")
+    data.addVarWithInitializer(kind = Const, name = tmp, typ = td):
+      genBracedInit(p, n, isConst = true, n.typ, data)
+    p.module.s[cfsData].add(extract(data))
     putIntoDest(p, d, n, tmp, OnStatic)
   else:
     var tmp: TLoc
@@ -3180,9 +3184,11 @@ proc exprComplexConst(p: BProc, n: PNode, d: var TLoc) =
     # expression not found in the cache:
     inc(p.module.labels)
     let td = getTypeDesc(p.module, t, dkConst)
-    p.module.s[cfsData].addVarWithInitializer(
+    var data = newBuilder("")
+    data.addVarWithInitializer(
         kind = Const, name = tmp, typ = td):
-      genBracedInit(p, n, isConst = true, t, p.module.s[cfsData])
+      genBracedInit(p, n, isConst = true, t, data)
+    p.module.s[cfsData].add(extract(data))
 
   if d.k == locNone:
     fillLoc(d, locData, n, tmp, OnStatic)
@@ -3229,9 +3235,11 @@ proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
   # add a suffix for hcr - will later init the global pointer with this data
   let actualConstName = if q.hcrOn: sym.loc.snippet & "_const" else: sym.loc.snippet
   let td = getTypeDesc(q, sym.typ)
-  q.s[cfsData].addDeclWithVisibility(Private):
-    q.s[cfsData].addVarWithInitializer(Local, actualConstName, typ = td):
-      genBracedInit(q.initProc, sym.astdef, isConst = true, sym.typ, q.s[cfsData])
+  var data = newBuilder("")
+  data.addDeclWithVisibility(Private):
+    data.addVarWithInitializer(Local, actualConstName, typ = td):
+      genBracedInit(q.initProc, sym.astdef, isConst = true, sym.typ, data)
+  q.s[cfsData].add(extract(data))
   if q.hcrOn:
     # generate the global pointer with the real name
     q.s[cfsVars].addVar(kind = Global, name = sym.loc.snippet,
