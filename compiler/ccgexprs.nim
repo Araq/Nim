@@ -3234,7 +3234,7 @@ proc genConstHeader(m, q: BModule; p: BProc, sym: PSym) =
 proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
   # add a suffix for hcr - will later init the global pointer with this data
   let actualConstName = if q.hcrOn: sym.loc.snippet & "_const" else: sym.loc.snippet
-  let td = getTypeDesc(q, sym.typ)
+  let td = constType(getTypeDesc(q, sym.typ))
   var data = newBuilder("")
   data.addDeclWithVisibility(Private):
     data.addVarWithInitializer(Local, actualConstName, typ = td):
