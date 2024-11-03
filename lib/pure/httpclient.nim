@@ -62,6 +62,7 @@
 ## validated to the server.
 ##
 ##   ```Nim
+##   import std/[httpclient]
 ##   var client = newHttpClient()
 ##   var data = newMultipartData()
 ##   data["output"] = "soap12"
@@ -79,6 +80,7 @@
 ## it, you can pass your own via the `mimeDb` parameter to avoid this.
 ##
 ##   ```Nim
+##   import std/[httpclient, mimetypes]
 ##   let mimes = newMimetypes()
 ##   var client = newHttpClient()
 ##   var data = newMultipartData()
@@ -160,7 +162,7 @@
 ## Example of setting SSL verification parameters in a new client:
 ##
 ##   ```Nim
-##   import httpclient
+##   import std/[net, httpclient]
 ##   var client = newHttpClient(sslContext=newContext(verifyMode=CVerifyPeer))
 ##   ```
 ##

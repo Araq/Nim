@@ -42,6 +42,18 @@ template addVarWithType(builder: var Builder, kind: VarKind = Local, name: strin
   builder.add(name)
   builder.add(";\n")
 
+template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string,
+                               typ: Snippet, initializerBody: typed) =
+  ## adds a variable declaration to the builder, with
+  ## `initializerBody` building the initializer. initializer must be provided
+  builder.addVarHeader(kind)
+  builder.add(typ)
+  builder.add(" ")
+  builder.add(name)
+  builder.add(" = ")
+  initializerBody
+  builder.add(";\n")
+
 template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                       typeBody, initializerBody: typed) =
   ## adds a variable declaration to the builder, with `typeBody` building the type, and
@@ -252,12 +264,12 @@ proc startSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: Sni
     obj.add(baseType)
   obj.add(" ")
   obj.add("{\n")
-  result.preFieldsLen = obj.len
+  result.preFieldsLen = obj.buf.len
   if result.baseKind == bcSupField:
     obj.addField(name = "Sup", typ = baseType)
 
 proc finishSimpleStruct(obj: var Builder; m: BModule; info: StructBuilderInfo) =
-  if info.baseKind == bcNone and info.preFieldsLen == obj.len:
+  if info.baseKind == bcNone and info.preFieldsLen == obj.buf.len:
     # no fields were added, add dummy field
     obj.addField(name = "dummy", typ = "char")
   if info.named:
@@ -308,7 +320,7 @@ proc startStruct(obj: var Builder; m: BModule; t: PType; name: string; baseType:
     obj.add(baseType)
   obj.add(" ")
   obj.add("{\n")
-  result.preFieldsLen = obj.len
+  result.preFieldsLen = obj.buf.len
   case result.baseKind
   of bcNone:
     # rest of the options add a field or don't need it due to inheritance,
@@ -328,7 +340,7 @@ proc startStruct(obj: var Builder; m: BModule; t: PType; name: string; baseType:
     obj.addField(name = "Sup", typ = baseType)
 
 proc finishStruct(obj: var Builder; m: BModule; t: PType; info: StructBuilderInfo) =
-  if info.baseKind == bcNone and info.preFieldsLen == obj.len and
+  if info.baseKind == bcNone and info.preFieldsLen == obj.buf.len and
       t.itemId notin m.g.graph.memberProcsPerType:
     # no fields were added, add dummy field
     obj.addField(name = "dummy", typ = "char")
