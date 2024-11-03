@@ -33,6 +33,7 @@ when enableRemoteNetworking and (defined(nimTestsEnableFlaky) or not defined(win
     CertTest = tuple[url:string, category:Category, desc: string]
 
   # badssl certs sometimes expire, set to false when that happens
+  # badssl now disabled indefinitely
   when false:
     const certificate_tests: array[0..54, CertTest] = [
       ("https://wrong.host.badssl.com/", bad, "wrong.host"),

@@ -55,7 +55,7 @@ suite "SSL certificate check":
       var ctx = newContext(verifyMode=CVerifyPeerUseEnvVars)
       ctx.wrapSocket(sock)
       checkpoint("Socket created")
-      when false:
+      when false: # badssl tests disabled indefinitely
         try:
           sock.connect("expired.badssl.com", 443.Port)
           fail()
