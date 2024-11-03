@@ -93,14 +93,14 @@ template addElseBranch(builder: var Builder, stmt: var IfStmt, body: typed) =
   body
   builder.add("}")
 
-proc addForRangeHeader(builder: var Builder, i, start, bound: Snippet, inclusive: static bool = false) =
+proc addForRangeHeader(builder: var Builder, i, start, bound: Snippet, inclusive: bool = false) =
   builder.add("for (")
   builder.add(i)
   builder.add(" = ")
   builder.add(start)
   builder.add("; ")
   builder.add(i)
-  when inclusive:
+  if inclusive:
     builder.add(" <= ")
   else:
     builder.add(" < ")
