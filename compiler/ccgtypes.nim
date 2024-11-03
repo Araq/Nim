@@ -1505,7 +1505,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
       name = enumArray,
       elementType = constPtrType("char"),
       len = typ.n.len):
-    m.s[cfsTypeInit1].add(enumNames)
+    m.s[cfsTypeInit1].add(extract(enumNames))
   m.s[cfsTypeInit3].addForRangeExclusive(i = counter,
       start = cIntValue(0),
       bound = cIntValue(typ.n.len)):
@@ -1517,7 +1517,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
       subscript(enumArray, counter))
     m.s[cfsTypeInit3].addSubscriptAssignment(nodePtrs, counter,
       cAddr(nodeLoc))
-  m.s[cfsTypeInit3].add(specialCases)
+  m.s[cfsTypeInit3].add(extract(specialCases))
   let n = getNimNode(m)
   m.s[cfsTypeInit3].addFieldAssignment(n, "len", typ.n.len)
   m.s[cfsTypeInit3].addFieldAssignment(n, "kind", 0)
