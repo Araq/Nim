@@ -322,7 +322,7 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
         let ra = rdLoc(a)
         result.add(ra)
         result.addArgumentSeparator()
-        result.addIntValue(lengthOrd(p.config, a.t))
+        result.addIntValue(lengthOrd(p.config, elementType(a.t)))
       else:
         internalError(p.config, "openArrayLoc: " & typeToString(a.t))
     else: internalError(p.config, "openArrayLoc: " & typeToString(a.t))
