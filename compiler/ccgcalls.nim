@@ -209,8 +209,7 @@ proc genOpenArraySlice(p: BProc; q: PNode; formalType, destType: PType; prepareF
       result = ("($3*)(($1)+($2))" % [rdLoc(a), rdLoc(b), dest],
                 lengthExpr)
     else:
-      var lit = newRopeAppender()
-      intLiteral(first, lit)
+      let lit = cIntLiteral(first)
       result = ("($4*)($1)+(($2)-($3))" %
         [rdLoc(a), rdLoc(b), lit, dest],
         lengthExpr)

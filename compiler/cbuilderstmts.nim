@@ -93,6 +93,32 @@ template addElseBranch(builder: var Builder, stmt: var IfStmt, body: typed) =
   body
   builder.add("}")
 
+proc addForRangeHeader(builder: var Builder, i, start, bound: Snippet, inclusive: bool = false) =
+  builder.add("for (")
+  builder.add(i)
+  builder.add(" = ")
+  builder.add(start)
+  builder.add("; ")
+  builder.add(i)
+  if inclusive:
+    builder.add(" <= ")
+  else:
+    builder.add(" < ")
+  builder.add(bound)
+  builder.add("; ")
+  builder.add(i)
+  builder.add("++) {\n")
+
+template addForRangeExclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
+  addForRangeHeader(builder, i, start, bound, false)
+  body
+  builder.add("}\n")
+
+template addForRangeInclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
+  addForRangeHeader(builder, i, start, bound, true)
+  body
+  builder.add("}\n")
+
 template addScope(builder: var Builder, body: typed) =
   builder.add("{")
   body

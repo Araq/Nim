@@ -34,15 +34,15 @@ proc genLiteral(p: BProc, n: PNode, ty: PType; result: var Builder) =
       else: k = tyNil # don't go into the case variant that uses 'ty'
     case k
     of tyChar, tyNil:
-      intLiteral(n.intVal, result)
+      result.addIntLiteral(n.intVal)
     of tyBool:
       if n.intVal != 0: result.add "NIM_TRUE"
       else: result.add "NIM_FALSE"
-    of tyInt64: int64Literal(n.intVal, result)
-    of tyUInt64: uint64Literal(uint64(n.intVal), result)
+    of tyInt64: result.addInt64Literal(n.intVal)
+    of tyUInt64: result.addUint64Literal(uint64(n.intVal))
     else:
       result.addCast(getTypeDesc(p.module, ty)):
-        intLiteral(n.intVal, result)
+        result.addIntLiteral(n.intVal)
   of nkNilLit:
     let k = if ty == nil: tyPointer else: skipTypes(ty, abstractVarRange).kind
     if k == tyProc and skipTypes(ty, abstractVarRange).callConv == ccClosure:
@@ -51,17 +51,14 @@ proc genLiteral(p: BProc, n: PNode, ty: PType; result: var Builder) =
       if id == p.module.labels:
         # not found in cache:
         inc(p.module.labels)
-        var data = newBuilder("")
-        data.addVarWithTypeAndInitializer(kind = Const, name = tmpName):
-          data.add(getTypeDesc(p.module, ty))
-        do:
+        let t = getTypeDesc(p.module, ty)
+        p.module.s[cfsStrData].addVarWithInitializer(kind = Const, name = tmpName, typ = t):
           var closureInit: StructInitializer
-          data.addStructInitializer(closureInit, kind = siOrderedStruct):
-            data.addField(closureInit, name = "ClP_0"):
-              data.add("NIM_NIL")
-            data.addField(closureInit, name = "ClE_0"):
-              data.add("NIM_NIL")
-        p.module.s[cfsStrData].add(data)
+          p.module.s[cfsStrData].addStructInitializer(closureInit, kind = siOrderedStruct):
+            p.module.s[cfsStrData].addField(closureInit, name = "ClP_0"):
+              p.module.s[cfsStrData].add("NIM_NIL")
+            p.module.s[cfsStrData].addField(closureInit, name = "ClE_0"):
+              p.module.s[cfsStrData].add("NIM_NIL")
       result.add tmpName
     elif k in {tyPointer, tyNil, tyProc}:
       result.add rope("NIM_NIL")
@@ -107,7 +104,7 @@ proc genRawSetData(cs: TBitSet, size: int; result: var Builder) =
           result.add "0123456789abcdef"[cs[i] div 16]
           result.add "0123456789abcdef"[cs[i] mod 16]
   else:
-    intLiteral(cast[BiggestInt](bitSetToWord(cs, size)), result)
+    result.addIntLiteral(cast[BiggestInt](bitSetToWord(cs, size)))
 
 proc genSetNode(p: BProc, n: PNode; result: var Builder) =
   var size = int(getSize(p.config, n.typ))
@@ -118,12 +115,9 @@ proc genSetNode(p: BProc, n: PNode; result: var Builder) =
     if id == p.module.labels:
       # not found in cache:
       inc(p.module.labels)
-      var data = newBuilder("")
-      data.addVarWithTypeAndInitializer(kind = Const, name = tmpName):
-        data.add(getTypeDesc(p.module, n.typ))
-      do:
-        genRawSetData(cs, size, data)
-      p.module.s[cfsStrData].add(data)
+      let td = getTypeDesc(p.module, n.typ)
+      p.module.s[cfsStrData].addVarWithInitializer(kind = Const, name = tmpName, typ = td):
+        genRawSetData(cs, size, p.module.s[cfsStrData])
     result.add tmpName
   else:
     genRawSetData(cs, size, result)
@@ -1065,8 +1059,9 @@ proc genFieldCheck(p: BProc, e: PNode, obj: Rope, field: PSym) =
       # passing around `TLineInfo` + the set of files in the project.
       msg.add toFileLineCol(p.config, e.info) & " "
     msg.add genFieldDefect(p.config, field.name.s, disc.sym)
-    var strLit = newRopeAppender()
-    genStringLiteral(p.module, newStrNode(nkStrLit, msg), strLit)
+    var strLitBuilder = newBuilder("")
+    genStringLiteral(p.module, newStrNode(nkStrLit, msg), strLitBuilder)
+    let strLit = extract(strLitBuilder)
 
     ## discriminant check
     let rt = rdLoc(test)
@@ -1456,7 +1451,7 @@ proc genStrConcat(p: BProc, e: PNode, d: var TLoc) =
   var a: TLoc
   var tmp: TLoc = getTemp(p, e.typ)
   var L = 0
-  var appends = newBuilder("")
+  var appends: seq[Snippet] = @[]
   var lens: seq[Snippet] = @[]
   for i in 0..<e.len - 1:
     # compute the length expression:
@@ -1465,23 +1460,21 @@ proc genStrConcat(p: BProc, e: PNode, d: var TLoc) =
     let ra = rdLoc(a)
     if skipTypes(e[i + 1].typ, abstractVarRange).kind == tyChar:
       inc(L)
-      appends.addCallStmt(cgsymValue(p.module, "appendChar"),
-        rstmp,
-        ra)
+      appends.add(cCall(cgsymValue(p.module, "appendChar"), rstmp, ra))
     else:
       if e[i + 1].kind in {nkStrLit..nkTripleStrLit}:
         inc(L, e[i + 1].strVal.len)
       else:
         lens.add(lenExpr(p, a))
-      appends.addCallStmt(cgsymValue(p.module, "appendString"),
-        rstmp,
-        ra)
+      appends.add(cCall(cgsymValue(p.module, "appendString"), rstmp, ra))
   var exprL = cIntValue(L)
   for len in lens:
     exprL = cOp(Add, "NI", exprL, len)
   p.s(cpsStmts).addAssignmentWithValue(tmp.snippet):
     p.s(cpsStmts).addCall(cgsymValue(p.module, "rawNewString"), exprL)
-  p.s(cpsStmts).add appends
+  for append in appends:
+    p.s(cpsStmts).addStmt():
+      p.s(cpsStmts).add(append)
   if d.k == locNone:
     d = tmp
   else:
@@ -1502,7 +1495,7 @@ proc genStrAppend(p: BProc, e: PNode, d: var TLoc) =
   #  }
   var
     a, call: TLoc
-    appends = newBuilder("")
+    appends: seq[Snippet] = @[]
   assert(d.k == locNone)
   var L = 0
   var lens: seq[Snippet] = @[]
@@ -1514,17 +1507,13 @@ proc genStrAppend(p: BProc, e: PNode, d: var TLoc) =
     let ra = rdLoc(a)
     if skipTypes(e[i + 2].typ, abstractVarRange).kind == tyChar:
       inc(L)
-      appends.addCallStmt(cgsymValue(p.module, "appendChar"),
-        rsd,
-        ra)
+      appends.add(cCall(cgsymValue(p.module, "appendChar"), rsd, ra))
     else:
       if e[i + 2].kind in {nkStrLit..nkTripleStrLit}:
         inc(L, e[i + 2].strVal.len)
       else:
         lens.add(lenExpr(p, a))
-      appends.addCallStmt(cgsymValue(p.module, "appendString"),
-        rsd,
-        ra)
+      appends.add(cCall(cgsymValue(p.module, "appendString"), rsd, ra))
   var exprL = cIntValue(L)
   for len in lens:
     exprL = cOp(Add, "NI", exprL, len)
@@ -1535,15 +1524,15 @@ proc genStrAppend(p: BProc, e: PNode, d: var TLoc) =
       exprL)
   else:
     call = initLoc(locCall, e, OnHeap)
-    var callRes = newBuilder("")
     let rd = rdLoc(dest)
-    callRes.addCall(cgsymValue(p.module, "resizeString"),
+    call.snippet = cCall(cgsymValue(p.module, "resizeString"),
       rd,
       exprL)
-    call.snippet = callRes
     genAssignment(p, dest, call, {})
     gcUsage(p.config, e)
-  p.s(cpsStmts).add appends
+  for append in appends:
+    p.s(cpsStmts).addStmt():
+      p.s(cpsStmts).add(append)
 
 proc genSeqElemAppend(p: BProc, e: PNode, d: var TLoc) =
   # seq &= x  -->
@@ -1553,13 +1542,11 @@ proc genSeqElemAppend(p: BProc, e: PNode, d: var TLoc) =
   var b = initLocExpr(p, e[2])
   let seqType = skipTypes(e[1].typ, {tyVar})
   var call = initLoc(locCall, e, OnHeap)
-  var callRes = newBuilder("")
   let ra = rdLoc(a)
-  callRes.addCast(getTypeDesc(p.module, e[1].typ)):
-    callRes.addCall(cgsymValue(p.module, "incrSeqV3"),
+  call.snippet = cCast(getTypeDesc(p.module, e[1].typ),
+    cCall(cgsymValue(p.module, "incrSeqV3"),
       if not p.module.compileToCpp: cCast(ptrType("TGenericSeq"), ra) else: ra,
-      genTypeInfoV1(p.module, seqType, e.info))
-  call.snippet = callRes
+      genTypeInfoV1(p.module, seqType, e.info)))
   # emit the write barrier if required, but we can always move here, so
   # use 'genRefAssign' for the seq.
   genRefAssign(p, a, call)
@@ -1589,12 +1576,10 @@ proc rawGenNew(p: BProc, a: var TLoc, sizeExpr: Rope; needsInit: bool) =
 
   if optTinyRtti in p.config.globalOptions:
     let fnName = cgsymValue(p.module, if needsInit: "nimNewObj" else: "nimNewObjUninit")
-    var bres = newBuilder("")
-    bres.addCast(getTypeDesc(p.module, typ)):
-      bres.addCall(fnName,
+    b.snippet = cCast(getTypeDesc(p.module, typ),
+      cCall(fnName,
         sizeExpr,
-        cAlignof(getTypeDesc(p.module, bt)))
-    b.snippet = bres
+        cAlignof(getTypeDesc(p.module, bt))))
     genAssignment(p, a, b, {})
   else:
     let ti = genTypeInfoV1(p.module, typ, a.lode.info)
@@ -1625,12 +1610,10 @@ proc rawGenNew(p: BProc, a: var TLoc, sizeExpr: Rope; needsInit: bool) =
       if p.config.selectedGC == gcGo:
         # newObjRC1() would clash with unsureAsgnRef() - which is used by gcGo to
         # implement the write barrier
-        var bres = newBuilder("")
-        bres.addCast(getTypeDesc(p.module, typ)):
-          bres.addCall(cgsymValue(p.module, "newObj"),
+        b.snippet = cCast(getTypeDesc(p.module, typ),
+          cCall(cgsymValue(p.module, "newObj"),
             ti,
-            sizeExpr)
-        b.snippet = bres
+            sizeExpr))
         let raa = addrLoc(p.config, a)
         let rb = b.rdLoc
         p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
@@ -1638,22 +1621,18 @@ proc rawGenNew(p: BProc, a: var TLoc, sizeExpr: Rope; needsInit: bool) =
           rb)
       else:
         # use newObjRC1 as an optimization
-        var bres = newBuilder("")
-        bres.addCast(getTypeDesc(p.module, typ)):
-          bres.addCall(cgsymValue(p.module, "newObjRC1"),
+        b.snippet = cCast(getTypeDesc(p.module, typ),
+          cCall(cgsymValue(p.module, "newObjRC1"),
             ti,
-            sizeExpr)
-        b.snippet = bres
+            sizeExpr))
         let ra = a.rdLoc
         let rb = b.rdLoc
         p.s(cpsStmts).addAssignment(ra, rb)
     else:
-      var bres = newBuilder("")
-      bres.addCast(getTypeDesc(p.module, typ)):
-        bres.addCall(cgsymValue(p.module, "newObj"),
+      b.snippet = cCast(getTypeDesc(p.module, typ),
+        cCall(cgsymValue(p.module, "newObj"),
           ti,
-          sizeExpr)
-      b.snippet = bres
+          sizeExpr))
       genAssignment(p, a, b, {})
   # set the object type:
   genObjectInit(p, cpsStmts, bt, a, constructRefObj)
@@ -1686,20 +1665,16 @@ proc genNewSeqAux(p: BProc, dest: TLoc, length: Rope; lenIsZero: bool) =
       let typinfo = genTypeInfoV1(p.module, seqtype, dest.lode.info)
       if p.config.selectedGC == gcGo:
         # we need the write barrier
-        var callRes = newBuilder("")
-        callRes.addCast(st):
-          callRes.addCall(cgsymValue(p.module, "newSeq"), typinfo, length)
-        call.snippet = callRes
+        call.snippet = cCast(st,
+          cCall(cgsymValue(p.module, "newSeq"), typinfo, length))
         let rad = addrLoc(p.config, dest)
         let rc = call.rdLoc
         p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
           cCast("void**", rad),
           rc)
       else:
-        var callRes = newBuilder("")
-        callRes.addCast(st):
-          callRes.addCall(cgsymValue(p.module, "newSeqRC1"), typinfo, length)
-        call.snippet = callRes
+        call.snippet = cCast(st,
+          cCall(cgsymValue(p.module, "newSeqRC1"), typinfo, length))
         let rd = dest.rdLoc
         let rc = call.rdLoc
         p.s(cpsStmts).addAssignment(rd, rc)
@@ -1709,10 +1684,8 @@ proc genNewSeqAux(p: BProc, dest: TLoc, length: Rope; lenIsZero: bool) =
     else:
       let st = getTypeDesc(p.module, seqtype)
       let typinfo = genTypeInfoV1(p.module, seqtype, dest.lode.info)
-      var callRes = newBuilder("")
-      callRes.addCast(st):
-        callRes.addCall(cgsymValue(p.module, "newSeq"), typinfo, length)
-      call.snippet = callRes
+      call.snippet = cCast(st,
+        cCall(cgsymValue(p.module, "newSeq"), typinfo, length))
     genAssignment(p, dest, call, {})
 
 proc genNewSeq(p: BProc, e: PNode) =
@@ -1755,11 +1728,10 @@ proc genNewSeqOfCap(p: BProc; e: PNode; d: var TLoc) =
   else:
     if d.k == locNone: d = getTemp(p, e.typ, needsInit=false) # bug #22560
     let ra = a.rdLoc
-    var dres = newBuilder("")
-    dres.addCast(getTypeDesc(p.module, seqtype)):
-      dres.addCall(cgsymValue(p.module, "nimNewSeqOfCap"),
+    let dres = cCast(getTypeDesc(p.module, seqtype),
+      cCall(cgsymValue(p.module, "nimNewSeqOfCap"),
         genTypeInfoV1(p.module, seqtype, e.info),
-        ra)
+        ra))
     putIntoDest(p, d, e, dres)
     gcUsage(p.config, e)
 
@@ -1771,15 +1743,14 @@ proc rawConstExpr(p: BProc, n: PNode; d: var TLoc) =
   if id == p.module.labels:
     # expression not found in the cache:
     inc(p.module.labels)
+    let td = getTypeDesc(p.module, t)
     var data = newBuilder("")
-    data.addVarWithTypeAndInitializer(kind = Const, name = d.snippet):
-      data.add(getTypeDesc(p.module, t))
-    do:
+    data.addVarWithInitializer(kind = Const, name = d.snippet, typ = td):
       # bug #23627; when generating const object fields, it's likely that
       # we need to generate type infos for the object, which may be an object with
       # custom hooks. We need to generate potential consts in the hooks first.
       genBracedInit(p, n, isConst = true, t, data)
-    p.module.s[cfsData].add data
+    p.module.s[cfsData].add(extract(data))
 
 proc handleConstExpr(p: BProc, n: PNode, d: var TLoc): bool =
   if d.k == locNone and n.len > ord(n.kind == nkObjConstr) and n.isDeepConstExpr:
@@ -1942,8 +1913,7 @@ proc genArrToSeq(p: BProc, n: PNode, d: var TLoc) =
   if L < 10:
     for i in 0..<L:
       elem = initLoc(locExpr, lodeTyp elemType(skipTypes(n.typ, abstractInst)), OnHeap)
-      var lit = newRopeAppender()
-      intLiteral(i, lit)
+      let lit = cIntLiteral(i)
       elem.snippet = ropecg(p.module, "$1$3[$2]", [rdLoc(d), lit, dataField(p)])
       elem.storage = OnHeap # we know that sequences are on the heap
       arr = initLoc(locExpr, lodeTyp elemType(skipTypes(n[1].typ, abstractInst)), a.storage)
@@ -2518,12 +2488,12 @@ proc genRangeChck(p: BProc, n: PNode, d: var TLoc) =
 
     # emit range check:
     if n0t.kind in {tyUInt, tyUInt64}:
-      var first = newRopeAppender()
+      var first = newBuilder("")
       genLiteral(p, n[1], dest, first)
-      var last = newRopeAppender()
+      var last = newBuilder("")
       genLiteral(p, n[2], dest, last)
       linefmt(p, cpsStmts, "if ($1 > ($5)($3)){ #raiseRangeErrorNoArgs(); ",
-        [rdCharLoc(a), first, last,
+        [rdCharLoc(a), extract(first), extract(last),
         raiser, getTypeDesc(p.module, n0t)])
       raiseInstr(p, p.s(cpsStmts))
       linefmt p, cpsStmts, "}$n", []
@@ -2541,12 +2511,12 @@ proc genRangeChck(p: BProc, n: PNode, d: var TLoc) =
           "(NI64)"
         else:
           ""
-      var first = newRopeAppender()
+      var first = newBuilder("")
       genLiteral(p, n[1], dest, first)
-      var last = newRopeAppender()
+      var last = newBuilder("")
       genLiteral(p, n[2], dest, last)
       linefmt(p, cpsStmts, "if ($5($1) < $2 || $5($1) > $3){ $4($1, $2, $3); ",
-        [rdCharLoc(a), first, last,
+        [rdCharLoc(a), extract(first), extract(last),
         raiser, boundaryCast])
       raiseInstr(p, p.s(cpsStmts))
       linefmt p, cpsStmts, "}$n", []
@@ -2952,9 +2922,9 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
     a, b: TLoc
   var idx: TLoc
   if nfAllConst in e.flags:
-    var elem = newRopeAppender()
+    var elem = newBuilder("")
     genSetNode(p, e, elem)
-    putIntoDest(p, d, e, elem)
+    putIntoDest(p, d, e, extract(elem))
   else:
     if d.k == locNone: d = getTemp(p, e.typ)
     if getSize(p.config, e.typ) > 8:
@@ -3043,12 +3013,11 @@ proc genClosure(p: BProc, n: PNode, d: var TLoc) =
   if isConstClosure(n):
     inc(p.module.labels)
     var tmp = "CNSTCLOSURE" & rope(p.module.labels)
+    let td = getTypeDesc(p.module, n.typ)
     var data = newBuilder("")
-    data.addVarWithTypeAndInitializer(kind = Const, name = tmp):
-      data.add(getTypeDesc(p.module, n.typ))
-    do:
+    data.addVarWithInitializer(kind = Const, name = tmp, typ = td):
       genBracedInit(p, n, isConst = true, n.typ, data)
-    p.module.s[cfsData].add data
+    p.module.s[cfsData].add(extract(data))
     putIntoDest(p, d, n, tmp, OnStatic)
   else:
     var tmp: TLoc
@@ -3075,8 +3044,7 @@ proc genArrayConstr(p: BProc, n: PNode, d: var TLoc) =
     if d.k == locNone: d = getTemp(p, n.typ)
     for i in 0..<n.len:
       arr = initLoc(locExpr, lodeTyp elemType(skipTypes(n.typ, abstractInst)), d.storage)
-      var lit = newRopeAppender()
-      intLiteral(i, lit)
+      let lit = cIntLiteral(i)
       arr.snippet = subscript(rdLoc(d), lit)
       expr(p, n[i], arr)
 
@@ -3215,11 +3183,12 @@ proc exprComplexConst(p: BProc, n: PNode, d: var TLoc) =
   if id == p.module.labels:
     # expression not found in the cache:
     inc(p.module.labels)
-    p.module.s[cfsData].addVarWithTypeAndInitializer(
-        kind = Const, name = tmp):
-      p.module.s[cfsData].add(getTypeDesc(p.module, t, dkConst))
-    do:
-      genBracedInit(p, n, isConst = true, t, p.module.s[cfsData])
+    let td = getTypeDesc(p.module, t, dkConst)
+    var data = newBuilder("")
+    data.addVarWithInitializer(
+        kind = Const, name = tmp, typ = td):
+      genBracedInit(p, n, isConst = true, t, data)
+    p.module.s[cfsData].add(extract(data))
 
   if d.k == locNone:
     fillLoc(d, locData, n, tmp, OnStatic)
@@ -3258,20 +3227,19 @@ proc genConstHeader(m, q: BModule; p: BProc, sym: PSym) =
     headerDecl.addDeclWithVisibility(Extern):
       headerDecl.addVar(kind = Local, name = sym.loc.snippet,
         typ = constType(getTypeDesc(m, sym.loc.t, dkVar)))
-    m.s[cfsData].add(headerDecl)
+    m.s[cfsData].add(extract(headerDecl))
     if sfExportc in sym.flags and p.module.g.generatedHeader != nil:
-      p.module.g.generatedHeader.s[cfsData].add(headerDecl)
+      p.module.g.generatedHeader.s[cfsData].add(extract(headerDecl))
 
 proc genConstDefinition(q: BModule; p: BProc; sym: PSym) =
   # add a suffix for hcr - will later init the global pointer with this data
   let actualConstName = if q.hcrOn: sym.loc.snippet & "_const" else: sym.loc.snippet
-  var data = newRopeAppender()
+  let td = constType(getTypeDesc(q, sym.typ))
+  var data = newBuilder("")
   data.addDeclWithVisibility(Private):
-    data.addVarWithTypeAndInitializer(Local, actualConstName):
-      data.add(constType(getTypeDesc(q, sym.typ)))
-    do:
+    data.addVarWithInitializer(Local, actualConstName, typ = td):
       genBracedInit(q.initProc, sym.astdef, isConst = true, sym.typ, data)
-  q.s[cfsData].add data
+  q.s[cfsData].add(extract(data))
   if q.hcrOn:
     # generate the global pointer with the real name
     q.s[cfsVars].addVar(kind = Global, name = sym.loc.snippet,
@@ -3348,9 +3316,9 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
       putLocIntoDest(p, d, sym.loc)
     of skConst:
       if isSimpleConst(sym.typ):
-        var lit = newRopeAppender()
+        var lit = newBuilder("")
         genLiteral(p, sym.astdef, sym.typ, lit)
-        putIntoDest(p, d, n, lit, OnStatic)
+        putIntoDest(p, d, n, extract(lit), OnStatic)
       elif useAliveDataFromDce in p.module.flags:
         genConstHeader(p.module, p.module, p, sym)
         assert((sym.loc.snippet != "") and (sym.loc.t != nil))
@@ -3402,17 +3370,17 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
     else: internalError(p.config, n.info, "expr(" & $sym.kind & "); unknown symbol")
   of nkNilLit:
     if not isEmptyType(n.typ):
-      var lit = newRopeAppender()
+      var lit = newBuilder("")
       genLiteral(p, n, lit)
-      putIntoDest(p, d, n, lit)
+      putIntoDest(p, d, n, extract(lit))
   of nkStrLit..nkTripleStrLit:
-    var lit = newRopeAppender()
+    var lit = newBuilder("")
     genLiteral(p, n, lit)
-    putDataIntoDest(p, d, n, lit)
+    putDataIntoDest(p, d, n, extract(lit))
   of nkIntLit..nkUInt64Lit, nkFloatLit..nkFloat128Lit, nkCharLit:
-    var lit = newRopeAppender()
+    var lit = newBuilder("")
     genLiteral(p, n, lit)
-    putIntoDest(p, d, n, lit)
+    putIntoDest(p, d, n, extract(lit))
   of nkCall, nkHiddenCallConv, nkInfix, nkPrefix, nkPostfix, nkCommand,
      nkCallStrLit:
     genLineDir(p, n) # may be redundant, it is generated in fixupCall as well
@@ -3432,9 +3400,9 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
         genCall(p, n, d)
   of nkCurly:
     if isDeepConstExpr(n) and n.len != 0:
-      var lit = newRopeAppender()
+      var lit = newBuilder("")
       genSetNode(p, n, lit)
-      putIntoDest(p, d, n, lit)
+      putIntoDest(p, d, n, extract(lit))
     else:
       genSetConstr(p, n, d)
   of nkBracket:
@@ -3781,6 +3749,7 @@ proc genConstSeq(p: BProc, n: PNode, t: PType; isConst: bool; result: var Builde
   let base = t.skipTypes(abstractInst)[0]
   let tmpName = getTempName(p.module)
 
+  # genBracedInit can modify cfsStrData, we need an intermediate builder:
   var def = newBuilder("")
   def.addVarWithTypeAndInitializer(
       if isConst: Const else: Global,
@@ -3805,7 +3774,7 @@ proc genConstSeq(p: BProc, n: PNode, t: PType; isConst: bool; result: var Builde
             for i in 0..<n.len:
               def.addField(arrInit, name = ""):
                 genBracedInit(p, n[i], isConst, base, def)
-  p.module.s[cfsStrData].add def
+  p.module.s[cfsStrData].add extract(def)
 
   result.add cCast(typ = getTypeDesc(p.module, t), value = cAddr(tmpName))
 
@@ -3813,6 +3782,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
   let base = t.skipTypes(abstractInst)[0]
   let payload = getTempName(p.module)
 
+  # genBracedInit can modify cfsStrData, we need an intermediate builder:
   var def = newBuilder("")
   def.addVarWithTypeAndInitializer(
       if isConst: AlwaysConst else: Global,
@@ -3832,7 +3802,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
             for i in 0..<n.len:
               def.addField(arrInit, name = ""):
                 genBracedInit(p, n[i], isConst, base, def)
-  p.module.s[cfsStrData].add def
+  p.module.s[cfsStrData].add extract(def)
 
   var resultInit: StructInitializer
   result.addStructInitializer(resultInit, kind = siOrderedStruct):
@@ -3900,12 +3870,13 @@ proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; resul
       let payload = getTempName(p.module)
       let ctype = getTypeDesc(p.module, typ.elementType)
       let arrLen = n.len
+      # genConstSimpleList can modify cfsStrData, we need an intermediate builder:
       var data = newBuilder("")
       data.addArrayVarWithInitializer(
           kind = if isConst: AlwaysConst else: Global,
           name = payload, elementType = ctype, len = arrLen):
         genConstSimpleList(p, n, isConst, data)
-      p.module.s[cfsStrData].add(data)
+      p.module.s[cfsStrData].add(extract(data))
       var openArrInit: StructInitializer
       result.addStructInitializer(openArrInit, kind = siOrderedStruct):
         result.addField(openArrInit, name = "Field0"):

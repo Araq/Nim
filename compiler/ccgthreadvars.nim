@@ -47,11 +47,9 @@ proc generateThreadLocalStorage(m: BModule) =
   if m.g.nimtv != "" and (usesThreadVars in m.flags or sfMainModule in m.module.flags):
     for t in items(m.g.nimtvDeps): discard getTypeDesc(m, t)
     finishTypeDescriptions(m)
-    var typedef = newBuilder("")
-    typedef.addTypedef(name = "NimThreadVars"):
-      typedef.addSimpleStruct(m, name = "", baseType = ""):
-        typedef.add(m.g.nimtv)
-    m.s[cfsSeqTypes].add(typedef)
+    m.s[cfsSeqTypes].addTypedef(name = "NimThreadVars"):
+      m.s[cfsSeqTypes].addSimpleStruct(m, name = "", baseType = ""):
+        m.s[cfsSeqTypes].add(m.g.nimtv)
 
 proc generateThreadVarsSize(m: BModule) =
   if m.g.nimtv != "":
