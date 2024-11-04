@@ -1897,7 +1897,6 @@ proc addResult(c: PContext, n: PNode, t: PType, owner: TSymKind) =
     var s = newSym(skResult, getIdent(c.cache, "result"), c.idgen,
                    getCurrOwner(c), n.info)
     s.typ = t
-    incl(s.flags, sfUsed)
 
   if owner == skMacro or t != nil:
     if n.len > resultPos and n[resultPos] != nil:
