@@ -29,6 +29,9 @@ proc procPtrTypeUnnamed(rettype, params: Snippet): Snippet =
 proc procPtrTypeUnnamedNimCall(rettype, params: Snippet): Snippet =
   rettype & "(N_RAW_NIMCALL*)" & params
 
+proc procPtrTypeUnnamed(callConv: TCallingConvention, rettype, params: Snippet): Snippet =
+  CallingConvToStr[callConv] & "_PTR(" & rettype & ", )" & params
+
 proc cCast(typ, value: Snippet): Snippet =
   "((" & typ & ") " & value & ")"
 

@@ -119,6 +119,61 @@ template addForRangeInclusive(builder: var Builder, i, start, bound: Snippet, bo
   body
   builder.add("}\n")
 
+template addSwitchStmt(builder: var Builder, val: Snippet, body: typed) =
+  builder.add("switch (")
+  builder.add(val)
+  builder.add(") {\n")
+  body
+  builder.add("}\n")
+
+template addSingleSwitchCase(builder: var Builder, val: Snippet, body: typed) =
+  builder.add("case ")
+  builder.add(val)
+  builder.add(":\n")
+  body
+
+type
+  SwitchCaseState = enum
+    None, Of, Else, Finished
+  SwitchCaseBuilder = object
+    state: SwitchCaseState
+
+proc addCase(builder: var Builder, info: var SwitchCaseBuilder, val: Snippet) =
+  if info.state != Of:
+    assert info.state == None
+    info.state = Of
+  builder.add("case ")
+  builder.add(val)
+  builder.add(":\n")
+
+proc addCaseRange(builder: var Builder, info: var SwitchCaseBuilder, first, last: Snippet) =
+  if info.state != Of:
+    assert info.state == None
+    info.state = Of
+  builder.add("case ")
+  builder.add(first)
+  builder.add(" ... ")
+  builder.add(last)
+  builder.add(":\n")
+
+proc addCaseElse(builder: var Builder, info: var SwitchCaseBuilder) =
+  assert info.state == None
+  info.state = Else
+  builder.add("default:\n")
+
+template addSwitchCase(builder: var Builder, info: out SwitchCaseBuilder, caseBody, body: typed) =
+  info = SwitchCaseBuilder(state: None)
+  caseBody
+  info.state = Finished
+  body
+
+template addSwitchElse(builder: var Builder, body: typed) =
+  builder.add("default:\n")
+  body
+
+proc addBreak(builder: var Builder) =
+  builder.add("break;\n")
+
 template addScope(builder: var Builder, body: typed) =
   builder.add("{")
   body
