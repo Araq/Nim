@@ -2136,7 +2136,8 @@ proc semProcBody(c: PContext, n: PNode; expectedType: PType = nil): PNode =
         while last.kind in {nkStmtList, nkStmtListExpr}:
           last = last.lastSon
         localError(c.config, last.info, "cannot use implicit return, " &
-          "the `result` symbol was used in '" & c.p.owner.name.s & "'")
+          "the `result` symbol was used in '" & c.p.owner.name.s & "'; " &
+          "got expression of type '" & last.typ.typeToString & "'")
       incl(c.p.resultSym.flags, sfUsed)
       var a = newNodeI(nkAsgn, n.info, 2)
       a[0] = newSymNode(c.p.resultSym)
