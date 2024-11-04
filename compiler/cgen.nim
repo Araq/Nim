@@ -362,7 +362,7 @@ proc rdLoc(a: TLoc): Rope =
   else:
     result = a.snippet
 
-proc addRdLoc(a: TLoc; result: var Rope) =
+proc addRdLoc(a: TLoc; result: var Builder) =
   if lfIndirect in a.flags:
     result.add cDeref(a.snippet)
   else:
@@ -411,7 +411,7 @@ template mapTypeChooser(n: PNode): TSymKind =
 
 template mapTypeChooser(a: TLoc): TSymKind = mapTypeChooser(a.lode)
 
-proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Rope) =
+proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Builder) =
   if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
     result.add wrapPar(cAddr(a.snippet))
   else:
@@ -782,7 +782,7 @@ proc expr(p: BProc, n: PNode, d: var TLoc)
 
 proc putLocIntoDest(p: BProc, d: var TLoc, s: TLoc)
 proc genLiteral(p: BProc, n: PNode; result: var Builder)
-proc genOtherArg(p: BProc; ri: PNode; i: int; typ: PType; result: var Rope; argsCounter: var int)
+proc genOtherArg(p: BProc; ri: PNode; i: int; typ: PType; result: var Builder; argBuilder: var CallBuilder)
 proc raiseExit(p: BProc)
 proc raiseExitCleanup(p: BProc, destroy: string)
 

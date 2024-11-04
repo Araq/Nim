@@ -75,9 +75,14 @@ proc initCallBuilder(builder: var Builder, callee: Snippet): CallBuilder =
   builder.add(callee)
   builder.add("(")
 
+proc addArgumentSeparator(builder: var Builder) =
+  # no-op on NIFC
+  # used by "single argument" builders
+  builder.add(", ")
+
 template addArgument(builder: var Builder, call: var CallBuilder, valueBody: typed) =
   if call.needsComma:
-    builder.add(", ")
+    builder.addArgumentSeparator()
   else:
     call.needsComma = true
   valueBody

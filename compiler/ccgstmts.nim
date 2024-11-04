@@ -289,16 +289,16 @@ proc potentialValueInit(p: BProc; v: PSym; value: PNode; result: var Builder) =
     #echo "New code produced for ", v.name.s, " ", p.config $ value.info
     genBracedInit(p, value, isConst = false, v.typ, result)
 
-proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): string =
-  result = ""
-  var argsCounter = 0
+proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): Snippet =
+  var res = newBuilder("")
+  var argBuilder = default(CallBuilder) # not init, only building params
   let typ = skipTypes(call[0].typ, abstractInst)
   assert(typ.kind == tyProc)
   for i in 1..<call.len:
     #if it's a type we can just generate here another initializer as we are in an initializer context
     if call[i].kind == nkCall and call[i][0].kind == nkSym and call[i][0].sym.kind == skType:
-      if argsCounter > 0: result.add ","
-      result.add genCppInitializer(p.module, p, call[i][0].sym.typ, didGenTemp)
+      res.addArgument(argBuilder):
+        res.add genCppInitializer(p.module, p, call[i][0].sym.typ, didGenTemp)
     else:
       #We need to test for temp in globals, see: #23657
       let param =
@@ -311,7 +311,8 @@ proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): string =
           tyVarargs, tySequence, tyString, tyCstring, tyTuple}:
         let tempLoc = initLocExprSingleUse(p, param)
         didGenTemp = didGenTemp or tempLoc.k == locTemp
-      genOtherArg(p, call, i, typ, result, argsCounter)
+      genOtherArg(p, call, i, typ, res, argBuilder)
+  result = extract(res)
 
 proc genCppVarForCtor(p: BProc; call: PNode; decl: var Rope, didGenTemp: var bool) =
   let params = genCppParamsForCtor(p, call, didGenTemp)
