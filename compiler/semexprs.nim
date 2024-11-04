@@ -2119,7 +2119,10 @@ proc semProcBody(c: PContext, n: PNode; expectedType: PType = nil): PNode =
       return n
   openScope(c)
   result = semExpr(c, n, expectedType = expectedType)
-  if c.p.resultSym != nil and not isEmptyType(result.typ):
+  if c.p.resultSym != nil and
+      not isEmptyType(result.typ) and
+      sfUsed notin c.p.resultSym.flags:
+    incl(c.p.resultSym.flags, sfUsed)
     if result.kind == nkNilLit:
       # or ImplicitlyDiscardable(result):
       # new semantic: 'result = x' triggers the void context
@@ -2131,14 +2134,6 @@ proc semProcBody(c: PContext, n: PNode; expectedType: PType = nil): PNode =
       # are not expressions:
       fixNilType(c, result)
     else:
-      if sfUsed in c.p.resultSym.flags:
-        var last = result
-        while last.kind in {nkStmtList, nkStmtListExpr}:
-          last = last.lastSon
-        localError(c.config, last.info, "cannot use implicit return, " &
-          "the `result` symbol was used in '" & c.p.owner.name.s & "'; " &
-          "got expression of type '" & last.typ.typeToString & "'")
-      incl(c.p.resultSym.flags, sfUsed)
       var a = newNodeI(nkAsgn, n.info, 2)
       a[0] = newSymNode(c.p.resultSym)
       a[1] = result
