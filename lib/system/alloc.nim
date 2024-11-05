@@ -1208,6 +1208,18 @@ proc realloc0(allocator: var MemRegion, p: pointer, oldsize, newsize: Natural): 
 proc abandonAllocator(a: var MemRegion) =
   # In the current implementation, this is allowed to leak memory
   #  when any of it has been shared and not reclaimed yet
+  for s in 0 .. max(1, SmallChunkSize div MemAlign-1):
+    # Edge case: A shared cell was deallocated and this thread didn't allocate again before being abandoned
+    #  -> must adjust the small cell counter
+    when hasThreadSupport:
+      var it = atomicExchangeN(addr a.sharedFreeLists[s], nil, ATOMIC_RELAXED)
+    else:
+      var it = a.sharedFreeLists[s]
+      a.sharedFreeLists[s] = nil
+    while it != nil:
+      dec a.smallCellsInUse
+      it = it.next
+
   if a.smallCellsInUse == 0 and a.bigChunksInUse == 0:
     # Deallocating is only safe if all pages are unused
     deallocOsPages(a)
