@@ -2459,7 +2459,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       if d.k == locNone: d = getTemp(p, setType)
       let ri = rdLoc(i)
       let rd = rdLoc(d)
-      let ra = rdLoc(b)
+      let ra = rdLoc(a)
       let rb = rdLoc(b)
       p.s(cpsStmts).addForRangeExclusive(ri, cIntValue(0), cIntValue(size)):
         p.s(cpsStmts).addAssignmentWithValue(subscript(rd, ri)):
