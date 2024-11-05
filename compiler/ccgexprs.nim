@@ -1965,7 +1965,7 @@ proc genOfHelper(p: BProc; dest: PType; a: Rope; info: TLineInfo; result: var Bu
     let token = $genDisplayElem(MD5Digest(hashType(dest, p.config)))
     result.addCall(cgsymValue(p.module, "isObjDisplayCheck"),
       dotField(a, "m_type"),
-      cIntValue(getObjDepth(dest)),
+      cIntValue(int(getObjDepth(dest))),
       token)
   else:
     # unfortunately 'genTypeInfoV1' sets tfObjHasKids as a side effect, so we
@@ -2210,7 +2210,7 @@ proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
   let ra = rdLoc(a)
   let rb = rdLoc(b)
   let rt = getTypeDesc(p.module, t)
-  let rti = getTypeInfoV1(p.module, t.skipTypes(abstractInst), e.info)
+  let rti = genTypeInfoV1(p.module, t.skipTypes(abstractInst), e.info)
   var pExpr: Snippet
   if not p.module.compileToCpp:
     pExpr = cIfExpr(ra, cAddr(derefField(ra, "Sup")), "NIM_NIL")
@@ -2295,7 +2295,7 @@ proc genInExprAux(p: BProc, e: PNode, a, b, d: var TLoc) =
     binaryExprIn(p, e, a, b, d,
       cOp(NotEqual,
         cOp(BitAnd, "NU8",
-          subscript(ra, cOp(Shr, cCast("NU", elem), cIntValue(3))),
+          subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
           cOp(Shl, "NU8",
             cCast("NU8", cIntValue(1)),
             cOp(BitAnd, "NU",
@@ -2387,11 +2387,11 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       unaryExprChar(p, e, d, cgCall(p, name, ra))
     of mLtSet:
       binaryExprChar(p, e, d, cOp(And,
-        cOp(Equal, cOp(BitAnd, rt, a, cOp(BitNot, rt, ra)), cIntValue(0)),
-        cOp(NotEqual, a, b)))
+        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, ra)), cIntValue(0)),
+        cOp(NotEqual, ra, rb)))
     of mLeSet:
       binaryExprChar(p, e, d,
-        cOp(Equal, cOp(BitAnd, rt, a, cOp(BitNot, rt, ra)), cIntValue(0)))
+        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, ra)), cIntValue(0)))
     of mEqSet: binaryExpr(p, e, d, cOp(Equal, ra, rb))
     of mMulSet: binaryExpr(p, e, d, cOp(BitAnd, rt, ra, rb))
     of mPlusSet: binaryExpr(p, e, d, cOp(BitOr, rt, ra, rb))
@@ -2405,12 +2405,12 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     of mIncl:
       binaryStmtInExcl(p, e, d, cInPlaceOp(BitOr, "NU8",
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
-        cOp(Shl, cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7)))))
+        cOp(Shl, "NU8", cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7)))))
     of mExcl:
       binaryStmtInExcl(p, e, d, cInPlaceOp(BitOr, "NU8",
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
         cOp(BitNot, "NU8",
-          cOp(Shl, cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7))))))
+          cOp(Shl, "NU8", cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7))))))
     of mCard:
       var a: TLoc = initLocExpr(p, e[1])
       let rca = rdCharLoc(a)
@@ -2684,9 +2684,9 @@ proc binaryFloatArith(p: BProc, e: PNode, d: var TLoc, m: TMagic) =
     if optInfCheck in p.options:
       let rd = rdLoc(d)
       p.s(cpsStmts).addSingleIfStmt(cOp(And,
-          cOp(NotEqual, rd, cFloatValue(0.0),
-          cOp(Equal, cOp(Mul, rt, rd, cFloatValue(0.5)), rd)))):
-        p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "raiseFloatOverflow", rd))
+          cOp(NotEqual, rd, cFloatValue(0.0)),
+          cOp(Equal, cOp(Mul, rt, rd, cFloatValue(0.5)), rd))):
+        p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "raiseFloatOverflow"), rd)
         raiseInstr(p, p.s(cpsStmts))
 
   else:
