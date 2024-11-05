@@ -225,8 +225,9 @@ block: # same as above but use slice overload
       doAssert a3.type is a2.type
   test cast[uint](int.high)
   test cast[uint](int.high) + 1
-  whenJsNoBigInt64: discard
-  do:
+  when hasWorkingInt64 and defined(js):
+    # weirdly this has to run only in JS for the final int32.high test
+    # to be the same between C/C++ and --jsbigint64:on
     test uint64.high
     test uint64.high - 1
   test uint.high - 2

@@ -146,16 +146,16 @@ proc loadInto(p: BProc, le, ri: PNode, a: var TLoc) {.inline.} =
     a.flags.incl(lfEnforceDeref)
     expr(p, ri, a)
 
-proc assignLabel(b: var TBlock; result: var Rope) {.inline.} =
+proc assignLabel(b: var TBlock; result: var Builder) {.inline.} =
   b.label = "LA" & b.id.rope
   result.add b.label
 
-proc blockBody(b: var TBlock; result: var Rope) =
-  result.add b.sections[cpsLocals]
+proc blockBody(b: var TBlock; result: var Builder) =
+  result.add extract(b.sections[cpsLocals])
   if b.frameLen > 0:
     result.addf("FR_.len+=$1;$n", [b.frameLen.rope])
-  result.add(b.sections[cpsInit])
-  result.add(b.sections[cpsStmts])
+  result.add(extract(b.sections[cpsInit]))
+  result.add(extract(b.sections[cpsStmts]))
 
 proc endBlock(p: BProc, blockEnd: Rope) =
   let topBlock = p.blocks.len-1
@@ -281,7 +281,7 @@ proc genGotoVar(p: BProc; value: PNode) =
 
 proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; result: var Builder)
 
-proc potentialValueInit(p: BProc; v: PSym; value: PNode; result: var Rope) =
+proc potentialValueInit(p: BProc; v: PSym; value: PNode; result: var Builder) =
   if lfDynamicLib in v.loc.flags or sfThread in v.flags or p.hcrOn:
     discard "nothing to do"
   elif sfGlobal in v.flags and value != nil and isDeepConstExpr(value, p.module.compileToCpp) and
@@ -289,16 +289,16 @@ proc potentialValueInit(p: BProc; v: PSym; value: PNode; result: var Rope) =
     #echo "New code produced for ", v.name.s, " ", p.config $ value.info
     genBracedInit(p, value, isConst = false, v.typ, result)
 
-proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): string =
-  result = ""
-  var argsCounter = 0
+proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): Snippet =
+  var res = newBuilder("")
+  var argBuilder = default(CallBuilder) # not init, only building params
   let typ = skipTypes(call[0].typ, abstractInst)
   assert(typ.kind == tyProc)
   for i in 1..<call.len:
     #if it's a type we can just generate here another initializer as we are in an initializer context
     if call[i].kind == nkCall and call[i][0].kind == nkSym and call[i][0].sym.kind == skType:
-      if argsCounter > 0: result.add ","
-      result.add genCppInitializer(p.module, p, call[i][0].sym.typ, didGenTemp)
+      res.addArgument(argBuilder):
+        res.add genCppInitializer(p.module, p, call[i][0].sym.typ, didGenTemp)
     else:
       #We need to test for temp in globals, see: #23657
       let param =
@@ -311,7 +311,8 @@ proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): string =
           tyVarargs, tySequence, tyString, tyCstring, tyTuple}:
         let tempLoc = initLocExprSingleUse(p, param)
         didGenTemp = didGenTemp or tempLoc.k == locTemp
-      genOtherArg(p, call, i, typ, result, argsCounter)
+      genOtherArg(p, call, i, typ, res, argBuilder)
+  result = extract(res)
 
 proc genCppVarForCtor(p: BProc; call: PNode; decl: var Rope, didGenTemp: var bool) =
   let params = genCppParamsForCtor(p, call, didGenTemp)
@@ -330,8 +331,9 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
     value.kind in nkCallKinds and value[0].kind == nkSym and
     v.typ.kind != tyPtr and sfConstructor in value[0].sym.flags
   var targetProc = p
-  var valueAsRope = ""
-  potentialValueInit(p, v, value, valueAsRope)
+  var valueBuilder = newBuilder("")
+  potentialValueInit(p, v, value, valueBuilder)
+  let valueAsRope = extract(valueBuilder)
   if sfGlobal in v.flags:
     if v.flags * {sfImportc, sfExportc} == {sfImportc} and
         value.kind == nkEmpty and
@@ -594,8 +596,7 @@ proc genComputedGoto(p: BProc; n: PNode) =
         return
 
       let val = getOrdValue(it[j])
-      var lit = newRopeAppender()
-      intLiteral(toInt64(val)+id+1, lit)
+      let lit = cIntLiteral(toInt64(val)+id+1)
       lineF(p, cpsStmts, "TMP$#_:$n", [lit])
 
     genStmts(p, it.lastSon)
@@ -775,7 +776,7 @@ proc finallyActions(p: BProc) =
     if finallyBlock != nil:
       genSimpleBlock(p, finallyBlock[0])
 
-proc raiseInstr(p: BProc; result: var Rope) =
+proc raiseInstr(p: BProc; result: var Builder) =
   if p.config.exc == excGoto:
     let L = p.nestedTryStmts.len
     if L == 0:
@@ -925,8 +926,7 @@ proc genStringCase(p: BProc, t: PNode, stringKind: TTypeKind, d: var TLoc) =
               [rdLoc(a), bitMask])
     for j in 0..high(branches):
       if branches[j] != "":
-        var lit = newRopeAppender()
-        intLiteral(j, lit)
+        let lit = cIntLiteral(j)
         lineF(p, cpsStmts, "case $1: $n$2break;$n",
              [lit, branches[j]])
     lineF(p, cpsStmts, "}$n", []) # else statement:
@@ -960,26 +960,26 @@ proc ifSwitchSplitPoint(p: BProc, n: PNode): int =
       if branch.kind == nkOfBranch and branchHasTooBigRange(branch):
         result = i
 
-proc genCaseRange(p: BProc, branch: PNode) =
+proc genCaseRange(p: BProc, branch: PNode, info: var SwitchCaseBuilder) =
   for j in 0..<branch.len-1:
     if branch[j].kind == nkRange:
       if hasSwitchRange in CC[p.config.cCompiler].props:
-        var litA = newRopeAppender()
-        var litB = newRopeAppender()
+        var litA = newBuilder("")
+        var litB = newBuilder("")
         genLiteral(p, branch[j][0], litA)
         genLiteral(p, branch[j][1], litB)
-        lineF(p, cpsStmts, "case $1 ... $2:$n", [litA, litB])
+        p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
       else:
         var v = copyNode(branch[j][0])
         while v.intVal <= branch[j][1].intVal:
-          var litA = newRopeAppender()
+          var litA = newBuilder("")
           genLiteral(p, v, litA)
-          lineF(p, cpsStmts, "case $1:$n", [litA])
+          p.s(cpsStmts).addCase(info, extract(litA))
           inc(v.intVal)
     else:
-      var litA = newRopeAppender()
+      var litA = newBuilder("")
       genLiteral(p, branch[j], litA)
-      lineF(p, cpsStmts, "case $1:$n", [litA])
+      p.s(cpsStmts).addCase(info, extract(litA))
 
 proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
   # analyse 'case' statement:
@@ -994,26 +994,31 @@ proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
 
   # generate switch part (might be empty):
   if splitPoint+1 < n.len:
-    lineF(p, cpsStmts, "switch ($1) {$n", [rdCharLoc(a)])
-    var hasDefault = false
-    for i in splitPoint+1..<n.len:
-      # bug #4230: avoid false sharing between branches:
-      if d.k == locTemp and isEmptyType(n.typ): d.k = locNone
-      var branch = n[i]
-      if branch.kind == nkOfBranch:
-        genCaseRange(p, branch)
-      else:
-        # else part of case statement:
-        lineF(p, cpsStmts, "default:$n", [])
-        hasDefault = true
-      exprBlock(p, branch.lastSon, d)
-      lineF(p, cpsStmts, "break;$n", [])
-    if not hasDefault:
-      if hasBuiltinUnreachable in CC[p.config.cCompiler].props:
-        lineF(p, cpsStmts, "default: __builtin_unreachable();$n", [])
-      elif hasAssume in CC[p.config.cCompiler].props:
-        lineF(p, cpsStmts, "default: __assume(0);$n", [])
-    lineF(p, cpsStmts, "}$n", [])
+    let rca = rdCharLoc(a)
+    p.s(cpsStmts).addSwitchStmt(rca):
+      var hasDefault = false
+      for i in splitPoint+1..<n.len:
+        # bug #4230: avoid false sharing between branches:
+        if d.k == locTemp and isEmptyType(n.typ): d.k = locNone
+        var branch = n[i]
+        var caseBuilder: SwitchCaseBuilder
+        p.s(cpsStmts).addSwitchCase(caseBuilder):
+          if branch.kind == nkOfBranch:
+            genCaseRange(p, branch, caseBuilder)
+          else:
+            # else part of case statement:
+            hasDefault = true
+            p.s(cpsStmts).addCaseElse(caseBuilder)
+        do:
+          exprBlock(p, branch.lastSon, d)
+          p.s(cpsStmts).addBreak()
+      if not hasDefault:
+        if hasBuiltinUnreachable in CC[p.config.cCompiler].props:
+          p.s(cpsStmts).addSwitchElse():
+            p.s(cpsStmts).addCallStmt("__builtin_unreachable")
+        elif hasAssume in CC[p.config.cCompiler].props:
+          p.s(cpsStmts).addSwitchElse():
+            p.s(cpsStmts).addCallStmt("__assume", cIntValue(0))
   if lend != "": fixLabel(p, lend)
 
 proc genCase(p: BProc, t: PNode, d: var TLoc) =
@@ -1641,8 +1646,7 @@ proc genDiscriminantCheck(p: BProc, a, tmp: TLoc, objtype: PType,
   if not containsOrIncl(p.module.declaredThings, field.id):
     appcg(p.module, cfsVars, "extern $1",
           [discriminatorTableDecl(p.module, t, field)])
-  var lit = newRopeAppender()
-  intLiteral(toInt64(lengthOrd(p.config, field.typ))+1, lit)
+  let lit = cIntLiteral(toInt64(lengthOrd(p.config, field.typ))+1)
   lineCg(p, cpsStmts,
         "#FieldDiscriminantCheck((NI)(NU)($1), (NI)(NU)($2), $3, $4);$n",
         [rdLoc(a), rdLoc(tmp), discriminatorTableName(p.module, t, field),

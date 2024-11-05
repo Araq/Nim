@@ -65,7 +65,7 @@ runnableExamples:
 ## * `sha1 module <sha1.html>`_ for the SHA-1 checksum algorithm
 ## * `tables module <tables.html>`_ for hash tables
 
-import std/private/since
+import std/private/[since, jsutils]
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
@@ -518,17 +518,10 @@ proc hashFarm(s: openArray[byte]): uint64 {.inline.} =
   swap z, x
   len16 len16(v[0],w[0],mul) + shiftMix(y)*k0 + z, len16(v[1],w[1],mul) + x, mul
 
-template jsNoInt64: untyped =
-  when defined js:
-    when compiles(compileOption("jsbigint64")):
-      when not compileOption("jsbigint64"): true
-      else: false
-    else: false
-  else: false
-const sHash2 = (when defined(nimStringHash2) or jsNoInt64(): true else: false)
+const sHash2 = defined(nimStringHash2) or jsNoBigInt64
 
 template maybeFailJS_Number =
-  when jsNoInt64() and not defined(nimStringHash2):
+  when jsNoBigInt64 and not defined(nimStringHash2):
     {.error: "Must use `-d:nimStringHash2` when using `--jsbigint64:off`".}
 
 proc hash*(x: string): Hash =

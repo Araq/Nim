@@ -193,7 +193,7 @@ proc guardDotAccess(a: PEffects; n: PNode) =
     let dot = newNodeI(nkDotExpr, n.info, 2)
     dot[0] = n[0]
     dot[1] = newSymNode(g)
-    dot.typ = g.typ
+    dot.typ() = g.typ
     for L in a.locked:
       #if a.guards.sameSubexprs(dot, L): return
       if guards.sameTree(dot, L): return
@@ -411,7 +411,7 @@ proc throws(tracked, n, orig: PNode) =
   if n.typ == nil or n.typ.kind != tyError:
     if orig != nil:
       let x = copyTree(orig)
-      x.typ = n.typ
+      x.typ() = n.typ
       tracked.add x
     else:
       tracked.add n
@@ -426,12 +426,12 @@ proc excType(g: ModuleGraph; n: PNode): PType =
 
 proc createRaise(g: ModuleGraph; n: PNode): PNode =
   result = newNode(nkType)
-  result.typ = getEbase(g, n.info)
+  result.typ() = getEbase(g, n.info)
   if not n.isNil: result.info = n.info
 
 proc createTag(g: ModuleGraph; n: PNode): PNode =
   result = newNode(nkType)
-  result.typ = g.sysTypeFromName(n.info, "RootEffect")
+  result.typ() = g.sysTypeFromName(n.info, "RootEffect")
   if not n.isNil: result.info = n.info
 
 proc addRaiseEffect(a: PEffects, e, comesFrom: PNode) =
@@ -1210,7 +1210,7 @@ proc track(tracked: PEffects, n: PNode) =
     if n.sym.typ != nil and tfHasAsgn in n.sym.typ.flags:
       tracked.owner.flags.incl sfInjectDestructors
       # bug #15038: ensure consistency
-      if n.typ == nil or (not hasDestructor(n.typ) and sameType(n.typ, n.sym.typ)): n.typ = n.sym.typ
+      if n.typ == nil or (not hasDestructor(n.typ) and sameType(n.typ, n.sym.typ)): n.typ() = n.sym.typ
   of nkHiddenAddr, nkAddr:
     if n[0].kind == nkSym and isLocalSym(tracked, n[0].sym) and
           n.typ.kind notin {tyVar, tyLent}:

@@ -198,11 +198,11 @@ proc getDocList(): seq[string] =
   # don't ignore these even though in lib/system (not include files)
   const goodSystem = """
 lib/system/nimscript.nim
-lib/system/assertions.nim
 lib/system/iterators.nim
 lib/system/exceptions.nim
 lib/system/dollars.nim
 lib/system/ctypes.nim
+lib/system/repr_v2.nim
 """.splitWhitespace()
 
   proc follow(a: PathEntry): bool =

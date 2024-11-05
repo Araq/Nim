@@ -834,3 +834,30 @@ block: # bug #24141
     doAssert abc == "fbc"
 
   main()
+
+block:
+  type
+    FooObj = object
+      data: int
+    Foo = ref FooObj
+
+
+  proc delete(self: FooObj) =
+    discard
+
+  var s = Foo()
+  new(s, delete)
+
+block:
+  type
+    FooObj = object
+      data: int
+      i1, i2, i3, i4: float
+    Foo = ref FooObj
+
+
+  proc delete(self: FooObj) =
+    discard
+
+  var s = Foo()
+  new(s, delete)

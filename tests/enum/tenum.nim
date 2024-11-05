@@ -197,7 +197,7 @@ block: # unordered enum
         b = 0
 
     doAssert (ord(a), ord(b)) == (1, 0)
-    doAssert unordered_enum.toSeq == @[a, b]
+    doAssert unordered_enum.toSeq == @[b, a]
 
   block:
     type
@@ -227,7 +227,7 @@ block: # unordered enum
         d
 
     doAssert (ord(a), ord(b), ord(c), ord(d)) == (7, 6, 5, 8)
-    doAssert unordered_enum.toSeq == @[a, b, c, d]
+    doAssert unordered_enum.toSeq == @[c, b, a, d]
 
   block:
     type
@@ -265,3 +265,21 @@ block: # unordered enum
         seC = "foo"
 
     doAssert (ord(seA), ord(seB), ord(seC)) == (3, 2, 4)
+
+block: # bug #23952
+  block:
+    proc foo =
+      type Foo = enum A B = -1
+      doAssert cast[Foo](-1) == B
+      doAssert ord(A) == 0
+    static: foo()
+    foo()
+
+  block:
+    proc foo =
+      type Foo = enum A B=8, C=1
+      let s1 = {A}
+      let s2 = {B}
+      doAssert s1 != s2
+    static: foo()
+    foo()

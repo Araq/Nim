@@ -1,3 +1,7 @@
+discard """
+disabled: "arm64"
+"""
+
 proc testAsm() =
   let src = 41
   var dst = 0

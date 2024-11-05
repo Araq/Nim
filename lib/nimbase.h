@@ -472,7 +472,8 @@ typedef char* NCSTRING;
 /* declared size of a sequence/variable length array: */
 #if defined(__cplusplus) && defined(__clang__)
 #  define SEQ_DECL_SIZE 1
-#elif defined(__GNUC__) || defined(_MSC_VER)
+#elif defined(__GNUC__) || defined(_MSC_VER) || defined(__TINYC__) || \
+        (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)) // C99
 #  define SEQ_DECL_SIZE /* empty is correct! */
 #else
 #  define SEQ_DECL_SIZE 1000000

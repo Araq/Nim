@@ -43,3 +43,4 @@ when not defined(testsConciseTypeMismatch):
   switch("legacy", "verboseTypeMismatch")
 switch("experimental", "vtables")
 switch("experimental", "openSym")
+switch("experimental", "typeBoundOps")
