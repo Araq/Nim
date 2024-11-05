@@ -772,11 +772,17 @@ proc setFilePos*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet) {.benign
   if c_fseek(f, pos, cint(relativeTo)) != 0:
     raiseEIO("cannot set file position")
 
+proc seek*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet): bool {.benign, sideEffect.} =
+  c_fseek(f, pos, cint(relativeTo)) != 0
+
 proc getFilePos*(f: File): int64 {.benign.} =
   ## Retrieves the current position of the file pointer that is used to
   ## read from the file `f`. The file's first byte has the index zero.
   result = c_ftell(f)
   if result < 0: raiseEIO("cannot retrieve file position")
+
+proc tell*(f: File): int64 {.benign.} =
+  c_ftell(f)
 
 proc getFileSize*(f: File): int64 {.tags: [ReadIOEffect], benign.} =
   ## Retrieves the file size (in bytes) of `f`.
