@@ -2387,11 +2387,11 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       unaryExprChar(p, e, d, cgCall(p, name, ra))
     of mLtSet:
       binaryExprChar(p, e, d, cOp(And,
-        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, ra)), cIntValue(0)),
+        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, rb)), cIntValue(0)),
         cOp(NotEqual, ra, rb)))
     of mLeSet:
       binaryExprChar(p, e, d,
-        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, ra)), cIntValue(0)))
+        cOp(Equal, cOp(BitAnd, rt, ra, cOp(BitNot, rt, rb)), cIntValue(0)))
     of mEqSet: binaryExpr(p, e, d, cOp(Equal, ra, rb))
     of mMulSet: binaryExpr(p, e, d, cOp(BitAnd, rt, ra, rb))
     of mPlusSet: binaryExpr(p, e, d, cOp(BitOr, rt, ra, rb))
@@ -2407,7 +2407,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
         cOp(Shl, "NU8", cUintValue(1), cOp(BitAnd, "NU", elem, cUintValue(7)))))
     of mExcl:
-      binaryStmtInExcl(p, e, d, cInPlaceOp(BitOr, "NU8",
+      binaryStmtInExcl(p, e, d, cInPlaceOp(BitAnd, "NU8",
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
         cOp(BitNot, "NU8",
           cOp(Shl, "NU8", cUintValue(1), cOp(BitAnd, "NU", elem, cUintValue(7))))))
@@ -2448,9 +2448,9 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       var b = initLocExpr(p, e[2])
       let rca = a.rdCharLoc
       let rcb = b.rdCharLoc
-      putIntoDest(p, d, e, cOp(NotEqual,
+      putIntoDest(p, d, e, cOp(Equal,
         cgCall(p, "nimCmpMem", rca, rcb, cIntValue(size)),
-        cIntValue(size)))
+        cIntValue(0)))
     of mMulSet, mPlusSet, mMinusSet, mXorSet:
       # we inline the simple for loop for better code generation:
       i = getTemp(p, getSysType(p.module.g.graph, unknownLineInfo, tyInt)) # our counter
@@ -3070,8 +3070,8 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           p.s(cpsStmts).addForRangeInclusive(ri, aa, bb):
             p.s(cpsStmts).addInPlaceOp(BitOr, "NU8",
               subscript(rd, cOp(Shr, "NU", cCast("NU", ri), cIntValue(3))),
-              cOp(Shl, "NU8", cCast("NU8", cIntValue(1)),
-                cOp(BitAnd, "NU", cCast("NU", ri), cIntValue(7))))
+              cOp(Shl, "NU8", cUintValue(1),
+                cOp(BitAnd, "NU", cCast("NU", ri), cUintValue(7))))
         else:
           a = initLocExpr(p, it)
           var aa: Snippet = ""
@@ -3079,8 +3079,8 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           let rd = rdLoc(d)
           p.s(cpsStmts).addInPlaceOp(BitOr, "NU8",
             subscript(rd, cOp(Shr, "NU", cCast("NU", aa), cIntValue(3))),
-            cOp(Shl, "NU8", cCast("NU8", cIntValue(1)),
-              cOp(BitAnd, "NU", cCast("NU", aa), cIntValue(7))))
+            cOp(Shl, "NU8", cUintValue(1),
+              cOp(BitAnd, "NU", cCast("NU", aa), cUintValue(7))))
     else:
       # small set
       var ts = "NU" & $(getSize(p.config, e.typ) * 8)
@@ -3107,7 +3107,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           let rd = rdLoc(d)
           p.s(cpsStmts).addInPlaceOp(BitOr, ts, rd,
             cOp(Shl, ts, cCast(ts, cIntValue(1)),
-              cOp(Mod, ts, rd, cOp(Mul, ts, cSizeof(ts), cIntValue(8)))))
+              cOp(Mod, ts, aa, cOp(Mul, ts, cSizeof(ts), cIntValue(8)))))
 
 proc genTupleConstr(p: BProc, n: PNode, d: var TLoc) =
   var rec: TLoc
