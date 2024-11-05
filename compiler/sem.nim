@@ -18,7 +18,7 @@ import
   evaltempl, patterns, parampatterns, sempass2, linter, semmacrosanity,
   lowerings, plugins/active, lineinfos, int128,
   isolation_check, typeallowed, modulegraphs, enumtostr, concepts, astmsgs,
-  extccomp
+  extccomp, layeredtable
 
 import vtables
 import std/[strtabs, math, tables, intsets, strutils, packedsets]
@@ -89,6 +89,11 @@ proc fitNodePostMatch(c: PContext, formal: PType, arg: PNode): PNode =
     changeType(c, x, formal, check=true)
   result = arg
   result = skipHiddenSubConv(result, c.graph, c.idgen)
+  # mark inserted converter as used:
+  var a = result
+  if a.kind == nkHiddenDeref: a = a[0]
+  if a.kind == nkHiddenCallConv and a[0].kind == nkSym:
+    markUsed(c, a.info, a[0].sym)
 
 
 proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
@@ -97,7 +102,7 @@ proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
                renderTree(arg, {renderNoComments}))
     # error correction:
     result = copyTree(arg)
-    result.typ = formal
+    result.typ() = formal
   elif arg.kind in nkSymChoices and formal.skipTypes(abstractInst).kind == tyEnum:
     # Pick the right 'sym' from the sym choice by looking at 'formal' type:
     result = nil
@@ -111,7 +116,7 @@ proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
       typeMismatch(c.config, info, formal, arg.typ, arg)
       # error correction:
       result = copyTree(arg)
-      result.typ = formal
+      result.typ() = formal
     else:
       result = fitNodePostMatch(c, formal, result)
 
@@ -251,7 +256,7 @@ proc newSymG*(kind: TSymKind, n: PNode, c: PContext): PSym =
     # when there is a nested proc inside a template, semtmpl
     # will assign a wrong owner during the first pass over the
     # template; we must fix it here: see #909
-    result.owner = getCurrOwner(c)
+    setOwner(result, getCurrOwner(c))
   else:
     result = newSym(kind, considerQuotedIdent(c, n), c.idgen, getCurrOwner(c), n.info)
     if find(result.name.s, '`') >= 0:
@@ -465,7 +470,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
                    renderTree(result, {renderNoComments}))
         result = newSymNode(errorSym(c, result))
       else:
-        result.typ = makeTypeDesc(c, typ)
+        result.typ() = makeTypeDesc(c, typ)
       #result = symNodeFromType(c, typ, n.info)
     else:
       if s.ast[genericParamsPos] != nil and retType.isMetaType:
@@ -473,7 +478,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
         # e.g. template foo(T: typedesc): seq[T]
         # We will instantiate the return type here, because
         # we now know the supplied arguments
-        var paramTypes = initTypeMapping()
+        var paramTypes = initLayeredTypeMap()
         for param, value in genericParamsInMacroCall(s, call):
           var givenType = value.typ
           # the sym nodes used for the supplied generic arguments for
@@ -481,7 +486,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
           # in this case, get the type directly from the sym
           if givenType == nil and value.kind == nkSym and value.sym.typ != nil:
             givenType = value.sym.typ
-          idTablePut(paramTypes, param.typ, givenType)
+          put(paramTypes, param.typ, givenType)
 
         retType = generateTypeInstance(c, paramTypes,
                                        macroResult.info, retType)
@@ -489,7 +494,7 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
       if retType.kind == tyVoid:
         result = semStmt(c, result, flags)
       else:
-        result = semExpr(c, result, flags, expectedType)
+        result = semExpr(c, result, flags)
         result = fitNode(c, retType, result, result.info)
       #globalError(s.info, errInvalidParamKindX, typeToString(s.typ.returnType))
   dec(c.config.evalTemplateCounter)
@@ -497,7 +502,6 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
 
 const
   errMissingGenericParamsForTemplate = "'$1' has unspecified generic parameters"
-  errFloatToString = "cannot convert '$1' to '$2'"
 
 proc semMacroExpr(c: PContext, n, nOrig: PNode, sym: PSym,
                   flags: TExprFlags = {}; expectedType: PType = nil): PNode =
@@ -608,7 +612,7 @@ proc defaultFieldsForTuple(c: PContext, recNode: PNode, hasDefault: var bool, ch
                       newNodeIT(nkType, recNode.info, asgnType)
                     )
       asgnExpr.flags.incl nfSkipFieldChecking
-      asgnExpr.typ = recNode.typ
+      asgnExpr.typ() = recNode.typ
       result.add newTree(nkExprColonExpr, recNode, asgnExpr)
   else:
     raiseAssert "unreachable"
@@ -630,7 +634,7 @@ proc defaultFieldsForTheUninitialized(c: PContext, recNode: PNode, checkDefault:
       if checkDefault: # don't add defaults when checking whether a case branch has default fields
         return
       defaultValue = newIntNode(nkIntLit#[c.graph]#, 0)
-      defaultValue.typ = discriminator.typ
+      defaultValue.typ() = discriminator.typ
     selectedBranch = recNode.pickCaseBranchIndex defaultValue
     defaultValue.flags.incl nfSkipFieldChecking
     result.add newTree(nkExprColonExpr, discriminator, defaultValue)
@@ -643,7 +647,7 @@ proc defaultFieldsForTheUninitialized(c: PContext, recNode: PNode, checkDefault:
     elif recType.kind in {tyObject, tyArray, tyTuple}:
       let asgnExpr = defaultNodeField(c, recNode, recNode.typ, checkDefault)
       if asgnExpr != nil:
-        asgnExpr.typ = recNode.typ
+        asgnExpr.typ() = recNode.typ
         asgnExpr.flags.incl nfSkipFieldChecking
         result.add newTree(nkExprColonExpr, recNode, asgnExpr)
   else:
@@ -656,7 +660,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
     let child = defaultFieldsForTheUninitialized(c, aTypSkip.n, checkDefault)
     if child.len > 0:
       var asgnExpr = newTree(nkObjConstr, newNodeIT(nkType, a.info, aTyp))
-      asgnExpr.typ = aTyp
+      asgnExpr.typ() = aTyp
       asgnExpr.sons.add child
       result = semExpr(c, asgnExpr)
     else:
@@ -671,7 +675,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
               semExprWithType(c, child),
               node
                 ))
-      result.typ = aTyp
+      result.typ() = aTyp
     else:
       result = nil
   of tyTuple:
@@ -680,7 +684,7 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
       let children = defaultFieldsForTuple(c, aTypSkip.n, hasDefault, checkDefault)
       if hasDefault and children.len > 0:
         result = newNodeI(nkTupleConstr, a.info)
-        result.typ = aTyp
+        result.typ() = aTyp
         result.sons.add children
         result = semExpr(c, result)
       else:
@@ -729,6 +733,7 @@ proc preparePContext*(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PCo
   result.semInferredLambda = semInferredLambda
   result.semGenerateInstance = generateInstance
   result.instantiateOnlyProcType = instantiateOnlyProcType
+  result.fitDefaultNode = fitDefaultNode
   result.semTypeNode = semTypeNode
   result.instTypeBoundOp = sigmatch.instTypeBoundOp
   result.hasUnresolvedArgs = hasUnresolvedArgs

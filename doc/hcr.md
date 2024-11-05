@@ -241,5 +241,5 @@ JavaScript target
 =================
 
 Once your code is compiled for hot reloading, a convenient solution for implementing the actual reloading
-in the browser using a framework such as [LiveReload](http://livereload.com/)
+in the browser using a framework such as [LiveReload](https://livereload.com/)
 or [BrowserSync](https://browsersync.io/).

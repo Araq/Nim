@@ -527,8 +527,7 @@ template main() =
 
   block: # toHex
     doAssert(toHex(100i16, 32) == "00000000000000000000000000000064")
-    whenJsNoBigInt64: discard
-    do:
+    when hasWorkingInt64:
       doAssert(toHex(-100i16, 32) == "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF9C")
       doAssert(toHex(high(uint64)) == "FFFFFFFFFFFFFFFF")
       doAssert(toHex(high(uint64), 16) == "FFFFFFFFFFFFFFFF")
@@ -550,9 +549,8 @@ template main() =
     doAssert(spaces(0) == "")
 
   block: # toBin, toOct
-    whenJsNoBigInt64: # bug #11369
-      discard
-    do:
+    when hasWorkingInt64:
+      # bug #11369
       var num: int64 = -1
       doAssert num.toBin(64) == "1111111111111111111111111111111111111111111111111111111111111111"
       doAssert num.toOct(24) == "001777777777777777777777"
@@ -773,8 +771,7 @@ bar
 
   block: # formatSize
     disableVm:
-      whenJsNoBigInt64: discard
-      do:
+      when hasWorkingInt64:
         doAssert formatSize((1'i64 shl 31) + (300'i64 shl 20)) == "2.293GiB" # <=== bug #8231
       doAssert formatSize((2.234*1024*1024).int) == "2.234MiB"
       doAssert formatSize(4096) == "4KiB"

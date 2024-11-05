@@ -56,6 +56,7 @@ type
     reJoined,          # test is disabled because it was joined into the megatest
     reSuccess          # test was successful
     reInvalidSpec      # test had problems to parse the spec
+    reRetry            # test is being retried
 
   TTarget* = enum
     targetC = "c"
@@ -102,6 +103,7 @@ type
                       # but don't rely on much precision
     inlineErrors*: seq[InlineError] # line information to error message
     debugInfo*: string # debug info to give more context
+    retries*: int # number of retry attempts after the test fails
 
 proc getCmd*(s: TSpec): string =
   if s.cmd.len == 0:
@@ -477,6 +479,8 @@ proc parseSpec*(filename: string): TSpec =
           result.timeout = parseFloat(e.value)
         except ValueError:
           result.parseErrors.addLine "cannot interpret as a float: ", e.value
+      of "retries":
+        discard parseInt(e.value, result.retries)
       of "targets", "target":
         try:
           result.targets.incl parseTargets(e.value)

@@ -2241,6 +2241,10 @@ Nim supports these `calling conventions`:idx:\:
     only a hint for the compiler: it may completely ignore it, and
     it may inline procedures that are not marked as `inline`.
 
+`noinline`:idx:
+:   The backend compiler may inline procedures that are not marked as `inline`.
+    The noinline convention prevents it.
+
 `fastcall`:idx:
 :   Fastcall means different things to different C compilers. One gets whatever
     the C `__fastcall` means.
@@ -2623,12 +2627,12 @@ In a call `p(args)` where `p` may refer to more than one
 candidate, it is said to be a symbol choice. Overload resolution will attempt to
 find the best candidate, thus transforming the symbol choice into a resolved symbol.
 The routine `p` that matches best is selected following a series of trials explained below. 
-In order: Catagory matching, Hierarchical Order Comparison, and finally, Complexity Analysis.
+In order: Category matching, Hierarchical Order Comparison, and finally, Complexity Analysis.
 
 If multiple candidates match equally well after all trials have been tested, the ambiguity 
 is reported during semantic analysis.
 
-First Trial: Catagory matching
+First Trial: Category matching
 --------------------------------
 
 Every arg in `args` needs to match and there are multiple different categories of matches.
@@ -2689,7 +2693,7 @@ Matching formals for this type include `T`, `object`, `A`, `A[...]` and `A[C]` w
 is a generic typeclass composition and `T` is an unconstrained generic type variable. This list is in order of 
 specificity with respect to `A` as each subsequent category narrows the set of types that are members of their match set.
 
-In this trail, the formal parameters of candidates are compared in order (1st parameter, 2nd parameter, etc.) to search for
+In this trial, the formal parameters of candidates are compared in order (1st parameter, 2nd parameter, etc.) to search for
 a candidate that has an unrivaled specificity. If such a formal parameter is found, the candidate it belongs to is chosen 
 as the resolved symbol.
 
@@ -5169,7 +5173,7 @@ It is possible to raise/catch imported C++ exceptions. Types imported using
 `importcpp` can be raised or caught. Exceptions are raised by value and
 caught by reference. Example:
 
-  ```nim  test = "nim cpp -r $1"
+  ```nim
   type
     CStdException {.importcpp: "std::exception", header: "<exception>", inheritable.} = object
       ## does not inherit from `RootObj`, so we use `inheritable` instead
@@ -8644,6 +8648,14 @@ is available and a literal dollar sign must be written as ``$$``.
 If the symbol should also be exported to a dynamic library, the `dynlib`
 pragma should be used in addition to the `exportc` pragma. See
 [Dynlib pragma for export].
+
+
+Exportcpp pragma
+----------------
+The `exportcpp` pragma works like the `exportc` pragma but it requires the `cpp` backend.
+When compiled with the `cpp` backend, the `exportc` pragma adds `export "C"` to
+the declaration in the generated code so that it can be called from both C and
+C++ code. `exportcpp` pragma doesn't add `export "C"`.
 
 
 Extern pragma

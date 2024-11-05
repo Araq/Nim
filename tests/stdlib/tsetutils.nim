@@ -44,6 +44,26 @@ template main =
     s[a2] = true
     s[a3] = true
     doAssert s == {a2, a3}
+  
+  block: # set symmetric difference (xor), https://github.com/nim-lang/RFCs/issues/554
+    type T = set[range[0..15]]
+    let x: T = {1, 4, 5, 8, 9}
+    let y: T = {0, 2..6, 9}
+    let res = symmetricDifference(x, y)
+    doAssert res == {0, 1, 2, 3, 6, 8}
+    doAssert res == (x + y - x * y)
+    doAssert res == ((x - y) + (y - x))
+    var z = x
+    doAssert z == {1, 4, 5, 8, 9}
+    doAssert z == x
+    z.toggle(y)
+    doAssert z == res
+    z.toggle(y)
+    doAssert z == x
+    z.toggle({1, 5})
+    doAssert z == {4, 8, 9}
+    z.toggle({3, 8})
+    doAssert z == {3, 4, 9}
 
 main()
 static: main()

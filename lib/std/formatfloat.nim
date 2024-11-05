@@ -79,10 +79,10 @@ proc writeFloatToBufferSprintf*(buf: var array[65, char]; value: BiggestFloat): 
       result = 3
 
 proc writeFloatToBuffer*(buf: var array[65, char]; value: BiggestFloat | float32): int {.inline.} =
-  when defined(nimPreviewFloatRoundtrip) or defined(nimPreviewSlimSystem):
-    writeFloatToBufferRoundtrip(buf, value)
-  else:
+  when defined(nimLegacySprintf):
     writeFloatToBufferSprintf(buf, value)
+  else:
+    writeFloatToBufferRoundtrip(buf, value)
 
 proc addFloatRoundtrip*(result: var string; x: float | float32) =
   when nimvm:
@@ -127,10 +127,10 @@ proc addFloat*(result: var string; x: float | float32) {.inline.} =
     s.addFloat(45.67)
     assert s == "foo:45.67"
   template impl =
-    when defined(nimPreviewFloatRoundtrip) or defined(nimPreviewSlimSystem):
-      addFloatRoundtrip(result, x)
-    else:
+    when defined(nimLegacySprintf):
       addFloatSprintf(result, x)
+    else:
+      addFloatRoundtrip(result, x)
   when defined(js):
     when nimvm: impl()
     else:

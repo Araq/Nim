@@ -202,7 +202,7 @@ proc copyValue(src: PNode): PNode =
     return src
   result = newNode(src.kind)
   result.info = src.info
-  result.typ = src.typ
+  result.typ() = src.typ
   result.flags = src.flags * PersistentNodeFlags
   result.comment = src.comment
   when defined(useNodeIds):
@@ -1276,6 +1276,11 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       createSet(regs[ra])
       move(regs[ra].node.sons,
            nimsets.diffSets(c.config, regs[rb].node, regs[rc].node).sons)
+    of opcXorSet:
+      decodeBC(rkNode)
+      createSet(regs[ra])
+      move(regs[ra].node.sons,
+           nimsets.symdiffSets(c.config, regs[rb].node, regs[rc].node).sons)
     of opcConcatStr:
       decodeBC(rkNode)
       createStr regs[ra]
@@ -1532,10 +1537,10 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       # Set the `name` field of the exception
       var exceptionNameNode = newStrNode(nkStrLit, c.currentExceptionA.typ.sym.name.s)
       if c.currentExceptionA[2].kind == nkExprColonExpr:
-        exceptionNameNode.typ = c.currentExceptionA[2][1].typ
+        exceptionNameNode.typ() = c.currentExceptionA[2][1].typ
         c.currentExceptionA[2][1] = exceptionNameNode
       else:
-        exceptionNameNode.typ = c.currentExceptionA[2].typ
+        exceptionNameNode.typ() = c.currentExceptionA[2].typ
         c.currentExceptionA[2] = exceptionNameNode
       c.exceptionInstr = pc
 
@@ -1577,7 +1582,7 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       let instr2 = c.code[pc]
       let count = regs[instr2.regA].intVal.int
       regs[ra].node = newNodeI(nkBracket, c.debug[pc])
-      regs[ra].node.typ = typ
+      regs[ra].node.typ() = typ
       newSeq(regs[ra].node.sons, count)
       for i in 0..<count:
         regs[ra].node[i] = getNullValue(c, typ.elementType, c.debug[pc], c.config)
@@ -1992,7 +1997,7 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       else:
         internalAssert c.config, false
       regs[ra].node.info = n.info
-      regs[ra].node.typ = n.typ
+      regs[ra].node.typ() = n.typ
     of opcNCopyLineInfo:
       decodeB(rkNode)
       regs[ra].node.info = regs[rb].node.info
@@ -2072,7 +2077,7 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
         ensureKind(rkNode)
         regs[ra].node = temp
         regs[ra].node.info = c.debug[pc]
-      regs[ra].node.typ = typ
+      regs[ra].node.typ() = typ
     of opcConv:
       let rb = instr.regB
       inc pc
@@ -2332,9 +2337,17 @@ proc execProc*(c: PCtx; sym: PSym; args: openArray[PNode]): PNode =
     localError(c.config, sym.info,
       "NimScript: attempt to call non-routine: " & sym.name.s)
 
+proc errorNode(idgen: IdGenerator; owner: PSym, n: PNode): PNode =
+  result = newNodeI(nkEmpty, n.info)
+  result.typ() = newType(tyError, idgen, owner)
+  result.typ.flags.incl tfCheckedForDestructor
+
 proc evalStmt*(c: PCtx, n: PNode) =
   let n = transformExpr(c.graph, c.idgen, c.module, n)
   let start = genStmt(c, n)
+  if c.cannotEval:
+    c.cannotEval = false
+    return
   # execute new instructions; this redundant opcEof check saves us lots
   # of allocations in 'execute':
   if c.code[start].opcode != opcEof:
@@ -2345,7 +2358,10 @@ proc evalExpr*(c: PCtx, n: PNode): PNode =
   # `nim --eval:"expr"` might've used it at some point for idetools; could
   # be revived for nimsuggest
   let n = transformExpr(c.graph, c.idgen, c.module, n)
+  c.cannotEval = false
   let start = genExpr(c, n)
+  if c.cannotEval:
+    return errorNode(c.idgen, c.module, n)
   assert c.code[start].opcode != opcEof
   result = execute(c, start)
 
@@ -2398,7 +2414,10 @@ proc evalConstExprAux(module: PSym; idgen: IdGenerator;
   var c = PCtx g.vm
   let oldMode = c.mode
   c.mode = mode
+  c.cannotEval = false
   let start = genExpr(c, n, requiresValue = mode!=emStaticStmt)
+  if c.cannotEval:
+    return errorNode(idgen, prc, n)
   if c.code[start].opcode == opcEof: return newNodeI(nkEmpty, n.info)
   assert c.code[start].opcode != opcEof
   when debugEchoCode: c.echoCode start
@@ -2455,7 +2474,7 @@ proc setupMacroParam(x: PNode, typ: PType): TFullReg =
     var n = x
     if n.kind in {nkHiddenSubConv, nkHiddenStdConv}: n = n[1]
     n.flags.incl nfIsRef
-    n.typ = x.typ
+    n.typ() = x.typ
     result = TFullReg(kind: rkNode, node: n)
 
 iterator genericParamsInMacroCall*(macroSym: PSym, call: PNode): (PSym, PNode) =
@@ -2468,11 +2487,6 @@ iterator genericParamsInMacroCall*(macroSym: PSym, call: PNode): (PSym, PNode) =
 
 # to prevent endless recursion in macro instantiation
 const evalMacroLimit = 1000
-
-#proc errorNode(idgen: IdGenerator; owner: PSym, n: PNode): PNode =
-#  result = newNodeI(nkEmpty, n.info)
-#  result.typ = newType(tyError, idgen, owner)
-#  result.typ.flags.incl tfCheckedForDestructor
 
 proc evalMacroCall*(module: PSym; idgen: IdGenerator; g: ModuleGraph; templInstCounter: ref int;
                     n, nOrig: PNode, sym: PSym): PNode =
@@ -2497,7 +2511,10 @@ proc evalMacroCall*(module: PSym; idgen: IdGenerator; g: ModuleGraph; templInstC
   c.comesFromHeuristic.line = 0'u16
   c.callsite = nOrig
   c.templInstCounter = templInstCounter
+  c.cannotEval = false
   let start = genProc(c, sym)
+  if c.cannotEval:
+    return errorNode(idgen, module, n)
 
   var tos = PStackFrame(prc: sym, comesFrom: 0, next: nil)
   let maxSlots = sym.offset

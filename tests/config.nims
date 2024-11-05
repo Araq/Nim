@@ -30,12 +30,8 @@ hint("Processing", off)
 # switch("hint", "ConvFromXtoItselfNotNeeded")
 # switch("warningAsError", "InheritFromException") # would require fixing a few tests
 
-# experimental APIs are enabled in testament, refs https://github.com/timotheecour/Nim/issues/575
-# sync with `kochdocs.docDefines` or refactor.
-switch("define", "nimExperimentalLinenoiseExtra")
 
 # preview APIs are expected to be the new default in upcoming versions
-switch("define", "nimPreviewFloatRoundtrip")
 #switch("define", "nimPreviewDotLikeOps") # deprecated?
 switch("define", "nimPreviewJsonutilsHoleyEnum")
 switch("define", "nimPreviewHashRef")
@@ -47,3 +43,4 @@ when not defined(testsConciseTypeMismatch):
   switch("legacy", "verboseTypeMismatch")
 switch("experimental", "vtables")
 switch("experimental", "openSym")
+switch("experimental", "typeBoundOps")

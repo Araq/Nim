@@ -67,7 +67,7 @@ Documentation Comments
 
 Any comments which are preceded by a double-hash (`##`), are interpreted as
 documentation.  Comments are parsed as RST (see [reference](
-http://docutils.sourceforge.net/docs/user/rst/quickref.html)), providing
+https://docutils.sourceforge.net/docs/user/rst/quickref.html)), providing
 Nim module authors the ability to easily generate richly formatted
 documentation with only their well-documented code!
 Basic Markdown syntax is also supported inside the doc comments.

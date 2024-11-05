@@ -35,7 +35,7 @@ proc atomicTypeX(cache: IdentCache; name: string; m: TMagic; t: PType; info: TLi
   sym.magic = m
   sym.typ = t
   result = newSymNode(sym)
-  result.typ = t
+  result.typ() = t
 
 proc atomicTypeX(s: PSym; info: TLineInfo): PNode =
   result = newSymNode(s)
@@ -52,7 +52,7 @@ proc mapTypeToBracketX(cache: IdentCache; name: string; m: TMagic; t: PType; inf
   for a in t.kids:
     if a == nil:
       let voidt = atomicTypeX(cache, "void", mVoid, t, info, idgen)
-      voidt.typ = newType(tyVoid, idgen, t.owner)
+      voidt.typ() = newType(tyVoid, idgen, t.owner)
       result.add voidt
     else:
       result.add mapTypeToAstX(cache, a, info, idgen, inst)
@@ -136,7 +136,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       if allowRecursion:
         result = mapTypeToAstR(t.skipModifier, info)
         # keep original type info for getType calls on the output node:
-        result.typ = t
+        result.typ() = t
       else:
         result = newNodeX(nkBracketExpr)
         #result.add mapTypeToAst(t.last, info)
@@ -146,7 +146,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
     else:
       result = mapTypeToAstX(cache, t.skipModifier, info, idgen, inst, allowRecursion)
       # keep original type info for getType calls on the output node:
-      result.typ = t
+      result.typ() = t
   of tyGenericBody:
     if inst:
       result = mapTypeToAstR(t.typeBodyImpl, info)

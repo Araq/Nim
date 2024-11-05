@@ -63,7 +63,7 @@ type
 
 # Configuration settings for various compilers.
 # When adding new compilers, the cmake sources could be a good reference:
-# http://cmake.org/gitweb?p=cmake.git;a=tree;f=Modules/Platform;
+# https://cmake.org/gitweb?p=cmake.git;a=tree;f=Modules/Platform;
 
 template compiler(name, settings: untyped): untyped =
   proc name: TInfoCC {.compileTime.} = settings
@@ -162,7 +162,11 @@ compiler vcc:
     linkerExe: "cl",
     linkTmpl: "$builddll$vccplatform /Fe$exefile $objfiles $buildgui /nologo $options",
     includeCmd: " /I",
-    linkDirCmd: " /LIBPATH:",
+    # HACK: we call `cl` so we have to pass `/link` for linker options,
+    # but users may still want to pass arguments to `cl` (see #14221)
+    # to deal with this, we add `/link` before each `/LIBPATH`,
+    # the linker ignores extra `/link`s since it's an unrecognized argument
+    linkDirCmd: " /link /LIBPATH:",
     linkLibCmd: " $1.lib",
     debug: " /RTC1 /Z7 ",
     pic: "",
@@ -777,7 +781,7 @@ proc getLinkCmd(conf: ConfigRef; output: AbsoluteFile,
     # https://blog.molecular-matters.com/2017/05/09/deleting-pdb-files-locked-by-visual-studio/
     # and a bit about the .pdb format in case that is ever needed:
     # https://github.com/crosire/blink
-    # http://www.debuginfo.com/articles/debuginfomatch.html#pdbfiles
+    # https://www.debuginfo.com/articles/debuginfomatch.html#pdbfiles
     if conf.hcrOn and isVSCompatible(conf):
       let t = now()
       let pdb = output.string & "." & format(t, "MMMM-yyyy-HH-mm-") & $t.nanosecond & ".pdb"

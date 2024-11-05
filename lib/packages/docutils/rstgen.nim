@@ -8,7 +8,7 @@
 #
 
 ## This module implements a generator of HTML/Latex from
-## `reStructuredText`:idx: (see http://docutils.sourceforge.net/rst.html for
+## `reStructuredText`:idx: (see https://docutils.sourceforge.net/rst.html for
 ## information on this markup syntax) and is used by the compiler's `docgen
 ## tools <docgen.html>`_.
 ##

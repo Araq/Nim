@@ -1,5 +1,6 @@
 discard """
   output: "true"
+  retries: 2
 """
 
 import intsets

@@ -157,7 +157,7 @@ proc close*(p: Process) {.rtl, extern: "nosp$1", raises: [IOError, OSError], tag
   ##
   ## .. warning:: If the process has not finished executing, this will forcibly
   ##   terminate the process. Doing so may result in zombie processes and
-  ##   `pty leaks <http://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
+  ##   `pty leaks <https://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
 
 proc suspend*(p: Process) {.rtl, extern: "nosp$1", tags: [].}
   ## Suspends the process `p`.
@@ -740,7 +740,8 @@ when defined(windows) and not defined(useNimRtl):
       if poInteractive in result.options: close(result)
       const errInvalidParameter = 87.int
       const errFileNotFound = 2.int
-      if lastError.int in {errInvalidParameter, errFileNotFound}:
+      case lastError.int
+      of errInvalidParameter, errFileNotFound:
         raiseOSError(lastError,
               "Requested command not found: '" & command & "'. OS error:")
       else:

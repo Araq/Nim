@@ -53,8 +53,8 @@ Nim programming language. Those C sources are available within the
 
 Next, to build from source you will need:
 
-  * A C compiler such as ``gcc`` 5.x/later or an alternative such as ``clang``,
-    ``Visual C++`` or ``Intel C++``. It is recommended to use ``gcc`` 5.x or
+  * A C compiler such as ``gcc`` 6.x/later or an alternative such as ``clang``,
+    ``Visual C++`` or ``Intel C++``. It is recommended to use ``gcc`` 6.x or
     later.
   * Either ``git`` or ``wget`` to download the needed source repositories.
   * The ``build-essential`` package when using ``gcc`` on Ubuntu (and likely

@@ -211,7 +211,7 @@ when defined(nimHasStyleChecks):
 when defined(posix) and not defined(lwip):
   from std/posix import TPollfd, POLLIN, POLLPRI, POLLOUT, POLLWRBAND, Tnfds
 
-  template monitorPollEvent(x: var SocketHandle, y: cint, timeout: int): int =
+  template monitorPollEvent(x: var SocketHandle, y, timeout: cint): int =
     var tpollfd: TPollfd
     tpollfd.fd = cast[cint](x)
     tpollfd.events = y
@@ -222,14 +222,14 @@ proc timeoutRead(fd: var SocketHandle, timeout = 500): int =
     var fds = @[fd]
     selectRead(fds, timeout)
   else:
-    monitorPollEvent(fd, POLLIN or POLLPRI, timeout)
+    monitorPollEvent(fd, POLLIN or POLLPRI, cint(timeout))
 
 proc timeoutWrite(fd: var SocketHandle, timeout = 500): int =
   when defined(windows) or defined(lwip):
     var fds = @[fd]
     selectWrite(fds, timeout)
   else:
-    monitorPollEvent(fd, POLLOUT or POLLWRBAND, timeout)
+    monitorPollEvent(fd, POLLOUT or POLLWRBAND, cint(timeout))
 
 proc socketError*(socket: Socket, err: int = -1, async = false,
                   lastError = (-1).OSErrorCode,
@@ -598,7 +598,7 @@ when defineSsl:
       ctx.referencedData.incl(index)
     GC_ref(data)
 
-  # http://simplestcodings.blogspot.co.uk/2010/08/secure-server-client-using-openssl-in-c.html
+  # https://simplestcodings.blogspot.co.uk/2010/08/secure-server-client-using-openssl-in-c.html
   proc loadCertificates(ctx: SslCtx, certFile, keyFile: string) =
     if certFile != "" and not fileExists(certFile):
       raise newException(system.IOError,

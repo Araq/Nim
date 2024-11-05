@@ -484,8 +484,6 @@ type
     events*: cshort  ## The input event flags (see below).
     revents*: cshort ## The output event flags (see below).
 
-  Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = culong
-
 var
   errno* {.importc, header: "<errno.h>".}: cint ## error variable
   h_errno* {.importc, header: "<netdb.h>".}: cint

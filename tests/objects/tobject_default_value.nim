@@ -776,5 +776,18 @@ template main {.dirty.} =
     var d: limited_int;
     doAssert d == 1
 
+  block: # bug #23545
+    proc evaluate(params: int) =
+        discard
+
+    proc evaluate() =
+        discard
+
+    type SearchInfo = object
+      evaluation: proc() = evaluate
+
+    var a = SearchInfo()
+    a.evaluation()
+
 static: main()
 main()

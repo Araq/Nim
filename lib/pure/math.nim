@@ -78,7 +78,7 @@ when not defined(js) and not defined(nimscript): # C
       importc: "frexpf", header: "<math.h>".}
   func c_frexp2(x: cdouble, exponent: var cint): cdouble {.
       importc: "frexp", header: "<math.h>".}
-  
+
   type
     div_t {.importc, header: "<stdlib.h>".} = object
       quot: cint
@@ -89,13 +89,13 @@ when not defined(js) and not defined(nimscript): # C
     lldiv_t {.importc, header: "<stdlib.h>".} = object
       quot: clonglong
       rem: clonglong
-  
+
   when cint isnot clong:
     func divmod_c(x, y: cint): div_t {.importc: "div", header: "<stdlib.h>".}
   when clong isnot clonglong:
     func divmod_c(x, y: clonglong): lldiv_t {.importc: "lldiv", header: "<stdlib.h>".}
   func divmod_c(x, y: clong): ldiv_t {.importc: "ldiv", header: "<stdlib.h>".}
-  func divmod*[T: SomeInteger](x, y: T): (T, T) {.inline.} = 
+  func divmod*[T: SomeInteger](x, y: T): (T, T) {.inline.} =
     ## Specialized instructions for computing both division and modulus.
     ## Return structure is: (quotient, remainder)
     runnableExamples:
@@ -628,11 +628,11 @@ when not defined(js): # C
   func pow*(x, y: float64): float64 {.importc: "pow", header: "<math.h>".} =
     ## Computes `x` raised to the power of `y`.
     ##
-    ## To compute the power between integers (e.g. 2^6),
-    ## use the `^ func <#^,T,Natural>`_.
+    ## You may use the `^ func <#^, T, U>`_ instead.
     ##
     ## **See also:**
-    ## * `^ func <#^,T,Natural>`_
+    ## * `^ (SomeNumber, Natural) func <#^,T,Natural>`_
+    ## * `^ (SomeNumber, SomeFloat) func <#^,T,U>`_
     ## * `sqrt func <#sqrt,float64>`_
     ## * `cbrt func <#cbrt,float64>`_
     runnableExamples:
@@ -828,14 +828,14 @@ else: # JS
       doAssert -6.5 mod  2.5 == -1.5
       doAssert  6.5 mod -2.5 ==  1.5
       doAssert -6.5 mod -2.5 == -1.5
-  
-  func divmod*[T:SomeInteger](num, denom: T): (T, T) = 
+
+  func divmod*[T:SomeInteger](num, denom: T): (T, T) =
     runnableExamples:
       doAssert  divmod(5, 2) ==  (2, 1)
       doAssert divmod(5, -3) == (-1, 2)
     result[0] = num div denom
     result[1] = num mod denom
-  
+
 
 func round*[T: float32|float64](x: T, places: int): T =
   ## Decimal rounding on a binary floating point number.
@@ -1186,8 +1186,8 @@ func `^`*[T: SomeNumber](x: T, y: Natural): T =
   ## `pow <#pow,float64,float64>`_ for negative exponents.
   ##
   ## **See also:**
-  ## * `pow func <#pow,float64,float64>`_ for negative exponent or
-  ##   floats
+  ## * `^ func <#^,T,U>`_ for negative exponent or floats
+  ## * `pow func <#pow,float64,float64>`_ for `float32` or `float64` output
   ## * `sqrt func <#sqrt,float64>`_
   ## * `cbrt func <#cbrt,float64>`_
   runnableExamples:
@@ -1210,6 +1210,48 @@ func `^`*[T: SomeNumber](x: T, y: Natural): T =
       if y == 0:
         break
       x *= x
+
+func isInteger(y: SomeFloat): bool =
+  ## Determines if a float represents an integer
+  return round(y) == y
+
+func `^`*[T: SomeNumber, U: SomeFloat](x: T, y: U): float =
+  ## Computes `x` to the power of `y`.
+  ##
+  ## Error handling follows the C++ specification even for the JS backend
+  ## https://en.cppreference.com/w/cpp/numeric/math/pow
+  ##
+  ## **See also:**
+  ## * `^ func <#^,T,Natural>`_
+  ## * `pow func <#pow,float64,float64>`_ for `float32` or `float64` output
+  ## * `sqrt func <#sqrt,float64>`_
+  ## * `cbrt func <#cbrt,float64>`_
+  runnableExamples:
+    doAssert almostEqual(5.5 ^ 2.2, 42.540042248725975)
+    doAssert 1.0 ^ Inf == 1.0
+  let
+    isZero_x: bool = (x == 0.0 or x == -0.0)
+    isNegZero: bool = classify(x) == fcNegZero
+    isPosZero: bool = classify(x) == fcZero
+    yIsFinite: bool = (y != Inf and y != -Inf)
+    yIsOddInteger: bool = (isInteger(y) and yIsFinite and (abs(int(y) mod 2) == 1))
+
+  assert not(isPosZero and y < 0 and yIsOddInteger)
+  assert not(isNegZero and y < 0 and yIsOddInteger)
+  assert not(isZero_x and y < 0 and y != -Inf)
+  assert not(isZero_x and y == -Inf)
+  assert not(x < 0 and not isInteger(x) and yIsFinite and not yIsOddInteger)
+  when defined(js):
+    # JS behavior follows an old version of IEEE 754 for compatibility reasons
+    # See https://262.ecma-international.org/#sec-numeric-types-number-exponentiate
+    if (x == 1.0 or x == -1.0) and not yIsFinite:
+      float(1.0)
+    elif x == 1.0 and y.isNan():
+      float(1.0)
+    else:
+      float(pow(x, y))
+  else:
+    float(pow(x, y))
 
 func gcd*[T](x, y: T): T =
   ## Computes the greatest common (positive) divisor of `x` and `y`.

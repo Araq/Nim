@@ -50,8 +50,8 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
   case n.kind
   of nkObjConstr:
     let x = t.skipTypes(abstractPtrs)
-    n.typ = t
-    n[0].typ = t
+    n.typ() = t
+    n[0].typ() = t
     for i in 1..<n.len:
       var j = i-1
       let field = x.ithField(j)
@@ -62,12 +62,12 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
         annotateType(n[i][1], field.typ, conf)
   of nkPar, nkTupleConstr:
     if x.kind == tyTuple:
-      n.typ = t
+      n.typ() = t
       for i in 0..<n.len:
         if i >= x.kidsLen: globalError conf, n.info, "invalid field at index " & $i
         else: annotateType(n[i], x[i], conf)
     elif x.kind == tyProc and x.callConv == ccClosure:
-      n.typ = t
+      n.typ() = t
     elif x.kind == tyOpenArray: # `opcSlice` transforms slices into tuples
       if n.kind == nkTupleConstr:
         let
@@ -88,39 +88,39 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
           globalError(conf, n.info, "Incorrectly generated tuple constr")
         n[] = bracketExpr[]
 
-      n.typ = t
+      n.typ() = t
     else:
       globalError(conf, n.info, "() must have a tuple type")
   of nkBracket:
     if x.kind in {tyArray, tySequence, tyOpenArray}:
-      n.typ = t
+      n.typ() = t
       for m in n: annotateType(m, x.elemType, conf)
     else:
       globalError(conf, n.info, "[] must have some form of array type")
   of nkCurly:
     if x.kind in {tySet}:
-      n.typ = t
+      n.typ() = t
       for m in n: annotateType(m, x.elemType, conf)
     else:
       globalError(conf, n.info, "{} must have the set type")
   of nkFloatLit..nkFloat128Lit:
     if x.kind in {tyFloat..tyFloat128}:
-      n.typ = t
+      n.typ() = t
     else:
       globalError(conf, n.info, "float literal must have some float type")
   of nkCharLit..nkUInt64Lit:
     if x.kind in {tyInt..tyUInt64, tyBool, tyChar, tyEnum}:
-      n.typ = t
+      n.typ() = t
     else:
       globalError(conf, n.info, "integer literal must have some int type")
   of nkStrLit..nkTripleStrLit:
     if x.kind in {tyString, tyCstring}:
-      n.typ = t
+      n.typ() = t
     else:
       globalError(conf, n.info, "string literal must be of some string type")
   of nkNilLit:
     if x.kind in NilableTypes+{tyString, tySequence}:
-      n.typ = t
+      n.typ() = t
     else:
       globalError(conf, n.info, "nil literal must be of some pointer type")
   else: discard

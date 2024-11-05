@@ -166,4 +166,4 @@ proc makeAddr*(n: PNode; idgen: IdGenerator): PNode =
     result = n
   else:
     result = newTree(nkHiddenAddr, n)
-    result.typ = makePtrType(n.typ, idgen)
+    result.typ() = makePtrType(n.typ, idgen)

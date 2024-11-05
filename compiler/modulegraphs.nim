@@ -88,6 +88,7 @@ type
     suggestMode*: bool # whether we are in nimsuggest mode or not.
     invalidTransitiveClosure: bool
     interactive*: bool
+    withinSystem*: bool # in system.nim or a module imported by system.nim
     inclToMod*: Table[FileIndex, FileIndex] # mapping of include file to the
                                             # first module that included it
     importStack*: seq[FileIndex]  # The current import stack. Used for detecting recursive

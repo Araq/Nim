@@ -722,12 +722,12 @@ proc processPragma(c: PContext, n: PNode, i: int) =
 proc pragmaRaisesOrTags(c: PContext, n: PNode) =
   proc processExc(c: PContext, x: PNode) =
     if c.hasUnresolvedArgs(c, x):
-      x.typ = makeTypeFromExpr(c, x)
+      x.typ() = makeTypeFromExpr(c, x)
     else:
       var t = skipTypes(c.semTypeNode(c, x, nil), skipPtrs)
       if t.kind notin {tyObject, tyOr}:
         localError(c.config, x.info, errGenerated, "invalid type for raises/tags list")
-      x.typ = t
+      x.typ() = t
 
   if n.kind in nkPragmaCallKinds and n.len == 2:
     let it = n[1]

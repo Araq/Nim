@@ -100,7 +100,7 @@ type
     opcEqRef, opcEqNimNode, opcSameNodeType,
     opcXor, opcNot, opcUnaryMinusInt, opcUnaryMinusFloat, opcBitnotInt,
     opcEqStr, opcEqCString, opcLeStr, opcLtStr, opcEqSet, opcLeSet, opcLtSet,
-    opcMulSet, opcPlusSet, opcMinusSet, opcConcatStr,
+    opcMulSet, opcPlusSet, opcMinusSet, opcXorSet, opcConcatStr,
     opcContainsSet, opcRepr, opcSetLenStr, opcSetLenSeq,
     opcIsNil, opcOf, opcIs,
     opcParseFloat, opcConv, opcCast,
@@ -270,6 +270,7 @@ type
     templInstCounter*: ref int # gives every template instantiation a unique ID, needed here for getAst
     vmstateDiff*: seq[(PSym, PNode)] # we remember the "diff" to global state here (feature for IC)
     procToCodePos*: Table[int, int]
+    cannotEval*: bool
 
   PStackFrame* = ref TStackFrame
   TStackFrame* {.acyclic.} = object

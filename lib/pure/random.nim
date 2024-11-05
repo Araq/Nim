@@ -11,8 +11,8 @@
 ##
 ## Its implementation is based on the `xoroshiro128+`
 ## (xor/rotate/shift/rotate) library.
-## * More information: http://xoroshiro.di.unimi.it
-## * C implementation: http://xoroshiro.di.unimi.it/xoroshiro128plus.c
+## * More information: https://xoroshiro.di.unimi.it
+## * C implementation: https://xoroshiro.di.unimi.it/xoroshiro128plus.c
 ##
 ## **Do not use this module for cryptographic purposes!**
 ##
@@ -79,24 +79,13 @@ when defined(nimPreviewSlimSystem):
 
 include system/inclrtl
 {.push debugger: off.}
-template whenHasBigInt64(yes64, no64): untyped =
-  when defined(js):
-    when compiles(compileOption("jsbigint64")):
-      when compileOption("jsbigint64"):
-        yes64
-      else:
-        no64
-    else:
-      no64
-  else:
-    yes64
 
 
-whenHasBigInt64:
+when hasWorkingInt64:
   type Ui = uint64
 
   const randMax = 18_446_744_073_709_551_615u64
-do:
+else:
   type Ui = uint32
 
   const randMax = 4_294_967_295u32
@@ -118,14 +107,14 @@ type
                  ## generator are **not** thread-safe!
     a0, a1: Ui
 
-whenHasBigInt64:
+when hasWorkingInt64:
   const DefaultRandSeed = Rand(
     a0: 0x69B4C98CB8530805u64,
     a1: 0xFED1DD3004688D67CAu64)
 
   # racy for multi-threading but good enough for now:
   var state = DefaultRandSeed # global for backwards compatibility
-do:
+else:
   var state = Rand(
     a0: 0x69B4C98Cu32,
     a1: 0xFED1DD30u32) # global for backwards compatibility
@@ -221,9 +210,9 @@ proc skipRandomNumbers*(s: var Rand) =
     doAssert vals == [501737, 497901, 500683, 500157]
 
 
-  whenHasBigInt64:
+  when hasWorkingInt64:
     const helper = [0xbeac0467eba5facbu64, 0xd86b048b86aa9922u64]
-  do:
+  else:
     const helper = [0xbeac0467u32, 0xd86b048bu32]
   var
     s0 = Ui 0
@@ -359,9 +348,9 @@ proc rand*[T: Ordinal or SomeFloat](r: var Rand; x: HSlice[T, T]): T =
   when T is SomeFloat:
     result = rand(r, x.b - x.a) + x.a
   else: # Integers and Enum types
-    whenJsNoBigInt64:
+    when jsNoBigInt64:
       result = cast[T](rand(r, cast[uint](x.b) - cast[uint](x.a)) + cast[uint](x.a))
-    do:
+    else:
       result = cast[T](rand(r, cast[uint64](x.b) - cast[uint64](x.a)) + cast[uint64](x.a))
 
 proc rand*[T: Ordinal or SomeFloat](x: HSlice[T, T]): T =
@@ -402,9 +391,9 @@ proc rand*[T: Ordinal](r: var Rand; t: typedesc[T]): T {.since: (1, 7, 1).} =
   elif T is bool:
     result = r.next < randMax div 2
   else:
-    whenJsNoBigInt64:
+    when jsNoBigInt64:
       result = cast[T](r.next shr (sizeof(uint)*8 - sizeof(T)*8))
-    do:
+    else:
       result = cast[T](r.next shr (sizeof(uint64)*8 - sizeof(T)*8))
 
 proc rand*[T: Ordinal](t: typedesc[T]): T =

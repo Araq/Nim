@@ -337,6 +337,18 @@ proc SetMinus(a, b: int): int {.compilerproc, asmNoStackFrame.} =
     return result;
   """.}
 
+proc SetXor(a, b: int): int {.compilerproc, asmNoStackFrame.} =
+  {.emit: """
+    var result = {};
+    for (var elem in `a`) {
+      if (!`b`[elem]) { result[elem] = true; }
+    }
+    for (var elem in `b`) {
+      if (!`a`[elem]) { result[elem] = true; }
+    }
+    return result;
+  """.}
+
 proc cmpStrings(a, b: string): int {.asmNoStackFrame, compilerproc.} =
   {.emit: """
     if (`a` == `b`) return 0;

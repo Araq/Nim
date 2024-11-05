@@ -16,7 +16,7 @@ const
   paCode* = " --doc.plausibleAnalytics:nim-lang.org"
   # errormax: subsequent errors are probably consequences of 1st one; a simple
   # bug could cause unlimited number of errors otherwise, hard to debug in CI.
-  docDefines = "-d:nimExperimentalLinenoiseExtra"
+  docDefines = "-d:nimExperimentalLinenoiseExtra" # deadcode `nimExperimentalLinenoiseExtra` has been enabled
   nimArgs = "--errormax:3 --hint:Conf:off --hint:Path:off --hint:Processing:off --hint:XDeclaredButNotUsed:off --warning:UnusedImport:off -d:boot --putenv:nimversion=$# $#" % [system.NimVersion, docDefines]
   gitUrl = "https://github.com/nim-lang/Nim"
   docHtmlOutput = "doc/html"
@@ -198,11 +198,11 @@ proc getDocList(): seq[string] =
   # don't ignore these even though in lib/system (not include files)
   const goodSystem = """
 lib/system/nimscript.nim
-lib/system/assertions.nim
 lib/system/iterators.nim
 lib/system/exceptions.nim
 lib/system/dollars.nim
 lib/system/ctypes.nim
+lib/system/repr_v2.nim
 """.splitWhitespace()
 
   proc follow(a: PathEntry): bool =

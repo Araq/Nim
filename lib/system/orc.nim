@@ -424,7 +424,8 @@ proc collectCycles() =
         rootsThreshold = 0
       #cfprintf(cstderr, "[collectCycles] freed %ld, touched %ld new threshold %ld\n", j.freed, j.touched, rootsThreshold)
     elif rootsThreshold < high(int) div 4:
-      rootsThreshold = (if rootsThreshold <= 0: defaultThreshold else: rootsThreshold) * 3 div 2
+      rootsThreshold = (if rootsThreshold <= 0: defaultThreshold else: rootsThreshold)
+      rootsThreshold = rootsThreshold div 2 + rootsThreshold
   when logOrc:
     cfprintf(cstderr, "[collectCycles] end; freed %ld new threshold %ld touched: %ld mem: %ld rcSum: %ld edges: %ld\n", j.freed, rootsThreshold, j.touched,
       getOccupiedMem(), j.rcSum, j.edges)

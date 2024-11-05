@@ -507,7 +507,7 @@ proc len(filenames: RstFileTable): int = filenames.idxToFilename.len
 proc addFilename*(s: PRstSharedState, file1: string): FileIndex =
   ## Returns index of filename, adding it if it has not been used before
   let nextIdx = s.filenames.len.FileIndex
-  result = getOrDefault(s.filenames.filenameToIdx, file1, default = nextIdx)
+  result = getOrDefault(s.filenames.filenameToIdx, file1, nextIdx)
   if result == nextIdx:
     s.filenames.filenameToIdx[file1] = result
     s.filenames.idxToFilename.add file1
@@ -3364,7 +3364,7 @@ proc dirCodeBlock(p: var RstParser, nimExtension = false): PRstNode =
   ## description of ``parseDirective`` for further structure information.
   ##
   ## Code blocks can come in two forms, the standard `code directive
-  ## <http://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
+  ## <https://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
   ## the nim extension ``.. code-block::``. If the block is an extension, we
   ## want the default language syntax highlighting to be Nim, so we create a
   ## fake internal field to communicate with the generator. The field is named

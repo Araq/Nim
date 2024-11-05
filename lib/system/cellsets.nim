@@ -144,7 +144,7 @@ proc cellSetPut(t: var CellSet, key: uint): PPageDesc =
     if x.key == key: return x
     h = nextTry(h, t.max)
 
-  if ((t.max+1)*2 < t.counter*3) or ((t.max+1)-t.counter < 4):
+  if ((t.max+1) < t.counter div 2 + t.counter) or ((t.max+1)-t.counter < 4):
     cellSetEnlarge(t)
   inc(t.counter)
   h = cast[int](key) and t.max

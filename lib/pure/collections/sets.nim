@@ -187,7 +187,7 @@ proc card*[A](s: HashSet[A]): int =
   ## Alias for `len() <#len,HashSet[A]>`_.
   ##
   ## Card stands for the `cardinality
-  ## <http://en.wikipedia.org/wiki/Cardinality>`_ of a set.
+  ## <https://en.wikipedia.org/wiki/Cardinality>`_ of a set.
   result = s.counter
 
 proc incl*[A](s: var HashSet[A], key: A) =
@@ -840,7 +840,7 @@ proc card*[A](s: OrderedSet[A]): int {.inline.} =
   ## Alias for `len() <#len,OrderedSet[A]>`_.
   ##
   ## Card stands for the `cardinality
-  ## <http://en.wikipedia.org/wiki/Cardinality>`_ of a set.
+  ## <https://en.wikipedia.org/wiki/Cardinality>`_ of a set.
   result = s.counter
 
 proc `==`*[A](s, t: OrderedSet[A]): bool =

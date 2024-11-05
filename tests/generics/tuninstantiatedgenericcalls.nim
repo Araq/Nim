@@ -421,17 +421,17 @@ block: # issue #24090
   doAssert a.x is M[int]
   var b: Foo[float]
   doAssert b.x is M[float]
+  # related to #24091:
   doAssert not (compiles do:
     type Bar[T] = object
-      x: typeof(M()) # actually fails here immediately
-    var bar: Bar[int])
+      # ideally fails here immediately since the inside of `typeof` does not
+      # depend on an unresolved parameter
+      # but if typechecking gets too lazy, then we need to instantiate to error
+      x: typeof(M()))
   doAssert not (compiles do:
     type Bar[T] = object
-      x: typeof(default(M))
-    var bar: Bar[int]
-    # gives "undeclared identifier x" because of #24091,
-    # normally it should fail in the line above
-    echo bar.x)
+      # again, ideally fails here immediately
+      x: typeof(default(M)))
   proc foo[T: M](x: T = default(T)) = discard x
   foo[M[int]]()
   doAssert not compiles(foo())

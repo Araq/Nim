@@ -37,7 +37,7 @@ runnableExamples:
 ## PCRE has `some additional terms`_ that you must agree to in order to use
 ## this module.
 ##
-## .. _`some additional terms`: http://pcre.sourceforge.net/license.txt
+## .. _`some additional terms`: https://pcre.sourceforge.net/license.txt
 runnableExamples:
   import std/sugar
   let vowels = re"[aeoui]"
@@ -74,7 +74,14 @@ when defined(nimPreviewSlimSystem):
 export options
 
 type
-  Regex* = ref object
+  RegexDesc* = object
+    pattern*: string
+    pcreObj: ptr pcre.Pcre  ## not nil
+    pcreExtra: ptr pcre.ExtraData  ## nil
+
+    captureNameToId: Table[string, int]
+
+  Regex* = ref RegexDesc
     ## Represents the pattern that things are matched against, constructed with
     ## `re(string)`. Examples: `re"foo"`, `re(r"(*ANYCRLF)(?x)foo #
     ## comment".`
@@ -134,22 +141,17 @@ type
     ## -  `(*NO_STUDY)` - turn off studying; study is enabled by default
     ##
     ## For more details on the leading option groups, see the `Option
-    ## Setting <http://man7.org/linux/man-pages/man3/pcresyntax.3.html#OPTION_SETTING>`_
+    ## Setting <https://man7.org/linux/man-pages/man3/pcresyntax.3.html#OPTION_SETTING>`_
     ## and the `Newline
-    ## Convention <http://man7.org/linux/man-pages/man3/pcresyntax.3.html#NEWLINE_CONVENTION>`_
+    ## Convention <https://man7.org/linux/man-pages/man3/pcresyntax.3.html#NEWLINE_CONVENTION>`_
     ## sections of the `PCRE syntax
-    ## manual <http://man7.org/linux/man-pages/man3/pcresyntax.3.html>`_.
+    ## manual <https://man7.org/linux/man-pages/man3/pcresyntax.3.html>`_.
     ##
     ## Some of these options are not part of PCRE and are converted by nre
     ## into PCRE flags. These include `NEVER_UTF`, `ANCHORED`,
     ## `DOLLAR_ENDONLY`, `FIRSTLINE`, `NO_AUTO_CAPTURE`,
     ## `JAVASCRIPT_COMPAT`, `U`, `NO_STUDY`. In other PCRE wrappers, you
     ## will need to pass these as separate flags to PCRE.
-    pattern*: string
-    pcreObj: ptr pcre.Pcre  ## not nil
-    pcreExtra: ptr pcre.ExtraData  ## nil
-
-    captureNameToId: Table[string, int]
 
   RegexMatch* = object
     ## Usually seen as Option[RegexMatch], it represents the result of an
@@ -216,12 +218,28 @@ type
     ## for whatever reason. The message contains the error
     ## code.
 
-proc destroyRegex(pattern: Regex) =
-  `=destroy`(pattern.pattern)
-  pcre.free_substring(cast[cstring](pattern.pcreObj))
-  if pattern.pcreExtra != nil:
-    pcre.free_study(pattern.pcreExtra)
-  `=destroy`(pattern.captureNameToId)
+when defined(gcDestructors):
+  when defined(nimAllowNonVarDestructor) and defined(nimPreviewNonVarDestructor):
+    proc `=destroy`(pattern: RegexDesc) =
+      `=destroy`(pattern.pattern)
+      pcre.free_substring(cast[cstring](pattern.pcreObj))
+      if pattern.pcreExtra != nil:
+        pcre.free_study(pattern.pcreExtra)
+      `=destroy`(pattern.captureNameToId)
+  else:
+    proc `=destroy`(pattern: var RegexDesc) =
+      `=destroy`(pattern.pattern)
+      pcre.free_substring(cast[cstring](pattern.pcreObj))
+      if pattern.pcreExtra != nil:
+        pcre.free_study(pattern.pcreExtra)
+      `=destroy`(pattern.captureNameToId)
+else:
+  proc destroyRegex(pattern: Regex) =
+    `=destroy`(pattern.pattern)
+    pcre.free_substring(cast[cstring](pattern.pcreObj))
+    if pattern.pcreExtra != nil:
+      pcre.free_study(pattern.pcreExtra)
+    `=destroy`(pattern.captureNameToId)
 
 proc getinfo[T](pattern: Regex, opt: cint): T =
   let retcode = pcre.fullinfo(pattern.pcreObj, pattern.pcreExtra, opt, addr result)
@@ -251,7 +269,10 @@ proc getNameToNumberTable(pattern: Regex): Table[string, int] =
     result[name] = num
 
 proc initRegex(pattern: string, flags: int, study = true): Regex =
-  new(result, destroyRegex)
+  when defined(gcDestructors):
+    result = Regex()
+  else:
+    new(result, destroyRegex)
   result.pattern = pattern
 
   var errorMsg: cstring

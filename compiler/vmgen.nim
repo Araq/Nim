@@ -1212,6 +1212,7 @@ proc genMagic(c: PCtx; n: PNode; dest: var TDest; flags: TGenFlags = {}, m: TMag
   of mMulSet: genBinarySet(c, n, dest, opcMulSet)
   of mPlusSet: genBinarySet(c, n, dest, opcPlusSet)
   of mMinusSet: genBinarySet(c, n, dest, opcMinusSet)
+  of mXorSet: genBinarySet(c, n, dest, opcXorSet)
   of mConStrStr: genVarargsABC(c, n, dest, opcConcatStr)
   of mInSet: genBinarySet(c, n, dest, opcContainsSet)
   of mRepr: genUnaryABC(c, n, dest, opcRepr)
@@ -1473,9 +1474,9 @@ proc canElimAddr(n: PNode; idgen: IdGenerator): PNode =
       result = copyNode(n[0])
       result.add m[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
   of nkHiddenStdConv, nkHiddenSubConv, nkConv:
     var m = n[0][1]
     if m.kind in {nkDerefExpr, nkHiddenDeref}:
@@ -1484,9 +1485,9 @@ proc canElimAddr(n: PNode; idgen: IdGenerator): PNode =
       result.add n[0][0]
       result.add m[0]
       if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-        result.typ = n.typ
+        result.typ() = n.typ
       elif n.typ.skipTypes(abstractInst).kind in {tyVar}:
-        result.typ = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
+        result.typ() = toVar(result.typ, n.typ.skipTypes(abstractInst).kind, idgen)
   else:
     if n[0].kind in {nkDerefExpr, nkHiddenDeref}:
       # addr ( deref ( x )) --> x
@@ -1542,9 +1543,12 @@ proc setSlot(c: PCtx; v: PSym) =
     v.position = getFreeRegister(c, if v.kind == skLet: slotFixedLet else: slotFixedVar, start = 1)
 
 template cannotEval(c: PCtx; n: PNode) =
-  if c.config.cmd == cmdCheck:
+  if c.config.cmd == cmdCheck and c.config.m.errorOutputs != {}:
+    # nim check command with no error outputs doesn't need to cascade here,
+    # includes `tryConstExpr` case which should not continue generating code
     localError(c.config, n.info, "cannot evaluate at compile time: " & 
     n.renderTree)
+    c.cannotEval = true
     return
   globalError(c.config, n.info, "cannot evaluate at compile time: " &
     n.renderTree)
@@ -1678,7 +1682,7 @@ proc genAsgn(c: PCtx; le, ri: PNode; requiresCopy: bool) =
 
 proc genTypeLit(c: PCtx; t: PType; dest: var TDest) =
   var n = newNode(nkType)
-  n.typ = t
+  n.typ() = t
   genLit(c, n, dest)
 
 proc isEmptyBody(n: PNode): bool =
@@ -1847,7 +1851,7 @@ proc genCheckedObjAccessAux(c: PCtx; n: PNode; dest: var TDest; flags: TGenFlags
   let fieldName = $accessExpr[1]
   let msg = genFieldDefect(c.config, fieldName, disc.sym)
   let strLit = newStrNode(msg, accessExpr[1].info)
-  strLit.typ = strType
+  strLit.typ() = strType
   c.genLit(strLit, msgReg)
   c.gABC(n, opcInvalidField, msgReg, discVal)
   c.freeTemp(discVal)
