@@ -27,25 +27,28 @@ proc specializeResetN(p: BProc, accessor: Rope, n: PNode;
     if disc.loc.snippet == "": fillObjectFields(p.module, typ)
     if disc.loc.t == nil:
       internalError(p.config, n.info, "specializeResetN()")
-    lineF(p, cpsStmts, "switch ($1.$2) {$n", [accessor, disc.loc.snippet])
-    for i in 1..<n.len:
-      let branch = n[i]
-      assert branch.kind in {nkOfBranch, nkElse}
-      if branch.kind == nkOfBranch:
-        genCaseRange(p, branch)
-      else:
-        lineF(p, cpsStmts, "default:$n", [])
-      specializeResetN(p, accessor, lastSon(branch), typ)
-      lineF(p, cpsStmts, "break;$n", [])
-    lineF(p, cpsStmts, "} $n", [])
-    specializeResetT(p, "$1.$2" % [accessor, disc.loc.snippet], disc.loc.t)
+    let discField = dotField(accessor, disc.loc.snippet)
+    p.s(cpsStmts).addSwitchStmt(discField):
+      for i in 1..<n.len:
+        let branch = n[i]
+        assert branch.kind in {nkOfBranch, nkElse}
+        var caseBuilder: SwitchCaseBuilder
+        p.s(cpsStmts).addSwitchCase(caseBuilder):
+          if branch.kind == nkOfBranch:
+            genCaseRange(p, branch, caseBuilder)
+          else:
+            p.s(cpsStmts).addCaseElse(caseBuilder)
+        do:
+          specializeResetN(p, accessor, lastSon(branch), typ)
+          p.s(cpsStmts).addBreak()
+    specializeResetT(p, discField, disc.loc.t)
   of nkSym:
     let field = n.sym
     if field.typ.kind == tyVoid: return
     if field.loc.snippet == "": fillObjectFields(p.module, typ)
     if field.loc.t == nil:
       internalError(p.config, n.info, "specializeResetN()")
-    specializeResetT(p, "$1.$2" % [accessor, field.loc.snippet], field.loc.t)
+    specializeResetT(p, dotField(accessor, field.loc.snippet), field.loc.t)
   else: internalError(p.config, n.info, "specializeResetN()")
 
 proc specializeResetT(p: BProc, accessor: Rope, typ: PType) =
@@ -58,10 +61,8 @@ proc specializeResetT(p: BProc, accessor: Rope, typ: PType) =
   of tyArray:
     let arraySize = lengthOrd(p.config, typ.indexType)
     var i: TLoc = getTemp(p, getSysType(p.module.g.graph, unknownLineInfo, tyInt))
-    linefmt(p, cpsStmts, "for ($1 = 0; $1 < $2; $1++) {$n",
-            [i.snippet, arraySize])
-    specializeResetT(p, ropecg(p.module, "$1[$2]", [accessor, i.snippet]), typ.elementType)
-    lineF(p, cpsStmts, "}$n", [])
+    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize)):
+      specializeResetT(p, subscript(accessor, i.snippet), typ.elementType)
   of tyObject:
     var x = typ.baseClass
     if x != nil: x = x.skipTypes(skipPtrs)
@@ -70,28 +71,34 @@ proc specializeResetT(p: BProc, accessor: Rope, typ: PType) =
   of tyTuple:
     let typ = getUniqueType(typ)
     for i, a in typ.ikids:
-      specializeResetT(p, ropecg(p.module, "$1.Field$2", [accessor, i]), a)
+      specializeResetT(p, dotField(accessor, "Field" & $i), a)
 
   of tyString, tyRef, tySequence:
-    lineCg(p, cpsStmts, "#unsureAsgnRef((void**)&$1, NIM_NIL);$n", [accessor])
+    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
+      cCast("void**", cAddr(accessor)),
+      "NIM_NIL")
 
   of tyProc:
     if typ.callConv == ccClosure:
-      lineCg(p, cpsStmts, "#unsureAsgnRef((void**)&$1.ClE_0, NIM_NIL);$n", [accessor])
-      lineCg(p, cpsStmts, "$1.ClP_0 = NIM_NIL;$n", [accessor])
+      p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
+        cCast("void**", cAddr(dotField(accessor, "ClE_0"))),
+        "NIM_NIL")
+      p.s(cpsStmts).addFieldAssignment(accessor, "ClP_0", "NIM_NIL")
     else:
-      lineCg(p, cpsStmts, "$1 = NIM_NIL;$n", [accessor])
+      p.s(cpsStmts).addAssignment(accessor, "NIM_NIL")
   of tyChar, tyBool, tyEnum, tyRange, tyInt..tyUInt64:
-    lineCg(p, cpsStmts, "$1 = 0;$n", [accessor])
+    p.s(cpsStmts).addAssignment(accessor, cIntValue(0))
   of tyCstring, tyPointer, tyPtr, tyVar, tyLent:
-    lineCg(p, cpsStmts, "$1 = NIM_NIL;$n", [accessor])
+    p.s(cpsStmts).addAssignment(accessor, "NIM_NIL")
   of tySet:
     case mapSetType(p.config, typ)
     of ctArray:
-      lineCg(p, cpsStmts, "#nimZeroMem($1, sizeof($2));$n",
-          [accessor, getTypeDesc(p.module, typ)])
+      let t = getTypeDesc(p.module, typ)
+      p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
+        accessor,
+        cSizeof(t))
     of ctInt8, ctInt16, ctInt32, ctInt64:
-      lineCg(p, cpsStmts, "$1 = 0;$n", [accessor])
+      p.s(cpsStmts).addAssignment(accessor, cIntValue(0))
     else:
       raiseAssert "unexpected set type kind"
   of tyNone, tyEmpty, tyNil, tyUntyped, tyTyped, tyGenericInvocation,

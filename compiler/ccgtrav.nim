@@ -16,12 +16,15 @@ type
     p: BProc
     visitorFrmt: string
 
-const
-  visitorFrmt = "#nimGCvisit((void*)$1, $2);$n"
 
 proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType)
-proc genCaseRange(p: BProc, branch: PNode)
+proc genCaseRange(p: BProc, branch: PNode, info: var SwitchCaseBuilder)
 proc getTemp(p: BProc, t: PType, needsInit=false): TLoc
+
+proc visit(p: BProc, data, visitor: Snippet) =
+  p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCvisit"),
+    cCast("void*", data),
+    visitor)
 
 proc genTraverseProc(c: TTraversalClosure, accessor: Rope, n: PNode;
                      typ: PType) =
@@ -37,29 +40,32 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, n: PNode;
     if disc.loc.snippet == "": fillObjectFields(c.p.module, typ)
     if disc.loc.t == nil:
       internalError(c.p.config, n.info, "genTraverseProc()")
-    lineF(p, cpsStmts, "switch ($1.$2) {$n", [accessor, disc.loc.snippet])
-    for i in 1..<n.len:
-      let branch = n[i]
-      assert branch.kind in {nkOfBranch, nkElse}
-      if branch.kind == nkOfBranch:
-        genCaseRange(c.p, branch)
-      else:
-        lineF(p, cpsStmts, "default:$n", [])
-      genTraverseProc(c, accessor, lastSon(branch), typ)
-      lineF(p, cpsStmts, "break;$n", [])
-    lineF(p, cpsStmts, "} $n", [])
+    let discField = dotField(accessor, disc.loc.snippet)
+    p.s(cpsStmts).addSwitchStmt(discField):
+      for i in 1..<n.len:
+        let branch = n[i]
+        assert branch.kind in {nkOfBranch, nkElse}
+        var caseBuilder: SwitchCaseBuilder
+        p.s(cpsStmts).addSwitchCase(caseBuilder):
+          if branch.kind == nkOfBranch:
+            genCaseRange(c.p, branch, caseBuilder)
+          else:
+            p.s(cpsStmts).addCaseElse(caseBuilder)
+        do:
+          genTraverseProc(c, accessor, lastSon(branch), typ)
+          p.s(cpsStmts).addBreak()
   of nkSym:
     let field = n.sym
     if field.typ.kind == tyVoid: return
     if field.loc.snippet == "": fillObjectFields(c.p.module, typ)
     if field.loc.t == nil:
       internalError(c.p.config, n.info, "genTraverseProc()")
-    genTraverseProc(c, "$1.$2" % [accessor, field.loc.snippet], field.loc.t)
+    genTraverseProc(c, dotField(accessor, field.loc.snippet), field.loc.t)
   else: internalError(c.p.config, n.info, "genTraverseProc()")
 
 proc parentObj(accessor: Rope; m: BModule): Rope {.inline.} =
   if not m.compileToCpp:
-    result = "$1.Sup" % [accessor]
+    result = dotField(accessor, "Sup")
   else:
     result = accessor
 
@@ -76,15 +82,14 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType) =
     let arraySize = lengthOrd(c.p.config, typ.indexType)
     var i: TLoc = getTemp(p, getSysType(c.p.module.g.graph, unknownLineInfo, tyInt))
     var oldCode = p.s(cpsStmts)
-    linefmt(p, cpsStmts, "for ($1 = 0; $1 < $2; $1++) {$n",
-            [i.snippet, arraySize])
-    let oldLen = p.s(cpsStmts).buf.len
-    genTraverseProc(c, ropecg(c.p.module, "$1[$2]", [accessor, i.snippet]), typ.elementType)
-    if p.s(cpsStmts).buf.len == oldLen:
+    var oldLen, newLen: int
+    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize)):
+      oldLen = p.s(cpsStmts).buf.len
+      genTraverseProc(c, subscript(accessor, i.snippet), typ.elementType)
+      newLen = p.s(cpsStmts).buf.len
+    if oldLen == newLen:
       # do not emit dummy long loops for faster debug builds:
       p.s(cpsStmts) = oldCode
-    else:
-      lineF(p, cpsStmts, "}$n", [])
   of tyObject:
     var x = typ.baseClass
     if x != nil: x = x.skipTypes(skipPtrs)
@@ -93,23 +98,25 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType) =
   of tyTuple:
     let typ = getUniqueType(typ)
     for i, a in typ.ikids:
-      genTraverseProc(c, ropecg(c.p.module, "$1.Field$2", [accessor, i]), a)
+      genTraverseProc(c, dotField(accessor, "Field" & $i), a)
   of tyRef:
-    lineCg(p, cpsStmts, visitorFrmt, [accessor, c.visitorFrmt])
+    visit(p, accessor, c.visitorFrmt)
   of tySequence:
     if optSeqDestructors notin c.p.module.config.globalOptions:
-      lineCg(p, cpsStmts, visitorFrmt, [accessor, c.visitorFrmt])
+      visit(p, accessor, c.visitorFrmt)
     elif containsGarbageCollectedRef(typ.elementType):
       # destructor based seqs are themselves not traced but their data is, if
       # they contain a GC'ed type:
-      lineCg(p, cpsStmts, "#nimGCvisitSeq((void*)$1, $2);$n", [accessor, c.visitorFrmt])
+      p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCvisitSeq"),
+        cCast("void*", accessor),
+        c.visitorFrmt)
       #genTraverseProcSeq(c, accessor, typ)
   of tyString:
     if tfHasAsgn notin typ.flags:
-      lineCg(p, cpsStmts, visitorFrmt, [accessor, c.visitorFrmt])
+      visit(p, accessor, c.visitorFrmt)
   of tyProc:
     if typ.callConv == ccClosure:
-      lineCg(p, cpsStmts, visitorFrmt, [ropecg(c.p.module, "$1.ClE_0", [accessor]), c.visitorFrmt])
+      visit(p, dotField(accessor, "ClE_0"), c.visitorFrmt)
   else:
     discard
 
@@ -118,17 +125,17 @@ proc genTraverseProcSeq(c: TTraversalClosure, accessor: Rope, typ: PType) =
   assert typ.kind == tySequence
   var i = getTemp(p, getSysType(c.p.module.g.graph, unknownLineInfo, tyInt))
   var oldCode = p.s(cpsStmts)
+  var oldLen, newLen: int
   var a = TLoc(snippet: accessor)
+  let le = lenExpr(c.p, a)
 
-  lineF(p, cpsStmts, "for ($1 = 0; $1 < $2; $1++) {$n",
-      [i.snippet, lenExpr(c.p, a)])
-  let oldLen = p.s(cpsStmts).buf.len
-  genTraverseProc(c, "$1$3[$2]" % [accessor, i.snippet, dataField(c.p)], typ.elementType)
-  if p.s(cpsStmts).buf.len == oldLen:
+  p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), le):
+    oldLen = p.s(cpsStmts).buf.len
+    genTraverseProc(c, subscript(dataField(c.p, accessor), i.snippet), typ.elementType)
+    newLen = p.s(cpsStmts).buf.len
+  if newLen == oldLen:
     # do not emit dummy long loops for faster debug builds:
     p.s(cpsStmts) = oldCode
-  else:
-    lineF(p, cpsStmts, "}$n", [])
 
 proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
   var p = newProc(nil, m)
@@ -137,11 +144,10 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
     hcrOn = m.hcrOn
     typ = origTyp.skipTypes(abstractInstOwned)
     markerName = if hcrOn: result & "_actual" else: result
-    header = "static N_NIMCALL(void, $1)(void* p, NI op)" % [markerName]
     t = getTypeDesc(m, typ)
 
-  lineF(p, cpsLocals, "$1 a;$n", [t])
-  lineF(p, cpsInit, "a = ($1)p;$n", [t])
+  p.s(cpsLocals).addVar(kind = Local, name = "a", typ = t)
+  p.s(cpsInit).addAssignment("a", cCast(t, "p"))
 
   var c = TTraversalClosure(p: p,
     visitorFrmt: "op" # "#nimGCvisit((void*)$1, op);$n"
@@ -155,18 +161,40 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
       # C's arrays are broken beyond repair:
       genTraverseProc(c, "a".rope, typ.elementType)
     else:
-      genTraverseProc(c, "(*a)".rope, typ.elementType)
+      genTraverseProc(c, cDeref("a"), typ.elementType)
 
-  let generatedProc = "$1 {$n$2$3$4}\n" %
-        [header, extract(p.s(cpsLocals)), extract(p.s(cpsInit)), extract(p.s(cpsStmts))]
+  var headerBuilder = newBuilder("")
+  headerBuilder.addProcHeaderWithParams(ccNimCall, markerName, "void"):
+    var paramBuilder: ProcParamBuilder
+    headerBuilder.addProcParams(paramBuilder):
+      headerBuilder.addParam(paramBuilder, name = "p", typ = "void*")
+      headerBuilder.addParam(paramBuilder, name = "op", typ = "NI")
+  let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addf("$1;\n", [header])
-  m.s[cfsProcs].add(generatedProc)
+  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+    m.s[cfsProcHeaders].add(header)
+    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  m.s[cfsProcs].addDeclWithVisibility(StaticProc):
+    m.s[cfsProcs].add(header)
+    m.s[cfsProcs].finishProcHeaderWithBody():
+      m.s[cfsProcs].add(extract(p.s(cpsLocals)))
+      m.s[cfsProcs].add(extract(p.s(cpsInit)))
+      m.s[cfsProcs].add(extract(p.s(cpsStmts)))
 
   if hcrOn:
-    m.s[cfsProcHeaders].addf("N_NIMCALL_PTR(void, $1)(void*, NI);\n", [result])
-    m.s[cfsDynLibInit].addf("\t$1 = (N_NIMCALL_PTR(void, )(void*, NI)) hcrRegisterProc($3, \"$1\", (void*)$2);\n",
-         [result, markerName, getModuleDllPath(m)])
+    var desc = newBuilder("")
+    var unnamedParamBuilder: ProcParamBuilder
+    desc.addProcParams(unnamedParamBuilder):
+      desc.addUnnamedParam(unnamedParamBuilder, "void*")
+      desc.addUnnamedParam(unnamedParamBuilder, "NI")
+    let unnamedParams = extract(desc)
+    m.s[cfsProcHeaders].addProcVar(ccNimCall, result, unnamedParams, "void")
+    m.s[cfsDynLibInit].addAssignmentWithValue(result):
+      m.s[cfsDynLibInit].addCast(procPtrTypeUnnamed(ccNimCall, "void", unnamedParams)):
+        m.s[cfsDynLibInit].addCall("hcrRegisterProc",
+          getModuleDllPath(m),
+          '"' & result & '"',
+          cCast("void*", markerName))
 
 proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
   discard genTypeInfoV1(m, s.loc.t, info)
@@ -177,17 +205,28 @@ proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
 
   if sfThread in s.flags and emulatedThreadVars(m.config):
     accessThreadLocalVar(p, s)
-    sLoc = "NimTV_->" & sLoc
+    sLoc = derefField("NimTV_", sLoc)
 
   var c = TTraversalClosure(p: p,
-    visitorFrmt: "0" # "#nimGCvisit((void*)$1, 0);$n"
+    visitorFrmt: cIntValue(0) # "#nimGCvisit((void*)$1, 0);$n"
   )
 
-  let header = "static N_NIMCALL(void, $1)(void)" % [result]
   genTraverseProc(c, sLoc, s.loc.t)
 
-  let generatedProc = "$1 {$n$2$3$4}$n" %
-        [header, extract(p.s(cpsLocals)), extract(p.s(cpsInit)), extract(p.s(cpsStmts))]
+  var headerBuilder = newBuilder("")
+  headerBuilder.addProcHeaderWithParams(ccNimCall, result, "void"):
+    var paramBuilder: ProcParamBuilder
+    headerBuilder.addProcParams(paramBuilder):
+      # (void)
+      discard
+  let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addf("$1;$n", [header])
-  m.s[cfsProcs].add(generatedProc)
+  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+    m.s[cfsProcHeaders].add(header)
+    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  m.s[cfsProcs].addDeclWithVisibility(StaticProc):
+    m.s[cfsProcs].add(header)
+    m.s[cfsProcs].finishProcHeaderWithBody():
+      m.s[cfsProcs].add(extract(p.s(cpsLocals)))
+      m.s[cfsProcs].add(extract(p.s(cpsInit)))
+      m.s[cfsProcs].add(extract(p.s(cpsStmts)))

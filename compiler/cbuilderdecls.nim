@@ -471,9 +471,31 @@ template addProcParams(builder: var Builder, params: out ProcParamBuilder, body:
   body
   finishProcParamBuilder(builder, params)
 
+template addProcHeaderWithParams(builder: var Builder, callConv: TCallingConvention,
+                                 name: string, rettype: Snippet, paramBuilder: typed) =
+  # on nifc should build something like (proc name params type pragmas
+  # with no body given
+  # or enforce this with secondary builder object
+  builder.add(CallingConvToStr[callConv])
+  builder.add("(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(")")
+  paramBuilder
+
+proc addProcHeader(builder: var Builder, callConv: TCallingConvention,
+                   name: string, rettype, params: Snippet) =
+  # on nifc should build something like (proc name params type pragmas
+  # with no body given
+  # or enforce this with secondary builder object
+  addProcHeaderWithParams(builder, callConv, name, rettype):
+    builder.add(params)
+
 proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool) =
   # on nifc should build something like (proc name params type pragmas
   # with no body given
+  # or enforce this with secondary builder object
   let noreturn = isNoReturn(m, prc)
   if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
     builder.add("__declspec(naked) ")
@@ -523,5 +545,20 @@ proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, param
       builder.add(" __attribute__((naked))")
     if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
       builder.add(" __attribute__((noreturn))")
+  # ensure we are just adding a variable:
+  builder.add(";\n")
+
+proc addProcVar(builder: var Builder, callConv: TCallingConvention,
+                name: string, params, rettype: Snippet, isStatic = false) =
+  # on nifc, builds full variable
+  if isStatic:
+    builder.add("static ")
+  builder.add(CallingConvToStr[callConv])
+  builder.add("_PTR(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(")")
+  builder.add(params)
   # ensure we are just adding a variable:
   builder.add(";\n")
