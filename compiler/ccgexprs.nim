@@ -2738,7 +2738,7 @@ proc genMove(p: BProc; n: PNode; d: var TLoc) =
               s = dotField(ra, "Field0") & cArgumentSeparator & dotField(ra, "Field1")
           else:
             s = ra & cArgumentSeparator & ra & "Len_0"
-          p.s(cpsStmts).addCallStmt(s, rdLoc(b))
+          p.s(cpsStmts).addCallStmt(rdLoc(b), s)
         else:
           let val = if p.module.compileToCpp: rdLoc(a) else: byRefLoc(p, a)
           p.s(cpsStmts).addCallStmt(rdLoc(b), val)
