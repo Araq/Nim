@@ -34,6 +34,8 @@ template cIntValue*(val: int64): Snippet = $val
 template cIntValue*(val: uint64): Snippet = $val
 template cIntValue*(val: Int128): Snippet = $val
 
+template cUintValue*(val: uint): Snippet = $val & "U"
+
 import std/formatfloat
 
 proc addFloatValue*(builder: var Builder, val: float) =

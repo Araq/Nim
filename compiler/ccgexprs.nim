@@ -2288,7 +2288,7 @@ proc genInExprAux(p: BProc, e: PNode, a, b, d: var TLoc) =
       cOp(NotEqual,
         cOp(BitAnd, rt, ra,
           cOp(Shl, rt, cCast(rt, cIntValue(1)),
-            cOp(BitAnd, "NU", cCast("NU", elem), cIntValue(mask)))),
+            cOp(BitAnd, "NU", cCast("NU", elem), cUintValue(mask.uint)))),
         cIntValue(0)))
   else:
     # ((a[(NU)(elem)>>3] &(1U<<((NU)(elem)&7U)))!=0)
@@ -2297,10 +2297,10 @@ proc genInExprAux(p: BProc, e: PNode, a, b, d: var TLoc) =
         cOp(BitAnd, "NU8",
           subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
           cOp(Shl, "NU8",
-            cCast("NU8", cIntValue(1)),
+            cUintValue(1),
             cOp(BitAnd, "NU",
               cCast("NU", elem),
-              cIntValue(7)))),
+              cUintValue(7)))),
         cIntValue(0)))
 
 template binaryStmtInExcl(p: BProc, e: PNode, d: var TLoc, frmt: untyped) =
@@ -2405,12 +2405,12 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     of mIncl:
       binaryStmtInExcl(p, e, d, cInPlaceOp(BitOr, "NU8",
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
-        cOp(Shl, "NU8", cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7)))))
+        cOp(Shl, "NU8", cUintValue(1), cOp(BitAnd, "NU", elem, cUintValue(7)))))
     of mExcl:
       binaryStmtInExcl(p, e, d, cInPlaceOp(BitOr, "NU8",
         subscript(ra, cOp(Shr, "NU", cCast("NU", elem), cIntValue(3))),
         cOp(BitNot, "NU8",
-          cOp(Shl, "NU8", cCast("NU8", cIntValue(1)), cOp(BitAnd, "NU", elem, cIntValue(7))))))
+          cOp(Shl, "NU8", cUintValue(1), cOp(BitAnd, "NU", elem, cUintValue(7))))))
     of mCard:
       var a: TLoc = initLocExpr(p, e[1])
       let rca = rdCharLoc(a)
