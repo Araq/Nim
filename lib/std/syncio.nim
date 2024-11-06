@@ -174,6 +174,7 @@ proc checkErr(f: File) =
     # shouldn't happen
     quit(1)
 
+
 {.push stackTrace: off, profiler: off.}
 proc readBuffer*(f: File, buffer: pointer, len: Natural): int {.
   tags: [ReadIOEffect], benign.} =
@@ -766,13 +767,13 @@ proc open*(filename: string,
   if not open(result, filename, mode, bufSize):
     raise newException(IOError, "cannot open: " & filename)
 
-proc setFilePos*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet) {.benign, sideEffect.} =
+proc setFilePos*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet) {.raises: [], benign, sideEffect.} =
   ## Sets the position of the file pointer that is used for read/write
   ## operations. The file's first byte has the index zero.
   if c_fseek(f, pos, cint(relativeTo)) != 0:
     raiseEIO("cannot set file position")
 
-proc seek*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet): bool {.benign, sideEffect.} =
+proc seek*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet): bool {.raises: [], benign, sideEffect.} =
   c_fseek(f, pos, cint(relativeTo)) != 0
 
 proc getFilePos*(f: File): int64 {.benign.} =
