@@ -1,6 +1,6 @@
 discard """
   cmd: "nim c --mm:arc $file"
-  errormsg: "'=copy' is not available for type <Obj>; requires a copy because it's not the last read of 'chan[]'; routine: test"
+  errormsg: "'=copy' is not available for type <Obj[system.int]>; requires a copy because it's not the last read of 'chan[]'; routine: test"
 """
 
 # bug #22218

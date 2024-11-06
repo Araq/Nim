@@ -1936,10 +1936,6 @@ proc isCharArrayPtr*(t: PType; allowPointerToChar: bool): bool =
   else:
     result = false
 
-proc isConcreteNominal*(t: PType): bool {.inline.} =
-  t.kind in {tyDistinct, tyEnum, tyObject} or
-    (t.kind in {tyRef, tyPtr} and tfRefsAnonObj in t.flags)
-
 proc nominalRoot*(t: PType): PType =
   ## the "name" type of a given instance of a nominal type,
   ## i.e. the type directly associated with the symbol where the root
@@ -1971,7 +1967,8 @@ proc nominalRoot*(t: PType): PType =
     while result.skipModifier.kind in {tyGenericInvocation, tyGenericInst}:
       result = result.skipModifier[0]
     let val = result.skipModifier
-    if isConcreteNominal(val):
+    if val.kind in {tyDistinct, tyEnum, tyObject} or
+        (val.kind in {tyRef, tyPtr} and tfRefsAnonObj in val.flags):
       # atomic nominal types, this generic body is attached to them
       discard
     else:
@@ -2003,8 +2000,18 @@ proc nominalRoot*(t: PType): PType =
     result = nil
 
 proc skipStructuralGenerics*(t: PType, otherKinds: TTypeKinds = {}): PType =
+  ## skips `otherKinds` and generic instantiations in `t`,
+  ## given that the generic instantiations are not of direct
+  ## object/enum/distinct types
+  # note: ref/ptr types are excluded (i.e. `type Foo[T] = ref object`)
+  # in practice this is not an issue since destructors are defined on
+  # direct `object` etc types, but in general the underlying `Foo:Obj`
+  # type will not have/use a corresponding `tyGenericInst`
   result = t
   while result.kind in otherKinds or
       (result.kind == tyGenericInst and
-        not isConcreteNominal(result.skipModifier)):
+        result.skipModifier.kind notin {tyObject, tyEnum, tyDistinct}):
     result = result.last
+  if result.kind == tyGenericInst:
+    echo "got ", (result, result.last)
+    result = result.last.typeInst
