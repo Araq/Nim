@@ -2357,7 +2357,7 @@ when notJSnotNims:
       else:
         let c3 = cast[proc(y: int; env: pointer): int {.nimcall.}](p)
         echo c3(3, e)
-
+    result = nil
     {.emit: """
     `result` = (void*)`x`.ClP_0;
     """.}
@@ -2365,12 +2365,14 @@ when notJSnotNims:
   proc rawEnv*[T: proc {.closure.} | iterator {.closure.}](x: T): pointer {.noSideEffect, inline.} =
     ## Retrieves the raw environment pointer of the closure `x`. See also `rawProc`.
     ## This is not available for the JS target.
+    result = nil
     {.emit: """
     `result` = `x`.ClE_0;
     """.}
 
 proc finished*[T: iterator {.closure.}](x: T): bool {.noSideEffect, inline, magic: "Finished".} =
   ## It can be used to determine if a first class iterator has finished.
+  result = false
   when defined(js):
     # TODO: mangle `:state`
     {.emit: """
@@ -2965,6 +2967,7 @@ when notJSnotNims and not defined(nimSeqsV2):
 
 proc arrayWith*[T](y: T, size: static int): array[size, T] {.raises: [].} =
   ## Creates a new array filled with `y`.
+  result = zeroDefault(array[size, T])
   for i in 0..size-1:
     when nimvm:
       result[i] = y

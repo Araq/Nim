@@ -44,7 +44,7 @@ when not defined(windows) and not disableSSLTesting():
   proc runServer(port: Port): bool {.thread.} =
     ## Run a trivial HTTPS server in a {.thread.}
     ## Exit after serving one request
-
+    result = false
     var socket = newSocket()
     socket.setSockOpt(OptReusePort, true)
     socket.bindAddr(port)
@@ -54,7 +54,7 @@ when not defined(windows) and not disableSSLTesting():
     ##  Handle one connection
     socket.listen()
 
-    var client: Socket
+    var client: Socket = default(Socket)
     var address = ""
 
     log "server: ready"

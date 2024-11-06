@@ -137,6 +137,7 @@ when defined(zephyr):
 {.push stack_trace:off.}
 when defined(windows):
   proc threadProcWrapper[TArg](closure: pointer): int32 {.stdcall.} =
+    result = 0'i32
     nimThreadProcWrapperBody(closure)
     # implicitly return 0
 elif defined(genode):
@@ -144,6 +145,7 @@ elif defined(genode):
     nimThreadProcWrapperBody(closure)
 else:
   proc threadProcWrapper[TArg](closure: pointer): pointer {.noconv.} =
+    result = nil
     nimThreadProcWrapperBody(closure)
 {.pop.}
 

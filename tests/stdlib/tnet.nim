@@ -94,10 +94,10 @@ block: # "IpAddress/Sockaddr conversion"
 
     doAssert($ipaddrstr == $ipaddr_1)
 
-    var sockaddr: Sockaddr_storage
-    var socklen: SockLen
-    var ipaddr_2: IpAddress
-    var port_2: Port
+    var sockaddr: Sockaddr_storage = default(Sockaddr_storage)
+    var socklen: SockLen = default(SockLen)
+    var ipaddr_2: IpAddress = default(IpAddress)
+    var port_2: Port = default(Port)
 
     toSockAddr(ipaddr_1, Port(0), sockaddr, socklen)
     fromSockAddr(sockaddr, socklen, ipaddr_2, port_2)
@@ -108,11 +108,11 @@ block: # "IpAddress/Sockaddr conversion"
     doAssert($ipaddr_1 == $ipaddr_2)
 
     if sockaddr.ss_family.cint == AF_INET.toInt:
-      var sockaddr4: Sockaddr_in
+      var sockaddr4: Sockaddr_in = default(Sockaddr_in)
       copyMem(addr sockaddr4, addr sockaddr, sizeof(sockaddr4))
       fromSockAddr(sockaddr4, socklen, ipaddr_2, port_2)
     elif sockaddr.ss_family.cint == AF_INET6.toInt:
-      var sockaddr6: Sockaddr_in6
+      var sockaddr6: Sockaddr_in6 = default(Sockaddr_in6)
       copyMem(addr sockaddr6, addr sockaddr, sizeof(sockaddr6))
       fromSockAddr(sockaddr6, socklen, ipaddr_2, port_2)
 

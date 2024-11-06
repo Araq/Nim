@@ -112,7 +112,7 @@ proc main() =
 
   when sizeof(int) == 8 or defined(js):
     block:
-      var s: seq[Hash]
+      var s: seq[Hash] = @[]
       for a in [0.0, 1.0, -1.0, 1000.0, -1000.0]:
         let b = hash(a)
         doAssert b notin s
@@ -197,7 +197,7 @@ proc main() =
     doAssert hash(Obj5(t: false, x: 1)) != hash(Obj5(t: true, y: 2))
 
   block: # hash(ref|ptr|pointer)
-    var a: array[10, uint8]
+    var a: array[10, uint8] = default(array[10, uint8])
     # disableVm:
     whenVMorJs:
       # pending fix proposed in https://github.com/nim-lang/Nim/issues/15952#issuecomment-786312417

@@ -15,7 +15,7 @@ proc testRoundtrip[T](t: T, expected: string) =
   let j = t.toJson
   doAssert $j == expected, "\n" & $j & "\n" & expected
   doAssert j.jsonTo(T).toJson == j
-  var t2: T
+  var t2: T = default(T)
   t2.fromJson(j)
   doAssert t2.toJson == j
 

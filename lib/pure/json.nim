@@ -1253,7 +1253,7 @@ proc foldObjectBody(dst, typeNode, tmpSym, jsonNode, jsonPath, originalJsonPathL
       when nimvm:
         when isRefSkipDistinct(`tmpSym`.`fieldSym`):
           # workaround #12489
-          var tmp: `fieldType`
+          var tmp: `fieldType` = default(typeof(`fieldType`))
           initFromJson(tmp, getOrDefault(`jsonNode`,`fieldNameLit`), `jsonPath`)
           `tmpSym`.`fieldSym` = tmp
         else:
@@ -1269,7 +1269,7 @@ proc foldObjectBody(dst, typeNode, tmpSym, jsonNode, jsonPath, originalJsonPathL
     let kindType = typeNode[0][1]
     let kindOffsetLit = newLit(uint(getOffset(kindSym)))
     dst.add quote do:
-      var kindTmp: `kindType`
+      var kindTmp: `kindType` = default(typeof(`kindType`))
       jsonPath.add `kindPathLit`
       initFromJson(kindTmp, `jsonNode`[`kindNameLit`], `jsonPath`)
       jsonPath.setLen `originalJsonPathLen`

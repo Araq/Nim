@@ -242,6 +242,7 @@ else:
     `=destroy`(pattern.captureNameToId)
 
 proc getinfo[T](pattern: Regex, opt: cint): T =
+  result = default(T)
   let retcode = pcre.fullinfo(pattern.pcreObj, pattern.pcreExtra, opt, addr result)
 
   if retcode < 0:
@@ -275,8 +276,8 @@ proc initRegex(pattern: string, flags: int, study = true): Regex =
     new(result, destroyRegex)
   result.pattern = pattern
 
-  var errorMsg: cstring
-  var errOffset: cint
+  var errorMsg: cstring = ""
+  var errOffset: cint = 0
 
   result.pcreObj = pcre.compile(cstring(pattern),
                                 # better hope int is at least 4 bytes..
@@ -288,7 +289,7 @@ proc initRegex(pattern: string, flags: int, study = true): Regex =
 
   if study:
     var options: cint = 0
-    var hasJit: cint
+    var hasJit: cint = cint(0)
     if pcre.config(pcre.CONFIG_JIT, addr hasJit) == 0:
       if hasJit == 1'i32:
         options = pcre.STUDY_JIT_COMPILE
@@ -313,7 +314,7 @@ proc matchesCrLf(pattern: Regex): bool =
     return true
 
   # get flags from build config
-  var confFlags: cint
+  var confFlags: cint = cint(0)
   if pcre.config(pcre.CONFIG_NEWLINE, addr confFlags) != 0:
     assert(false, "CONFIG_NEWLINE apparently got screwed up")
 
@@ -573,7 +574,7 @@ iterator findIter*(str: string, pattern: Regex, start = 0, endpos = int.high): R
     pcre.UTF8) > 0u32
   let strlen = if endpos == int.high: str.len else: endpos+1
   var offset = start
-  var match: Option[RegexMatch]
+  var match: Option[RegexMatch] = default(Option[RegexMatch])
   var neverMatched = true
 
   while true:
@@ -762,7 +763,7 @@ proc escapeRe*(str: string): string {.gcsafe.} =
   const SpecialCharMatcher = {'\\', '+', '*', '?', '[', '^', ']', '$', '(',
                               ')', '{', '}', '=', '!', '<', '>', '|', ':',
                               '-'}
-
+  result = ""
   for c in items(str):
     case c
     of SpecialCharMatcher:

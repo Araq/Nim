@@ -124,7 +124,7 @@ proc main() =
     var x = @[1, 7, 8, 11, 21, 33, 45, 99]
     var y = @[6, 7, 9, 12, 57, 66]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged == sorted(x & y)
@@ -133,7 +133,7 @@ proc main() =
     var x = @[111, 88, 76, 56, 45, 31, 22, 19, 11, 3]
     var y = @[99, 85, 83, 82, 69, 64, 48, 42, 33, 31, 26, 13]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y, (x, y) => -system.cmp(x, y))
     doAssert merged.isSorted((x, y) => -system.cmp(x, y))
     doAssert merged == sorted(x & y, SortOrder.Descending)
@@ -142,7 +142,7 @@ proc main() =
     var x: seq[int] = @[]
     var y = @[1]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged.isSorted(SortOrder.Descending)
@@ -152,7 +152,7 @@ proc main() =
     var x = [1, 3, 5, 5, 7]
     var y: seq[int] = @[]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged == @x
@@ -167,26 +167,26 @@ proc main() =
 
 
   block:
-    var x: array[0, int]
+    var x = default(array[0, int])
     var y = [1, 4, 6, 7, 9]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged == @y
 
   block:
-    var x: array[0, int]
-    var y: array[0, int]
+    var x: array[0, int] = []
+    var y: array[0, int] = []
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged.len == 0
 
   block:
-    var x: array[0, int]
-    var y: array[0, int]
+    var x: array[0, int] = []
+    var y: array[0, int] = []
 
     var merged: seq[int] = @[99, 99, 99]
     merged.setLen(0)
@@ -195,10 +195,10 @@ proc main() =
     doAssert merged.len == 0
 
   block:
-    var x: seq[int]
-    var y: seq[int]
+    var x: seq[int] = @[]
+    var y: seq[int] = @[]
 
-    var merged: seq[int]
+    var merged: seq[int] = @[]
     merged.merge(x, y)
     doAssert merged.isSorted
     doAssert merged.len == 0
@@ -245,7 +245,7 @@ proc main() =
     var x = @[r(-12), r(1), r(3), r(8), r(13), r(88)]
     var y = @[r(4), r(7), r(12), r(13), r(77), r(99)]
 
-    var merged: seq[Record]
+    var merged: seq[Record] = @[]
     merged.setLen(0)
     merged.merge(x, y, ascendingCmp)
     doAssert merged.isSorted(ascendingCmp)
@@ -267,7 +267,7 @@ proc main() =
     doAssert merged == sorted(x & y, ascendingCmp)
 
 
-  var x: seq[(int, int)]
+  var x: seq[(int, int)] = @[]
   x.merge([(1,1)], [(1,2)], (a,b) => a[0] - b[0])
   doAssert x == @[(1, 1), (1, 2)]
 

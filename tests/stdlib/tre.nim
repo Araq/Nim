@@ -23,7 +23,7 @@ proc testAll() =
   doAssert find("_____abc_______", re"abc") == 5
   doAssert findBounds("_____abc_______", re"abc") == (5,7)
 
-  var matches: array[6, string]
+  var matches: array[6, string] = default(array[6, string])
   if match("abcdefg", re"c(d)ef(g)", matches, 2):
     doAssert matches[0] == "d"
     doAssert matches[1] == "g"
@@ -85,7 +85,7 @@ proc testAll() =
   doAssert("XYZ".match(re"^\d*") == true)
 
   block:
-    var matches: array[16, string]
+    var matches: array[16, string] = default(array[16, string])
     if match("abcdefghijklmnop", re"(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)(o)(p)", matches):
       for i in 0..matches.high:
         doAssert matches[i] == $chr(i + 'a'.ord)

@@ -2413,8 +2413,7 @@ proc smallest*[A](t: CountTable[A]): tuple[key: A, val: int] =
   for h in 0 .. high(t.data):
     if t.data[h].val > 0 and (minIdx == -1 or t.data[minIdx].val > t.data[h].val):
       minIdx = h
-  result.key = t.data[minIdx].key
-  result.val = t.data[minIdx].val
+  result = (t.data[minIdx].key, t.data[minIdx].val)
 
 proc largest*[A](t: CountTable[A]): tuple[key: A, val: int] =
   ## Returns the `(key, value)` pair with the largest `val`. Efficiency: O(n)
@@ -2425,8 +2424,7 @@ proc largest*[A](t: CountTable[A]): tuple[key: A, val: int] =
   var maxIdx = 0
   for h in 1 .. high(t.data):
     if t.data[maxIdx].val < t.data[h].val: maxIdx = h
-  result.key = t.data[maxIdx].key
-  result.val = t.data[maxIdx].val
+  result = (t.data[maxIdx].key, t.data[maxIdx].val)
 
 proc hasKey*[A](t: CountTable[A], key: A): bool =
   ## Returns true if `key` is in the table `t`.
@@ -2955,16 +2953,19 @@ iterator mvalues*[A](t: CountTableRef[A]): var int =
       assert(len(t) == L, "the length of the table changed while iterating over it")
 
 proc hash*[K,V](s: Table[K,V]): Hash =
+  result = Hash(0)
   for p in pairs(s):
     result = result xor hash(p)
   result = !$result
 
 proc hash*[K,V](s: OrderedTable[K,V]): Hash =
+  result = Hash(0)
   for p in pairs(s):
     result = result !& hash(p)
   result = !$result
 
 proc hash*[V](s: CountTable[V]): Hash =
+  result = Hash(0)
   for p in pairs(s):
     result = result xor hash(p)
   result = !$result

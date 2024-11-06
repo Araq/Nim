@@ -164,7 +164,9 @@ runnableExamples:
 
   # bug #13491
   block:
-    proc fun(): int = doAssert false
+    proc fun(): int =
+      result = 0
+      doAssert false
     doAssertRaises(AssertionDefect, (discard fun()))
 
   block:

@@ -563,6 +563,8 @@ template matchOrParse(mopProc: untyped) =
   # are provided which just return *discard*.
 
   proc mopProc(s: string, p: Peg, start: int, c: var Captures): int {.gcsafe, raises: [].} =
+    result = 0
+
     proc matchBackRef(s: string, p: Peg, start: int, c: var Captures): int =
       # Parse handler code must run in an *of* clause of its own for each
       # *PegKind*, so we encapsulate the identical clause body for
@@ -579,7 +581,7 @@ template matchOrParse(mopProc: untyped) =
         n = Peg(kind: pkTerminalIgnoreStyle, term: s.substr(a, b))
       of pkBackRefIgnoreCase:
         n = Peg(kind: pkTerminalIgnoreCase, term: s.substr(a, b))
-      else: assert(false, "impossible case")
+      else: raiseAssert "impossible case"
       mopProc(s, n, start, c)
 
     case p.kind
@@ -695,7 +697,7 @@ template matchOrParse(mopProc: untyped) =
       enter(pkTerminalIgnoreStyle, s, p, start)
       var
         i = 0
-        a, b: Rune
+        a, b: Rune = default(Rune)
       result = start
       while i < len(p.term):
         while i < len(p.term):
@@ -1067,7 +1069,7 @@ template eventParser*(pegAst, handlers: untyped): (proc(s: string): int) =
   proc parser(s: string): int {.gensym.} =
     # the proc to be returned
     var
-      ms: array[MaxSubpatterns, (int, int)]
+      ms: array[MaxSubpatterns, (int, int)] = default(array[MaxSubpatterns, (int, int)])
       cs = Captures(matches: ms, ml: 0, origStart: 0)
     rawParse(s, pegAst, 0, cs)
   parser

@@ -673,11 +673,11 @@ template main {.dirty.} =
         result = v
 
       proc failed(): Result[int, string] =
-        discard
+        result = default(Result[int, string])
 
       proc calling(): Result[int, string] =
         let _ = ? failed()
-        doAssert false
+        raiseAssert "false"
 
       let r = calling()
       doAssert assigned

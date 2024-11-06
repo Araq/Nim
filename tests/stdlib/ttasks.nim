@@ -513,12 +513,12 @@ block:
 
     proc testReturnValues() =
       let t = toTask returnsSomething(2233, 11)
-      var res: int
+      var res: int = 0
       t.invoke(addr res)
       doAssert res == 2233+11
 
       let tb = toTask noArgsButReturnsSomething()
-      var resB: string
+      var resB: string = ""
       tb.invoke(addr resB)
       doAssert resB == "abcdef"
 

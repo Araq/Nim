@@ -88,7 +88,7 @@ proc main() =
     defer: close client
     client.connect("127.0.0.1", port)
 
-    var input: Socket
+    var input: Socket = default(Socket)
     server.accept(input)
 
     leakCheck(input.getFd, "accept()")

@@ -228,6 +228,7 @@ proc skipRandomNumbers*(s: var Rand) =
 
 proc rand[T: uint | uint64](r: var Rand; max: T): T =
   # xxx export in future work
+  result = default(T)
   if max == 0: return
   else:
     let max = uint64(max)

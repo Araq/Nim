@@ -58,7 +58,7 @@ proc finalize(n: NimNode, lhs: NimNode, level: int): NimNode =
   if level == 0:
     result = quote: `lhs` = `n`
   else:
-    result = quote: (let `lhs` = `n`)
+    result = quote: (var `lhs` = `n`)
 
 proc process(n: NimNode, lhs: NimNode, label: NimNode, level: int): NimNode =
   var n = n.copyNimTree
@@ -77,7 +77,7 @@ proc process(n: NimNode, lhs: NimNode, label: NimNode, level: int): NimNode =
       let check = it[1]
       let okSet = check[1]
       let kind1 = check[2]
-      let tmp = genSym(nskLet, "tmpCase")
+      let tmp = genSym(nskVar, "tmpCase")
       let body = process(objRef, tmp, label, level + 1)
       let tmp3 = nnkDerefExpr.newTree(tmp)
       it[0][0] = tmp3
@@ -91,7 +91,7 @@ proc process(n: NimNode, lhs: NimNode, label: NimNode, level: int): NimNode =
         `assgn`
       break
     elif it.kind in {nnkHiddenDeref, nnkDerefExpr}:
-      let tmp = genSym(nskLet, "tmp")
+      let tmp = genSym(nskVar, "tmp")
       let body = process(it[0], tmp, label, level + 1)
       it[0] = tmp
       let assgn = finalize(n, lhs, level)
@@ -116,7 +116,7 @@ macro `?.`*(a: typed): auto =
   let label = genSym(nskLabel, "label")
   let body = process(a, lhs, label, 0)
   result = quote do:
-    var `lhs`: type(`a`)
+    var `lhs`: type(`a`) = default(type(`a`))
     block `label`:
       `body`
     `lhs`
@@ -148,9 +148,9 @@ macro `??.`*(a: typed): Option =
   let label = genSym(nskLabel, "label")
   let body = process(a, lhs2, label, 0)
   result = quote do:
-    var `lhs`: Option[type(`a`)]
+    var `lhs`: Option[type(`a`)] = default(Option[type(`a`)])
     block `label`:
-      var `lhs2`: type(`a`)
+      var `lhs2`: type(`a`) = default(type(`a`))
       `body`
       `lhs` = option(`lhs2`)
     `lhs`

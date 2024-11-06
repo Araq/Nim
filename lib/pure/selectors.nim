@@ -336,7 +336,7 @@ else:
       elif defined(zephyr) or defined(freertos):
         FD_MAX
       else:
-        var fdLim: RLimit
+        var fdLim: RLimit = default(RLimit)
         var res = int(getrlimit(RLIMIT_NOFILE, fdLim))
         if res >= 0:
           res = int(fdLim.rlim_cur) - 1

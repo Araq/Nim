@@ -167,7 +167,7 @@ func count*[T](s: openArray[T], x: T): int =
     assert count(a, 2) == 4
     assert count(a, 99) == 0
     assert count(b, 'r') == 2
-
+  result = 0
   for itm in items(s):
     if itm == x:
       inc result
@@ -244,7 +244,7 @@ func minIndex*[T](s: openArray[T]): int {.since: (1, 1).} =
     assert minIndex(b) == 3
     assert minIndex(c) == 1
     assert minIndex(d) == 2
-
+  result = 0
   for i in 1..high(s):
     if s[i] < s[result]: result = i
 
@@ -261,7 +261,7 @@ func maxIndex*[T](s: openArray[T]): int {.since: (1, 1).} =
     assert maxIndex(b) == 0
     assert maxIndex(c) == 2
     assert maxIndex(d) == 0
-
+  result = 0
   for i in 1..high(s):
     if s[i] > s[result]: result = i
 

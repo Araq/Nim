@@ -186,7 +186,7 @@ proc discKeyMatch[T](obj: T, json: JsonNode, key: static string): bool =
   if not json.hasKey key:
     return true
   let field = accessField(obj, key)
-  var jsonVal: typeof(field)
+  var jsonVal: typeof(field) = default(typeof(field))
   fromJson(jsonVal, json[key])
   if jsonVal != field:
     return false
@@ -293,6 +293,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
 
 proc jsonTo*(b: JsonNode, T: typedesc, opt = Joptions()): T =
   ## reverse of `toJson`
+  result = default(T)
   fromJson(result, b, opt)
 
 proc toJson*[T](a: T, opt = initToJsonOptions()): JsonNode =

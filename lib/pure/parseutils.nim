@@ -182,6 +182,7 @@ proc parseHex*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): i
     var num64: int64
     doAssert parseHex("4E69ED4E69ED", num64) == 12
     doAssert num64 == 86216859871725
+  result = 0
   var i = 0
   var output = T(0)
   var foundDigit = false
