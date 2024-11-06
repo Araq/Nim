@@ -2013,5 +2013,4 @@ proc skipStructuralGenerics*(t: PType, otherKinds: TTypeKinds = {}): PType =
         result.skipModifier.kind notin {tyObject, tyEnum, tyDistinct}):
     result = result.last
   if result.kind == tyGenericInst:
-    echo "got ", (result, result.last)
     result = result.last.typeInst
