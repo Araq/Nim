@@ -1816,7 +1816,9 @@ proc semSubscript(c: PContext, n: PNode, flags: TExprFlags, afterOverloading = f
         # type parameters: partial generic specialization
         n[0] = semSymGenericInstantiation(c, n[0], s)
         result = maybeInstantiateGeneric(c, n, s, doError = afterOverloading)
-        if result != nil:
+        if result != nil and
+            # leave untyped generic expression alone:
+            (result.typ == nil or result.typ.kind != tyFromExpr):
           # check newly created sym/symchoice
           result = semExpr(c, result, flags)
       of skMacro, skTemplate:

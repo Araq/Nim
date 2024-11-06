@@ -53,3 +53,11 @@ block: # issue #21346
   b1(false)     # Error: cannot instantiate K; got: <T> but expected: <T>
   b2(false)     # Builds, on its own
   b3(false)
+
+block: # explicit generic with unresolved generic param, https://forum.nim-lang.org/t/12579
+  var s: seq[string] = @[]
+  proc MyMedian[T](A: var openArray[T],myCmp : proc(x,y:T):int {.nimcall.} = cmp[T]) : T =
+    if myCmp(A[0], A[1]) == 0: s.add("1")
+  var x = [1, 1]
+  discard MyMedian(x) # emits "1\n"
+  doAssert s == @["1"]
