@@ -381,6 +381,12 @@ template addAnonUnion(obj: var Builder; body: typed) =
   body
   obj.add("};\n")
 
+template addUnionType(obj: var Builder; body: typed) =
+  ## adds a union type i.e. `union { ... }` with fields according to `body`
+  obj.add "union{\n"
+  body
+  obj.add("}")
+
 type DeclVisibility = enum
   None
   Extern

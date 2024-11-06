@@ -973,8 +973,14 @@ proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym, doError: bool)
     # common case; check the only candidate has the right
     # number of generic type parameters:
     result = explicitGenericSym(c, n, s, errors, doError)
-    if doError and result == nil:
-      notFoundError(c, n, errors)
+    if result == nil:
+      if c.inGenericContext > 0:
+        # same as in semOverloadedCall, make expression untyped,
+        # may have failed match due to unresolved types
+        result = semGenericStmt(c, n)
+        result.typ() = makeTypeFromExpr(c, result.copyTree)
+      elif doError:
+        notFoundError(c, n, errors)
   elif a.kind in {nkClosedSymChoice, nkOpenSymChoice}:
     # choose the generic proc with the proper number of type parameters.
     result = newNodeI(a.kind, getCallLineInfo(n))
@@ -984,6 +990,14 @@ proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym, doError: bool)
                             skFunc, skIterator}:
         let x = explicitGenericSym(c, n, candidate, errors, doError)
         if x != nil: result.add(x)
+        elif c.inGenericContext > 0:
+          # same as in semOverloadedCall, make expression untyped,
+          # may have failed match due to unresolved types
+          # any failing match stops building the symchoice for correctness,
+          # can also make it untyped from the start
+          result = semGenericStmt(c, n)
+          result.typ() = makeTypeFromExpr(c, result.copyTree)
+          return
     # get rid of nkClosedSymChoice if not ambiguous:
     if result.len == 0:
       result = nil

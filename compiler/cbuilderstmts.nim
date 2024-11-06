@@ -203,3 +203,37 @@ template addIncr(builder: var Builder, val: Snippet) =
 template addDecr(builder: var Builder, val: Snippet) =
   builder.add(val)
   builder.add("--;\n")
+
+proc addInPlaceOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet) =
+  builder.add(a)
+  builder.add(' ')
+  builder.add(typedBinaryOperators[binOp])
+  builder.add("= ")
+  builder.add(b)
+  builder.add(";\n")
+
+proc addInPlaceOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
+  builder.add(a)
+  builder.add(' ')
+  builder.add(untypedBinaryOperators[binOp])
+  builder.add("= ")
+  builder.add(b)
+  builder.add(";\n")
+
+proc cInPlaceOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
+  result = ""
+  result.add(a)
+  result.add(' ')
+  result.add(typedBinaryOperators[binOp])
+  result.add("= ")
+  result.add(b)
+  result.add(";\n")
+
+proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
+  result = ""
+  result.add(a)
+  result.add(' ')
+  result.add(untypedBinaryOperators[binOp])
+  result.add("= ")
+  result.add(b)
+  result.add(";\n")
