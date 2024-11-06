@@ -124,10 +124,13 @@ proc hashType(c: var MD5Context, t: PType; flags: set[ConsiderFlag]; conf: Confi
       # This is an imported C++ generic type.
       # We cannot trust the `lastSon` to hold a properly populated and unique
       # value for each instantiation, so we hash the generic parameters here:
-      let normalizedType = t.skipGenericAlias
-      c.hashType normalizedType.genericHead, flags, conf
-      for _, a in normalizedType.genericInstParams:
-        c.hashType a, flags, conf
+      let normalizedType = t.skipStructuralGenerics
+      if normalizedType.kind == tyGenericInst:
+        c.hashType normalizedType.genericHead, flags, conf
+        for _, a in normalizedType.genericInstParams:
+          c.hashType a, flags, conf
+      else:
+        c.hashType normalizedType, flags, conf
     else:
       c.hashType t.skipModifier, flags, conf
   of tyAlias, tySink, tyUserTypeClasses, tyInferred:
