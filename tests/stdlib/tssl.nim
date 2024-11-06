@@ -88,10 +88,10 @@ proc main() =
     let (_, port) = server.getLocalAddr()
     server.listen()
 
-    var clientThread: Thread[Port]
+    var clientThread: Thread[Port] = default(Thread[Port])
     createThread(clientThread, abruptShutdown, port)
 
-    var peer: Socket
+    var peer: Socket = default(Socket)
     try:
       server.accept(peer)
       peer.send(DummyData)
@@ -115,10 +115,10 @@ proc main() =
     let (_, port) = server.getLocalAddr()
     server.listen()
 
-    var clientThread: Thread[Port]
+    var clientThread: Thread[Port] = default(Thread[Port])
     createThread(clientThread, notifiedShutdown, port)
 
-    var peer: Socket
+    var peer: Socket = default(Socket)
     try:
       server.accept(peer)
       peer.send(DummyData)
