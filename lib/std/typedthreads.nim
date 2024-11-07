@@ -63,7 +63,7 @@ proc threadFunc(obj: ptr seq[int]) {.thread.} =
 proc threadHandler() =
   var thr: array[0..4, Thread[ptr seq[int]]]
   var s = newSeq[int]()
-    
+
   for i in 0..high(thr):
     createThread(thr[i], threadFunc, s.addr)
   joinThreads(thr)
@@ -166,7 +166,7 @@ when hostOS == "windows":
 
   proc joinThreads*[TArg](t: varargs[Thread[TArg]]) =
     ## Waits for every thread in `t` to finish.
-    var a: array[MAXIMUM_WAIT_OBJECTS, SysThread]
+    var a: array[MAXIMUM_WAIT_OBJECTS, SysThread] = default(array[MAXIMUM_WAIT_OBJECTS, SysThread])
     var k = 0
     while k < len(t):
       var count = min(len(t) - k, MAXIMUM_WAIT_OBJECTS)
@@ -222,7 +222,7 @@ when hostOS == "windows":
     when TArg isnot void: t.data = param
     t.dataFn = tp
     when hasSharedHeap: t.core.stackSize = ThreadStackSize
-    var dummyThreadId: int32
+    var dummyThreadId: int32 = 0'i32
     t.sys = createThread(nil, ThreadStackSize, threadProcWrapper[TArg],
                          addr(t), 0'i32, dummyThreadId)
     if t.sys <= 0:
