@@ -222,7 +222,7 @@ type
     strictEffects,
     unicodeOperators, # deadcode
     flexibleOptionalParams,
-    strictDefs,
+    strictDefs, # deadcode
     strictCaseObjects,
     inferGenericTypes,
     openSym, # remove nfDisabledOpenSym when this is default
@@ -248,6 +248,8 @@ type
       ## Useful for libraries that rely on local passC
     jsNoLambdaLifting
       ## Old transformation for closures in JS backend
+    noStrictDefs
+      ## disable "strictdefs"
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest

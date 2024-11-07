@@ -1,4 +1,5 @@
 discard """
+  matrix: "--legacy:nostrictdefs"
   joinable: false
 """
 
@@ -28,9 +29,8 @@ template gn2 =
   discard fn()
   {.warningAsError[ProveInit]:off.}
 
-when false: # TODO: adds nostrictdefs
-  doAssert not compiles(fn1())
-  doAssert compiles(fn2())
+doAssert not compiles(fn1())
+doAssert compiles(fn2())
 
-  doAssert not compiles(gn1())
-  doAssert compiles(gn2())
+doAssert not compiles(gn1())
+doAssert compiles(gn2())

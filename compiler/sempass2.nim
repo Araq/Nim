@@ -220,7 +220,7 @@ proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
     if volatileCheck: makeVolatile(a, s)
     for x in a.init:
       if x == s.id:
-        if strictDefs in a.c.features and s.kind == skLet:
+        if noStrictDefs notin a.c.config.legacyFeatures and s.kind == skLet:
           localError(a.config, n.info, errXCannotBeAssignedTo %
                     renderTree(n, {renderNoComments}
                 ))
@@ -378,7 +378,7 @@ proc useVar(a: PEffects, n: PNode) =
       if s.typ.requiresInit:
         message(a.config, n.info, warnProveInit, s.name.s)
       elif a.leftPartOfAsgn <= 0:
-        if strictDefs in a.c.features:
+        if noStrictDefs notin a.c.config.legacyFeatures:
           if s.kind == skLet:
             localError(a.config, n.info, errLetNeedsInit)
           else:
@@ -1658,7 +1658,7 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
 
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
-       strictDefs in c.features) and
+       noStrictDefs notin c.config.legacyFeatures) and
      s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone:
     var res = s.ast[resultPos].sym # get result symbol
     if res.id notin t.init and breaksBlock(body) != bsNoReturn:

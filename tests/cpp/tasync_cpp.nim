@@ -1,11 +1,8 @@
 discard """
   targets: "cpp"
   output: "hello"
-  disabled: true
-  cmd: "nim cpp --clearNimblePath --nimblePath:build/deps/pkgs2 $file"
+  cmd: "nim cpp --legacy:nostrictdefs --clearNimblePath --nimblePath:build/deps/pkgs2 $file"
 """
-
-# TODO:
 
 # bug #3299
 
