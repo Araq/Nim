@@ -1113,10 +1113,10 @@ proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
     lineCg(p, cpsStmts, "}$n", [])
   else:
     startBlockWith(p):
-      p.s(cpsStmts).add("try {$n")
+      p.s(cpsStmts).add("try {\n")
     expr(p, t[0], d)
     endBlockWith(p):
-      p.s(cpsStmts).add("}$n")
+      p.s(cpsStmts).add("}\n")
 
   # First pass: handle Nim based exceptions:
   lineCg(p, cpsStmts, "catch (#Exception* T$1_) {$n", [etmp+1])
