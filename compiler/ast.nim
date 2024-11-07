@@ -1628,6 +1628,20 @@ proc skipTypesOrNil*(t: PType, kinds: TTypeKinds): PType =
     if result.sons.len == 0: return nil
     result = last(result)
 
+proc skipStructuralGenerics*(t: PType, otherKinds: TTypeKinds = {}): PType =
+  ## skips `otherKinds` and generic instantiations in `t`,
+  ## given that the generic instantiations are not of direct
+  ## object/enum/distinct types
+  # note: ref/ptr types are excluded (i.e. `type Foo[T] = ref object`)
+  # in practice this is not an issue since destructors are defined on
+  # direct `object` etc types, but in general the underlying `Foo:Obj`
+  # type will not have/use a corresponding `tyGenericInst`
+  result = t
+  while result.kind in otherKinds or
+      (result.kind == tyGenericInst and
+        result.skipModifier.kind notin {tyObject, tyEnum, tyDistinct}):
+    result = result.last
+
 proc isGCedMem*(t: PType): bool {.inline.} =
   result = t.kind in {tyString, tyRef, tySequence} or
            t.kind == tyProc and t.callConv == ccClosure

@@ -1242,12 +1242,12 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
 
   if x == y: return true
   let aliasSkipSet = maybeSkipRange({tyAlias})
-  var a = skipTypes(x, aliasSkipSet)
+  var a = skipStructuralGenerics(x, aliasSkipSet)
   while a.kind == tyUserTypeClass and tfResolved in a.flags:
-    a = skipTypes(a.last, aliasSkipSet)
-  var b = skipTypes(y, aliasSkipSet)
+    a = skipStructuralGenerics(a.last, aliasSkipSet)
+  var b = skipStructuralGenerics(y, aliasSkipSet)
   while b.kind == tyUserTypeClass and tfResolved in b.flags:
-    b = skipTypes(b.last, aliasSkipSet)
+    b = skipStructuralGenerics(b.last, aliasSkipSet)
   assert(a != nil)
   assert(b != nil)
   case c.cmp
@@ -1255,12 +1255,12 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     if a.kind != b.kind: return false
   of dcEqIgnoreDistinct:
     let distinctSkipSet = maybeSkipRange({tyDistinct, tyGenericInst})
-    a = a.skipTypes(distinctSkipSet)
-    b = b.skipTypes(distinctSkipSet)
+    a = a.skipStructuralGenerics(distinctSkipSet)
+    b = b.skipStructuralGenerics(distinctSkipSet)
     if a.kind != b.kind: return false
   of dcEqOrDistinctOf:
     let distinctSkipSet = maybeSkipRange({tyDistinct, tyGenericInst})
-    a = a.skipTypes(distinctSkipSet)
+    a = a.skipStructuralGenerics(distinctSkipSet)
     if a.kind != b.kind: return false
 
   #[
@@ -1998,19 +1998,3 @@ proc nominalRoot*(t: PType): PType =
     # skips all typeclasses
     # is this correct for `concept`?
     result = nil
-
-proc skipStructuralGenerics*(t: PType, otherKinds: TTypeKinds = {}): PType =
-  ## skips `otherKinds` and generic instantiations in `t`,
-  ## given that the generic instantiations are not of direct
-  ## object/enum/distinct types
-  # note: ref/ptr types are excluded (i.e. `type Foo[T] = ref object`)
-  # in practice this is not an issue since destructors are defined on
-  # direct `object` etc types, but in general the underlying `Foo:Obj`
-  # type will not have/use a corresponding `tyGenericInst`
-  result = t
-  while result.kind in otherKinds or
-      (result.kind == tyGenericInst and
-        result.skipModifier.kind notin {tyObject, tyEnum, tyDistinct}):
-    result = result.last
-  if result.kind == tyGenericInst:
-    result = result.last.typeInst
