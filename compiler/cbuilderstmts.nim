@@ -68,32 +68,49 @@ template addSingleIfStmtWithCond(builder: var Builder, condBody: typed, body: ty
   body
   builder.add("}\n")
 
-type IfStmt = object
-  needsElse: bool
+proc initIfStmt(builder: var Builder): IfBuilder =
+  IfBuilder(state: WaitingIf)
 
-template addIfStmt(builder: var Builder, stmt: out IfStmt, body: typed) =
-  stmt = IfStmt(needsElse: false)
-  body
+proc finishIfStmt(builder: var Builder, stmt: IfBuilder) =
+  assert stmt.state != InBlock
   builder.add("\n")
 
-template addElifBranch(builder: var Builder, stmt: var IfStmt, cond: Snippet, body: typed) =
-  if stmt.needsElse:
-    builder.add(" else ")
-  else:
-    stmt.needsElse = true
-  builder.add("if (")
+template addIfStmt(builder: var Builder, stmt: out IfBuilder, body: typed) =
+  stmt = initIfStmt(builder)
+  body
+  finishIfStmt(builder, stmt)
+
+proc initElifBranch(builder: var Builder, stmt: var IfBuilder, cond: Snippet) =
+  case stmt.state
+  of WaitingIf:
+    builder.add("if (")
+  of WaitingElseIf:
+    builder.add(" else if (")
+  else: assert false, $stmt.state
   builder.add(cond)
   builder.add(") {\n")
-  body
-  builder.add("}")
+  stmt.state = InBlock
 
-template addElseBranch(builder: var Builder, stmt: var IfStmt, body: typed) =
-  assert stmt.needsElse
+proc initElseBranch(builder: var Builder, stmt: var IfBuilder) =
+  assert stmt.state == WaitingElseIf, $stmt.state
   builder.add(" else {\n")
-  body
-  builder.add("}")
+  stmt.state = InBlock
 
-proc addForRangeHeader(builder: var Builder, i, start, bound: Snippet, inclusive: bool = false) =
+proc finishBranch(builder: var Builder, stmt: var IfBuilder) =
+  builder.add("}")
+  stmt.state = WaitingElseIf
+
+template addElifBranch(builder: var Builder, stmt: var IfBuilder, cond: Snippet, body: typed) =
+  initElifBranch(builder, stmt, cond)
+  body
+  finishBranch(builder, stmt)
+
+template addElseBranch(builder: var Builder, stmt: var IfBuilder, body: typed) =
+  initElseBranch(builder, stmt)
+  body
+  finishBranch(builder, stmt)
+
+proc initForRange(builder: var Builder, i, start, bound: Snippet, inclusive: bool = false) =
   builder.add("for (")
   builder.add(i)
   builder.add(" = ")
@@ -109,15 +126,36 @@ proc addForRangeHeader(builder: var Builder, i, start, bound: Snippet, inclusive
   builder.add(i)
   builder.add("++) {\n")
 
-template addForRangeExclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
-  addForRangeHeader(builder, i, start, bound, false)
-  body
+proc initForStep(builder: var Builder, i, start, bound, step: Snippet, inclusive: bool = false) =
+  builder.add("for (")
+  builder.add(i)
+  builder.add(" = ")
+  builder.add(start)
+  builder.add("; ")
+  builder.add(i)
+  if inclusive:
+    builder.add(" <= ")
+  else:
+    builder.add(" < ")
+  builder.add(bound)
+  builder.add("; ")
+  builder.add(i)
+  builder.add(" += ")
+  builder.add(step)
+  builder.add(") {\n")
+
+proc finishFor(builder: var Builder) {.inline.} =
   builder.add("}\n")
 
-template addForRangeInclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
-  addForRangeHeader(builder, i, start, bound, true)
+template addForRangeExclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
+  initForRange(builder, i, start, bound, false)
   body
-  builder.add("}\n")
+  finishFor(builder)
+
+template addForRangeInclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
+  initForRange(builder, i, start, bound, true)
+  body
+  finishFor(builder)
 
 template addSwitchStmt(builder: var Builder, val: Snippet, body: typed) =
   builder.add("switch (")
@@ -174,10 +212,43 @@ template addSwitchElse(builder: var Builder, body: typed) =
 proc addBreak(builder: var Builder) =
   builder.add("break;\n")
 
+type ScopeBuilder = object
+  inside: bool
+
+proc initScope(builder: var Builder): ScopeBuilder =
+  builder.add("{\n")
+  result = ScopeBuilder(inside: true)
+
+proc finishScope(builder: var Builder, scope: var ScopeBuilder) =
+  assert scope.inside, "scope not inited"
+  builder.add("}\n")
+  scope.inside = false
+
 template addScope(builder: var Builder, body: typed) =
-  builder.add("{")
+  builder.add("{\n")
   body
-  builder.add("\t}")
+  builder.add("}\n")
+
+type WhileBuilder = object
+  inside: bool
+
+proc initWhileStmt(builder: var Builder, cond: Snippet): WhileBuilder =
+  builder.add("while (")
+  builder.add(cond)
+  builder.add(") {\n")
+  result = WhileBuilder(inside: true)
+
+proc finishWhileStmt(builder: var Builder, stmt: var WhileBuilder) =
+  assert stmt.inside, "while stmt not inited"
+  builder.add("}\n")
+  stmt.inside = false
+
+template addWhileStmt(builder: var Builder, cond: Snippet, body: typed) =
+  builder.add("while (")
+  builder.add(cond)
+  builder.add(") {\n")
+  body
+  builder.add("}\n")
 
 proc addLabel(builder: var Builder, name: TLabel) =
   builder.add(name)
@@ -237,3 +308,8 @@ proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result.add("= ")
   result.add(b)
   result.add(";\n")
+
+template addCPragma(builder: var Builder, val: Snippet) =
+  builder.add("#pragma ")
+  builder.add(val)
+  builder.add("\n")

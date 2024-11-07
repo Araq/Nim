@@ -2210,21 +2210,24 @@ when false:
     readMergeInfo(getCFile(m), m)
     result = m
 
-proc addHcrInitGuards(p: BProc, n: PNode, inInitGuard: var bool) =
+proc addHcrInitGuards(p: BProc, n: PNode, inInitGuard: var bool, init: var IfBuilder) =
   if n.kind == nkStmtList:
     for child in n:
-      addHcrInitGuards(p, child, inInitGuard)
+      addHcrInitGuards(p, child, inInitGuard, init)
   else:
     let stmtShouldExecute = n.kind in {nkVarSection, nkLetSection} or
                             nfExecuteOnReload in n.flags
     if inInitGuard:
       if stmtShouldExecute:
-        endBlock(p)
+        endBlockWith(p):
+          finishBranch(p.s(cpsStmts), init)
+          finishIfStmt(p.s(cpsStmts), init)
         inInitGuard = false
     else:
       if not stmtShouldExecute:
-        line(p, cpsStmts, "if (nim_hcr_do_init_)\n")
-        startBlock(p)
+        startBlockWith(p):
+          init = initIfStmt(p.s(cpsStmts))
+          initElifBranch(p.s(cpsStmts), init, "nim_hcr_do_init_")
         inInitGuard = true
 
     genStmts(p, n)
@@ -2240,7 +2243,7 @@ proc genTopLevelStmt*(m: BModule; n: PNode) =
     transformedN = injectDestructorCalls(m.g.graph, m.idgen, m.module, transformedN)
 
   if m.hcrOn:
-    addHcrInitGuards(m.initProc, transformedN, m.inHcrInitGuard)
+    addHcrInitGuards(m.initProc, transformedN, m.inHcrInitGuard, m.hcrInitGuard)
   else:
     genProcBody(m.initProc, transformedN)
 
@@ -2356,7 +2359,9 @@ proc finalCodegenActions*(graph: ModuleGraph; m: BModule; n: PNode) =
       if sym != nil:
         cgsymImpl m, sym
       if m.inHcrInitGuard:
-        endBlock(m.initProc)
+        endBlockWith(m.initProc):
+          finishBranch(m.initProc.s(cpsStmts), m.hcrInitGuard)
+          finishIfStmt(m.initProc.s(cpsStmts), m.hcrInitGuard)
 
     if sfMainModule in m.module.flags:
       if m.hcrOn:

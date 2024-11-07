@@ -240,3 +240,6 @@ template cOp(binOp: UntypedUnaryOp, a: Snippet): Snippet =
 template cIfExpr(cond, a, b: Snippet): Snippet =
   # XXX used for `min` and `max`, maybe add nifc primitives for these
   "(" & cond & " ? " & a & " : " & b & ")"
+
+template cUnlikely(val: Snippet): Snippet =
+  "NIM_UNLIKELY(" & val & ")"

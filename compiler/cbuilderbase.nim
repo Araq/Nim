@@ -88,3 +88,9 @@ proc cIntLiteral*(i: BiggestInt): Snippet =
 
 proc cIntLiteral*(i: Int128): Snippet =
   result = cIntLiteral(toInt64(i))
+
+type
+  IfBuilderState* = enum
+    WaitingIf, WaitingElseIf, InBlock
+  IfBuilder* = object
+    state*: IfBuilderState
