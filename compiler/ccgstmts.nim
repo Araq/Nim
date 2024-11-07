@@ -1172,8 +1172,9 @@ proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
             appcg(p.module, orExpr, "#isObj(#nimBorrowCurrentException()->$1, $2)", [memberName, checkFor])
 
       if orExpr.len != 0:
-        hasIf = true
-        ifStmt = initIfStmt(p.s(cpsStmts))
+        if not hasIf:
+          hasIf = true
+          ifStmt = initIfStmt(p.s(cpsStmts))
         startBlockWith(p):
           initElifBranch(p.s(cpsStmts), ifStmt, orExpr)
         if exvar != nil:
