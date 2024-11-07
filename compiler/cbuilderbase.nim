@@ -4,6 +4,7 @@ type
   Snippet* = string
   Builder* = object
     buf*: string
+    indents*: int
 
 template newBuilder*(s: string): Builder =
   Builder(buf: s)
@@ -16,6 +17,30 @@ proc add*(builder: var Builder, s: string) =
 
 proc add*(builder: var Builder, s: char) =
   builder.buf.add(s)
+
+proc addNewline*(builder: var Builder) =
+  builder.add('\n')
+  for i in 0 ..< builder.indents:
+    builder.add('\t')
+
+proc addLineEnd*(builder: var Builder, s: string) =
+  builder.add(s)
+  builder.addNewline()
+
+proc addLineEndIndent*(builder: var Builder, s: string) =
+  inc builder.indents
+  builder.add(s)
+  builder.addNewline()
+
+proc addDedent*(builder: var Builder, s: string) =
+  if builder.buf.len > 0 and builder.buf[^1] == '\t':
+    builder.buf.setLen(builder.buf.len - 1)
+  builder.add(s)
+  dec builder.indents
+
+proc addLineEndDedent*(builder: var Builder, s: string) =
+  builder.addDedent(s)
+  builder.addNewline()
 
 proc addIntValue*(builder: var Builder, val: int) =
   builder.buf.addInt(val)

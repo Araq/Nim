@@ -2,13 +2,13 @@ template addAssignmentWithValue(builder: var Builder, lhs: Snippet, valueBody: t
   builder.add(lhs)
   builder.add(" = ")
   valueBody
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addFieldAssignmentWithValue(builder: var Builder, lhs: Snippet, name: string, valueBody: typed) =
   builder.add(lhs)
   builder.add("." & name & " = ")
   valueBody
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addAssignment(builder: var Builder, lhs, rhs: Snippet) =
   builder.addAssignmentWithValue(lhs):
@@ -35,18 +35,18 @@ template addDerefFieldAssignment(builder: var Builder, lhs: Snippet, name: strin
   builder.add(lhs)
   builder.add("->" & name & " = ")
   builder.add(rhs)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addSubscriptAssignment(builder: var Builder, lhs: Snippet, index: Snippet, rhs: Snippet) =
   builder.add(lhs)
   builder.add("[" & index & "] = ")
   builder.add(rhs)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addStmt(builder: var Builder, stmtBody: typed) =
   ## makes an expression built by `stmtBody` into a statement
   stmtBody
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addCallStmt(builder: var Builder, callee: Snippet, args: varargs[Snippet]) =
   builder.addStmt():
@@ -57,23 +57,23 @@ proc addCallStmt(builder: var Builder, callee: Snippet, args: varargs[Snippet]) 
 template addSingleIfStmt(builder: var Builder, cond: Snippet, body: typed) =
   builder.add("if (")
   builder.add(cond)
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
   body
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
 
 template addSingleIfStmtWithCond(builder: var Builder, condBody: typed, body: typed) =
   builder.add("if (")
   condBody
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
   body
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
 
 proc initIfStmt(builder: var Builder): IfBuilder =
   IfBuilder(state: WaitingIf)
 
 proc finishIfStmt(builder: var Builder, stmt: IfBuilder) =
   assert stmt.state != InBlock
-  builder.add("\n")
+  builder.addNewline()
 
 template addIfStmt(builder: var Builder, stmt: out IfBuilder, body: typed) =
   stmt = initIfStmt(builder)
@@ -88,16 +88,16 @@ proc initElifBranch(builder: var Builder, stmt: var IfBuilder, cond: Snippet) =
     builder.add(" else if (")
   else: assert false, $stmt.state
   builder.add(cond)
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
   stmt.state = InBlock
 
 proc initElseBranch(builder: var Builder, stmt: var IfBuilder) =
   assert stmt.state == WaitingElseIf, $stmt.state
-  builder.add(" else {\n")
+  builder.addLineEndIndent(" else {")
   stmt.state = InBlock
 
 proc finishBranch(builder: var Builder, stmt: var IfBuilder) =
-  builder.add("}")
+  builder.addDedent("}")
   stmt.state = WaitingElseIf
 
 template addElifBranch(builder: var Builder, stmt: var IfBuilder, cond: Snippet, body: typed) =
@@ -124,7 +124,7 @@ proc initForRange(builder: var Builder, i, start, bound: Snippet, inclusive: boo
   builder.add(bound)
   builder.add("; ")
   builder.add(i)
-  builder.add("++) {\n")
+  builder.addLineEndIndent("++) {")
 
 proc initForStep(builder: var Builder, i, start, bound, step: Snippet, inclusive: bool = false) =
   builder.add("for (")
@@ -142,10 +142,10 @@ proc initForStep(builder: var Builder, i, start, bound, step: Snippet, inclusive
   builder.add(i)
   builder.add(" += ")
   builder.add(step)
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
 
 proc finishFor(builder: var Builder) {.inline.} =
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
 
 template addForRangeExclusive(builder: var Builder, i, start, bound: Snippet, body: typed) =
   initForRange(builder, i, start, bound, false)
@@ -160,15 +160,16 @@ template addForRangeInclusive(builder: var Builder, i, start, bound: Snippet, bo
 template addSwitchStmt(builder: var Builder, val: Snippet, body: typed) =
   builder.add("switch (")
   builder.add(val)
-  builder.add(") {\n")
+  builder.addLineEnd(") {") # no indent
   body
-  builder.add("}\n")
+  builder.addLineEnd("}")
 
 template addSingleSwitchCase(builder: var Builder, val: Snippet, body: typed) =
   builder.add("case ")
   builder.add(val)
-  builder.add(":\n")
+  builder.addLineEndIndent(":")
   body
+  builder.addLineEndDedent("")
 
 type
   SwitchCaseState = enum
@@ -182,7 +183,7 @@ proc addCase(builder: var Builder, info: var SwitchCaseBuilder, val: Snippet) =
     info.state = Of
   builder.add("case ")
   builder.add(val)
-  builder.add(":\n")
+  builder.addLineEndIndent(":")
 
 proc addCaseRange(builder: var Builder, info: var SwitchCaseBuilder, first, last: Snippet) =
   if info.state != Of:
@@ -192,42 +193,44 @@ proc addCaseRange(builder: var Builder, info: var SwitchCaseBuilder, first, last
   builder.add(first)
   builder.add(" ... ")
   builder.add(last)
-  builder.add(":\n")
+  builder.addLineEndIndent(":")
 
 proc addCaseElse(builder: var Builder, info: var SwitchCaseBuilder) =
   assert info.state == None
   info.state = Else
-  builder.add("default:\n")
+  builder.addLineEndIndent("default:")
 
 template addSwitchCase(builder: var Builder, info: out SwitchCaseBuilder, caseBody, body: typed) =
   info = SwitchCaseBuilder(state: None)
   caseBody
   info.state = Finished
   body
+  builder.addLineEndDedent("")
 
 template addSwitchElse(builder: var Builder, body: typed) =
-  builder.add("default:\n")
+  builder.addLineEndIndent("default:")
   body
+  builder.addLineEndDedent("")
 
 proc addBreak(builder: var Builder) =
-  builder.add("break;\n")
+  builder.addLineEnd("break;")
 
 type ScopeBuilder = object
   inside: bool
 
 proc initScope(builder: var Builder): ScopeBuilder =
-  builder.add("{\n")
+  builder.addLineEndIndent("{")
   result = ScopeBuilder(inside: true)
 
 proc finishScope(builder: var Builder, scope: var ScopeBuilder) =
   assert scope.inside, "scope not inited"
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
   scope.inside = false
 
 template addScope(builder: var Builder, body: typed) =
-  builder.add("{\n")
+  builder.addLineEndIndent("{")
   body
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
 
 type WhileBuilder = object
   inside: bool
@@ -235,50 +238,50 @@ type WhileBuilder = object
 proc initWhileStmt(builder: var Builder, cond: Snippet): WhileBuilder =
   builder.add("while (")
   builder.add(cond)
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
   result = WhileBuilder(inside: true)
 
 proc finishWhileStmt(builder: var Builder, stmt: var WhileBuilder) =
   assert stmt.inside, "while stmt not inited"
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
   stmt.inside = false
 
 template addWhileStmt(builder: var Builder, cond: Snippet, body: typed) =
   builder.add("while (")
   builder.add(cond)
-  builder.add(") {\n")
+  builder.addLineEndIndent(") {")
   body
-  builder.add("}\n")
+  builder.addLineEndDedent("}")
 
 proc addLabel(builder: var Builder, name: TLabel) =
   builder.add(name)
-  builder.add(": ;\n")
+  builder.addLineEnd(": ;")
 
 proc addReturn(builder: var Builder) =
-  builder.add("return;\n")
+  builder.addLineEnd("return;")
 
 proc addReturn(builder: var Builder, value: Snippet) =
   builder.add("return ")
   builder.add(value)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addGoto(builder: var Builder, label: TLabel) =
   builder.add("goto ")
   builder.add(label)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addComputedGoto(builder: var Builder, value: Snippet) =
   builder.add("goto *")
   builder.add(value)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addIncr(builder: var Builder, val: Snippet) =
   builder.add(val)
-  builder.add("++;\n")
+  builder.addLineEnd("++;")
 
 proc addDecr(builder: var Builder, val: Snippet) =
   builder.add(val)
-  builder.add("--;\n")
+  builder.addLineEnd("--;")
 
 proc addInPlaceOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet) =
   builder.add(a)
@@ -286,7 +289,7 @@ proc addInPlaceOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: 
   builder.add(typedBinaryOperators[binOp])
   builder.add("= ")
   builder.add(b)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addInPlaceOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
   builder.add(a)
@@ -294,7 +297,7 @@ proc addInPlaceOp(builder: var Builder, binOp: UntypedBinaryOp, a, b: Snippet) =
   builder.add(untypedBinaryOperators[binOp])
   builder.add("= ")
   builder.add(b)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc cInPlaceOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
   result = ""
@@ -303,7 +306,7 @@ proc cInPlaceOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
   result.add(typedBinaryOperators[binOp])
   result.add("= ")
   result.add(b)
-  result.add(";\n")
+  result.addLineEnd(";")
 
 proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result = ""
@@ -312,9 +315,10 @@ proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result.add(untypedBinaryOperators[binOp])
   result.add("= ")
   result.add(b)
-  result.add(";\n")
+  result.addLineEnd(";")
 
 template addCPragma(builder: var Builder, val: Snippet) =
-  builder.add("\n#pragma ")
+  builder.addNewline()
+  builder.add("#pragma ")
   builder.add(val)
-  builder.add("\n")
+  builder.addNewline()

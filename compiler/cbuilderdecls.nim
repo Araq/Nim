@@ -32,7 +32,7 @@ proc addVar(builder: var Builder, kind: VarKind = Local, name: string, typ: Snip
   if initializer.len != 0:
     builder.add(" = ")
     builder.add(initializer)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addVarWithType(builder: var Builder, kind: VarKind = Local, name: string, body: typed) =
   ## adds a variable declaration to the builder, with the `body` building the type
@@ -40,7 +40,7 @@ template addVarWithType(builder: var Builder, kind: VarKind = Local, name: strin
   body
   builder.add(" ")
   builder.add(name)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                typ: Snippet, initializerBody: typed) =
@@ -52,7 +52,7 @@ template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name
   builder.add(name)
   builder.add(" = ")
   initializerBody
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                       typeBody, initializerBody: typed) =
@@ -64,7 +64,7 @@ template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Loca
   builder.add(name)
   builder.add(" = ")
   initializerBody
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addArrayVar(builder: var Builder, kind: VarKind = Local, name: string, elementType: Snippet, len: int, initializer: Snippet = "") =
   ## adds an array variable declaration to the builder
@@ -78,7 +78,7 @@ proc addArrayVar(builder: var Builder, kind: VarKind = Local, name: string, elem
   if initializer.len != 0:
     builder.add(" = ")
     builder.add(initializer)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addArrayVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string, elementType: Snippet, len: int, body: typed) =
   ## adds an array variable declaration to the builder with the initializer built according to `body`
@@ -90,7 +90,7 @@ template addArrayVarWithInitializer(builder: var Builder, kind: VarKind = Local,
   builder.addIntValue(len)
   builder.add("] = ")
   body
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addTypedef(builder: var Builder, name: string, typeBody: typed) =
   ## adds a typedef declaration to the builder with name `name` and type as
@@ -99,7 +99,7 @@ template addTypedef(builder: var Builder, name: string, typeBody: typed) =
   typeBody
   builder.add(" ")
   builder.add(name)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
   builder.add("typedef ")
@@ -110,7 +110,7 @@ proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: st
   builder.add(name)
   builder.add(")")
   builder.add(params)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, typeBody: typed) =
   ## adds an array typedef declaration to the builder with name `name`,
@@ -121,7 +121,7 @@ template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, ty
   builder.add(name)
   builder.add("[")
   builder.addIntValue(len)
-  builder.add("];\n")
+  builder.addLineEnd("];")
 
 type
   StructInitializerKind = enum
@@ -525,12 +525,13 @@ proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, pa
       builder.add(" __attribute__((noreturn))")
 
 proc finishProcHeaderAsProto(builder: var Builder) =
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 template finishProcHeaderWithBody(builder: var Builder, body: typed) =
-  builder.add(" {\n")
+  builder.addLineEndIndent(" {")
   body
-  builder.add("}\n\n")
+  builder.addLineEndDedent("}")
+  builder.addNewline
 
 proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet,
                 isStatic = false, ignoreAttributes = false) =
@@ -556,7 +557,7 @@ proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, param
     if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
       builder.add(" __attribute__((noreturn))")
   # ensure we are just adding a variable:
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addProcVar(builder: var Builder, callConv: TCallingConvention,
                 name: string, params, rettype: Snippet, isStatic = false) =
@@ -571,7 +572,7 @@ proc addProcVar(builder: var Builder, callConv: TCallingConvention,
   builder.add(")")
   builder.add(params)
   # ensure we are just adding a variable:
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 type VarInitializerKind = enum
   Assignment, CppConstructor
@@ -583,7 +584,7 @@ proc addVar(builder: var Builder, m: BModule, s: PSym, name: string, typ: Snippe
       if initializerKind == Assignment:
         builder.add(" = ")
       builder.add(initializer)
-    builder.add(";\n")
+    builder.addLineEnd(";")
     return
   if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
     builder.add("NIM_ALIGN(" & $s.alignment & ") ")
@@ -606,7 +607,7 @@ proc addVar(builder: var Builder, m: BModule, s: PSym, name: string, typ: Snippe
     if initializerKind == Assignment:
       builder.add(" = ")
     builder.add(initializer)
-  builder.add(";\n")
+  builder.addLineEnd(";")
 
 proc addInclude(builder: var Builder, value: Snippet) =
-  builder.add("#include " & value & "\n")
+  builder.addLineEnd("#include " & value)

@@ -98,7 +98,7 @@ proc genRawSetData(cs: TBitSet, size: int; result: var Builder) =
     result.addStructInitializer(setInit, kind = siArray):
       for i in 0..<size:
         if i mod 8 == 0:
-          result.add("\n")
+          result.addNewline()
         result.addField(setInit, name = ""):
           result.add "0x"
           result.add "0123456789abcdef"[cs[i] div 16]
