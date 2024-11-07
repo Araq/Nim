@@ -310,6 +310,6 @@ proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result.add(";\n")
 
 template addCPragma(builder: var Builder, val: Snippet) =
-  builder.add("#pragma ")
+  builder.add("\n#pragma ")
   builder.add(val)
   builder.add("\n")
