@@ -1193,6 +1193,7 @@ proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
       p.s(cpsStmts).add("throw;\n")
   if hasIf:
     finishIfStmt(p.s(cpsStmts), ifStmt)
+  linefmt(p, cpsStmts, "}$n", [])
 
   # Second pass: handle C++ based exceptions:
   template genExceptBranchBody(body: PNode) {.dirty.} =
