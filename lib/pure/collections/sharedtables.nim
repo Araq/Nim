@@ -139,16 +139,19 @@ template withValue*[A, B](t: var SharedTable[A, B], key: A,
 proc mget*[A, B](t: var SharedTable[A, B], key: A): var B =
   ## Retrieves the value at `t[key]`. The value can be modified.
   ## If `key` is not in `t`, the `KeyError` exception is raised.
-  withLock t:
-    var hc: Hash = Hash(0)
-    var index = rawGet(t, key, hc)
-    let hasKey = index >= 0
-    if hasKey: result = t.data[index].val
+  acquire(t.lock)
+  var hc: Hash = Hash(0)
+  var index = rawGet(t, key, hc)
+  let hasKey = index >= 0
+  if hasKey:
+    result = t.data[index].val
+    release(t.lock)
+  else:
+    release(t.lock)
+    when compiles($key):
+      raise newException(KeyError, "key not found: " & $key)
     else:
-      when compiles($key):
-        raise newException(KeyError, "key not found: " & $key)
-      else:
-        raise newException(KeyError, "key not found")
+      raise newException(KeyError, "key not found")
 
 proc mgetOrPut*[A, B](t: var SharedTable[A, B], key: A, val: B): var B =
   ## Retrieves value at `t[key]` or puts `val` if not present, either way
