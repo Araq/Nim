@@ -272,9 +272,6 @@ proc addComputedGoto(builder: var Builder, value: Snippet) =
   builder.add(value)
   builder.add(";\n")
 
-proc addBreak(builder: var Builder) =
-  builder.add("break;")
-
 proc addIncr(builder: var Builder, val: Snippet) =
   builder.add(val)
   builder.add("++;\n")

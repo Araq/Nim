@@ -187,9 +187,9 @@ proc loadInto(p: BProc, le, ri: PNode, a: var TLoc) {.inline.} =
     a.flags.incl(lfEnforceDeref)
     expr(p, ri, a)
 
-proc assignLabel(b: var TBlock; result: var Builder) {.inline.} =
+proc assignLabel(b: var TBlock; result: var TLabel) {.inline.} =
   b.label = "LA" & b.id.rope
-  result.add b.label
+  result = b.label
 
 proc startSimpleBlock(p: BProc, scope: out ScopeBuilder): int {.discardable, inline.} =
   startBlockWith(p):
@@ -271,7 +271,7 @@ proc genGotoState(p: BProc, n: PNode) =
   let ra = rdLoc(a)
   p.s(cpsStmts).addSwitchStmt(ra):
     p.flags.incl beforeRetNeeded
-    p.s(cpsStmts).addSwitchCase(cIntValue(-1)):
+    p.s(cpsStmts).addSingleSwitchCase(cIntValue(-1)):
       blockLeaveActions(p,
         howManyTrys    = p.nestedTryStmts.len,
         howManyExcepts = p.inExceptBlockLen)
@@ -282,7 +282,7 @@ proc genGotoState(p: BProc, n: PNode) =
     let prefix = if n.len == 3 and n[2].kind == nkStrLit: n[2].strVal.rope
                 else: rope"STATE"
     for i in 0i64..toInt64(statesCounter):
-      p.s(cpsStmts).addSwitchCase(cIntValue(i)):
+      p.s(cpsStmts).addSingleSwitchCase(cIntValue(i)):
         p.s(cpsStmts).addGoto(prefix & $i)
 
 proc genBreakState(p: BProc, n: PNode, d: var TLoc) =
@@ -950,7 +950,7 @@ template genCaseGeneric(p: BProc, t: PNode, d: var TLoc,
 
 proc genCaseStringBranch(p: BProc, b: PNode, e: TLoc, labl: TLabel,
                          stringKind: TTypeKind,
-                         branches: var openArray[Rope]) =
+                         branches: var openArray[Builder]) =
   var x: TLoc
   for i in 0..<b.len - 1:
     assert(b[i].kind != nkRange)
@@ -977,7 +977,7 @@ proc genStringCase(p: BProc, t: PNode, stringKind: TTypeKind, d: var TLoc) =
     if t[i].kind == nkOfBranch: inc(strings, t[i].len - 1)
   if strings > stringCaseThreshold:
     var bitMask = math.nextPowerOfTwo(strings) - 1
-    var branches: seq[Rope]
+    var branches: seq[Builder]
     newSeq(branches, bitMask + 1)
     var a: TLoc = initLocExpr(p, t[0]) # first pass: generate ifs+goto:
     var labId = p.labels
@@ -997,10 +997,10 @@ proc genStringCase(p: BProc, t: PNode, stringKind: TTypeKind, d: var TLoc) =
         cCall(cgsymValue(p.module, fnName), ra),
         cIntValue(bitMask))):
       for j in 0..high(branches):
-        if branches[j] != "":
+        if branches[j].buf.len != 0:
           let lit = cIntLiteral(j)
           p.s(cpsStmts).addSingleSwitchCase(lit):
-            p.s(cpsStmts).add(branches[j])
+            p.s(cpsStmts).add(extract(branches[j]))
             p.s(cpsStmts).addBreak()
     # else statement:
     if t[^1].kind != nkOfBranch:
@@ -1476,23 +1476,22 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       var orExpr: Snippet = ""
       for j in 0..<t[i].len - 1:
         assert(t[i][j].kind == nkType)
-        var excVal = newBuilder("")
-        excVal.addCall(cgsymValue(p.module, "nimBorrowCurrentException"))
+        var excVal = cCall(cgsymValue(p.module, "nimBorrowCurrentException"))
         let member =
           if p.module.compileToCpp:
             derefField(excVal, "m_type")
           else:
             dotField(derefField(excVal, "Sup"), "m_type")
-        var branch = newBuilder("")
+        var branch: Snippet = ""
         if optTinyRtti in p.config.globalOptions:
           let checkFor = $getObjDepth(t[i][j].typ)
-          branch.addCall(cgsymValue(p.module, "isObjDisplayCheck"),
+          branch = cCall(cgsymValue(p.module, "isObjDisplayCheck"),
             member,
             checkFor,
             $genDisplayElem(MD5Digest(hashType(t[i][j].typ, p.config))))
         else:
           let checkFor = genTypeInfoV1(p.module, t[i][j].typ, t[i][j].info)
-          branch.addCall(cgsymValue(p.module, "isObj"),
+          branch = cCall(cgsymValue(p.module, "isObj"),
             member,
             checkFor)
         if orExpr.len == 0:
@@ -1678,23 +1677,22 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
       var orExpr: Snippet = ""
       for j in 0..<t[i].len - 1:
         assert(t[i][j].kind == nkType)
-        var excVal = newBuilder("")
-        excVal.addCall(cgsymValue(p.module, "nimBorrowCurrentException"))
+        var excVal = cCall(cgsymValue(p.module, "nimBorrowCurrentException"))
         let member =
           if p.module.compileToCpp:
             derefField(excVal, "m_type")
           else:
             dotField(derefField(excVal, "Sup"), "m_type")
-        var branch = newBuilder("")
+        var branch: Snippet = ""
         if optTinyRtti in p.config.globalOptions:
           let checkFor = $getObjDepth(t[i][j].typ)
-          branch.addCall(cgsymValue(p.module, "isObjDisplayCheck"),
+          branch = cCall(cgsymValue(p.module, "isObjDisplayCheck"),
             member,
             checkFor,
             $genDisplayElem(MD5Digest(hashType(t[i][j].typ, p.config))))
         else:
           let checkFor = genTypeInfoV1(p.module, t[i][j].typ, t[i][j].info)
-          branch.addCall(cgsymValue(p.module, "isObj"),
+          branch = cCall(cgsymValue(p.module, "isObj"),
             member,
             checkFor)
         if orExpr.len == 0:
