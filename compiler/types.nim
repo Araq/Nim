@@ -1201,17 +1201,19 @@ proc sameChildrenAux(a, b: PType, c: var TSameTypeClosure): bool =
     if not result: return
 
 proc isGenericAlias*(t: PType): bool =
-  return t.kind == tyGenericInst and t.skipModifier.kind == tyGenericInst
+  return t.kind == tyGenericInst and t.skipModifier.skipTypes({tyAlias}).kind == tyGenericInst
 
 proc genericAliasDepth*(t: PType): int =
   result = 0
-  var it = t
+  var it = t.skipTypes({tyAlias})
   while it.isGenericAlias:
-    it = it.skipModifier
+    it = it.skipModifier.skipTypes({tyAlias})
     inc result
 
 proc skipGenericAlias*(t: PType): PType =
-  return if t.isGenericAlias: t.skipModifier else: t
+  result = t.skipTypes({tyAlias})
+  if result.isGenericAlias:
+    result = result.skipModifier.skipTypes({tyAlias})
 
 proc sameFlags*(a, b: PType): bool {.inline.} =
   result = eqTypeFlags*a.flags == eqTypeFlags*b.flags
