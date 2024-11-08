@@ -400,7 +400,8 @@ proc transformYield(c: PTransf, n: PNode): PNode =
           let lhs = c.transCon.forStmt[i]
           let rhs = transform(c, v)
           result.add(asgnTo(lhs, rhs))
-    elif e.kind notin {nkAddr, nkHiddenAddr}: # no need to generate temp for address operation
+    elif e.kind notin {nkAddr, nkHiddenAddr} and e.kind != nkSym:
+      # no need to generate temp for address operation + nodes without sideeffects
       # TODO do not use temp for nodes which cannot have side-effects
       var tmp = newTemp(c, e.typ, e.info)
       let v = newNodeI(nkVarSection, e.info)
@@ -435,7 +436,8 @@ proc transformYield(c: PTransf, n: PNode): PNode =
       else:
         notLiteralTuple = true
 
-      if e.kind notin {nkAddr, nkHiddenAddr} and notLiteralTuple:
+      if e.kind notin {nkAddr, nkHiddenAddr} and notLiteralTuple and e.kind != nkSym:
+        # no need to generate temp for address operation + nodes without sideeffects
         # TODO do not use temp for nodes which cannot have side-effects
         var tmp = newTemp(c, e.typ, e.info)
         let v = newNodeI(nkVarSection, e.info)
