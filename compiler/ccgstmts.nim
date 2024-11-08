@@ -823,7 +823,8 @@ proc raiseExitCleanup(p: BProc, destroy: string) =
   if nimErrorFlagDisabled notin p.flags:
     p.flags.incl nimErrorFlagAccessed
     p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref("nimErr_"))):
-      p.s(cpsStmts).add(destroy)
+      p.s(cpsStmts).addStmt():
+        p.s(cpsStmts).add(destroy)
       if p.nestedTryStmts.len == 0:
         p.flags.incl beforeRetNeeded
         # easy case, simply goto 'ret':
