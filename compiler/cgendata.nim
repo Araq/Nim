@@ -127,7 +127,7 @@ type
     graph*: ModuleGraph
     strVersion*, seqVersion*: int # version of the string/seq implementation to use
 
-    nimtv*: Rope            # Nim thread vars; the struct body
+    nimtv*: Builder         # Nim thread vars; the struct body
     nimtvDeps*: seq[PType]  # type deps: every module needs whole struct
     nimtvDeclared*: IntSet  # so that every var/field exists only once
                             # in the struct
@@ -169,7 +169,7 @@ type
     typeNodes*, nimTypes*: int # used for type info generation
     typeNodesName*, nimTypesName*: Rope # used for type info generation
     labels*: Natural          # for generating unique module-scope names
-    extensionLoaders*: array['0'..'9', Rope] # special procs for the
+    extensionLoaders*: array['0'..'9', Builder] # special procs for the
                                              # OpenGL wrapper
     sigConflicts*: CountTable[SigHash]
     g*: BModuleList

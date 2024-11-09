@@ -348,13 +348,6 @@ proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): Snippet =
       genOtherArg(p, call, i, typ, res, argBuilder)
   result = extract(res)
 
-proc genCppVarForCtor(p: BProc; call: PNode; decl: var Rope, didGenTemp: var bool) =
-  let params = genCppParamsForCtor(p, call, didGenTemp)
-  if params.len == 0:
-    decl = runtimeFormat("$#;\n", [decl])
-  else:
-    decl = runtimeFormat("$#($#);\n", [decl, params])
-
 proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
   if sfGoto in v.flags:
     # translate 'var state {.goto.} = X' into 'goto LX':
@@ -416,18 +409,18 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
       # parameterless constructor followed by an assignment operator. So we
       # generate better code here: 'Foo f = x;'
       genLineDir(p, vn)
-      var decl = localVarDecl(p, vn)
-      var tmp: TLoc
+      var initializer: Snippet = ""
+      var initializerKind: VarInitializerKind = Assignment
       if isCppCtorCall:
         var didGenTemp = false
-        genCppVarForCtor(p, value, decl, didGenTemp)
-        line(p, cpsStmts, decl)
+        initializer = genCppParamsForCtor(p, value, didGenTemp)
+        if initializer.len != 0:
+          initializerKind = CppConstructor
       else:
-        tmp = initLocExprSingleUse(p, value)
-        if value.kind == nkEmpty:
-          lineF(p, cpsStmts, "$#;\n", [decl])
-        else:
-          lineF(p, cpsStmts, "$# = $#;\n", [decl, tmp.rdLoc])
+        var tmp = initLocExprSingleUse(p, value)
+        if value.kind != nkEmpty:
+          initializer = tmp.rdLoc
+      localVarDecl(p.s(cpsStmts), p, vn, initializer, initializerKind)
       return
     assignLocalVar(p, vn)
     initLocalVar(p, v, imm)

@@ -1690,28 +1690,30 @@ proc genDisplayElem(d: MD5Digest): uint32 =
     result += uint32(d[i])
     result = result shl 8
 
-proc genDisplay(m: BModule; t: PType, depth: int): Rope =
-  result = Rope"{"
+proc genDisplay(result: var Builder, m: BModule; t: PType, depth: int) =
   var x = t
-  var seqs = newSeq[string](depth+1)
+  var seqs = newSeq[Snippet](depth+1)
   var i = 0
   while x != nil:
     x = skipTypes(x, skipPtrs)
-    seqs[i] = $genDisplayElem(MD5Digest(hashType(x, m.config)))
+    seqs[i] = cIntValue(genDisplayElem(MD5Digest(hashType(x, m.config))))
     x = x[0]
     inc i
 
-  for i in countdown(depth, 1):
-    result.add seqs[i] & ", "
-  result.add seqs[0]
-  result.add "}"
+  var arr: StructInitializer
+  result.addStructInitializer(arr, siArray):
+    for i in countdown(depth, 1):
+      result.addField(arr, ""):
+        result.add(seqs[i])
+    result.addField(arr, ""):
+      result.add(seqs[0])
 
-proc genVTable(seqs: seq[PSym]): string =
-  result = "{"
-  for i in 0..<seqs.len:
-    if i > 0: result.add ", "
-    result.add "(void *) " & seqs[i].loc.snippet
-  result.add "}"
+proc genVTable(result: var Builder, seqs: seq[PSym]) =
+  var table: StructInitializer
+  result.addStructInitializer(table, siArray):
+    for i in 0..<seqs.len:
+      result.addField(table, ""):
+        result.add(cCast("void*", seqs[i].loc.snippet))
 
 proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLineInfo) =
   cgsym(m, "TNimTypeV2")
@@ -1752,23 +1754,22 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
   typeEntry.addFieldAssignment(name, "flags", flags)
 
   if objDepth >= 0:
-    let objDisplay = genDisplay(m, t, objDepth)
     let objDisplayStore = getTempName(m)
-    m.s[cfsVars].addArrayVar(kind = Global,
+    m.s[cfsVars].addArrayVarWithInitializer(kind = Global,
         name = objDisplayStore,
         elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
-        len = objDepth + 1,
-        initializer = objDisplay)
+        len = objDepth + 1):
+      genDisplay(m.s[cfsVars], m, t, objDepth)
     typeEntry.addFieldAssignment(name, "display", objDisplayStore)
 
   let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
   if dispatchMethods.len > 0:
     let vTablePointerName = getTempName(m)
-    m.s[cfsVars].addArrayVar(kind = Global,
+    m.s[cfsVars].addArrayVarWithInitializer(kind = Global,
         name = vTablePointerName,
         elementType = "void*",
-        len = dispatchMethods.len,
-        initializer = genVTable(dispatchMethods))
+        len = dispatchMethods.len):
+      genVTable(m.s[cfsVars], dispatchMethods)
     for i in dispatchMethods:
       genProcPrototype(m, i)
     typeEntry.addFieldAssignment(name, "vTable", vTablePointerName)
@@ -1811,13 +1812,12 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
           typeEntry.addIntValue(objDepth)
 
         if objDepth >= 0:
-          let objDisplay = genDisplay(m, t, objDepth)
           let objDisplayStore = getTempName(m)
-          m.s[cfsVars].addArrayVar(kind = Const,
+          m.s[cfsVars].addArrayVarWithInitializer(kind = Const,
               name = objDisplayStore,
               elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
-              len = objDepth + 1,
-              initializer = objDisplay)
+              len = objDepth + 1):
+            genDisplay(m.s[cfsVars], m, t, objDepth)
           typeEntry.addField(typeInit, name = "display"):
             typeEntry.add(objDisplayStore)
         if isDefined(m.config, "nimTypeNames"):
@@ -1839,7 +1839,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
           for i in dispatchMethods:
             genProcPrototype(m, i)
           typeEntry.addField(typeInit, name = "vTable"):
-            typeEntry.add(genVTable(dispatchMethods))
+            genVTable(typeEntry, dispatchMethods)
         else:
           typeEntry.addField(typeInit, name = "flags"):
             typeEntry.addIntValue(flags)

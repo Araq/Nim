@@ -397,8 +397,8 @@ type DeclVisibility = enum
   Private
   StaticProc
 
-template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility, declBody: typed) =
-  ## adds a declaration as in `declBody` with the given visibility
+proc addVisibilityPrefix(builder: var Builder, visibility: DeclVisibility) =
+  # internal proc
   case visibility
   of None: discard
   of Extern:
@@ -415,6 +415,10 @@ template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility,
     builder.add("N_LIB_PRIVATE ")
   of StaticProc:
     builder.add("static ")
+
+template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility, declBody: typed) =
+  ## adds a declaration as in `declBody` with the given visibility
+  builder.addVisibilityPrefix(visibility)
   declBody
 
 type ProcParamBuilder = object
@@ -568,3 +572,41 @@ proc addProcVar(builder: var Builder, callConv: TCallingConvention,
   builder.add(params)
   # ensure we are just adding a variable:
   builder.add(";\n")
+
+type VarInitializerKind = enum
+  Assignment, CppConstructor
+
+proc addVar(builder: var Builder, m: BModule, s: PSym, name: string, typ: Snippet, kind = Local, visibility: DeclVisibility = None, initializer: Snippet = "", initializerKind: VarInitializerKind = Assignment) =
+  if sfCodegenDecl in s.flags:
+    builder.add(runtimeFormat(s.cgDeclFrmt, [typ, name]))
+    if initializer.len != 0:
+      if initializerKind == Assignment:
+        builder.add(" = ")
+      builder.add(initializer)
+    builder.add(";\n")
+    return
+  if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
+    builder.add("NIM_ALIGN(" & $s.alignment & ") ")
+  builder.addVisibilityPrefix(visibility)
+  if kind == Threadvar:
+    if optThreads in m.config.globalOptions:
+      let sym = s.typ.sym
+      if sym != nil and sfCppNonPod in sym.flags:
+        builder.add("NIM_THREAD_LOCAL ")
+      else: builder.add("NIM_THREADVAR ")
+  else:
+    builder.addVarHeader(kind)
+  builder.add(typ)
+  if sfRegister in s.flags: builder.add(" register")
+  if sfVolatile in s.flags: builder.add(" volatile")
+  if sfNoalias in s.flags: builder.add(" NIM_NOALIAS")
+  builder.add(" ")
+  builder.add(name)
+  if initializer.len != 0:
+    if initializerKind == Assignment:
+      builder.add(" = ")
+    builder.add(initializer)
+  builder.add(";\n")
+
+proc addInclude(builder: var Builder, value: Snippet) =
+  builder.add("#include " & value & "\n")
