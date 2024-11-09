@@ -612,7 +612,7 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
     linefmt(p, cpsLocals, "$1 $2$3;$n", [getTypeDesc(p.module, t, dkVar), result.snippet,
       genCppInitializer(p.module, p, t, didGenTemp)])
   else:
-    p.s(cpsStmts).addVar(kind = Local,
+    p.s(cpsLocals).addVar(kind = Local,
       name = result.snippet,
       typ = getTypeDesc(p.module, t, dkVar))
   constructLoc(p, result, not needsInit)
@@ -700,6 +700,7 @@ proc genGlobalVarDecl(res: var Builder, p: BProc, n: PNode; td: Snippet;
   res.addVar(p.module, s,
     name = s.loc.snippet,
     typ = typ,
+    visibility = vis,
     initializer = initializer,
     initializerKind = initializerKind)
 
@@ -912,13 +913,13 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
       p.flags.incl nimErrorFlagDisabled
       var dest: TLoc = initLoc(locTemp, lib.path, OnStack)
       dest.snippet = getTempName(m)
-      let rd = rdLoc(dest)
-      m.s[cfsDynLibInit].addVar(name = rd, typ = getTypeDesc(m, lib.path.typ, dkVar))
+      m.s[cfsDynLibInit].addVar(name = rdLoc(dest), typ = getTypeDesc(m, lib.path.typ, dkVar))
       expr(p, lib.path, dest)
 
       m.s[cfsVars].add(extract(p.s(cpsLocals)))
       m.s[cfsDynLibInit].add(extract(p.s(cpsInit)))
       m.s[cfsDynLibInit].add(extract(p.s(cpsStmts)))
+      let rd = rdLoc(dest)
       m.s[cfsDynLibInit].addAssignment(tmp,
         cCall(cgsymValue(m, "nimLoadLibrary"), rd))
       m.s[cfsDynLibInit].addSingleIfStmt(cOp(Not, tmp)):
