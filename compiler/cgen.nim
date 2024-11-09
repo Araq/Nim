@@ -552,7 +552,7 @@ proc resetLoc(p: BProc, loc: var TLoc) =
           let ratmp = addrLoc(p.config, tmp)
           p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
             cCast("void*", ral),
-            cCast(ptrConstType(ratmp), ratmp),
+            cCast(ptrConstType("void"), ratmp),
             cSizeof(tyDesc))
       else:
         let ral = addrLoc(p.config, loc)
@@ -684,7 +684,8 @@ proc treatGlobalDifferentlyForHCR(m: BModule, s: PSym): bool =
 
 proc genGlobalVarDecl(res: var Builder, p: BProc, n: PNode; td: Snippet;
                       initializer: Snippet = "",
-                      initializerKind: VarInitializerKind = Assignment) =
+                      initializerKind: VarInitializerKind = Assignment,
+                      allowConst = true) =
   let s = n.sym
   let vis =
     if p.hcrOn: StaticProc
@@ -692,7 +693,7 @@ proc genGlobalVarDecl(res: var Builder, p: BProc, n: PNode; td: Snippet;
     elif lfExportLib in s.loc.flags: ExportLibVar
     else: Private
   var typ = td
-  if s.kind == skLet and initializer.len != 0:
+  if allowConst and s.kind == skLet and initializer.len != 0:
     typ = constType(typ)
   if p.hcrOn:
     typ = ptrType(typ)
@@ -759,12 +760,12 @@ proc callGlobalVarCppCtor(p: BProc; v: PSym; vn, value: PNode; didGenTemp: var b
   fillBackendName(p.module, s)
   fillLoc(s.loc, locGlobalVar, vn, OnHeap)
   let td = getTypeDesc(p.module, vn.sym.typ, dkVar)
-  var didGenTemp = false
   let val = genCppParamsForCtor(p, value, didGenTemp)
   if didGenTemp:  return # generated in the caller
   genGlobalVarDecl(p.module.s[cfsVars], p, vn, td,
     initializer = val,
-    initializerKind = CppConstructor)
+    initializerKind = CppConstructor,
+    allowConst = false)
 
 proc assignParam(p: BProc, s: PSym, retType: PType) =
   assert(s.loc.snippet != "")
