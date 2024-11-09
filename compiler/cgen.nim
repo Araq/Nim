@@ -1558,7 +1558,9 @@ proc genVarPrototype(m: BModule, n: PNode) =
     else:
       let vis = if m.hcrOn: StaticProc else: Extern
       var typ = getTypeDesc(m, sym.loc.t, dkVar)
-      if m.hcrOn or lfDynamicLib in sym.loc.flags:
+      if m.hcrOn:
+        typ = ptrType(typ)
+      if lfDynamicLib in sym.loc.flags:
         typ = ptrType(typ)
       m.s[cfsVars].addVar(m, sym,
         name = sym.loc.snippet,
