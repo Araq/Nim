@@ -1,3 +1,7 @@
+discard """
+  joinable: false
+"""
+
 {.experimental: "strictDefs".}
 
 proc bar(x: out string) =
@@ -53,3 +57,29 @@ proc foo() =
 
 static: foo()
 foo()
+
+proc foo2 =
+  when nimvm:
+    discard
+  else:
+    let x = 1
+  doAssert x == 1
+
+  when false:
+    discard
+  else:
+    let y = 2
+
+  doAssert y == 2
+
+  const e = 1
+  when e == 0:
+    discard
+  elif e == 1:
+    let z = 3
+  else:
+    discard
+
+  doAssert z == 3
+
+foo2()
