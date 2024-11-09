@@ -415,6 +415,7 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
         var didGenTemp = false
         initializer = genCppParamsForCtor(p, value, didGenTemp)
         if initializer.len != 0:
+          initializer = "(" & initializer & ")"
           initializerKind = CppConstructor
       else:
         var tmp = initLocExprSingleUse(p, value)

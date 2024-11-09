@@ -764,7 +764,7 @@ proc callGlobalVarCppCtor(p: BProc; v: PSym; vn, value: PNode; didGenTemp: var b
   let val = genCppParamsForCtor(p, value, didGenTemp)
   if didGenTemp:  return # generated in the caller
   genGlobalVarDecl(p.module.s[cfsVars], p, vn, td,
-    initializer = val,
+    initializer = "(" & val & ")",
     initializerKind = CppConstructor,
     allowConst = false)
 
