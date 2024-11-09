@@ -751,6 +751,8 @@ proc assignGlobalVar(p: BProc, n: PNode; value: Rope) =
             initializer = value
         else:
           discard
+      else:
+        initializer = value
       genGlobalVarDecl(p.module.s[cfsVars], p, n, td, initializer = initializer)
   if p.withinLoop > 0 and value == "":
     # fixes tests/run/tzeroarray:
@@ -761,10 +763,12 @@ proc callGlobalVarCppCtor(p: BProc; v: PSym; vn, value: PNode; didGenTemp: var b
   fillBackendName(p.module, s)
   fillLoc(s.loc, locGlobalVar, vn, OnHeap)
   let td = getTypeDesc(p.module, vn.sym.typ, dkVar)
-  let val = genCppParamsForCtor(p, value, didGenTemp)
+  var val = genCppParamsForCtor(p, value, didGenTemp)
   if didGenTemp:  return # generated in the caller
+  if val.len != 0:
+    val = "(" & val & ")"
   genGlobalVarDecl(p.module.s[cfsVars], p, vn, td,
-    initializer = "(" & val & ")",
+    initializer = val,
     initializerKind = CppConstructor,
     allowConst = false)
 
