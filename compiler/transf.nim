@@ -865,9 +865,7 @@ proc transformArrayAccess(c: PTransf, n: PNode): PNode =
   if n[0].kind == nkSym and n[0].sym.kind == skType:
     result = n
   else:
-    result = newTransNode(n)
-    for i in 0..<n.len:
-      result[i] = transform(c, skipConv(n[i]))
+    result = transformSons(c, n)
 
 proc getMergeOp(n: PNode): PSym =
   case n.kind
