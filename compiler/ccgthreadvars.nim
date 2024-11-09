@@ -59,6 +59,9 @@ proc generateThreadVarsSize(m: BModule) =
                        sfCompileToCpp in m.module.flags: ExternC
                   else: None
     m.s[cfsProcs].addDeclWithVisibility(externc):
-      m.s[cfsProcs].addProcHeader(ccNoConvention, "NimThreadVarsSize", "NI", "")
+      m.s[cfsProcs].addProcHeaderWithParams(ccNoConvention, "NimThreadVarsSize", "NI"):
+        var params: ProcParamBuilder
+        m.s[cfsProcs].addProcParams(params):
+          discard
       m.s[cfsProcs].finishProcHeaderWithBody():
         m.s[cfsProcs].addReturn(cCast("NI", cSizeof("NimThreadVars")))
