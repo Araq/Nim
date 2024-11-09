@@ -366,6 +366,19 @@ proc transformAsgn(c: PTransf, n: PNode): PNode =
   result[0] = letSection
   result[1] = asgnNode
 
+template assignTupleUnpacking(c: PTransf, e: PNode) =
+  for i in 0..<c.transCon.forStmt.len - 2:
+    if c.transCon.forStmt[i].kind == nkVarTuple:
+      for j in 0..<c.transCon.forStmt[i].len-1:
+        let lhs = c.transCon.forStmt[i][j]
+        let rhs = transform(c, newTupleAccess(c.graph, newTupleAccess(c.graph, e, i), j))
+        result.add(asgnTo(lhs, rhs))
+    else:
+      let lhs = c.transCon.forStmt[i]
+      let rhs = transform(c, newTupleAccess(c.graph, e, i))
+      result.add(asgnTo(lhs, rhs))
+
+
 proc transformYield(c: PTransf, n: PNode): PNode =
   proc asgnTo(lhs: PNode, rhs: PNode): PNode =
     # Choose the right assignment instruction according to the given ``lhs``
@@ -409,21 +422,9 @@ proc transformYield(c: PTransf, n: PNode): PNode =
 
       result.add transform(c, v)
 
-      for i in 0..<c.transCon.forStmt.len - 2:
-        if c.transCon.forStmt[i].kind == nkVarTuple:
-          for j in 0..<c.transCon.forStmt[i].len-1:
-            let lhs = c.transCon.forStmt[i][j]
-            let rhs = transform(c, newTupleAccess(c.graph, newTupleAccess(c.graph, tmp, i), j))
-            result.add(asgnTo(lhs, rhs))
-        else:
-          let lhs = c.transCon.forStmt[i]
-          let rhs = transform(c, newTupleAccess(c.graph, tmp, i))
-          result.add(asgnTo(lhs, rhs))
+      assignTupleUnpacking(c, tmp)
     else:
-      for i in 0..<c.transCon.forStmt.len - 2:
-        let lhs = c.transCon.forStmt[i]
-        let rhs = transform(c, newTupleAccess(c.graph, e, i))
-        result.add(asgnTo(lhs, rhs))
+      assignTupleUnpacking(c, e)
   else:
     if c.transCon.forStmt[0].kind == nkVarTuple:
       var notLiteralTuple = false # we don't generate temp for tuples with const value: (1, 2, 3)
