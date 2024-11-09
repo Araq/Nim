@@ -8,6 +8,7 @@ line: 14
 
 type
   Foo[T] = object
+    x: T
 
 proc main =
   var f: Foo[int]

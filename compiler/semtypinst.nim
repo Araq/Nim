@@ -715,7 +715,7 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): 
     if containsGenericType(t) or
         # nominal types as direct generic instantiation values
         # are re-instantiated even if they don't contain generic fields
-        (isInstValue and t.kind in {tyDistinct, tyEnum, tyObject}):
+        (isInstValue and t.kind in {tyDistinct, tyObject}):
       #if not cl.allowMetaTypes:
       bailout()
       result = instCopyType(cl, t)
