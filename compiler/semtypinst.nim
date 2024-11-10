@@ -715,13 +715,14 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): 
     if containsGenericType(t) or
         # nominal types as direct generic instantiation values
         # are re-instantiated even if they don't contain generic fields
-        (isInstValue and t.kind in {tyDistinct, tyObject}):
+        (isInstValue and (t.kind in {tyDistinct, tyObject} or isRefPtrObject(t))):
       #if not cl.allowMetaTypes:
       bailout()
       result = instCopyType(cl, t)
       result.size = -1 # needs to be recomputed
       #if not cl.allowMetaTypes:
       cl.localCache[t.itemId] = result
+      let propagateInstValue = isInstValue and isRefPtrObject(t)
 
       for i, resulti in result.ikids:
         if resulti != nil:
@@ -731,7 +732,7 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): 
               typeToString(result[i], preferDesc) &
               "' inside of type definition: '" &
               t.owner.name.s & "'; Maybe generic arguments are missing?")
-          var r = replaceTypeVarsT(cl, resulti)
+          var r = replaceTypeVarsT(cl, resulti, isInstValue = propagateInstValue)
           if result.kind == tyObject:
             # carefully coded to not skip the precious tyGenericInst:
             let r2 = r.skipTypes({tyAlias, tySink, tyOwned})
