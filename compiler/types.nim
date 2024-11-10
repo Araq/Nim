@@ -1124,6 +1124,8 @@ proc sameTuple(a, b: PType, c: var TSameTypeClosure): bool =
     result = false
 
 template ifFastObjectTypeCheckFailed(a, b: PType, body: untyped) =
+  # XXX should be removed in favor of just symbol/ID equalities,
+  # structural equality is wrong in general
   if tfFromGeneric notin a.flags + b.flags:
     # fast case: id comparison suffices:
     result = a.id == b.id
@@ -1309,6 +1311,12 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     withoutShallowFlags:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
+        if a.typeInst != nil and b.typeInst != nil:
+          # this is required because of `ref object`s,
+          # the value of their dereferences are not wrapped in `tyGenericInst`,
+          # so we need to check the generic parameters here
+          for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+            if not sameTypeAux(ff, aa, c): return false
         result = sameObjectStructures(a, b, c) and sameFlags(a, b)
   of tyDistinct:
     cycleCheck()
