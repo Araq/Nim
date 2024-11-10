@@ -1,9 +1,8 @@
 discard """
-disabled: true
 joinable: false
 cmd: "nim check $file"
-errormsg: "cannot bind another '=destroy' to: Foo; previous declaration was constructed here implicitly: tinvalid_rebind.nim(12, 7)"
-line: 14
+errormsg: "cannot bind another '=destroy' to: Foo; previous declaration was constructed implicitly"
+line: 15
 """
 
 type
