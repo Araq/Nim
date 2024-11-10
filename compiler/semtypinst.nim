@@ -423,6 +423,7 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
     when defined(reportCacheHits):
       echo "Generic instantiation cached ", typeToString(result), " for ", typeToString(t)
     return
+  var hasTypeDescParam = false
   for i in FirstGenericParamAt..<t.kidsLen:
     var x = t[i]
     if x.kind in {tyGenericParam}:
@@ -432,6 +433,8 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
         header[i] = x
         propagateToOwner(header, x)
     else:
+      if x.kind == tyTypeDesc:
+        hasTypeDescParam = true
       propagateToOwner(header, x)
 
   if header != t:
@@ -497,6 +500,15 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
 
   rawAddSon(result, newbody)
   checkPartialConstructedType(cl.c.config, cl.info, newbody)
+
+  if hasTypeDescParam:
+    # We try to find an earlier instantiation. Otherwise `none(MyType)`
+    # produces a new type and not `Option[MyType]` due to the involved
+    # `tyTypeDesc`.
+    let alt = searchInstTypes(cl.c.graph, result)
+    if alt != nil:
+      return alt
+
   if not cl.allowMetaTypes:
     let dc = cl.c.graph.getAttachedOp(newbody, attachedDeepCopy)
     if dc != nil and sfFromGeneric notin dc.flags:
