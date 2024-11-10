@@ -643,14 +643,14 @@ proc genericParamPut(c: var TCandidate; last, fGenericOrigin: PType) =
         put(c, fGenericOrigin[i], last[i])
 
 proc isGenericObjectOf(f, a: PType): bool =
+  ## checks if `f` is an unparametrized generic type
+  ## that `a` is an instance of
   if not (f.sym != nil and f.sym.typ.kind == tyGenericBody):
+    # covers the case where `f` is the last child (body) of the `tyGenericBody`
     return false
-  if a.typeInst != nil:
-    let aBaseSym = a.typeInst.genericHead.sym
-    result = aBaseSym != nil and (f.sym == aBaseSym)
-  else:
-    # assume a is generic
-    result = a.sym != nil and a.sym.typ.kind == tyGenericBody and f.sym == a.sym
+  let aRoot = genericRoot(a)
+  # use sym equality to check if the `tyGenericBody` types are equal
+  result = aRoot != nil and f.sym == aRoot.sym
 
 proc isObjectSubtype(c: var TCandidate; a, f, fGenericOrigin: PType): int =
   var t = a

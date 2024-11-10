@@ -2000,3 +2000,20 @@ proc nominalRoot*(t: PType): PType =
     # skips all typeclasses
     # is this correct for `concept`?
     result = nil
+
+proc genericRoot*(t: PType): PType =
+  ## gets the root generic type (`tyGenericBody`) from `t`,
+  ## if `t` is a generic type or the body of a generic instantiation
+  case t.kind
+  of tyGenericBody:
+    result = t
+  of tyGenericInst, tyGenericInvocation:
+    result = t.genericHead
+  else:
+    if t.typeInst != nil:
+      result = t.typeInst.genericHead
+    elif t.sym != nil and t.sym.typ.kind == tyGenericBody:
+      # can happen if `t` is the last child (body) of the generic body
+      result = t.sym.typ
+    else:
+      result = nil
