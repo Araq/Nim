@@ -1,9 +1,3 @@
-discard """
-  disabled: true
-"""
-
-# currently broken
-
 block:
   type
     Foo[T] = object of RootObj
