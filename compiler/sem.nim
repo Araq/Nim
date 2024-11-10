@@ -671,8 +671,9 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
     if child != nil:
       let node = newNode(nkIntLit)
       node.intVal = toInt64(lengthOrd(c.graph.config, aTypSkip))
-      result = semExpr(c, newTree(nkCall, newSymNode(getSysSym(c.graph, a.info, "arrayWith"), a.info),
-              semExprWithType(c, child),
+      let typeNode = newNode(nkType)
+      typeNode.typ() = makeTypeDesc(c, aTypSkip[1])
+      result = semExpr(c, newTree(nkCall, newTree(nkBracketExpr, newSymNode(getSysSym(c.graph, a.info, "arrayWithDefault"), a.info), typeNode),
               node
                 ))
       result.typ() = aTyp
