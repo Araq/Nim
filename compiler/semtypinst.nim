@@ -375,10 +375,6 @@ proc lookupTypeVar(cl: var TReplTypeVars, t: PType): PType =
   result = cl.typeMap.lookup(t)
   if result == nil:
     if cl.allowMetaTypes or tfRetType in t.flags: return
-
-    if t.kind == tyStatic:
-      return nil
-
     localError(cl.c.config, t.sym.info, "cannot instantiate: '" & typeToString(t) & "'")
     result = errorType(cl.c)
     # In order to prevent endless recursions, we must remember
@@ -429,21 +425,11 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
     return
   for i in FirstGenericParamAt..<t.kidsLen:
     var x = t[i]
-    if x.kind in {tyGenericParam}:
+    if x.kind == tyGenericParam or (x.kind == tyStatic and x.n == nil):
       x = lookupTypeVar(cl, x)
       if x != nil:
         if header == t: header = instCopyType(cl, t)
         header[i] = x
-        propagateToOwner(header, x)
-    elif x.kind in {tyStatic}:
-      let y = lookupTypeVar(cl, x)
-      # In templates the lookup can lead to concrete types like tyInt instead of tyStatic,
-      # which can't be handled like this.
-      if y != nil and y.kind == tyStatic:
-        if header == t: header = instCopyType(cl, t)
-        header[i] = y
-        propagateToOwner(header, y)
-      else:
         propagateToOwner(header, x)
     else:
       propagateToOwner(header, x)
