@@ -883,6 +883,8 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
     var tmp = getTempName(m)
     assert(lib.name == "")
     lib.name = tmp # BUGFIX: cgsym has awful side-effects
+    let loadFn = cgsymValue(m, "nimLoadLibrary")
+    let loadErrorFn = cgsymValue(m, "nimLoadLibraryError")
     m.s[cfsVars].addVar(Global, name = tmp, typ = "void*")
     if lib.path.kind in {nkStrLit..nkTripleStrLit}:
       var s: TStringSeq = @[]
@@ -896,7 +898,7 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
           n.info = lib.path.info
           m.s[cfsDynLibInit].addAssignmentWithValue(tmp):
             var call: CallBuilder
-            m.s[cfsDynLibInit].addCall(call, cgsymValue(m, "nimLoadLibrary")):
+            m.s[cfsDynLibInit].addCall(call, loadFn):
               m.s[cfsDynLibInit].addArgument(call):
                 genStringLiteral(m, n, m.s[cfsDynLibInit])
         if i == 0:
@@ -905,7 +907,7 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
           if i == last:
             m.s[cfsDynLibInit].addStmt():
               var call: CallBuilder
-              m.s[cfsDynLibInit].addCall(call, cgsymValue(m, "nimLoadLibraryError")):
+              m.s[cfsDynLibInit].addCall(call, loadErrorFn):
                 m.s[cfsDynLibInit].addArgument(call):
                   genStringLiteral(m, lib.path, m.s[cfsDynLibInit])
           else:
@@ -925,9 +927,9 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
       m.s[cfsDynLibInit].add(extract(p.s(cpsStmts)))
       let rd = rdLoc(dest)
       m.s[cfsDynLibInit].addAssignment(tmp,
-        cCall(cgsymValue(m, "nimLoadLibrary"), rd))
+        cCall(loadFn, rd))
       m.s[cfsDynLibInit].addSingleIfStmt(cOp(Not, tmp)):
-        m.s[cfsDynLibInit].addCallStmt(cgsymValue(m, "nimLoadLibraryError"), rd)
+        m.s[cfsDynLibInit].addCallStmt(loadErrorFn, rd)
 
   if lib.name == "": internalError(m.config, "loadDynamicLib")
 
@@ -974,10 +976,12 @@ proc symInDynamicLib(m: BModule, sym: PSym) =
     else:
       internalError(m.config, sym.info, "wrong index: " & idx)
   else:
+    # cgsym has side effects, do it first:
+    let fn = cgsymValue(m, "nimGetProcAddr")
     m.s[cfsDynLibInit].add('\t')
     m.s[cfsDynLibInit].addAssignment(tmp,
       cCast(getTypeDesc(m, sym.typ, dkVar),
-        cCall(cgsymValue(m, "nimGetProcAddr"),
+        cCall(fn,
           lib.name,
           makeCString($extname))))
   m.s[cfsVars].addVar(name = sym.loc.snippet, typ = getTypeDesc(m, sym.loc.t, dkVar))
@@ -991,9 +995,11 @@ proc varInDynamicLib(m: BModule, sym: PSym) =
   sym.loc.snippet = tmp             # from now on we only need the internal name
   inc(m.labels, 2)
   let t = ptrType(getTypeDesc(m, sym.typ, dkVar))
+  # cgsym has side effects, do it first:
+  let fn = cgsymValue(m, "nimGetProcAddr")
   m.s[cfsDynLibInit].addAssignment(tmp,
     cCast(t,
-      cCall(cgsymValue(m, "nimGetProcAddr"),
+      cCall(fn,
         lib.name,
         makeCString($extname))))
   m.s[cfsVars].addVar(name = sym.loc.snippet, typ = t)
