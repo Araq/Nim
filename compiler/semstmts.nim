@@ -2052,7 +2052,7 @@ proc checkedForDestructor(t: PType): bool =
     return true
   # maybe another instance was instantiated, marking the generic root:
   let root = genericRoot(t)
-  if root != nil and tfCheckedForDestructor in root.flags:
+  if root != nil and tfGenericHasDestructor in root.flags:
     return true
   result = false
 
