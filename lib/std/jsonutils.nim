@@ -112,7 +112,7 @@ macro initCaseObject(T: typedesc, fun: untyped): untyped =
   else: raiseAssert $t.kind # xxx `nnkPtrTy` could be handled too
   doAssert t2.kind == nnkRecList
   result = newTree(nnkObjConstr)
-  result.add sym
+  result.add T
   for ti in t2:
     if ti.kind == nnkRecCase:
       let key = ti[0][0]
