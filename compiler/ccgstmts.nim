@@ -348,13 +348,6 @@ proc genCppParamsForCtor(p: BProc; call: PNode; didGenTemp: var bool): Snippet =
       genOtherArg(p, call, i, typ, res, argBuilder)
   result = extract(res)
 
-proc genCppVarForCtor(p: BProc; call: PNode; decl: var Rope, didGenTemp: var bool) =
-  let params = genCppParamsForCtor(p, call, didGenTemp)
-  if params.len == 0:
-    decl = runtimeFormat("$#;\n", [decl])
-  else:
-    decl = runtimeFormat("$#($#);\n", [decl, params])
-
 proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
   if sfGoto in v.flags:
     # translate 'var state {.goto.} = X' into 'goto LX':
@@ -416,18 +409,19 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
       # parameterless constructor followed by an assignment operator. So we
       # generate better code here: 'Foo f = x;'
       genLineDir(p, vn)
-      var decl = localVarDecl(p, vn)
-      var tmp: TLoc
+      var initializer: Snippet = ""
+      var initializerKind: VarInitializerKind = Assignment
       if isCppCtorCall:
         var didGenTemp = false
-        genCppVarForCtor(p, value, decl, didGenTemp)
-        line(p, cpsStmts, decl)
+        initializer = genCppParamsForCtor(p, value, didGenTemp)
+        if initializer.len != 0:
+          initializer = "(" & initializer & ")"
+          initializerKind = CppConstructor
       else:
-        tmp = initLocExprSingleUse(p, value)
-        if value.kind == nkEmpty:
-          lineF(p, cpsStmts, "$#;\n", [decl])
-        else:
-          lineF(p, cpsStmts, "$# = $#;\n", [decl, tmp.rdLoc])
+        var tmp = initLocExprSingleUse(p, value)
+        if value.kind != nkEmpty:
+          initializer = tmp.rdLoc
+      localVarDecl(p.s(cpsStmts), p, vn, initializer, initializerKind)
       return
     assignLocalVar(p, vn)
     initLocalVar(p, v, imm)
@@ -890,18 +884,23 @@ proc genRaiseStmt(p: BProc, t: PNode) =
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "reraiseException"))
   raiseInstr(p, p.s(cpsStmts))
 
-template genCaseGenericBranch(p: BProc, b: PNode, e: TLoc,
-                          rangeFormat, eqFormat: FormatStr, labl: TLabel) =
+template genCaseGenericBranch(p: BProc, b: PNode, e: TLoc, labl: TLabel,
+                          rangeFormat, eqFormat: untyped) =
   var x, y: TLoc
   for i in 0..<b.len - 1:
+    let rlabel {.inject.} = labl
     if b[i].kind == nkRange:
       x = initLocExpr(p, b[i][0])
       y = initLocExpr(p, b[i][1])
-      lineCg(p, cpsStmts, rangeFormat,
-           [rdCharLoc(e), rdCharLoc(x), rdCharLoc(y), labl])
+      let ra {.inject.} = rdCharLoc(e)
+      let rb {.inject.} = rdCharLoc(x)
+      let rc {.inject.} = rdCharLoc(y)
+      rangeFormat
     else:
       x = initLocExpr(p, b[i])
-      lineCg(p, cpsStmts, eqFormat, [rdCharLoc(e), rdCharLoc(x), labl])
+      let ra {.inject.} = rdCharLoc(e)
+      let rb {.inject.} = rdCharLoc(x)
+      eqFormat
 
 proc genCaseSecondPass(p: BProc, t: PNode, d: var TLoc,
                        labId, until: int): TLabel =
@@ -918,9 +917,8 @@ proc genCaseSecondPass(p: BProc, t: PNode, d: var TLoc,
   result = lend
 
 template genIfForCaseUntil(p: BProc, t: PNode, d: var TLoc,
-                       rangeFormat, eqFormat: FormatStr,
-                       until: int, a: TLoc): TLabel =
-  # XXX doesn't work with cbuilder
+                       until: int, a: TLoc,
+                       rangeFormat, eqFormat: untyped): TLabel =
   # generate a C-if statement for a Nim case statement
   var res: TLabel
   var labId = p.labels
@@ -928,7 +926,7 @@ template genIfForCaseUntil(p: BProc, t: PNode, d: var TLoc,
     inc(p.labels)
     let lab = "LA" & $p.labels & "_"
     if t[i].kind == nkOfBranch: # else statement
-      genCaseGenericBranch(p, t[i], a, rangeFormat, eqFormat, lab)
+      genCaseGenericBranch(p, t[i], a, lab, rangeFormat, eqFormat)
     else:
       p.s(cpsStmts).addGoto(lab)
   if until < t.len-1:
@@ -942,10 +940,9 @@ template genIfForCaseUntil(p: BProc, t: PNode, d: var TLoc,
   res
 
 template genCaseGeneric(p: BProc, t: PNode, d: var TLoc,
-                    rangeFormat, eqFormat: FormatStr) =
-  # XXX doesn't work with cbuilder
+                    rangeFormat, eqFormat: untyped) =
   var a: TLoc = initLocExpr(p, t[0])
-  var lend = genIfForCaseUntil(p, t, d, rangeFormat, eqFormat, t.len-1, a)
+  var lend = genIfForCaseUntil(p, t, d, t.len-1, a, rangeFormat, eqFormat)
   fixLabel(p, lend)
 
 proc genCaseStringBranch(p: BProc, b: PNode, e: TLoc, labl: TLabel,
@@ -1009,10 +1006,15 @@ proc genStringCase(p: BProc, t: PNode, stringKind: TTypeKind, d: var TLoc) =
     var lend = genCaseSecondPass(p, t, d, labId, t.len-1)
     fixLabel(p, lend)
   else:
-    if stringKind == tyCstring:
-      genCaseGeneric(p, t, d, "", "if (#eqCstrings($1, $2)) goto $3;$n")
-    else:
-      genCaseGeneric(p, t, d, "", "if (#eqStrings($1, $2)) goto $3;$n")
+    let eqFn = cgsymValue(p.module,
+      if stringKind == tyCstring: "eqCstrings"
+      else: "eqStrings")
+    genCaseGeneric(p, t, d):
+      discard
+    do:
+      p.s(cpsStmts).addSingleIfStmt(
+          cCall(eqFn, ra, rb)):
+        p.s(cpsStmts).addGoto(rlabel)
 
 proc branchHasTooBigRange(b: PNode): bool =
   result = false
@@ -1060,10 +1062,17 @@ proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
 
   # generate if part (might be empty):
   var a: TLoc = initLocExpr(p, n[0])
-  var lend = if splitPoint > 0: genIfForCaseUntil(p, n, d,
-                    rangeFormat = "if ($1 >= $2 && $1 <= $3) goto $4;$n",
-                    eqFormat = "if ($1 == $2) goto $3;$n",
-                    splitPoint, a) else: ""
+  var lend: TLabel = ""
+  if splitPoint > 0:
+    lend = genIfForCaseUntil(p, n, d, splitPoint, a):
+      p.s(cpsStmts).addSingleIfStmt(cOp(And,
+          cOp(GreaterEqual, ra, rb),
+          cOp(LessEqual, ra, rc))):
+        p.s(cpsStmts).addGoto(rlabel)
+    do:
+      p.s(cpsStmts).addSingleIfStmt(
+          removeSinglePar(cOp(Equal, ra, rb))):
+        p.s(cpsStmts).addGoto(rlabel)
 
   # generate switch part (might be empty):
   if splitPoint+1 < n.len:
@@ -1104,8 +1113,15 @@ proc genCase(p: BProc, t: PNode, d: var TLoc) =
   of tyCstring:
     genStringCase(p, t, tyCstring, d)
   of tyFloat..tyFloat128:
-    genCaseGeneric(p, t, d, "if ($1 >= $2 && $1 <= $3) goto $4;$n",
-                            "if ($1 == $2) goto $3;$n")
+    genCaseGeneric(p, t, d):
+      p.s(cpsStmts).addSingleIfStmt(cOp(And,
+          cOp(GreaterEqual, ra, rb),
+          cOp(LessEqual, ra, rc))):
+        p.s(cpsStmts).addGoto(rlabel)
+    do:
+      p.s(cpsStmts).addSingleIfStmt(
+          removeSinglePar(cOp(Equal, ra, rb))):
+        p.s(cpsStmts).addGoto(rlabel)
   else:
     if t[0].kind == nkSym and sfGoto in t[0].sym.flags:
       genGotoForCase(p, t)

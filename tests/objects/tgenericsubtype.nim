@@ -1,4 +1,4 @@
-block:
+block: # has generic field
   type
     Foo[T] = object of RootObj
       x: T
@@ -8,7 +8,7 @@ block:
 
   foo(Bar)
 
-block:
+block: # no generic field
   type
     Foo[T] = object of RootObj
     Bar = object of Foo[int]

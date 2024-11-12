@@ -865,9 +865,18 @@ proc transformArrayAccess(c: PTransf, n: PNode): PNode =
   if n[0].kind == nkSym and n[0].sym.kind == skType:
     result = n
   else:
-    result = newTransNode(n)
-    for i in 0..<n.len:
-      result[i] = transform(c, skipConv(n[i]))
+    result = transformSons(c, n)
+    if n.len >= 2 and result[1].kind in {nkChckRange, nkChckRange64} and
+        n[1].kind in {nkHiddenStdConv, nkHiddenSubConv}:
+      # implicit conversion, was transformed into range check
+      # remove in favor of index check if conversion to array index type
+      # has to be done here because the array index type needs to be relaxed
+      # i.e. a uint32 index can implicitly convert to range[0..3] but not int
+      let arr = skipTypes(n[0].typ, abstractVarRange)
+      if arr.kind == tyArray and
+          firstOrd(c.graph.config, arr) == getOrdValue(result[1][1]) and
+          lastOrd(c.graph.config, arr) == getOrdValue(result[1][2]):
+        result[1] = result[1].skipConv
 
 proc getMergeOp(n: PNode): PSym =
   case n.kind

@@ -368,9 +368,6 @@ proc addRdLoc(a: TLoc; result: var Builder) =
   else:
     result.add a.snippet
 
-proc lenField(p: BProc): Rope {.inline.} =
-  result = rope(if p.module.compileToCpp: "len" else: "Sup.len")
-
 proc lenField(p: BProc, val: Rope): Rope {.inline.} =
   if p.module.compileToCpp:
     result = derefField(val, "len")
@@ -389,12 +386,6 @@ proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
     result = dotField(wrapPar(sym), "p")
   else:
     result = sym
-
-proc dataField(p: BProc): Rope =
-  if optSeqDestructors in p.config.globalOptions:
-    result = rope".p->data"
-  else:
-    result = rope"->data"
 
 proc dataField(p: BProc, val: Rope): Rope {.inline.} =
   result = derefField(dataFieldAccessor(p, val), "data")
@@ -461,42 +452,48 @@ proc genObjectInit(p: BProc, section: TCProcSection, t: PType, a: var TLoc,
     discard
   of frHeader:
     var r = rdLoc(a)
-    if mode == constructRefObj: r = "(*$1)" % [r]
+    if mode == constructRefObj: r = cDeref(r)
     var s = skipTypes(t, abstractInst)
     if not p.module.compileToCpp:
       while s.kind == tyObject and s[0] != nil:
-        r.add(".Sup")
+        r = dotField(r, "Sup")
         s = skipTypes(s[0], skipPtrs)
     if optTinyRtti in p.config.globalOptions:
-      linefmt(p, section, "$1.m_type = $2;$n", [r, genTypeInfoV2(p.module, t, a.lode.info)])
+      p.s(section).addFieldAssignment(r, "m_type", genTypeInfoV2(p.module, t, a.lode.info))
     else:
-      linefmt(p, section, "$1.m_type = $2;$n", [r, genTypeInfoV1(p.module, t, a.lode.info)])
+      p.s(section).addFieldAssignment(r, "m_type", genTypeInfoV1(p.module, t, a.lode.info))
   of frEmbedded:
     if optTinyRtti in p.config.globalOptions:
       var tmp: TLoc = default(TLoc)
       if mode == constructRefObj:
         let objType = t.skipTypes(abstractInst+{tyRef})
         rawConstExpr(p, newNodeIT(nkType, a.lode.info, objType), tmp)
-        linefmt(p, cpsStmts,
-            "#nimCopyMem((void*)$1, (NIM_CONST void*)&$2, sizeof($3));$n",
-            [rdLoc(a), rdLoc(tmp), getTypeDesc(p.module, objType, descKindFromSymKind mapTypeChooser(a))])
+        let ra = rdLoc(a)
+        let rtmp = rdLoc(tmp)
+        let rt = getTypeDesc(p.module, objType, descKindFromSymKind mapTypeChooser(a))
+        p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
+          cCast("void*", ra),
+          cCast(ptrConstType("void"), cAddr(rtmp)),
+          cSizeof(rt))
       else:
         rawConstExpr(p, newNodeIT(nkType, a.lode.info, t), tmp)
         genAssignment(p, a, tmp, {})
     else:
       # worst case for performance:
       var r = if mode == constructObj: addrLoc(p.config, a) else: rdLoc(a)
-      linefmt(p, section, "#objectInit($1, $2);$n", [r, genTypeInfoV1(p.module, t, a.lode.info)])
+      p.s(section).addCallStmt(cgsymValue(p.module, "objectInit"),
+        r,
+        genTypeInfoV1(p.module, t, a.lode.info))
 
   if isException(t):
     var r = rdLoc(a)
-    if mode == constructRefObj: r = "(*$1)" % [r]
+    if mode == constructRefObj: r = cDeref(r)
     var s = skipTypes(t, abstractInst)
     if not p.module.compileToCpp:
       while s.kind == tyObject and s[0] != nil and s.sym.magic != mException:
-        r.add(".Sup")
+        r = dotField(r, "Sup")
         s = skipTypes(s[0], skipPtrs)
-    linefmt(p, section, "$1.name = $2;$n", [r, makeCString(t.skipTypes(abstractInst).sym.name.s)])
+    p.s(section).addFieldAssignment(r, "name", makeCString(t.skipTypes(abstractInst).sym.name.s))
 
 proc genRefAssign(p: BProc, dest, src: TLoc)
 
@@ -512,23 +509,28 @@ proc resetLoc(p: BProc, loc: var TLoc) =
   let typ = skipTypes(loc.t, abstractVarRange)
   if isImportedCppType(typ): 
     var didGenTemp = false
-    linefmt(p, cpsStmts, "$1 = $2;$n", [rdLoc(loc), genCppInitializer(p.module, p, typ, didGenTemp)])
+    let rl = rdLoc(loc)
+    let init = genCppInitializer(p.module, p, typ, didGenTemp)
+    p.s(cpsStmts).addAssignment(rl, init)
     return
   if optSeqDestructors in p.config.globalOptions and typ.kind in {tyString, tySequence}:
     assert loc.snippet != ""
 
     let atyp = skipTypes(loc.t, abstractInst)
+    let rl = rdLoc(loc)
     if atyp.kind in {tyVar, tyLent}:
-      linefmt(p, cpsStmts, "$1->len = 0; $1->p = NIM_NIL;$n", [rdLoc(loc)])
+      p.s(cpsStmts).addAssignment(derefField(rl, "len"), cIntValue(0))
+      p.s(cpsStmts).addAssignment(derefField(rl, "p"), "NIM_NIL")
     else:
-      linefmt(p, cpsStmts, "$1.len = 0; $1.p = NIM_NIL;$n", [rdLoc(loc)])
+      p.s(cpsStmts).addAssignment(dotField(rl, "len"), cIntValue(0))
+      p.s(cpsStmts).addAssignment(dotField(rl, "p"), "NIM_NIL")
   elif not isComplexValueType(typ):
     if containsGcRef:
       var nilLoc: TLoc = initLoc(locTemp, loc.lode, OnStack)
       nilLoc.snippet = rope("NIM_NIL")
       genRefAssign(p, loc, nilLoc)
     else:
-      linefmt(p, cpsStmts, "$1 = 0;$n", [rdLoc(loc)])
+      p.s(cpsStmts).addAssignment(rdLoc(loc), cIntValue(0))
   else:
     if loc.storage != OnStack and containsGcRef:
       specializeReset(p, loc)
@@ -546,11 +548,17 @@ proc resetLoc(p: BProc, loc: var TLoc) =
         if lfIndirect in loc.flags:
           #C++ cant be just zeroed. We need to call the ctors
           var tmp = getTemp(p, loc.t)
-          linefmt(p, cpsStmts,"#nimCopyMem((void*)$1, (NIM_CONST void*)$2, sizeof($3));$n",
-                  [addrLoc(p.config, loc), addrLoc(p.config, tmp), tyDesc])
+          let ral = addrLoc(p.config, loc)
+          let ratmp = addrLoc(p.config, tmp)
+          p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
+            cCast("void*", ral),
+            cCast(ptrConstType("void"), ratmp),
+            cSizeof(tyDesc))
       else:
-        linefmt(p, cpsStmts, "#nimZeroMem((void*)$1, sizeof($2));$n",
-                [addrLoc(p.config, loc), tyDesc])
+        let ral = addrLoc(p.config, loc)
+        p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
+          cCast("void*", ral),
+          cSizeof(tyDesc))
 
       # XXX: We can be extra clever here and call memset only
       # on the bytes following the m_type field?
@@ -559,22 +567,28 @@ proc resetLoc(p: BProc, loc: var TLoc) =
 proc constructLoc(p: BProc, loc: var TLoc, isTemp = false) =
   let typ = loc.t
   if optSeqDestructors in p.config.globalOptions and skipTypes(typ, abstractInst + {tyStatic}).kind in {tyString, tySequence}:
-    linefmt(p, cpsStmts, "$1.len = 0; $1.p = NIM_NIL;$n", [rdLoc(loc)])
+    let rl = rdLoc(loc)
+    p.s(cpsStmts).addFieldAssignment(rl, "len", cIntValue(0))
+    p.s(cpsStmts).addFieldAssignment(rl, "p", "NIM_NIL")
   elif not isComplexValueType(typ):
     if containsGarbageCollectedRef(loc.t):
       var nilLoc: TLoc = initLoc(locTemp, loc.lode, OnStack)
       nilLoc.snippet = rope("NIM_NIL")
       genRefAssign(p, loc, nilLoc)
     else:
-      linefmt(p, cpsStmts, "$1 = ($2)0;$n", [rdLoc(loc),
-        getTypeDesc(p.module, typ, descKindFromSymKind mapTypeChooser(loc))])
+      let rl = rdLoc(loc)
+      let rt = getTypeDesc(p.module, typ, descKindFromSymKind mapTypeChooser(loc))
+      p.s(cpsStmts).addAssignment(rl, cCast(rt, cIntValue(0)))
   else:
     if (not isTemp or containsGarbageCollectedRef(loc.t)) and not hasNoInit(loc.t):
       # don't use nimZeroMem for temporary values for performance if we can
       # avoid it:
       if not isOrHasImportedCppType(typ):
-        linefmt(p, cpsStmts, "#nimZeroMem((void*)$1, sizeof($2));$n",
-                [addrLoc(p.config, loc), getTypeDesc(p.module, typ, descKindFromSymKind mapTypeChooser(loc))])
+        let ral = addrLoc(p.config, loc)
+        let rt = getTypeDesc(p.module, typ, descKindFromSymKind mapTypeChooser(loc))
+        p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
+          cCast("void*", ral),
+          cSizeof(rt))
     genObjectInit(p, cpsStmts, loc.t, loc, constructObj)
 
 proc initLocalVar(p: BProc, v: PSym, immediateAsgn: bool) =
@@ -598,7 +612,9 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
     linefmt(p, cpsLocals, "$1 $2$3;$n", [getTypeDesc(p.module, t, dkVar), result.snippet,
       genCppInitializer(p.module, p, t, didGenTemp)])
   else:
-    linefmt(p, cpsLocals, "$1 $2;$n", [getTypeDesc(p.module, t, dkVar), result.snippet])
+    p.s(cpsLocals).addVar(kind = Local,
+      name = result.snippet,
+      typ = getTypeDesc(p.module, t, dkVar))
   constructLoc(p, result, not needsInit)
   when false:
     # XXX Introduce a compiler switch in order to detect these easily.
@@ -613,51 +629,48 @@ proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
   inc(p.labels)
   result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
                 storage: OnStack, flags: {})
-  linefmt(p, cpsStmts, "auto $1 = $2;$n", [result.snippet, value])
+  p.s(cpsStmts).addVar(kind = Local,
+    name = result.snippet,
+    typ = "auto",
+    initializer = value)
 
 proc getIntTemp(p: BProc): TLoc =
   inc(p.labels)
   result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp,
                 storage: OnStack, lode: lodeTyp getSysType(p.module.g.graph, unknownLineInfo, tyInt),
                 flags: {})
-  linefmt(p, cpsLocals, "NI $1;$n", [result.snippet])
+  p.s(cpsLocals).addVar(kind = Local, name = result.snippet, typ = "NI")
 
-proc localVarDecl(p: BProc; n: PNode): Rope =
-  var res = newBuilder("")
+proc localVarDecl(res: var Builder, p: BProc; n: PNode,
+                  initializer: Snippet = "",
+                  initializerKind: VarInitializerKind = Assignment) =
   let s = n.sym
   if s.loc.k == locNone:
     fillLocalName(p, s)
     fillLoc(s.loc, locLocalVar, n, OnStack)
     if s.kind == skLet: incl(s.loc.flags, lfNoDeepCopy)
-  if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
-    res.addf("NIM_ALIGN($1) ", [rope(s.alignment)])
 
   genCLineDir(res, p, n.info, p.config)
 
-  res.add getTypeDesc(p.module, s.typ, dkVar)
-  if sfCodegenDecl notin s.flags:
-    if sfRegister in s.flags: res.add(" register")
-    #elif skipTypes(s.typ, abstractInst).kind in GcTypeKinds:
-    #  decl.add(" GC_GUARD")
-    if sfVolatile in s.flags: res.add(" volatile")
-    if sfNoalias in s.flags: res.add(" NIM_NOALIAS")
-    res.add(" ")
-    res.add(s.loc.snippet)
-    result = extract(res)
-  else:
-    result = runtimeFormat(s.cgDeclFrmt, [extract(res), s.loc.snippet])
+  res.addVar(p.module, s,
+    name = s.loc.snippet,
+    typ = getTypeDesc(p.module, s.typ, dkVar),
+    initializer = initializer,
+    initializerKind = initializerKind)
 
 proc assignLocalVar(p: BProc, n: PNode) =
   #assert(s.loc.k == locNone) # not yet assigned
   # this need not be fulfilled for inline procs; they are regenerated
   # for each module that uses them!
-  let nl = if optLineDir in p.config.options: "" else: "\n"
-  var decl = localVarDecl(p, n)
+  var initializer: Snippet = ""
+  var initializerKind: VarInitializerKind = Assignment
   if p.module.compileToCpp and isOrHasImportedCppType(n.typ):
     var didGenTemp = false
-    decl.add genCppInitializer(p.module, p, n.typ, didGenTemp)
-  decl.add ";" & nl
-  line(p, cpsLocals, decl)
+    initializer = genCppInitializer(p.module, p, n.typ, didGenTemp)
+    initializerKind = CppConstructor
+  localVarDecl(p.s(cpsLocals), p, n, initializer, initializerKind)
+  if optLineDir in p.config.options:
+    p.s(cpsLocals).add("\n")
 
 include ccgthreadvars
 
@@ -669,28 +682,27 @@ proc treatGlobalDifferentlyForHCR(m: BModule, s: PSym): bool =
       # and s.owner.kind == skModule # owner isn't always a module (global pragma on local var)
       # and s.loc.k == locGlobalVar  # loc isn't always initialized when this proc is used
 
-proc genGlobalVarDecl(p: BProc, n: PNode; td, value: Rope; decl: var Rope) =
+proc genGlobalVarDecl(res: var Builder, p: BProc, n: PNode; td: Snippet;
+                      initializer: Snippet = "",
+                      initializerKind: VarInitializerKind = Assignment,
+                      allowConst = true) =
   let s = n.sym
-  if sfCodegenDecl notin s.flags:
-    if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
-      decl.addf "NIM_ALIGN($1) ", [rope(s.alignment)]
-    if p.hcrOn: decl.add("static ")
-    elif sfImportc in s.flags: decl.add("extern ")
-    elif lfExportLib in s.loc.flags: decl.add("N_LIB_EXPORT_VAR ")
-    else: decl.add("N_LIB_PRIVATE ")
-    if s.kind == skLet and value != "": decl.add("NIM_CONST ")
-    decl.add(td)
-    if p.hcrOn: decl.add("*")
-    if sfRegister in s.flags: decl.add(" register")
-    if sfVolatile in s.flags: decl.add(" volatile")
-    if sfNoalias in s.flags: decl.add(" NIM_NOALIAS")
-  else:
-    if value != "":
-      decl = runtimeFormat(s.cgDeclFrmt & " = $#;$n", [td, s.loc.snippet, value])
-    else:
-      decl = runtimeFormat(s.cgDeclFrmt & ";$n", [td, s.loc.snippet])
-
-proc genCppVarForCtor(p: BProc; call: PNode; decl: var Rope; didGenTemp: var bool)
+  let vis =
+    if p.hcrOn: StaticProc
+    elif sfImportc in s.flags: Extern
+    elif lfExportLib in s.loc.flags: ExportLibVar
+    else: Private
+  var typ = td
+  if allowConst and s.kind == skLet and initializer.len != 0:
+    typ = constType(typ)
+  if p.hcrOn:
+    typ = ptrType(typ)
+  res.addVar(p.module, s,
+    name = s.loc.snippet,
+    typ = typ,
+    visibility = vis,
+    initializer = initializer,
+    initializerKind = initializerKind)
 
 proc assignGlobalVar(p: BProc, n: PNode; value: Rope) =
   let s = n.sym
@@ -716,9 +728,8 @@ proc assignGlobalVar(p: BProc, n: PNode; value: Rope) =
       if value != "":
         internalError(p.config, n.info, ".threadvar variables cannot have a value")
     else:
-      var decl: Rope = ""
       let td = getTypeDesc(p.module, s.loc.t, dkVar)
-      genGlobalVarDecl(p, n, td, value, decl)
+      var initializer: Snippet = ""
       if s.constraint.isNil:
         if value != "":
           if p.module.compileToCpp and value.startsWith "{{}":
@@ -735,13 +746,14 @@ proc assignGlobalVar(p: BProc, n: PNode; value: Rope) =
             # [^0]: https://en.cppreference.com/w/cpp/language/aggregate_initialization
             # [^1]: https://cplusplus.github.io/CWG/issues/1518.html
             # [^2]: https://eel.is/c++draft/over.match.ctor
-            decl.addf(" $1;$n", [s.loc.snippet])
+            discard
           else:
-            decl.addf(" $1 = $2;$n", [s.loc.snippet, value])
+            initializer = value
         else:
-          decl.addf(" $1;$n", [s.loc.snippet])
-
-      p.module.s[cfsVars].add(decl)
+          discard
+      else:
+        initializer = value
+      genGlobalVarDecl(p.module.s[cfsVars], p, n, td, initializer = initializer)
   if p.withinLoop > 0 and value == "":
     # fixes tests/run/tzeroarray:
     resetLoc(p, s.loc)
@@ -750,13 +762,15 @@ proc callGlobalVarCppCtor(p: BProc; v: PSym; vn, value: PNode; didGenTemp: var b
   let s = vn.sym
   fillBackendName(p.module, s)
   fillLoc(s.loc, locGlobalVar, vn, OnHeap)
-  var decl: Rope = ""
   let td = getTypeDesc(p.module, vn.sym.typ, dkVar)
-  genGlobalVarDecl(p, vn, td, "", decl)
-  decl.add " " & $s.loc.snippet
-  genCppVarForCtor(p, value, decl, didGenTemp)
+  var val = genCppParamsForCtor(p, value, didGenTemp)
   if didGenTemp:  return # generated in the caller
-  p.module.s[cfsVars].add decl
+  if val.len != 0:
+    val = "(" & val & ")"
+  genGlobalVarDecl(p.module.s[cfsVars], p, vn, td,
+    initializer = val,
+    initializerKind = CppConstructor,
+    allowConst = false)
 
 proc assignParam(p: BProc, s: PSym, retType: PType) =
   assert(s.loc.snippet != "")
@@ -824,18 +838,33 @@ $1define nimlf_(n, file) \
   cgsym(p.module, "nimFrame")
   result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
 
-proc initFrameNoDebug(p: BProc; frame, procname, filename: Rope; line: int): Rope =
+proc initFrameNoDebug(p: BProc; frame, procname, filename: Snippet; line: int): Snippet =
   cgsym(p.module, "nimFrame")
-  p.blocks[0].sections[cpsLocals].addf("TFrame $1;$n", [frame])
-  result = ropecg(p.module, "\t$1.procname = $2; $1.filename = $3; " &
-                      " $1.line = $4; $1.len = -1; nimFrame(&$1);$n",
-                      [frame, procname, filename, line])
+  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = "TFrame")
+  var res = newBuilder("")
+  res.add('\t')
+  res.addFieldAssignment(frame, "procname", procname)
+  res.add('\t')
+  res.addFieldAssignment(frame, "filename", filename)
+  res.add('\t')
+  res.addFieldAssignment(frame, "line", cIntValue(line))
+  res.add('\t')
+  res.addFieldAssignment(frame, "len", cIntValue(-1))
+  res.add('\t')
+  res.addCallStmt("nimFrame", cAddr(frame))
+  result = extract(res)
 
-proc deinitFrameNoDebug(p: BProc; frame: Rope): Rope =
-  result = ropecg(p.module, "\t#popFrameOfAddr(&$1);$n", [frame])
+proc deinitFrameNoDebug(p: BProc; frame: Snippet): Snippet =
+  var res = newBuilder("")
+  res.add('\t')
+  res.addCallStmt(cgsymValue(p.module, "popFrameOfAddr"), cAddr(frame))
+  result = extract(res)
 
-proc deinitFrame(p: BProc): Rope =
-  result = ropecg(p.module, "\t#popFrame();$n", [])
+proc deinitFrame(p: BProc): Snippet =
+  var res = newBuilder("")
+  res.add('\t')
+  res.addCallStmt(cgsymValue(p.module, "popFrame"))
+  result = extract(res)
 
 include ccgexprs
 
@@ -854,25 +883,35 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
     var tmp = getTempName(m)
     assert(lib.name == "")
     lib.name = tmp # BUGFIX: cgsym has awful side-effects
-    m.s[cfsVars].addf("static void* $1;$n", [tmp])
+    let loadFn = cgsymValue(m, "nimLoadLibrary")
+    let loadErrorFn = cgsymValue(m, "nimLoadLibraryError")
+    m.s[cfsVars].addVar(Global, name = tmp, typ = "void*")
     if lib.path.kind in {nkStrLit..nkTripleStrLit}:
       var s: TStringSeq = @[]
       libCandidates(lib.path.strVal, s)
       rawMessage(m.config, hintDependency, lib.path.strVal)
-      var loadlib = newBuilder("")
-      for i in 0..high(s):
+      let last = high(s)
+      for i in 0..last:
         inc(m.labels)
-        if i > 0: loadlib.add("||")
-        let n = newStrNode(nkStrLit, s[i])
-        n.info = lib.path.info
-        appcg(m, loadlib, "($1 = #nimLoadLibrary(", [tmp])
-        genStringLiteral(m, n, loadlib)
-        loadlib.addf "))$n", []
-      appcg(m, m.s[cfsDynLibInit],
-            "if (!($1)) #nimLoadLibraryError(",
-            [extract(loadlib)])
-      genStringLiteral(m, lib.path, m.s[cfsDynLibInit])
-      m.s[cfsDynLibInit].addf ");$n", []
+        template doLoad(j: int) =
+          let n = newStrNode(nkStrLit, s[j])
+          n.info = lib.path.info
+          m.s[cfsDynLibInit].addAssignmentWithValue(tmp):
+            var call: CallBuilder
+            m.s[cfsDynLibInit].addCall(call, loadFn):
+              m.s[cfsDynLibInit].addArgument(call):
+                genStringLiteral(m, n, m.s[cfsDynLibInit])
+        if i == 0:
+          doLoad(i)
+        m.s[cfsDynLibInit].addSingleIfStmt(cOp(Not, tmp)):
+          if i == last:
+            m.s[cfsDynLibInit].addStmt():
+              var call: CallBuilder
+              m.s[cfsDynLibInit].addCall(call, loadErrorFn):
+                m.s[cfsDynLibInit].addArgument(call):
+                  genStringLiteral(m, lib.path, m.s[cfsDynLibInit])
+          else:
+            doLoad(i + 1)
 
     else:
       var p = newProc(nil, m)
@@ -880,16 +919,17 @@ proc loadDynamicLib(m: BModule, lib: PLib) =
       p.flags.incl nimErrorFlagDisabled
       var dest: TLoc = initLoc(locTemp, lib.path, OnStack)
       dest.snippet = getTempName(m)
-      appcg(m, m.s[cfsDynLibInit],"$1 $2;$n",
-           [getTypeDesc(m, lib.path.typ, dkVar), rdLoc(dest)])
+      m.s[cfsDynLibInit].addVar(name = rdLoc(dest), typ = getTypeDesc(m, lib.path.typ, dkVar))
       expr(p, lib.path, dest)
 
       m.s[cfsVars].add(extract(p.s(cpsLocals)))
       m.s[cfsDynLibInit].add(extract(p.s(cpsInit)))
       m.s[cfsDynLibInit].add(extract(p.s(cpsStmts)))
-      appcg(m, m.s[cfsDynLibInit],
-           "if (!($1 = #nimLoadLibrary($2))) #nimLoadLibraryError($2);$n",
-           [tmp, rdLoc(dest)])
+      let rd = rdLoc(dest)
+      m.s[cfsDynLibInit].addAssignment(tmp,
+        cCall(loadFn, rd))
+      m.s[cfsDynLibInit].addSingleIfStmt(cOp(Not, tmp)):
+        m.s[cfsDynLibInit].addCallStmt(loadErrorFn, rd)
 
   if lib.name == "": internalError(m.config, "loadDynamicLib")
 
@@ -914,28 +954,37 @@ proc symInDynamicLib(m: BModule, sym: PSym) =
   if isCall:
     let n = lib.path
     var a: TLoc = initLocExpr(m.initProc, n[0])
-    var params = rdLoc(a) & "("
+    let callee = rdLoc(a)
+    var params: seq[Snippet] = @[]
     for i in 1..<n.len-1:
       a = initLocExpr(m.initProc, n[i])
       params.add(rdLoc(a))
-      params.add(", ")
-    let load = "\t$1 = ($2) ($3$4));$n" %
-        [tmp, getTypeDesc(m, sym.typ, dkVar), params, makeCString($extname)]
+    params.add(makeCString($extname))
+    template load(builder: var Builder) =
+      builder.add('\t')
+      builder.addAssignment(tmp,
+        cCast(getTypeDesc(m, sym.typ, dkVar),
+          cCall(callee, params)))
     var last = lastSon(n)
     if last.kind == nkHiddenStdConv: last = last[1]
     internalAssert(m.config, last.kind == nkStrLit)
     let idx = last.strVal
     if idx.len == 0:
-      m.initProc.s(cpsStmts).add(load)
+      load(m.initProc.s(cpsStmts))
     elif idx.len == 1 and idx[0] in {'0'..'9'}:
-      m.extensionLoaders[idx[0]].add(load)
+      load(m.extensionLoaders[idx[0]])
     else:
       internalError(m.config, sym.info, "wrong index: " & idx)
   else:
-    appcg(m, m.s[cfsDynLibInit],
-        "\t$1 = ($2) #nimGetProcAddr($3, $4);$n",
-        [tmp, getTypeDesc(m, sym.typ, dkVar), lib.name, makeCString($extname)])
-  m.s[cfsVars].addf("$2 $1;$n", [sym.loc.snippet, getTypeDesc(m, sym.loc.t, dkVar)])
+    # cgsym has side effects, do it first:
+    let fn = cgsymValue(m, "nimGetProcAddr")
+    m.s[cfsDynLibInit].add('\t')
+    m.s[cfsDynLibInit].addAssignment(tmp,
+      cCast(getTypeDesc(m, sym.typ, dkVar),
+        cCall(fn,
+          lib.name,
+          makeCString($extname))))
+  m.s[cfsVars].addVar(name = sym.loc.snippet, typ = getTypeDesc(m, sym.loc.t, dkVar))
 
 proc varInDynamicLib(m: BModule, sym: PSym) =
   var lib = sym.annex
@@ -945,11 +994,15 @@ proc varInDynamicLib(m: BModule, sym: PSym) =
   var tmp = mangleDynLibProc(sym)
   sym.loc.snippet = tmp             # from now on we only need the internal name
   inc(m.labels, 2)
-  appcg(m, m.s[cfsDynLibInit],
-      "$1 = ($2*) #nimGetProcAddr($3, $4);$n",
-      [tmp, getTypeDesc(m, sym.typ, dkVar), lib.name, makeCString($extname)])
-  m.s[cfsVars].addf("$2* $1;$n",
-      [sym.loc.snippet, getTypeDesc(m, sym.loc.t, dkVar)])
+  let t = ptrType(getTypeDesc(m, sym.typ, dkVar))
+  # cgsym has side effects, do it first:
+  let fn = cgsymValue(m, "nimGetProcAddr")
+  m.s[cfsDynLibInit].addAssignment(tmp,
+    cCast(t,
+      cCall(fn,
+        lib.name,
+        makeCString($extname))))
+  m.s[cfsVars].addVar(name = sym.loc.snippet, typ = t)
 
 proc symInDynamicLibPartial(m: BModule, sym: PSym) =
   sym.loc.snippet = mangleDynLibProc(sym)
@@ -982,15 +1035,15 @@ proc cgsymValue(m: BModule, name: string): Rope =
 proc generateHeaders(m: BModule) =
   var nimbase = m.config.nimbasePattern
   if nimbase == "": nimbase = "nimbase.h"
-  m.s[cfsHeaders].addf("\L#include \"$1\"\L", [nimbase])
+  m.s[cfsHeaders].addInclude('"' & nimbase & '"')
 
   for it in m.headerFiles:
     if it[0] == '#':
       m.s[cfsHeaders].add(rope(it.replace('`', '"') & "\L"))
     elif it[0] notin {'"', '<'}:
-      m.s[cfsHeaders].addf("#include \"$1\"$N", [rope(it)])
+      m.s[cfsHeaders].addInclude('"' & $it & '"')
     else:
-      m.s[cfsHeaders].addf("#include $1$N", [rope(it)])
+      m.s[cfsHeaders].addInclude($it)
   m.s[cfsHeaders].add("""#undef LANGUAGE_C
 #undef MIPSEB
 #undef MIPSEL
@@ -1025,11 +1078,15 @@ proc closureSetup(p: BProc, prc: PSym) =
   assignLocalVar(p, ls)
   # generate cast assignment:
   if p.config.selectedGC == gcGo:
-    linefmt(p, cpsStmts, "#unsureAsgnRef((void**) $1, ($2) ClE_0);$n",
-            [addrLoc(p.config, env.loc), getTypeDesc(p.module, env.typ)])
+    let renv = addrLoc(p.config, env.loc)
+    let rt = getTypeDesc(p.module, env.typ)
+    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
+      cCast("void**", renv),
+      cCast(rt, "ClE_0"))
   else:
-    linefmt(p, cpsStmts, "$1 = ($2) ClE_0;$n",
-            [rdLoc(env.loc), getTypeDesc(p.module, env.typ)])
+    let renv = rdLoc(env.loc)
+    let rt = getTypeDesc(p.module, env.typ)
+    p.s(cpsStmts).addAssignment(renv, cCast(rt, "ClE_0"))
 
 const harmless = {nkConstSection, nkTypeSection, nkEmpty, nkCommentStmt, nkTemplateDef,
                   nkMacroDef, nkMixinStmt, nkBindStmt, nkFormalParams} +
@@ -1238,10 +1295,9 @@ proc genProcAux*(m: BModule, prc: PSym) =
     if not isInvalidReturnType(m.config, prc.typ) and sfConstructor notin prc.flags:
       if sfNoInit in prc.flags: incl(res.flags, sfNoInit)
       if sfNoInit in prc.flags and p.module.compileToCpp and (let val = easyResultAsgn(procBody); val != nil):
-        var decl = localVarDecl(p, resNode)
         var a: TLoc = initLocExprSingleUse(p, val)
         let ra = rdLoc(a)
-        p.s(cpsStmts).addAssignment(decl, ra)
+        localVarDecl(p.s(cpsStmts), p, resNode, initializer = ra)
       else:
         # declare the result symbol:
         assignLocalVar(p, resNode)
@@ -1408,8 +1464,13 @@ proc genProcNoForward(m: BModule, prc: PSym) =
       # reloadable (and has no _actual suffix) - other modules will need to be able to get it through
       # the hcr dynlib (also put it in the DynLibInit section - right after it gets loaded)
       if isReloadable(q, prc):
-        q.s[cfsDynLibInit].addf("\t$1 = ($2) hcrRegisterProc($3, \"$1\", (void*)$1);$n",
-            [prc.loc.snippet, getTypeDesc(q, prc.loc.t), getModuleDllPath(m, q.module)])
+        q.s[cfsDynLibInit].add('\t')
+        q.s[cfsDynLibInit].addAssignment(prc.loc.snippet,
+          cCast(getTypeDesc(q, prc.loc.t),
+            cCall("hcrRegisterProc",
+              getModuleDllPath(m, q.module),
+              '"' & prc.loc.snippet & '"',
+              cCast("void*", prc.loc.snippet))))
     else:
       symInDynamicLibPartial(m, prc)
   elif prc.typ.callConv == ccInline:
@@ -1438,8 +1499,12 @@ proc genProcNoForward(m: BModule, prc: PSym) =
     # to do the declaredProtos check before the call to genProcPrototype
     if isReloadable(m, prc) and prc.id notin m.declaredProtos and
       q != nil and q.module.id != m.module.id:
-      m.s[cfsDynLibInit].addf("\t$1 = ($2) hcrGetProc($3, \"$1\");$n",
-           [prc.loc.snippet, getProcTypeCast(m, prc), getModuleDllPath(m, prc)])
+      m.s[cfsDynLibInit].add('\t')
+      m.s[cfsDynLibInit].addAssignment(prc.loc.snippet,
+        cCast(getProcTypeCast(m, prc),
+          cCall("hcrGetProc",
+            getModuleDllPath(m, prc),
+            '"' & prc.loc.snippet & '"')))
     genProcPrototype(m, prc)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       # make sure there is a "prototype" in the external module
@@ -1497,19 +1562,23 @@ proc genVarPrototype(m: BModule, n: PNode) =
     if sfThread in sym.flags:
       declareThreadVar(m, sym, true)
     else:
-      if sym.kind in {skLet, skVar, skField, skForVar} and sym.alignment > 0:
-        m.s[cfsVars].addf "NIM_ALIGN($1) ", [rope(sym.alignment)]
-      m.s[cfsVars].add(if m.hcrOn: "static " else: "extern ")
-      m.s[cfsVars].add(getTypeDesc(m, sym.loc.t, dkVar))
-      if m.hcrOn: m.s[cfsVars].add("*")
-      if lfDynamicLib in sym.loc.flags: m.s[cfsVars].add("*")
-      if sfRegister in sym.flags: m.s[cfsVars].add(" register")
-      if sfVolatile in sym.flags: m.s[cfsVars].add(" volatile")
-      if sfNoalias in sym.flags: m.s[cfsVars].add(" NIM_NOALIAS")
-      m.s[cfsVars].addf(" $1;$n", [sym.loc.snippet])
-      if m.hcrOn: m.initProc.procSec(cpsLocals).addf(
-        "\t$1 = ($2*)hcrGetGlobal($3, \"$1\");$n", [sym.loc.snippet,
-        getTypeDesc(m, sym.loc.t, dkVar), getModuleDllPath(m, sym)])
+      let vis = if m.hcrOn: StaticProc else: Extern
+      var typ = getTypeDesc(m, sym.loc.t, dkVar)
+      if m.hcrOn:
+        typ = ptrType(typ)
+      if lfDynamicLib in sym.loc.flags:
+        typ = ptrType(typ)
+      m.s[cfsVars].addVar(m, sym,
+        name = sym.loc.snippet,
+        typ = typ,
+        visibility = vis)
+      if m.hcrOn:
+        m.initProc.procSec(cpsLocals).add('\t')
+        m.initProc.procSec(cpsLocals).addAssignment(sym.loc.snippet,
+          cCast(typ,
+            cCall("hcrGetGlobal",
+              getModuleDllPath(m, sym),
+              '"' & sym.loc.snippet & '"')))
 
 proc addNimDefines(result: var Builder; conf: ConfigRef) {.inline.} =
   result.addf("#define NIM_INTBITS $1\L", [
@@ -2019,9 +2088,9 @@ proc genInitCode(m: BModule) =
     m.s[cfsInitProc].addf("}$N$N", [])
 
   for i, el in pairs(m.extensionLoaders):
-    if el != "":
+    if el.buf.len != 0:
       let ex = "NIM_EXTERNC N_NIMCALL(void, nimLoadProcs$1)(void) {$2}$N$N" %
-        [(i.ord - '0'.ord).rope, el]
+        [(i.ord - '0'.ord).rope, extract(el)]
       moduleInitRequired = true
       prc.add(ex)
 
