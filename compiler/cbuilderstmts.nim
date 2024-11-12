@@ -306,7 +306,7 @@ proc cInPlaceOp(binOp: TypedBinaryOp, t: Snippet, a, b: Snippet): Snippet =
   result.add(typedBinaryOperators[binOp])
   result.add("= ")
   result.add(b)
-  result.addLineEnd(";")
+  result.add(";\n")
 
 proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result = ""
@@ -315,7 +315,7 @@ proc cInPlaceOp(binOp: UntypedBinaryOp, a, b: Snippet): Snippet =
   result.add(untypedBinaryOperators[binOp])
   result.add("= ")
   result.add(b)
-  result.addLineEnd(";")
+  result.add(";\n")
 
 template addCPragma(builder: var Builder, val: Snippet) =
   builder.addNewline()
