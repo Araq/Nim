@@ -207,14 +207,9 @@ when false:
       t.core = nil
 
 when hostOS == "windows":
-  proc createThread*[TArg](t: var Thread[TArg],
+  proc createThreadImpl[TArg](t: var Thread[TArg],
                            tp: proc (arg: TArg) {.thread, nimcall.},
                            param: TArg) =
-    ## Creates a new thread `t` and starts its execution.
-    ##
-    ## Entry point is the proc `tp`.
-    ## `param` is passed to `tp`. `TArg` can be `void` if you
-    ## don't need to pass any data to the thread.
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data = param
@@ -237,7 +232,7 @@ elif defined(genode):
   var affinityOffset: cuint = 1
     ## CPU affinity offset for next thread, safe to roll-over.
 
-  proc createThread*[TArg](t: var Thread[TArg],
+  proc createThreadImpl[TArg](t: var Thread[TArg],
                            tp: proc (arg: TArg) {.thread, nimcall.},
                            param: TArg) =
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
@@ -256,14 +251,9 @@ elif defined(genode):
     discard
 
 else:
-  proc createThread*[TArg](t: var Thread[TArg],
+  proc createThreadImpl[TArg](t: var Thread[TArg],
                            tp: proc (arg: TArg) {.thread, nimcall.},
                            param: TArg) =
-    ## Creates a new thread `t` and starts its execution.
-    ##
-    ## Entry point is the proc `tp`. `param` is passed to `tp`.
-    ## `TArg` can be `void` if you
-    ## don't need to pass any data to the thread.
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data = param
@@ -298,8 +288,24 @@ else:
       cpusetIncl(cpu.cint, s)
       setAffinity(t.sys, csize_t(sizeof(s)), s)
 
+proc containsRef(typ: typedesc): bool = typ is ref
+
+proc createThread*[TArg](t: var Thread[TArg],
+                           tp: proc (arg: TArg) {.thread, nimcall.},
+                           param: TArg) =
+  ## Creates a new thread `t` and starts its execution.
+  ##
+  ## Entry point is the proc `tp`.
+  ## `param` is passed to `tp`. `TArg` can be `void` if you
+  ## don't need to pass any data to the thread.
+  
+  when typeof(param).containsRef:
+    {.error: "The param passed to createThread must not be a ref type.".}
+
+  createThreadImpl[TArg](t, tp, param)
+
 proc createThread*(t: var Thread[void], tp: proc () {.thread, nimcall.}) =
-  createThread[void](t, tp)
+  createThreadImpl[void](t, tp)
 
 when not defined(gcOrc):
   include system/threadids
