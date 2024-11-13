@@ -9,7 +9,7 @@
 
 ## exposes the Nim VM to clients.
 import
-  ast, modules, condsyms,
+  ast, astalgo, modules, condsyms,
   options, llstream, lineinfos, vm,
   vmdef, modulegraphs, idents, pathutils,
   scriptconfig, std/[compilesettings, tables, os]
@@ -40,14 +40,14 @@ proc selectUniqueSymbol*(i: Interpreter; name: string;
   assert i != nil
   assert i.mainModule != nil, "no main module selected"
   let n = getIdent(i.graph.cache, name)
-  var it: ModuleIter = default(ModuleIter)
-  var s = initModuleIter(it, i.graph, i.mainModule, n)
+  var it: TIdentIter = default(TIdentIter)
+  var s = initIdentIter(it, selectTabs(i.graph, i.mainModule), n)
   result = nil
   while s != nil:
     if s.kind in symKinds:
       if result == nil: result = s
       else: return nil # ambiguous
-    s = nextModuleIter(it, i.graph)
+    s = nextIdentIter(it, selectTabs(i.graph, i.mainModule))
 
 proc selectRoutine*(i: Interpreter; name: string): PSym =
   ## Selects a declared routine (proc/func/etc) from the main module.

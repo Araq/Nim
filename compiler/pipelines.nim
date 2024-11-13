@@ -12,7 +12,6 @@ when not defined(leanCompiler):
 
 import std/[syncio, objectdollar, assertions, tables, strutils, strtabs]
 import renderer
-import ic/replayer
 
 proc setPipeLinePass*(graph: ModuleGraph; pass: PipelinePass) =
   graph.pipelinePass = pass
@@ -210,11 +209,6 @@ proc processPipelineModule*(graph: ModuleGraph; module: PSym; idgen: IdGenerator
   of NonePass:
     raiseAssert "use setPipeLinePass to set a proper PipelinePass"
 
-  if graph.config.backend notin {backendC, backendCpp, backendObjc}:
-    # We only write rod files here if no C-like backend is active.
-    # The C-like backends have been patched to support the IC mechanism.
-    # They are responsible for closing the rod files. See `cbackend.nim`.
-    closeRodFile(graph, module)
   result = true
 
 proc compilePipelineModule*(graph: ModuleGraph; fileIdx: FileIndex; flags: TSymFlags; fromModule: PSym = nil): PSym =
@@ -230,32 +224,14 @@ proc compilePipelineModule*(graph: ModuleGraph; fileIdx: FileIndex; flags: TSymF
       elif graph.config.projectIsCmd: s = llStreamOpen(graph.config.cmdInput)
     discard processPipelineModule(graph, result, idGeneratorFromModule(result), s)
   if result == nil:
-    var cachedModules: seq[FileIndex] = @[]
-    result = moduleFromRodFile(graph, fileIdx, cachedModules)
     let path = toFullPath(graph.config, fileIdx)
     let filename = AbsoluteFile path
     if fileExists(filename): # it could be a stdinfile
       graph.cachedFiles[path] = $secureHashFile(path)
-    if result == nil:
-      result = newModule(graph, fileIdx)
-      result.flags.incl flags
-      registerModule(graph, result)
-      processModuleAux("import")
-    else:
-      if sfSystemModule in flags:
-        graph.systemModule = result
-      if sfMainModule in flags and graph.config.cmd == cmdM:
-        result.flags.incl flags
-        registerModule(graph, result)
-        processModuleAux("import")
-      partialInitModule(result, graph, fileIdx, filename)
-    for m in cachedModules:
-      registerModuleById(graph, m)
-      if sfMainModule in flags and graph.config.cmd == cmdM:
-        discard
-      else:
-        replayStateChanges(graph.packed.pm[m.int].module, graph)
-        replayGenericCacheInformation(graph, m.int)
+    result = newModule(graph, fileIdx)
+    result.flags.incl flags
+    registerModule(graph, result)
+    processModuleAux("import")
   elif graph.isDirty(result):
     result.flags.excl sfDirty
     # reset module fields:
@@ -294,7 +270,6 @@ proc compilePipelineProject*(graph: ModuleGraph; projectFileIdx = InvalidFileIdx
   connectPipelineCallbacks(graph)
   let conf = graph.config
   wantMainModule(conf)
-  configComplete(graph)
 
   let systemFileIdx = fileInfoIdx(conf, conf.libpath / RelativeFile"system.nim")
   let projectFile = if projectFileIdx == InvalidFileIdx: conf.projectMainIdx else: projectFileIdx

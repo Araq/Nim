@@ -234,7 +234,7 @@ proc clearInstCache(graph: ModuleGraph, projectFileIdx: FileIndex) =
   for tbl in mitems(graph.attachedOps):
     var attachedOpsToDelete = newSeq[ItemId]()
     for id in tbl.keys:
-      if id.module == projectFileIdx.int and sfOverridden in resolveAttachedOp(graph, tbl[id]).flags:
+      if id.module == projectFileIdx.int and sfOverridden in tbl[id].flags:
         attachedOpsToDelete.add id
     for id in attachedOpsToDelete:
       tbl.del id

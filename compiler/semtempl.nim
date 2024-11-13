@@ -921,4 +921,4 @@ proc semPattern(c: PContext, n: PNode; s: PSym): PNode =
     elif result.len == 0:
       localError(c.config, n.info, "a pattern cannot be empty")
   closeScope(c)
-  addPattern(c, LazySym(sym: s))
+  addPattern(c, s)

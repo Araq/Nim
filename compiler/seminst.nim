@@ -391,13 +391,7 @@ proc generateInstance(c: PContext, fn: PSym, pt: LayeredIdTable,
   result = copySym(fn, c.idgen)
   incl(result.flags, sfFromGeneric)
   result.instantiatedFrom = fn
-  if sfGlobal in result.flags and c.config.symbolFiles != disabledSf:
-    let passc = getLocalPassC(c, producer)
-    if passc != "": #pass the local compiler options to the consumer module too
-      extccomp.addLocalCompileOption(c.config, passc, toFullPathConsiderDirty(c.config, c.module.info.fileIndex))
-    setOwner(result, c.module)
-  else:
-    setOwner(result, fn)
+  setOwner(result, fn)
   result.ast = n
   pushOwner(c, result)
 

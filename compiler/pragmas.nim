@@ -21,7 +21,6 @@ import std/[os, math, strutils]
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
-from ic / ic import addCompilerProc
 
 const
   FirstCallConv* = wNimcall
@@ -113,7 +112,6 @@ proc recordPragma(c: PContext; n: PNode; args: varargs[string]) =
   var recorded = newNodeI(nkReplayAction, n.info)
   for i in 0..args.high:
     recorded.add newStrNode(args[i], n.info)
-  addPragmaComputation(c, recorded)
 
 const
   errStringLiteralExpected = "string literal expected"
@@ -764,8 +762,6 @@ proc markCompilerProc(c: PContext; s: PSym) =
   incl(s.flags, sfCompilerProc)
   incl(s.flags, sfUsed)
   registerCompilerProc(c.graph, s)
-  if c.config.symbolFiles != disabledSf:
-    addCompilerProc(c.encoder, c.packedRepr, s)
 
 proc deprecatedStmt(c: PContext; outerPragma: PNode) =
   let pragma = outerPragma[1]

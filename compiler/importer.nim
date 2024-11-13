@@ -108,8 +108,8 @@ proc rawImportSymbol(c: PContext, s, origin: PSym; importSet: var IntSet) =
           else:
             importPureEnumField(c, e)
   else:
-    if s.kind == skConverter: addConverter(c, LazySym(sym: s))
-    if hasPattern(s): addPattern(c, LazySym(sym: s))
+    if s.kind == skConverter: addConverter(c, s)
+    if hasPattern(s): addPattern(c, s)
   if s.owner != origin:
     c.exportIndirections.incl((origin.id, s.id))
 
@@ -144,13 +144,13 @@ proc importSymbol(c: PContext, n: PNode, fromMod: PSym; importSet: var IntSet) =
     # for an enumeration we have to add all identifiers
     if multiImport:
       # for a overloadable syms add all overloaded routines
-      var it: ModuleIter = default(ModuleIter)
-      var e = initModuleIter(it, c.graph, fromMod, s.name)
+      var it: TIdentIter = default(TIdentIter)
+      var e = initIdentIter(it, selectTabs(c.graph, fromMod), s.name)
       while e != nil:
         if e.name.id != s.name.id: internalError(c.config, n.info, "importSymbol: 3")
         if s.kind in ExportableSymKinds:
           rawImportSymbol(c, e, fromMod, importSet)
-        e = nextModuleIter(it, c.graph)
+        e = nextIdentIter(it, selectTabs(c.graph, fromMod))
     else:
       rawImportSymbol(c, s, fromMod, importSet)
     suggestSym(c.graph, n.info, s, c.graph.usageSym, false)
@@ -190,22 +190,19 @@ proc addImport(c: PContext; im: sink ImportedModule) =
 template addUnnamedIt(c: PContext, fromMod: PSym; filter: untyped) {.dirty.} =
   for it in mitems c.graph.ifaces[fromMod.position].converters:
     if filter:
-      loadPackedSym(c.graph, it)
-      if sfExported in it.sym.flags:
+      if sfExported in it.flags:
         addConverter(c, it)
   for it in mitems c.graph.ifaces[fromMod.position].patterns:
     if filter:
-      loadPackedSym(c.graph, it)
-      if sfExported in it.sym.flags:
+      if sfExported in it.flags:
         addPattern(c, it)
   for it in mitems c.graph.ifaces[fromMod.position].pureEnums:
     if filter:
-      loadPackedSym(c.graph, it)
-      importPureEnumFields(c, it.sym, it.sym.typ)
+      importPureEnumFields(c, it, it.typ)
 
 proc importAllSymbolsExcept(c: PContext, fromMod: PSym, exceptSet: IntSet) =
   c.addImport ImportedModule(m: fromMod, mode: importExcept, exceptSet: exceptSet)
-  addUnnamedIt(c, fromMod, it.sym.name.id notin exceptSet)
+  addUnnamedIt(c, fromMod, it.name.id notin exceptSet)
 
 proc importAllSymbols*(c: PContext, fromMod: PSym) =
   c.addImport ImportedModule(m: fromMod, mode: importAll)
@@ -275,7 +272,6 @@ proc myImportModule(c: PContext, n: var PNode, importStmtResult: PNode): PSym =
   n = transf.node
   let f = checkModuleName(c.config, n)
   if f != InvalidFileIdx:
-    addImportFileDep(c, f)
     let L = c.graph.importStack.len
     let recursion = c.graph.importStack.find(f)
     c.graph.importStack.add f
@@ -323,7 +319,6 @@ proc myImportModule(c: PContext, n: var PNode, importStmtResult: PNode): PSym =
     result = nil
 
 proc afterImport(c: PContext, m: PSym) =
-  if isCachedModule(c.graph, m): return
   # fixes bug #17510, for re-exported symbols
   let realModuleId = c.importModuleMap[m.id]
   for s in allSyms(c.graph, m):

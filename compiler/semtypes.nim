@@ -184,7 +184,7 @@ proc semEnum(c: PContext, n: PNode, prev: PType): PType =
     )
 
   if isPure and sfExported in result.sym.flags:
-    addPureEnum(c, LazySym(sym: result.sym))
+    addPureEnum(c, result.sym)
   if tfNotNil in e.typ.flags and not hasNull:
     result.flags.incl tfRequiresInit
   setToStringProc(c.graph, result, genEnumToStrProc(result, n.info, c.graph, c.idgen))

@@ -35,7 +35,7 @@
 import prefixmatches, suggestsymdb
 from wordrecg import wDeprecated, wError, wAddr, wYield
 
-import std/[algorithm, sets, parseutils, tables]
+import std/[algorithm, sets, parseutils]
 
 when defined(nimsuggest):
   import pathutils # importer

@@ -83,7 +83,7 @@ proc containGenerics(base: PType, s: seq[tuple[depth: int, value: PType]]): bool
       break
 
 proc collectVTableDispatchers*(g: ModuleGraph) =
-  var itemTable = initTable[ItemId, seq[LazySym]]()
+  var itemTable = initTable[ItemId, seq[PSym]]()
   var rootTypeSeq = newSeq[PType]()
   var rootItemIdCount = initCountTable[ItemId]()
   for bucket in 0..<g.methods.len:
@@ -96,7 +96,7 @@ proc collectVTableDispatchers*(g: ModuleGraph) =
       let methodIndexLen = g.bucketTable[baseType.itemId]
       if baseType.itemId notin itemTable: # once is enough
         rootTypeSeq.add baseType
-        itemTable[baseType.itemId] = newSeq[LazySym](methodIndexLen)
+        itemTable[baseType.itemId] = newSeq[PSym](methodIndexLen)
 
         sort(g.objectTree[baseType.itemId], cmp = proc (x, y: tuple[depth: int, value: PType]): int =
           if x.depth >= y.depth: 1
@@ -105,7 +105,7 @@ proc collectVTableDispatchers*(g: ModuleGraph) =
 
         for item in g.objectTree[baseType.itemId]:
           if item.value.itemId notin itemTable:
-            itemTable[item.value.itemId] = newSeq[LazySym](methodIndexLen)
+            itemTable[item.value.itemId] = newSeq[PSym](methodIndexLen)
 
       var mIndex = 0 # here is the correpsonding index
       if baseType.itemId notin rootItemIdCount:
@@ -115,13 +115,13 @@ proc collectVTableDispatchers*(g: ModuleGraph) =
         rootItemIdCount.inc(baseType.itemId)
       for idx in 0..<g.methods[bucket].methods.len:
         let obj = g.methods[bucket].methods[idx].typ.firstParamType.skipTypes(skipPtrs)
-        itemTable[obj.itemId][mIndex] = LazySym(sym: g.methods[bucket].methods[idx])
+        itemTable[obj.itemId][mIndex] = g.methods[bucket].methods[idx]
       g.addDispatchers genVTableDispatcher(g, g.methods[bucket].methods, mIndex)
     else: # if the base object doesn't have this method
       g.addDispatchers genIfDispatcher(g, g.methods[bucket].methods, relevantCols, g.idgen)
 
 proc sortVTableDispatchers*(g: ModuleGraph) =
-  var itemTable = initTable[ItemId, seq[LazySym]]()
+  var itemTable = initTable[ItemId, seq[PSym]]()
   var rootTypeSeq = newSeq[ItemId]()
   var rootItemIdCount = initCountTable[ItemId]()
   for bucket in 0..<g.methods.len:
@@ -134,7 +134,7 @@ proc sortVTableDispatchers*(g: ModuleGraph) =
       let methodIndexLen = g.bucketTable[baseType.itemId]
       if baseType.itemId notin itemTable: # once is enough
         rootTypeSeq.add baseType.itemId
-        itemTable[baseType.itemId] = newSeq[LazySym](methodIndexLen)
+        itemTable[baseType.itemId] = newSeq[PSym](methodIndexLen)
 
         sort(g.objectTree[baseType.itemId], cmp = proc (x, y: tuple[depth: int, value: PType]): int =
           if x.depth >= y.depth: 1
@@ -143,7 +143,7 @@ proc sortVTableDispatchers*(g: ModuleGraph) =
 
         for item in g.objectTree[baseType.itemId]:
           if item.value.itemId notin itemTable:
-            itemTable[item.value.itemId] = newSeq[LazySym](methodIndexLen)
+            itemTable[item.value.itemId] = newSeq[PSym](methodIndexLen)
 
       var mIndex = 0 # here is the correpsonding index
       if baseType.itemId notin rootItemIdCount:
@@ -153,7 +153,7 @@ proc sortVTableDispatchers*(g: ModuleGraph) =
         rootItemIdCount.inc(baseType.itemId)
       for idx in 0..<g.methods[bucket].methods.len:
         let obj = g.methods[bucket].methods[idx].typ.firstParamType.skipTypes(skipPtrs)
-        itemTable[obj.itemId][mIndex] = LazySym(sym: g.methods[bucket].methods[idx])
+        itemTable[obj.itemId][mIndex] = g.methods[bucket].methods[idx]
 
   for baseType in rootTypeSeq:
     g.setMethodsPerType(baseType, itemTable[baseType])
@@ -161,7 +161,7 @@ proc sortVTableDispatchers*(g: ModuleGraph) =
       let typ = item.value.skipTypes(skipPtrs)
       let idx = typ.itemId
       for mIndex in 0..<itemTable[idx].len:
-        if itemTable[idx][mIndex].sym == nil:
+        if itemTable[idx][mIndex] == nil:
           let parentIndex = typ.baseClass.skipTypes(skipPtrs).itemId
           itemTable[idx][mIndex] = itemTable[parentIndex][mIndex]
       g.setMethodsPerType(idx, itemTable[idx])

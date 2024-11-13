@@ -685,7 +685,6 @@ proc usesWriteBarrier*(conf: ConfigRef): bool {.inline.} = conf.selectedGC >= gc
 
 template compilationCachePresent*(conf: ConfigRef): untyped =
   false
-#  conf.symbolFiles in {v2Sf, writeOnlySf}
 
 template optPreserveOrigSource*(conf: ConfigRef): untyped =
   optEmbedOrigSrc in conf.globalOptions

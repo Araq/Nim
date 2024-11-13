@@ -93,14 +93,14 @@ proc addTypeBoundSymbols(graph: ModuleGraph, arg: PType, name: PIdent,
     if t != nil and t.owner.kind == skModule:
       # search module for routines attachable to `t`
       let module = t.owner
-      var iter = default(ModuleIter)
-      var s = initModuleIter(iter, graph, module, name)
+      var iter = default(TIdentIter)
+      var s = initIdentIter(iter, selectTabs(graph, module), name)
       while s != nil:
         if s.kind in filter and s.isAttachableRoutineTo(t) and
             not containsOrIncl(marker, s.id):
           # least priority scope, less than explicit imports:
           syms.add((s, -2))
-        s = nextModuleIter(iter, graph)
+        s = nextIdentIter(iter, selectTabs(graph, module))
 
 proc pickBestCandidate(c: PContext, headSymbol: PNode,
                        n, orig: PNode,

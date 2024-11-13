@@ -109,9 +109,9 @@ proc localSearchInScope*(c: PContext, s: PIdent): PSym =
     scope = scope.parent
     result = strTableGet(scope.symbols, s)
 
-proc initIdentIter(ti: var ModuleIter; marked: var IntSet; im: ImportedModule; name: PIdent;
+proc initIdentIter(ti: var TIdentIter; marked: var IntSet; im: ImportedModule; name: PIdent;
                    g: ModuleGraph): PSym =
-  result = initModuleIter(ti, g, im.m, name)
+  result = initIdentIter(ti, selectTabs(g, im.m), name)
   while result != nil:
     let b =
       case im.mode
@@ -120,12 +120,12 @@ proc initIdentIter(ti: var ModuleIter; marked: var IntSet; im: ImportedModule; n
       of importExcept: name.id notin im.exceptSet
     if b and not containsOrIncl(marked, result.id):
       return result
-    result = nextModuleIter(ti, g)
+    result = nextIdentIter(ti, selectTabs(g, im.m))
 
-proc nextIdentIter(ti: var ModuleIter; marked: var IntSet; im: ImportedModule;
+proc nextIdentIter(ti: var TIdentIter; marked: var IntSet; im: ImportedModule;
                    g: ModuleGraph): PSym =
   while true:
-    result = nextModuleIter(ti, g)
+    result = nextIdentIter(ti, selectTabs(g, im.m))
     if result == nil: return nil
     case im.mode
     of importAll:
@@ -139,7 +139,7 @@ proc nextIdentIter(ti: var ModuleIter; marked: var IntSet; im: ImportedModule;
         return result
 
 iterator symbols(im: ImportedModule; marked: var IntSet; name: PIdent; g: ModuleGraph): PSym =
-  var ti: ModuleIter = default(ModuleIter)
+  var ti: TIdentIter = default(TIdentIter)
   var candidate = initIdentIter(ti, marked, im, name, g)
   while candidate != nil:
     yield candidate
@@ -330,7 +330,6 @@ type
     oimSymChoiceLocalLookup
   TOverloadIter* = object
     it*: TIdentIter
-    mit*: ModuleIter
     m*: PSym
     mode*: TOverloadIterMode
     symChoiceIndex*: int
@@ -410,8 +409,6 @@ proc addDecl*(c: PContext, sym: PSym) {.inline.} =
 proc addPrelimDecl*(c: PContext, sym: PSym) =
   discard c.currentScope.addUniqueSym(sym)
 
-from ic / ic import addHidden
-
 proc addInterfaceDeclAux(c: PContext, sym: PSym) =
   ## adds symbol to the module for either private or public access.
   if sfExported in sym.flags:
@@ -420,8 +417,6 @@ proc addInterfaceDeclAux(c: PContext, sym: PSym) =
     else: internalError(c.config, sym.info, "addInterfaceDeclAux")
   elif sym.kind in ExportableSymKinds and c.module != nil and isTopLevelInsideDeclaration(c, sym):
     strTableAdd(semtabAll(c.graph, c.module), sym)
-    if c.config.symbolFiles != disabledSf:
-      addHidden(c.encoder, c.packedRepr, sym)
 
 proc addInterfaceDeclAt*(c: PContext, scope: PScope, sym: PSym) =
   ## adds a symbol on the scope and the interface if appropriate
@@ -744,7 +739,7 @@ proc initOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
         scope = scope.parent
         if scope == nil:
           for i in 0..c.imports.high:
-            result = initIdentIter(o.mit, o.marked, c.imports[i], ident, c.graph)
+            result = initIdentIter(o.it, o.marked, c.imports[i], ident, c.graph)
             if result != nil:
               o.currentScope = nil
               o.importIdx = i
@@ -771,7 +766,7 @@ proc initOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
                                  ident)
           o.mode = oimSelfModule
         else:
-          result = initModuleIter(o.mit, c.graph, o.m, ident)
+          result = initIdentIter(o.it, selectTabs(c.graph, o.m), ident)
       else:
         noidentError(c.config, n[1], n)
         result = errorSym(c, n[1])
@@ -805,7 +800,7 @@ proc nextOverloadIterImports(o: var TOverloadIter, c: PContext, n: PNode): PSym 
   var idx = o.importIdx+1
   o.importIdx = c.imports.len # assume the other imported modules lack this symbol too
   while idx < c.imports.len:
-    result = initIdentIter(o.mit, o.marked, c.imports[idx], o.it.name, c.graph)
+    result = initIdentIter(o.it, o.marked, c.imports[idx], o.it.name, c.graph)
     if result != nil:
       # oh, we were wrong, some other module had the symbol, so remember that:
       o.importIdx = idx
@@ -816,7 +811,7 @@ proc symChoiceExtension(o: var TOverloadIter; c: PContext; n: PNode): PSym =
   result = nil
   assert o.currentScope == nil
   while o.importIdx < c.imports.len:
-    result = initIdentIter(o.mit, o.marked, c.imports[o.importIdx], o.it.name, c.graph)
+    result = initIdentIter(o.it, o.marked, c.imports[o.importIdx], o.it.name, c.graph)
     #while result != nil and result.id in o.marked:
     #  result = nextIdentIter(o.it, o.marked, c.imports[o.importIdx])
     if result != nil:
@@ -840,12 +835,12 @@ proc nextOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
         else:
           o.importIdx = 0
           if c.imports.len > 0:
-            result = initIdentIter(o.mit, o.marked, c.imports[o.importIdx], o.it.name, c.graph)
+            result = initIdentIter(o.it, o.marked, c.imports[o.importIdx], o.it.name, c.graph)
             if result == nil:
               result = nextOverloadIterImports(o, c, n)
           break
     elif o.importIdx < c.imports.len:
-      result = nextIdentIter(o.mit, o.marked, c.imports[o.importIdx], c.graph)
+      result = nextIdentIter(o.it, o.marked, c.imports[o.importIdx], c.graph)
       if result == nil:
         result = nextOverloadIterImports(o, c, n)
     else:
@@ -853,7 +848,7 @@ proc nextOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
   of oimSelfModule:
     result = nextIdentIter(o.it, c.topLevelScope.symbols)
   of oimOtherModule:
-    result = nextModuleIter(o.mit, c.graph)
+    result = nextIdentIter(o.it, selectTabs(c.graph, o.m))
   of oimSymChoice:
     if o.symChoiceIndex < n.len:
       result = n[o.symChoiceIndex].sym
@@ -894,7 +889,7 @@ proc nextOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
         incl o.marked, result.id
 
     elif o.importIdx < c.imports.len:
-      result = nextIdentIter(o.mit, o.marked, c.imports[o.importIdx], c.graph)
+      result = nextIdentIter(o.it, o.marked, c.imports[o.importIdx], c.graph)
       #assert result.id notin o.marked
       #while result != nil and result.id in o.marked:
       #  result = nextIdentIter(o.it, c.imports[o.importIdx])

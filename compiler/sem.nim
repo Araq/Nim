@@ -18,7 +18,7 @@ import
   evaltempl, patterns, parampatterns, sempass2, linter, semmacrosanity,
   lowerings, plugins/active, lineinfos, int128,
   isolation_check, typeallowed, modulegraphs, enumtostr, concepts, astmsgs,
-  extccomp, layeredtable
+  layeredtable
 
 import vtables
 import std/[strtabs, math, tables, intsets, strutils, packedsets]
@@ -850,7 +850,6 @@ proc semWithPContext*(c: PContext, n: PNode): PNode =
       else:
         result = newNodeI(nkEmpty, n.info)
       #if c.config.cmd == cmdIdeTools: findSuggest(c, n)
-  storeRodNode(c, result)
 
 
 proc reportUnusedModules(c: PContext) =
@@ -873,4 +872,3 @@ proc closePContext*(graph: ModuleGraph; c: PContext, n: PNode): PNode =
     result.add(c.module.ast)
   popOwner(c)
   popProcCon(c)
-  sealRodFile(c)

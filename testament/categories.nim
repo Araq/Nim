@@ -718,7 +718,7 @@ proc processCategory(r: var TResults, cat: Category,
     of "niminaction":
       testNimInAction(r, cat, options)
     of "ic":
-      icTests(r, testsDir / cat2, cat, options, isNavigatorTest=false)
+      discard
     of "navigator":
       icTests(r, testsDir / cat2, cat, options, isNavigatorTest=true)
     of "untestable":
