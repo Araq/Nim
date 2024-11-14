@@ -254,11 +254,11 @@ proc genGenericAsgn(p: BProc, dest, src: TLoc, flags: TAssignmentFlags) =
     if (dest.storage == OnStack and p.config.selectedGC != gcGo) or not usesWriteBarrier(p.config):
       let rad = addrLoc(p.config, dest)
       let ras = addrLoc(p.config, src)
-      let rd = rdLoc(dest)
+      let td = getTypeDesc(p.module, dest.t)
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
         cCast(CPointer, rad),
         cCast(CConstPointer, ras),
-        cSizeof(rd))
+        cSizeof(td))
     else:
       let rad = addrLoc(p.config, dest)
       let ras = addrLoc(p.config, src)
@@ -2553,7 +2553,7 @@ proc genCast(p: BProc, e: PNode, d: var TLoc) =
           p.s(cpsLocals).addField(name = "source", typ = srcTyp)
       p.s(cpsLocals).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
         cAddr("LOC" & lbl),
-        cSizeof("LOC" & lbl))
+        cIntValue(destsize))
     else:
       p.s(cpsLocals).addVarWithType(kind = Local, name = "LOC" & lbl):
         p.s(cpsLocals).addUnionType():
