@@ -1985,7 +1985,7 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       let osModulePath = ($systemModulePath).replace("stdlib_system", "stdlib_os").rope
       g.mainDatInit.addCallStmt("hcrAddModule", osModulePath)
       g.mainDatInit.addVar(name = "cmd_count", typ = ptrType("int"))
-      g.mainDatInit.addVar(name = "cmd_line", typ = ptrType(ptrType("char")))
+      g.mainDatInit.addVar(name = "cmd_line", typ = ptrType(ptrType(ptrType("char"))))
       g.mainDatInit.addCallStmt("hcrRegisterGlobal",
         osModulePath,
         "\"cmdCount\"",
