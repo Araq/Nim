@@ -1952,11 +1952,6 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       g.mainModProcs.addDeclWithVisibility(ExportLib):
         g.mainModProcs.addProcHeader(ccNimCall, datInit, "void", cProcParams())
         g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, m.getHcrInitName, "void", cProcParams(
-          (name: "", typ: "void*"),
-          (name: "", typ: ptrType("char"))))
-        g.mainModProcs.finishProcHeaderAsProto()
       g.mainModProcs.addf("N_LIB_EXPORT N_NIMCALL(void, $1)(void*, N_NIMCALL_PTR(void*, getProcAddr)(void*, char*));$N", [m.getHcrInitName])
       g.mainModProcs.addDeclWithVisibility(ExportLib):
         g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", "void", cProcParams())
