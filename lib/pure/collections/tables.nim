@@ -628,7 +628,7 @@ template withValue*[A, B](t: var Table[A, B], key: A, value, body: untyped) =
     assert t[1].uid == 1314
 
   mixin rawGet
-  var hc: Hash
+  var hc: Hash = default(Hash)
   var index = rawGet(t, key, hc)
   let hasKey = index >= 0
   if hasKey:
