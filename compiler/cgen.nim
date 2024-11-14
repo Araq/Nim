@@ -2186,7 +2186,7 @@ proc genInitCode(m: BModule) =
       m.s[cfsInitProc].addProcHeaderWithParams(ccNimCall, getHcrInitName(m), "void"):
         var hcrInitParams: ProcParamBuilder
         m.s[cfsInitProc].addProcParams(hcrInitParams):
-          m.s[cfsInitProc].addUnnamedParam(hcrInitParams, "void*")
+          m.s[cfsInitProc].addParam(hcrInitParams, "handle", "void*")
           m.s[cfsInitProc].addProcTypedParam(hcrInitParams, ccNimCall, "getProcAddr", "void*", cProcParams(
             (name: "", typ: "void*"),
             (name: "", typ: ptrType("char"))))
