@@ -468,6 +468,18 @@ proc addUnnamedParam(builder: var Builder, params: var ProcParamBuilder, typ: Sn
     params.needsComma = true
   builder.add(typ)
 
+proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+  if paramBuilder.needsComma:
+    builder.add(", ")
+  else:
+    paramBuilder.needsComma = true
+  builder.add(CallingConvToStr[callConv])
+  builder.add("_PTR(")
+  builder.add(rettype)
+  builder.add(", ")
+  builder.add(name)
+  builder.add(params)
+
 proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
   # does not exist in NIFC, needs to be proc pragma
   if params.needsComma:

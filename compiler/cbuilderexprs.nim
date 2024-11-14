@@ -35,9 +35,6 @@ proc procPtrTypeUnnamedNimCall(rettype, params: Snippet): Snippet =
 proc procPtrTypeUnnamed(callConv: TCallingConvention, rettype, params: Snippet): Snippet =
   CallingConvToStr[callConv] & "_PTR(" & rettype & ", )" & params
 
-proc procPtrType(callConv: TCallingConvention, rettype, name, params: Snippet): Snippet =
-  CallingConvToStr[callConv] & "_PTR(" & rettype & ", " & name & ")" & params
-
 type CppCaptureKind = enum None, ByReference, ByCopy
 
 template addCppLambda(builder: var Builder, captures: CppCaptureKind, params: Snippet, body: typed) =
