@@ -1638,14 +1638,171 @@ proc getHcrInitName(m: BModule): Rope = getSomeInitName(m, "HcrInit000")
 
 proc hcrGetProcLoadCode(m: BModule, sym, prefix, handle, getProcFunc: string): Rope
 
+# The use of a volatile function pointer to call Pre/NimMainInner
+# prevents inlining of the NimMainInner function and dependent
+# functions, which might otherwise merge their stack frames.
+proc isInnerMainVolatile(m: BModule): bool =
+  m.config.selectedGC notin {gcNone, gcArc, gcAtomicArc, gcOrc}
+
+proc genPreMain(m: BModule) =
+  m.s[cfsProcs].addDeclWithVisibility(Private):
+    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMainInner", "void", cProcParams())
+    m.s[cfsProcs].finishProcHeaderWithBody():
+      m.s[cfsProcs].add(extract(m.g.otherModsInit))
+  if optNoMain notin m.config.globalOptions:
+    m.s[cfsProcs].addDeclWithVisibility(Private):
+      m.s[cfsProcs].addVar(name = "cmdCount", typ = "int")
+    m.s[cfsProcs].addDeclWithVisibility(Private):
+      m.s[cfsProcs].addVar(name = "cmdLine", typ = "char**")
+    m.s[cfsProcs].addDeclWithVisibility(Private):
+      m.s[cfsProcs].addVar(name = "gEnv", typ = "char**")
+  m.s[cfsProcs].addDeclWithVisibility(Private):
+    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMain", "void", cProcParams())
+    m.s[cfsProcs].finishProcHeaderWithBody():
+      if isInnerMainVolatile(m):
+        m.s[cfsProcs].addProcVar(name = "inner", rettype = "void", params = cProcParams(), isVolatile = true)
+        m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "PreMainInner")
+        m.s[cfsProcs].add(extract(m.g.mainDatInit))
+        m.s[cfsProcs].addCallStmt(cDeref("inner"))
+      else:
+        # not volatile
+        m.s[cfsProcs].add(extract(m.g.mainDatInit))
+        m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "PreMainInner")
+
+proc genMainProcs(m: BModule) =
+  m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMain")
+
+proc genMainProcsWithResult(m: BModule) =
+  genMainProcs(m)
+  var res = "nim_program_result"
+  if m.hcrOn: res = cDeref(res)
+  m.s[cfsProcs].addReturn(res)
+
+proc genNimMainInner(m: BModule) =
+  m.s[cfsProcs].addDeclWithVisibility(Private):
+    m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMainInner", "void", cProcParams())
+    m.s[cfsProcs].finishProcHeaderWithBody():
+      m.s[cfsProcs].add(extract(m.g.mainModInit))
+  m.s[cfsProcs].addNewline()
+
+proc initStackBottom(m: BModule): bool =
+  not (m.config.target.targetOS == osStandalone or m.config.selectedGC in {gcNone, gcArc, gcAtomicArc, gcOrc})
+
+proc genNimMainProc(m: BModule, preMainCode: Snippet) =
+  m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMain", "void", cProcParams())
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    if isInnerMainVolatile(m):
+      m.s[cfsProcs].addProcVar(name = "inner", rettype = "void", params = cProcParams(), isVolatile = true)
+      m.s[cfsProcs].add(preMainCode)
+      m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "NimMainInner")
+      if initStackBottom(m):
+        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast("void*", cAddr("inner")))
+      m.s[cfsProcs].addCallStmt(cDeref("inner"))
+    else:
+      # not volatile
+      m.s[cfsProcs].add(preMainCode)
+      if initStackBottom(m):
+        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast("void*", cAddr("inner")))
+      m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMainInner")
+  m.s[cfsProcs].addNewline()
+
+proc genNimMainBody(m: BModule, preMainCode: Snippet) =
+  genNimMainInner(m)
+  genNimMainProc(m, preMainCode)
+
+proc genPosixCMain(m: BModule) =
+  m.s[cfsProcs].addProcHeader("main", "int", cProcParams(
+    (name: "argc", typ: "int"),
+    (name: "args", typ: ptrType(ptrType("char"))),
+    (name: "env", typ: ptrType(ptrType("char")))))
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    m.s[cfsProcs].addAssignment("cmdLine", "args")
+    m.s[cfsProcs].addAssignment("cmdCount", "argc")
+    m.s[cfsProcs].addAssignment("gEnv", "env")
+    genMainProcsWithResult(m)
+  m.s[cfsProcs].addNewline()
+
+proc genStandaloneCMain(m: BModule) =
+  m.s[cfsProcs].addProcHeader("main", "int", cProcParams())
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    genMainProcs(m)
+    m.s[cfsProcs].addReturn(cIntValue(0))
+  m.s[cfsProcs].addNewline()
+
+proc genWinNimMain(m: BModule, preMainCode: Snippet) =
+  genNimMainBody(m, preMainCode)
+
+proc genWinCMain(m: BModule) =
+  m.s[cfsProcs].addProcHeader(ccStdCall, "WinMain", "int", cProcParams(
+    (name: "hCurInstance", typ: "HINSTANCE"),
+    (name: "hPrevInstance", typ: "HINSTANCE"),
+    (name: "lpCmdLine", typ: "LPSTR"),
+    (name: "nCmdShow", typ: "int")))
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    genMainProcsWithResult(m)
+  m.s[cfsProcs].addNewline()
+
+proc genWinNimDllMain(m: BModule, preMainCode: Snippet) =
+  genNimMainInner(m)
+  m.s[cfsProcs].addDeclWithVisibility(ExportLib):
+    genNimMainProc(m, preMainCode)
+
+proc genWinCDllMain(m: BModule) =
+  # used to use WINAPI macro, now ccStdCall:
+  m.s[cfsProcs].addProcHeader(ccStdCall, "DllMain", "BOOL", cProcParams(
+    (name: "hinstDLL", typ: "HINSTANCE"),
+    (name: "fwdreason", typ: "DWORD"),
+    (name: "lpvReserved", typ: "LPVOID")))
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    m.s[cfsProcs].addSingleIfStmt(removeSinglePar(cOp(Equal, "fwdreason", "DLL_PROCESS_ATTACH"))):
+      genMainProcs(m)
+    m.s[cfsProcs].addReturn(cIntValue(1))
+  m.s[cfsProcs].addNewline()
+
+proc genPosixNimDllMain(m: BModule, preMainCode: Snippet) =
+  genWinNimDllMain(m, preMainCode)
+
+proc genPosixCDllMain(m: BModule) =
+  # used to use NIM_POSIX_INIT, now uses direct constructor attribute
+  m.s[cfsProcs].addProcHeader("NimMainInit", "void", cProcParams(), isConstructor = true)
+  genMainProcs(m)
+  m.s[cfsProcs].addNewline()
+
+proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
+  let typName = "Genode::Env"
+  m.s[cfsProcs].addDeclWithVisibility(Extern):
+    m.s[cfsProcs].addVar(name = "nim_runtime_env", typ = ptrType(typName))
+  m.s[cfsProcs].addDeclWithVisibility(ExternC):
+    m.s[cfsProcs].addProcHeader("nim_component_construct", "void", cProcParams((name: "", typ: ptrType(typName))))
+    m.s[cfsProcs].finishProcHeaderAsProto()
+  genNimMainBody(m, preMainCode)
+
+proc genComponentConstruct(m: BModule) =
+  let fnName = "Libc::Component::construct"
+  let typName = "Libc::Env"
+  m.s[cfsProcs].addProcHeader(fnName, "void", cProcParams((name: "env", typ: cppRefType(typName))))
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    m.s[cfsProcs].addLineComment("Set Env used during runtime initialization")
+    m.s[cfsProcs].addAssignment("nim_runtime_env", cAddr("env"))
+    let callFn = "Libc::with_libc"
+    var call: CallBuilder
+    m.s[cfsProcs].addStmt():
+      m.s[cfsProcs].addCall(call, callFn):
+        m.s[cfsProcs].addArgument(call):
+          m.s[cfsProcs].addCppLambda(ByReference, cProcParams()):
+            m.s[cfsProcs].addLineComment("Initialize runtime and globals")
+            genMainProcs(m)
+            m.s[cfsProcs].addLineComment("Call application construct")
+            m.s[cfsProcs].addCallStmt("nim_component_construct", cAddr("env"))
+  m.s[cfsProcs].addNewline()
+
 proc genMainProc(m: BModule) =
   ## this function is called in cgenWriteModules after all modules are closed,
   ## it means raising dependency on the symbols is too late as it will not propagate
   ## into other modules, only simple rope manipulations are allowed
-  var preMainCode: Rope = ""
+  var preMainBuilder = newBuilder("")
   if m.hcrOn:
-    proc loadLib(handle: string, name: string): Rope =
-      result = ""
+    proc loadLib(builder: var Builder, handle: string, name: string) =
       let prc = magicsys.getCompilerProc(m.g.graph, name)
       assert prc != nil
       let n = newStrNode(nkStrLit, prc.annex.path.strVal)
@@ -1653,130 +1810,23 @@ proc genMainProc(m: BModule) =
       var strLitBuilder = newBuilder("")
       genStringLiteral(m, n, strLitBuilder)
       let strLit = extract(strLitBuilder)
-      appcg(m, result, "\tif (!($1 = #nimLoadLibrary($2)))$N" &
-                       "\t\t#nimLoadLibraryError($2);$N",
-                       [handle, strLit])
+      builder.addAssignment(handle, cCall(cgsymValue(m, "nimLoadLibrary"), strLit))
+      builder.addSingleIfStmt(cOp(Not, handle)):
+        builder.addCallStmt(cgsymValue(m, "nimLoadLibraryError"), strLit)
 
-    preMainCode.add(loadLib("hcr_handle", "hcrGetProc"))
+    loadLib(preMainBuilder, "hcr_handle", "hcrGetProc")
     if m.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
-      preMainCode.add("\t$1PreMain();\L" % [rope m.config.nimMainPrefix])
+      preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
     else:
-      preMainCode.add("\tvoid* rtl_handle;\L")
-      preMainCode.add(loadLib("rtl_handle", "nimGC_setStackBottom"))
-      preMainCode.add(hcrGetProcLoadCode(m, "nimGC_setStackBottom", "nimrtl_", "rtl_handle", "nimGetProcAddr"))
-      preMainCode.add("\tinner = $1PreMain;\L" % [rope m.config.nimMainPrefix])
-      preMainCode.add("\tinitStackBottomWith_actual((void *)&inner);\L")
-      preMainCode.add("\t(*inner)();\L")
+      preMainBuilder.addVar(name = "rtl_handle", typ = "void*")
+      loadLib(preMainBuilder, "rtl_handle", "nimGC_setStackBottom")
+      preMainBuilder.add(hcrGetProcLoadCode(m, "nimGC_setStackBottom", "nimrtl_", "rtl_handle", "nimGetProcAddr"))
+      preMainBuilder.addAssignment("inner", m.config.nimMainPrefix & "PreMain")
+      preMainBuilder.addCallStmt("initStackBottomWith_actual", cCast("void*", cAddr("inner")))
+      preMainBuilder.addCallStmt(cDeref("inner"))
   else:
-    preMainCode.add("\t$1PreMain();\L" % [rope m.config.nimMainPrefix])
-
-  var posixCmdLine: Rope = ""
-  if optNoMain notin m.config.globalOptions:
-    posixCmdLine.add "N_LIB_PRIVATE int cmdCount;\L"
-    posixCmdLine.add "N_LIB_PRIVATE char** cmdLine;\L"
-    posixCmdLine.add "N_LIB_PRIVATE char** gEnv;\L"
-
-  const
-    # The use of a volatile function pointer to call Pre/NimMainInner
-    # prevents inlining of the NimMainInner function and dependent
-    # functions, which might otherwise merge their stack frames.
-
-    PreMainBody = "$N" &
-      "N_LIB_PRIVATE void $3PreMainInner(void) {$N" &
-      "$2" &
-      "}$N$N" &
-      "$4" &
-      "N_LIB_PRIVATE void $3PreMain(void) {$N" &
-      "##if $5$N" & # 1 for volatile call, 0 for non-volatile
-      "\tvoid (*volatile inner)(void);$N" &
-      "\tinner = $3PreMainInner;$N" &
-      "$1" &
-      "\t(*inner)();$N" &
-      "##else$N" &
-      "$1" &
-      "\t$3PreMainInner();$N" &
-      "##endif$N" &
-      "}$N$N"
-
-    MainProcs =
-      "\t$^NimMain();$N"
-
-    MainProcsWithResult =
-      MainProcs & ("\treturn $1nim_program_result;$N")
-
-    NimMainInner = "N_LIB_PRIVATE N_CDECL(void, $5NimMainInner)(void) {$N" &
-        "$1" &
-      "}$N$N"
-
-    NimMainProc =
-      "N_CDECL(void, $5NimMain)(void) {$N" &
-      "##if $6$N" & # 1 for volatile call, 0 for non-volatile
-      "\tvoid (*volatile inner)(void);$N" &
-      "$4" &
-      "\tinner = $5NimMainInner;$N" &
-      "$2" &
-      "\t(*inner)();$N" &
-      "##else$N" &
-      "$4" &
-      "$2" &
-      "\t$5NimMainInner();$N" &
-      "##endif$N" &
-      "}$N$N"
-
-    NimMainBody = NimMainInner & NimMainProc
-
-    PosixCMain =
-      "int main(int argc, char** args, char** env) {$N" &
-        "\tcmdLine = args;$N" &
-        "\tcmdCount = argc;$N" &
-        "\tgEnv = env;$N" &
-        MainProcsWithResult &
-      "}$N$N"
-
-    StandaloneCMain =
-      "int main(void) {$N" &
-        MainProcs &
-        "\treturn 0;$N" &
-      "}$N$N"
-
-    WinNimMain = NimMainBody
-
-    WinCMain = "N_STDCALL(int, WinMain)(HINSTANCE hCurInstance, $N" &
-      "                        HINSTANCE hPrevInstance, $N" &
-      "                        LPSTR lpCmdLine, int nCmdShow) {$N" &
-      MainProcsWithResult & "}$N$N"
-
-    WinNimDllMain = NimMainInner & "N_LIB_EXPORT " & NimMainProc
-
-    WinCDllMain =
-      "BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fwdreason, $N" &
-      "                    LPVOID lpvReserved) {$N" &
-      "\tif (fwdreason == DLL_PROCESS_ATTACH) {$N" & MainProcs & "\t}$N" &
-      "\treturn 1;$N}$N$N"
-
-    PosixNimDllMain = WinNimDllMain
-
-    PosixCDllMain =
-      "N_LIB_PRIVATE void NIM_POSIX_INIT NimMainInit(void) {$N" &
-        MainProcs &
-      "}$N$N"
-
-    GenodeNimMain =
-      "extern Genode::Env *nim_runtime_env;$N" &
-      "extern \"C\" void nim_component_construct(Genode::Env*);$N$N" &
-      NimMainBody
-
-    ComponentConstruct =
-      "void Libc::Component::construct(Libc::Env &env) {$N" &
-      "\t// Set Env used during runtime initialization$N" &
-      "\tnim_runtime_env = &env;$N" &
-      "\tLibc::with_libc([&] () {$N\t" &
-      "\t// Initialize runtime and globals$N" &
-      MainProcs &
-      "\t// Call application construct$N" &
-      "\t\tnim_component_construct(&env);$N" &
-      "\t});$N" &
-      "}$N$N"
+    preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
+  let preMainCode = extract(preMainBuilder)
 
   if m.config.target.targetOS == osWindows and
       m.config.globalOptions * {optGenGuiApp, optGenDynLib} != {}:
@@ -1784,36 +1834,24 @@ proc genMainProc(m: BModule) =
   elif m.config.target.targetOS == osGenode:
     m.includeHeader("<libc/component.h>")
 
-  let initStackBottomCall =
-    if m.config.target.targetOS == osStandalone or m.config.selectedGC in {gcNone, gcArc, gcAtomicArc, gcOrc}: "".rope
-    else: ropecg(m, "\t#initStackBottomWith((void *)&inner);$N", [])
+  if initStackBottom(m):
+    cgsym(m, "initStackBottomWith")
   inc(m.labels)
 
-  let isVolatile = if m.config.selectedGC notin {gcNone, gcArc, gcAtomicArc, gcOrc}: "1" else: "0"
-  appcg(m, m.s[cfsProcs], PreMainBody, [m.g.mainDatInit, m.g.otherModsInit, m.config.nimMainPrefix, posixCmdLine, isVolatile])
+  genPreMain(m)
 
   if m.config.target.targetOS == osWindows and
       m.config.globalOptions * {optGenGuiApp, optGenDynLib} != {}:
     if optGenGuiApp in m.config.globalOptions:
-      const nimMain = WinNimMain
-      appcg(m, m.s[cfsProcs], nimMain,
-        [m.g.mainModInit, initStackBottomCall, m.labels, preMainCode, m.config.nimMainPrefix, isVolatile])
+      genWinNimMain(m, preMainCode)
     else:
-      const nimMain = WinNimDllMain
-      appcg(m, m.s[cfsProcs], nimMain,
-        [m.g.mainModInit, initStackBottomCall, m.labels, preMainCode, m.config.nimMainPrefix, isVolatile])
+      genWinNimDllMain(m, preMainCode)
   elif m.config.target.targetOS == osGenode:
-    const nimMain = GenodeNimMain
-    appcg(m, m.s[cfsProcs], nimMain,
-        [m.g.mainModInit, initStackBottomCall, m.labels, preMainCode, m.config.nimMainPrefix, isVolatile])
+    genGenodeNimMain(m, preMainCode)
   elif optGenDynLib in m.config.globalOptions:
-    const nimMain = PosixNimDllMain
-    appcg(m, m.s[cfsProcs], nimMain,
-        [m.g.mainModInit, initStackBottomCall, m.labels, preMainCode, m.config.nimMainPrefix, isVolatile])
+    genPosixNimDllMain(m, preMainCode)
   else:
-    const nimMain = NimMainBody
-    appcg(m, m.s[cfsProcs], nimMain,
-        [m.g.mainModInit, initStackBottomCall, m.labels, preMainCode, m.config.nimMainPrefix, isVolatile])
+    genNimMainBody(m, preMainCode)
 
   if optNoMain notin m.config.globalOptions:
     if m.config.cppCustomNamespace.len > 0:
@@ -1823,23 +1861,17 @@ proc genMainProc(m: BModule) =
     if m.config.target.targetOS == osWindows and
         m.config.globalOptions * {optGenGuiApp, optGenDynLib} != {}:
       if optGenGuiApp in m.config.globalOptions:
-        const otherMain = WinCMain
-        appcg(m, m.s[cfsProcs], otherMain, [if m.hcrOn: "*" else: "", m.config.nimMainPrefix])
+        genWinCMain(m)
       else:
-        const otherMain = WinCDllMain
-        appcg(m, m.s[cfsProcs], otherMain, [m.config.nimMainPrefix])
+        genWinCDllMain(m)
     elif m.config.target.targetOS == osGenode:
-      const otherMain = ComponentConstruct
-      appcg(m, m.s[cfsProcs], otherMain, [m.config.nimMainPrefix])
+      genComponentConstruct(m)
     elif optGenDynLib in m.config.globalOptions:
-      const otherMain = PosixCDllMain
-      appcg(m, m.s[cfsProcs], otherMain, [m.config.nimMainPrefix])
+      genPosixCDllMain(m)
     elif m.config.target.targetOS == osStandalone:
-      const otherMain = StandaloneCMain
-      appcg(m, m.s[cfsProcs], otherMain, [m.config.nimMainPrefix])
+      genStandaloneCMain(m)
     else:
-      const otherMain = PosixCMain
-      appcg(m, m.s[cfsProcs], otherMain, [if m.hcrOn: "*" else: "", m.config.nimMainPrefix])
+      genPosixCMain(m)
 
     if m.config.cppCustomNamespace.len > 0:
       openNamespaceNim(m.config.cppCustomNamespace, m.s[cfsProcs])
@@ -1848,18 +1880,19 @@ proc registerInitProcs*(g: BModuleList; m: PSym; flags: set[ModuleBackendFlag]) 
   ## Called from the IC backend.
   if HasDatInitProc in flags:
     let datInit = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "DatInit000"
-    g.mainModProcs.addf("N_LIB_PRIVATE N_NIMCALL(void, $1)(void);$N", [datInit])
-    g.mainDatInit.addf("\t$1();$N", [datInit])
+    g.mainModProcs.addProcHeader(ccNimCall, datInit, "void", cProcParams())
+    g.mainModProcs.finishProcHeaderAsProto()
+    g.mainDatInit.addCallStmt(datInit)
   if HasModuleInitProc in flags:
     let init = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "Init000"
-    g.mainModProcs.addf("N_LIB_PRIVATE N_NIMCALL(void, $1)(void);$N", [init])
-    let initCall = "\t$1();$N" % [init]
+    g.mainModProcs.addProcHeader(ccNimCall, init, "void", cProcParams())
+    g.mainModProcs.finishProcHeaderAsProto()
     if sfMainModule in m.flags:
-      g.mainModInit.add(initCall)
+      g.mainModInit.addCallStmt(init)
     elif sfSystemModule in m.flags:
-      g.mainDatInit.add(initCall) # systemInit must called right after systemDatInit if any
+      g.mainDatInit.addCallStmt(init) # systemInit must called right after systemDatInit if any
     else:
-      g.otherModsInit.add(initCall)
+      g.otherModsInit.addCallStmt(init)
 
 proc whichInitProcs*(m: BModule): set[ModuleBackendFlag] =
   # called from IC.
@@ -1877,26 +1910,55 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     datInit = m.getDatInitName
 
   if m.hcrOn:
-    var hcrModuleMeta = "$nN_LIB_PRIVATE const char* hcr_module_list[] = {$n" % []
+    var hcrModuleMeta = newBuilder("")
     let systemModulePath = getModuleDllPath(m, g.modules[g.graph.config.m.systemFileIdx.int].module)
     let mainModulePath = getModuleDllPath(m, m.module)
+    hcrModuleMeta.addDeclWithVisibility(Private):
+      hcrModuleMeta.addArrayVarWithInitializer(kind = Local,
+          name = "hcr_module_list",
+          elementType = ptrConstType("char"),
+          len = g.graph.importDeps[FileIndex(m.module.position)].len +
+            ord(sfMainModule in m.module.flags) +
+            1):
+        var modules: StructInitializer
+        hcrModuleMeta.addStructInitializer(modules, siArray):
+          if sfMainModule in m.module.flags:
+            hcrModuleMeta.addField(modules, ""):
+              hcrModuleMeta.add(systemModulePath)
+          g.graph.importDeps.withValue(FileIndex(m.module.position), deps):
+            for curr in deps[]:
+              hcrModuleMeta.addField(modules, ""):
+                hcrModuleMeta.add(getModuleDllPath(m, g.modules[curr.int].module))
+          hcrModuleMeta.addField(modules, ""):
+            hcrModuleMeta.add("\"\"")
+    hcrModuleMeta.addDeclWithVisibility(ExportLib):
+      hcrModuleMeta.addProcHeader(ccNimCall, "HcrGetImportedModules", "void**", cProcParams())
+      hcrModuleMeta.finishProcHeaderWithBody():
+        hcrModuleMeta.addReturn(cCast("void**", "hcr_module_list"))
+    hcrModuleMeta.addDeclWithVisibility(ExportLib):
+      hcrModuleMeta.addProcHeader(ccNimCall, "HcrGetSigHash", "char*", cProcParams())
+      hcrModuleMeta.finishProcHeaderWithBody():
+        hcrModuleMeta.addReturn('"' & $sigHash(m.module, m.config) & '"')
     if sfMainModule in m.module.flags:
-      hcrModuleMeta.addf("\t$1,$n", [systemModulePath])
-    g.graph.importDeps.withValue(FileIndex(m.module.position), deps):
-      for curr in deps[]:
-        hcrModuleMeta.addf("\t$1,$n", [getModuleDllPath(m, g.modules[curr.int].module)])
-    hcrModuleMeta.addf("\t\"\"};$n", [])
-    hcrModuleMeta.addf("$nN_LIB_EXPORT N_NIMCALL(void**, HcrGetImportedModules)() { return (void**)hcr_module_list; }$n", [])
-    hcrModuleMeta.addf("$nN_LIB_EXPORT N_NIMCALL(char*, HcrGetSigHash)() { return \"$1\"; }$n$n",
-                          [($sigHash(m.module, m.config)).rope])
-    if sfMainModule in m.module.flags:
-      g.mainModProcs.add(hcrModuleMeta)
-      g.mainModProcs.addf("static void* hcr_handle;$N", [])
-      g.mainModProcs.addf("N_LIB_EXPORT N_NIMCALL(void, $1)(void);$N", [init])
-      g.mainModProcs.addf("N_LIB_EXPORT N_NIMCALL(void, $1)(void);$N", [datInit])
+      g.mainModProcs.add(extract(hcrModuleMeta))
+      g.mainModProcs.addDeclWithVisibility(StaticProc):
+        g.mainModProcs.addVar(name = "hcr_handle", typ = "void*")
+      g.mainModProcs.addDeclWithVisibility(ExportLib):
+        g.mainModProcs.addProcHeader(ccNimCall, init, "void", cProcParams())
+        g.mainModProcs.finishProcHeaderAsProto()
+      g.mainModProcs.addDeclWithVisibility(ExportLib):
+        g.mainModProcs.addProcHeader(ccNimCall, datInit, "void", cProcParams())
+        g.mainModProcs.finishProcHeaderAsProto()
+      g.mainModProcs.addDeclWithVisibility(ExportLib):
+        g.mainModProcs.addProcHeader(ccNimCall, m.getHcrInitName, "void", cProcParams(
+          (name: "", typ: "void*"),
+          (name: "", typ: ptrType("char"))))
+        g.mainModProcs.finishProcHeaderAsProto()
       g.mainModProcs.addf("N_LIB_EXPORT N_NIMCALL(void, $1)(void*, N_NIMCALL_PTR(void*, getProcAddr)(void*, char*));$N", [m.getHcrInitName])
-      g.mainModProcs.addf("N_LIB_EXPORT N_NIMCALL(void, HcrCreateTypeInfos)(void);$N", [])
-      g.mainModInit.addf("\t$1();$N", [init])
+      g.mainModProcs.addDeclWithVisibility(ExportLib):
+        g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", "void", cProcParams())
+        g.mainModProcs.finishProcHeaderAsProto()
+      g.mainModInit.addCallStmt(init)
       g.otherModsInit.addf("\thcrInit((void**)hcr_module_list, $1, $2, $3, hcr_handle, nimGetProcAddr);$n",
                             [mainModulePath, systemModulePath, datInit])
       g.mainDatInit.addf("\t$1(hcr_handle, nimGetProcAddr);$N", [m.getHcrInitName])
@@ -1917,7 +1979,7 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       g.mainDatInit.add("\t*cmd_count = cmdCount;\n")
       g.mainDatInit.add("\t*cmd_line = cmdLine;\n")
     else:
-      m.s[cfsInitProc].add(hcrModuleMeta)
+      m.s[cfsInitProc].add(extract(hcrModuleMeta))
     return
 
   if m.s[cfsDatInitProc].buf.len > 0:
@@ -2354,7 +2416,7 @@ proc writeModule(m: BModule, pending: bool) =
     if sfMainModule in m.module.flags:
       # generate main file:
       genMainProc(m)
-      m.s[cfsProcHeaders].add(m.g.mainModProcs)
+      m.s[cfsProcHeaders].add(extract(m.g.mainModProcs))
       generateThreadVarsSize(m)
 
   var cf = Cfile(nimname: m.module.name.s, cname: cfile,

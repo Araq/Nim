@@ -14,6 +14,9 @@ proc ptrConstType(t: Snippet): Snippet =
 proc ptrType(t: Snippet): Snippet =
   t & "*"
 
+proc cppRefType(t: Snippet): Snippet =
+  t & "&"
+
 const
   CallingConvToStr: array[TCallingConvention, string] = ["N_NIMCALL",
     "N_STDCALL", "N_CDECL", "N_SAFECALL",
@@ -31,6 +34,23 @@ proc procPtrTypeUnnamedNimCall(rettype, params: Snippet): Snippet =
 
 proc procPtrTypeUnnamed(callConv: TCallingConvention, rettype, params: Snippet): Snippet =
   CallingConvToStr[callConv] & "_PTR(" & rettype & ", )" & params
+
+proc procPtrType(callConv: TCallingConvention, rettype, name, params: Snippet): Snippet =
+  CallingConvToStr[callConv] & "_PTR(" & rettype & ", " & name & ")" & params
+
+type CppCaptureKind = enum None, ByReference, ByCopy
+
+template addCppLambda(builder: var Builder, captures: CppCaptureKind, params: Snippet, body: typed) =
+  builder.add("[")
+  case captures
+  of None: discard
+  of ByReference: builder.add("&")
+  of ByCopy: builder.add("=")
+  builder.add("] ")
+  builder.add(params)
+  builder.addLineEndIndent("{")
+  body
+  builder.addLineEndDedent("}")
 
 proc cCast(typ, value: Snippet): Snippet =
   "((" & typ & ") " & value & ")"

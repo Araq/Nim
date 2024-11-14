@@ -42,6 +42,12 @@ proc addLineEndDedent*(builder: var Builder, s: string) =
   builder.addDedent(s)
   builder.addNewline()
 
+proc addLineComment*(builder: var Builder, comment: string) =
+  # probably no-op on nifc
+  builder.add("// ")
+  builder.add(comment)
+  builder.addNewline()
+
 proc addIntValue*(builder: var Builder, val: int) =
   builder.buf.addInt(val)
 

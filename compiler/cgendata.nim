@@ -115,7 +115,7 @@ type
                         # computing alive data on our own.
 
   BModuleList* = ref object of RootObj
-    mainModProcs*, mainModInit*, otherModsInit*, mainDatInit*: Rope
+    mainModProcs*, mainModInit*, otherModsInit*, mainDatInit*: Builder
     mapping*: Rope             # the generated mapping file (if requested)
     modules*: seq[BModule]     # list of all compiled modules
     modulesClosed*: seq[BModule] # list of the same compiled modules, but in the order they were closed
