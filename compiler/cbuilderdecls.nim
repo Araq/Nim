@@ -478,6 +478,7 @@ proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder,
   builder.add(rettype)
   builder.add(", ")
   builder.add(name)
+  builder.add(")")
   builder.add(params)
 
 proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
