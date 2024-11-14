@@ -48,7 +48,7 @@ template addCppLambda(builder: var Builder, captures: CppCaptureKind, params: Sn
   of ByCopy: builder.add("=")
   builder.add("] ")
   builder.add(params)
-  builder.addLineEndIndent("{")
+  builder.addLineEndIndent(" {")
   body
   builder.addLineEndDedent("}")
 

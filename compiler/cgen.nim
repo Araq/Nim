@@ -1653,9 +1653,9 @@ proc genPreMain(m: BModule) =
     m.s[cfsProcs].addDeclWithVisibility(Private):
       m.s[cfsProcs].addVar(name = "cmdCount", typ = "int")
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "cmdLine", typ = "char**")
+      m.s[cfsProcs].addVar(name = "cmdLine", typ = ptrType(ptrType("char")))
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "gEnv", typ = "char**")
+      m.s[cfsProcs].addVar(name = "gEnv", typ = ptrType(ptrType("char")))
   m.s[cfsProcs].addDeclWithVisibility(Private):
     m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMain", "void", cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
@@ -1765,7 +1765,8 @@ proc genPosixNimDllMain(m: BModule, preMainCode: Snippet) =
 proc genPosixCDllMain(m: BModule) =
   # used to use NIM_POSIX_INIT, now uses direct constructor attribute
   m.s[cfsProcs].addProcHeader("NimMainInit", "void", cProcParams(), isConstructor = true)
-  genMainProcs(m)
+  m.s[cfsProcs].finishProcHeaderWithBody():
+    genMainProcs(m)
   m.s[cfsProcs].addNewline()
 
 proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
@@ -1880,13 +1881,15 @@ proc registerInitProcs*(g: BModuleList; m: PSym; flags: set[ModuleBackendFlag]) 
   ## Called from the IC backend.
   if HasDatInitProc in flags:
     let datInit = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "DatInit000"
-    g.mainModProcs.addProcHeader(ccNimCall, datInit, "void", cProcParams())
-    g.mainModProcs.finishProcHeaderAsProto()
+    g.mainModProcs.addDeclWithVisibility(Private):
+      g.mainModProcs.addProcHeader(ccNimCall, datInit, "void", cProcParams())
+      g.mainModProcs.finishProcHeaderAsProto()
     g.mainDatInit.addCallStmt(datInit)
   if HasModuleInitProc in flags:
     let init = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "Init000"
-    g.mainModProcs.addProcHeader(ccNimCall, init, "void", cProcParams())
-    g.mainModProcs.finishProcHeaderAsProto()
+    g.mainModProcs.addDeclWithVisibility(Private):
+      g.mainModProcs.addProcHeader(ccNimCall, init, "void", cProcParams())
+      g.mainModProcs.finishProcHeaderAsProto()
     if sfMainModule in m.flags:
       g.mainModInit.addCallStmt(init)
     elif sfSystemModule in m.flags:
@@ -1917,7 +1920,7 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       hcrModuleMeta.addArrayVarWithInitializer(kind = Local,
           name = "hcr_module_list",
           elementType = ptrConstType("char"),
-          len = g.graph.importDeps[FileIndex(m.module.position)].len +
+          len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
             ord(sfMainModule in m.module.flags) +
             1):
         var modules: StructInitializer
@@ -1936,7 +1939,7 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       hcrModuleMeta.finishProcHeaderWithBody():
         hcrModuleMeta.addReturn(cCast("void**", "hcr_module_list"))
     hcrModuleMeta.addDeclWithVisibility(ExportLib):
-      hcrModuleMeta.addProcHeader(ccNimCall, "HcrGetSigHash", "char*", cProcParams())
+      hcrModuleMeta.addProcHeader(ccNimCall, "HcrGetSigHash", ptrType("char"), cProcParams())
       hcrModuleMeta.finishProcHeaderWithBody():
         hcrModuleMeta.addReturn('"' & $sigHash(m.module, m.config) & '"')
     if sfMainModule in m.module.flags:
