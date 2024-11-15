@@ -1784,6 +1784,9 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     elif x.kind == tyGenericInst and concpt.kind == tyConcept:
       result = if concepts.conceptMatch(c.c, concpt, x, c.bindings, f): isGeneric
                else: isNone
+    elif concpt.kind == tyUserTypeClass:
+      let inst = prepareMetatypeForSigmatch(c.c, c.bindings, c.call.info, f)
+      return typeRel(c, inst, a, flags)
     else:
       let genericBody = f[0]
       var askip = skippedNone
@@ -1900,8 +1903,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         if aOrig == f: return isEqual
         var matched = matchUserTypeClass(c, f, aOrig)
         if matched != nil:
-          bindConcreteTypeToUserTypeClass(matched, a)
-          if doBind: put(c, f, matched)
+          if doBind: put(c, f, a)
           result = isGeneric
         elif a.len > 0 and a.last == f:
           # Needed for checking `Y` == `Addable` in the following
