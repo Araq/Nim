@@ -1853,12 +1853,16 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
   # distinct types can have their own destructors
   var t = skipTypes(origType, irrelevantForBackend + tyUserTypeClasses - {tyDistinct})
 
-  let prefixTI = if m.hcrOn: "(" else: "(&"
+  template prefixTI(x: Snippet): Snippet =
+    if m.hcrOn:
+      wrapPar(x)
+    else:
+      cAddr(x)
 
   let sig = hashType(origType, m.config)
   result = m.typeInfoMarkerV2.getOrDefault(sig)
   if result != "":
-    return prefixTI.rope & result & ")".rope
+    return prefixTI(result)
 
   let marker = m.g.typeInfoMarkerV2.getOrDefault(sig)
   if marker.str != "":
@@ -1866,7 +1870,7 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
     declareNimType(m, "TNimTypeV2", marker.str, marker.owner)
     # also store in local type section:
     m.typeInfoMarkerV2[sig] = marker.str
-    return prefixTI.rope & marker.str & ")".rope
+    return prefixTI(marker.str)
 
   result = "NTIv2$1_" % [rope($sig)]
   m.typeInfoMarkerV2[sig] = result
@@ -1878,14 +1882,14 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
     # reference the type info as extern here
     cgsym(m, "TNimTypeV2")
     declareNimType(m, "TNimTypeV2", result, owner)
-    return prefixTI.rope & result & ")".rope
+    return prefixTI(result)
 
   m.g.typeInfoMarkerV2[sig] = (str: result, owner: owner)
   if m.compileToCpp or m.hcrOn:
     genTypeInfoV2OldImpl(m, t, origType, result, info)
   else:
     genTypeInfoV2Impl(m, t, origType, result, info)
-  result = prefixTI.rope & result & ")".rope
+  result = prefixTI(result)
 
 proc openArrayToTuple(m: BModule; t: PType): PType =
   result = newType(tyTuple, m.idgen, t.owner)
@@ -1926,12 +1930,16 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
   let origType = t
   var t = skipTypes(origType, irrelevantForBackend + tyUserTypeClasses)
 
-  let prefixTI = if m.hcrOn: "(" else: "(&"
+  template prefixTI(x: Snippet): Snippet =
+    if m.hcrOn:
+      wrapPar(x)
+    else:
+      cAddr(x)
 
   let sig = hashType(origType, m.config)
   result = m.typeInfoMarker.getOrDefault(sig)
   if result != "":
-    return prefixTI.rope & result & ")".rope
+    return prefixTI(result)
 
   let marker = m.g.typeInfoMarker.getOrDefault(sig)
   if marker.str != "":
@@ -1940,7 +1948,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
     declareNimType(m, "TNimType", marker.str, marker.owner)
     # also store in local type section:
     m.typeInfoMarker[sig] = marker.str
-    return prefixTI.rope & marker.str & ")".rope
+    return prefixTI(marker.str)
 
   result = "NTI$1$2_" % [rope(typeToC(t)), rope($sig)]
   m.typeInfoMarker[sig] = result
@@ -1950,7 +1958,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
     cgsym(m, "TNimType")
     cgsym(m, "TNimNode")
     declareNimType(m, "TNimType", result, old.int)
-    return prefixTI.rope & result & ")".rope
+    return prefixTI(result)
 
   var owner = t.skipTypes(typedescPtrs).itemId.module
   if owner != m.module.position and moduleOpenForCodegen(m.g.graph, FileIndex owner):
@@ -1960,7 +1968,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
     cgsym(m, "TNimType")
     cgsym(m, "TNimNode")
     declareNimType(m, "TNimType", result, owner)
-    return prefixTI.rope & result & ")".rope
+    return prefixTI(result)
   else:
     owner = m.module.position.int32
 
@@ -2021,7 +2029,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
     m.s[cfsTypeInit3].addDerefFieldAssignment(v2info, "typeInfoV1", cCast("void*", cAddr(result)))
     m.s[cfsTypeInit3].addFieldAssignment(result, "typeInfoV2", cCast("void*", v2info))
 
-  result = prefixTI.rope & result & ")".rope
+  result = prefixTI(result)
 
 proc genTypeInfo*(config: ConfigRef, m: BModule; t: PType; info: TLineInfo): Rope =
   if optTinyRtti in config.globalOptions:
