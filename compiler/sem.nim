@@ -333,7 +333,7 @@ proc fixupTypeAfterEval(c: PContext, evaluated, eOrig: PNode): PNode =
       if hasCycle(result):
         result = localErrorNode(c, eOrig, "the resulting AST is cyclic and cannot be processed further")
       else:
-        result = semmacrosanity.annotateType(result, expectedType, c.config)
+        semmacrosanity.annotateType(result, expectedType, c.config)
   else:
     result = semExprWithType(c, evaluated)
     #result = fitNode(c, e.typ, result) inlined with special case:
