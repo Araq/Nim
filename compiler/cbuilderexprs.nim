@@ -70,7 +70,7 @@ template addCast(builder: var Builder, typ: Snippet, valueBody: typed) =
   builder.add ")"
 
 proc cAddr(value: Snippet): Snippet =
-  "&" & value
+  "(&" & value & ")"
 
 proc cLabelAddr(value: TLabel): Snippet =
   "&&" & value
