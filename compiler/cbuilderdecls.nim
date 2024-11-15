@@ -404,7 +404,7 @@ proc addVisibilityPrefix(builder: var Builder, visibility: DeclVisibility) =
   of Extern:
     builder.add("extern ")
   of ExternC:
-    builder.add("extern \"C\" ")
+    builder.add("NIM_EXTERNC ")
   of ImportLib:
     builder.add("N_LIB_IMPORT ")
   of ExportLib:
