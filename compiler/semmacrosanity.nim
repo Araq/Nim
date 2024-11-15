@@ -101,10 +101,10 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
       if field.isNil:
         globalError conf, n.info, "invalid field at index " & $i
       else:
-        # only add fields from active case branches
         internalAssert(conf, n[i].kind == nkExprColonExpr)
         annotateType(n[i][1], field.sym.typ, conf)
         if field.delete:
+          # only codegen fields from active case branches
           incl(n[i].flags, nfPreventCg)
   of nkPar, nkTupleConstr:
     if x.kind == tyTuple:
