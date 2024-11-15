@@ -1458,10 +1458,10 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
         var macroCall = newNodeI(nkCall, c.debug[pc])
         macroCall.add(newSymNode(prc))
         for i in 1..rc-1:
-          let node = regs[rb+i].regToNode
+          var node = regs[rb+i].regToNode
           node.info = c.debug[pc]
           if prc.typ[i].kind notin {tyTyped, tyUntyped}:
-            node.annotateType(prc.typ[i], c.config)
+            node = node.annotateType(prc.typ[i], c.config)
 
           macroCall.add(node)
         var a = evalTemplate(macroCall, prc, genSymOwner, c.config, c.cache, c.templInstCounter, c.idgen)
