@@ -1309,12 +1309,22 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     withoutShallowFlags:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
+        if a.typeInst != nil and b.typeInst != nil:
+          # this is required because of `ref object`s,
+          # the value of their dereferences are not wrapped in `tyGenericInst`,
+          # so we need to check the generic parameters here
+          for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+            if not sameTypeAux(ff, aa, c): return false
+        # XXX should be removed in favor of above lines,
+        # structural equality is wrong in general:
         result = sameObjectStructures(a, b, c) and sameFlags(a, b)
   of tyDistinct:
     cycleCheck()
     if c.cmp == dcEq:
       if sameFlags(a, b):
         ifFastObjectTypeCheckFailed(a, b):
+          # XXX should be removed in favor of checking generic params,
+          # structural equality is wrong in general:
           result = sameTypeAux(a.elementType, b.elementType, c)
     else:
       result = sameTypeAux(a.elementType, b.elementType, c) and sameFlags(a, b)

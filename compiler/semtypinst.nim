@@ -80,7 +80,7 @@ type
     owner*: PSym              # where this instantiation comes from
     recursionLimit: int
 
-proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType
+proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): PType
 proc replaceTypeVarsS(cl: var TReplTypeVars, s: PSym, t: PType): PSym
 proc replaceTypeVarsN*(cl: var TReplTypeVars, n: PNode; start=0; expectedType: PType = nil): PNode
 
@@ -95,8 +95,8 @@ template checkMetaInvariants(cl: TReplTypeVars, t: PType) = # noop code
       debug t
       writeStackTrace()
 
-proc replaceTypeVarsT*(cl: var TReplTypeVars, t: PType): PType =
-  result = replaceTypeVarsTAux(cl, t)
+proc replaceTypeVarsT*(cl: var TReplTypeVars, t: PType, isInstValue = false): PType =
+  result = replaceTypeVarsTAux(cl, t, isInstValue)
   checkMetaInvariants(cl, result)
 
 proc prepareNode*(cl: var TReplTypeVars, n: PNode): PNode =
@@ -481,7 +481,7 @@ proc handleGenericInvocation(cl: var TReplTypeVars, t: PType): PType =
     return
 
   let bbody = last body
-  var newbody = replaceTypeVarsT(cl, bbody)
+  var newbody = replaceTypeVarsT(cl, bbody, isInstValue = true)
   cl.skipTypedesc = oldSkipTypedesc
   newbody.flags = newbody.flags + (t.flags + body.flags - tfInstClearedFlags)
   result.flags = result.flags + newbody.flags - tfInstClearedFlags
@@ -578,7 +578,7 @@ proc propagateFieldFlags(t: PType, n: PNode) =
       propagateFieldFlags(t, son)
   else: discard
 
-proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
+proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): PType =
   template bailout =
     if (t.sym == nil) or (t.sym != nil and sfGeneratedType in t.sym.flags):
       # In the first case 't.sym' can be 'nil' if the type is a ref/ptr, see
@@ -712,13 +712,17 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
     propagateToOwner(result, result.last)
 
   else:
-    if containsGenericType(t):
+    if containsGenericType(t) or
+        # nominal types as direct generic instantiation values
+        # are re-instantiated even if they don't contain generic fields
+        (isInstValue and (t.kind in {tyDistinct, tyObject} or isRefPtrObject(t))):
       #if not cl.allowMetaTypes:
       bailout()
       result = instCopyType(cl, t)
       result.size = -1 # needs to be recomputed
       #if not cl.allowMetaTypes:
       cl.localCache[t.itemId] = result
+      let propagateInstValue = isInstValue and isRefPtrObject(t)
 
       for i, resulti in result.ikids:
         if resulti != nil:
@@ -728,7 +732,7 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
               typeToString(result[i], preferDesc) &
               "' inside of type definition: '" &
               t.owner.name.s & "'; Maybe generic arguments are missing?")
-          var r = replaceTypeVarsT(cl, resulti)
+          var r = replaceTypeVarsT(cl, resulti, isInstValue = propagateInstValue)
           if result.kind == tyObject:
             # carefully coded to not skip the precious tyGenericInst:
             let r2 = r.skipTypes({tyAlias, tySink, tyOwned})
