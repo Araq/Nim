@@ -3,8 +3,7 @@ discard """
   output: '''Sortable
 Sortable
 Container
-TObj
-int
+oof
 111 111
 (id: @[1, 2, 3], name: @["Vas", "Pas", "NafNaf"], age: @[10, 16, 18])
 '''
@@ -97,8 +96,7 @@ proc to(x: TObj, t: type string) = discard
 proc to(x: TObj, t: type JSonValue) = discard
 
 proc testFoo(x: TFoo) =
-  echo x.TypeName
-  echo x.MappedType.name
+  echo "oof"
 
 testFoo(TObj(x: 10))
 

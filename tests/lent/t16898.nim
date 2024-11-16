@@ -1,5 +1,5 @@
 discard """
-  errormsg: "invalid type: 'lent QuadraticExt' in this context: 'proc (r: var QuadraticExt, a: lent QuadraticExt, b: lent QuadraticExt){.noSideEffect, gcsafe.}' for proc"
+  errormsg: "invalid type: 'lent Fp2[6, system.uint64]' in this context: 'proc (r: var Fp2[6, system.uint64], a: lent Fp2[6, system.uint64], b: lent Fp2[6, system.uint64]){.noSideEffect, gcsafe.}' for proc"
 """
 
 # bug #16898
