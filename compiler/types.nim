@@ -1306,30 +1306,30 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
       cycleCheck()
       result = sameTypeAux(a.skipModifier, b.skipModifier, c)
   of tyObject:
-    withoutShallowFlags:
+    result = sameFlags(a, b)
+    if result:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
-        # should be generic:
+        # should be generic, and belong to the same generic head type:
         assert a.typeInst != nil, "generic object " & $a & " has no typeInst"
         assert b.typeInst != nil, "generic object " & $b & " has no typeInst"
-        result = sameFlags(a, b) and
-          sameTypeAux(a.typeInst.skipModifier, b.typeInst.skipModifier, c)
         if result:
-          # this is required because of generic `ref object`s,
-          # the value of their dereferences are not wrapped in `tyGenericInst`,
-          # so we need to check the generic parameters here
-          for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
-            if not sameTypeAux(ff, aa, c): return false
+          withoutShallowFlags:
+            # this is required because of generic `ref object`s,
+            # the value of their dereferences are not wrapped in `tyGenericInst`,
+            # so we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
   of tyDistinct:
     cycleCheck()
     if c.cmp == dcEq:
-      if sameFlags(a, b):
+      result = sameFlags(a, b)
+      if result:
         ifFastObjectTypeCheckFailed(a, b):
-          # should be generic:
+          # should be generic, and belong to the same generic head type:
           assert a.typeInst != nil, "generic distinct type " & $a & " has no typeInst"
           assert b.typeInst != nil, "generic distinct type " & $b & " has no typeInst"
-          result = sameTypeAux(a.typeInst.skipModifier, b.typeInst.skipModifier, c)
-          if result:
+          withoutShallowFlags:
             # just in case `tyGenericInst` was skipped at some point,
             # we need to check the generic parameters here
             for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
