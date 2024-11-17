@@ -3055,7 +3055,8 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
     putIntoDest(p, d, e, extract(elem))
   else:
     if d.k == locNone: d = getTemp(p, e.typ)
-    if getSize(p.config, e.typ) > 8:
+    let size = getSize(p.config, e.typ)
+    if size > 8:
       # big set:
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
         rdLoc(d),
@@ -3087,7 +3088,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
               cOp(BitAnd, "NU", cCast("NU", aa), cUintValue(7))))
     else:
       # small set
-      var ts = "NU" & $(getSize(p.config, e.typ) * 8)
+      var ts = "NU" & $(size * 8)
       p.s(cpsStmts).addAssignment(rdLoc(d), cIntValue(0))
       for it in e.sons:
         if it.kind == nkRange:
@@ -3103,7 +3104,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           p.s(cpsStmts).addForRangeInclusive(ri, aa, bb):
             p.s(cpsStmts).addInPlaceOp(BitOr, ts, rd,
               cOp(Shl, ts, cCast(ts, cIntValue(1)),
-                cOp(Mod, ts, ri, cOp(Mul, ts, cSizeof(ts), cIntValue(8)))))
+                cOp(Mod, ts, ri, cOp(Mul, ts, cIntValue(size), cIntValue(8)))))
         else:
           a = initLocExpr(p, it)
           var aa: Snippet = ""
@@ -3111,7 +3112,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           let rd = rdLoc(d)
           p.s(cpsStmts).addInPlaceOp(BitOr, ts, rd,
             cOp(Shl, ts, cCast(ts, cIntValue(1)),
-              cOp(Mod, ts, aa, cOp(Mul, ts, cSizeof(ts), cIntValue(8)))))
+              cOp(Mod, ts, aa, cOp(Mul, ts, cIntValue(size), cIntValue(8)))))
 
 proc genTupleConstr(p: BProc, n: PNode, d: var TLoc) =
   var rec: TLoc

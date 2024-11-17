@@ -1984,18 +1984,20 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       # bug #16265.
       let osModulePath = ($systemModulePath).replace("stdlib_system", "stdlib_os").rope
       g.mainDatInit.addCallStmt("hcrAddModule", osModulePath)
-      g.mainDatInit.addVar(name = "cmd_count", typ = ptrType("int"))
-      g.mainDatInit.addVar(name = "cmd_line", typ = ptrType(ptrType(ptrType("char"))))
+      let cmdCountTyp = ptrType("int")
+      let cmdLineTyp = ptrType(ptrType(ptrType("char")))
+      g.mainDatInit.addVar(name = "cmd_count", typ = cmdCountTyp)
+      g.mainDatInit.addVar(name = "cmd_line", typ = cmdLineTyp)
       g.mainDatInit.addCallStmt("hcrRegisterGlobal",
         osModulePath,
         "\"cmdCount\"",
-        cSizeof("cmd_count"),
+        cSizeof(cmdCountTyp),
         "NULL",
         cCast("void**", cAddr("cmd_count")))
       g.mainDatInit.addCallStmt("hcrRegisterGlobal",
         osModulePath,
         "\"cmdLine\"",
-        cSizeof("cmd_line"),
+        cSizeof(cmdLineTyp),
         "NULL",
         cCast("void**", cAddr("cmd_line")))
       g.mainDatInit.addAssignment(cDeref("cmd_count"), "cmdCount")
