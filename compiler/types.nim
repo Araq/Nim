@@ -1309,23 +1309,31 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
     withoutShallowFlags:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
-        if a.typeInst != nil and b.typeInst != nil:
-          # this is required because of `ref object`s,
+        # should be generic:
+        assert a.typeInst != nil, "generic object " & $a & " has no typeInst"
+        assert b.typeInst != nil, "generic object " & $b & " has no typeInst"
+        result = sameFlags(a, b) and
+          sameTypeAux(a.typeInst.skipModifier, b.typeInst.skipModifier, c)
+        if result:
+          # this is required because of generic `ref object`s,
           # the value of their dereferences are not wrapped in `tyGenericInst`,
           # so we need to check the generic parameters here
           for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
             if not sameTypeAux(ff, aa, c): return false
-        # XXX should be removed in favor of above lines,
-        # structural equality is wrong in general:
-        result = sameObjectStructures(a, b, c) and sameFlags(a, b)
   of tyDistinct:
     cycleCheck()
     if c.cmp == dcEq:
       if sameFlags(a, b):
         ifFastObjectTypeCheckFailed(a, b):
-          # XXX should be removed in favor of checking generic params,
-          # structural equality is wrong in general:
-          result = sameTypeAux(a.elementType, b.elementType, c)
+          # should be generic:
+          assert a.typeInst != nil, "generic distinct type " & $a & " has no typeInst"
+          assert b.typeInst != nil, "generic distinct type " & $b & " has no typeInst"
+          result = sameTypeAux(a.typeInst.skipModifier, b.typeInst.skipModifier, c)
+          if result:
+            # just in case `tyGenericInst` was skipped at some point,
+            # we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
     else:
       result = sameTypeAux(a.elementType, b.elementType, c) and sameFlags(a, b)
   of tyEnum, tyForward:
