@@ -1393,7 +1393,7 @@ proc genEcho(p: BProc, n: PNode) =
     p.module.includeHeader("<base/log.h>")
     p.module.includeHeader("<util/string.h>")
     var a: TLoc
-    let logName = "Genode::log"
+    let logName = cSymbol("Genode::log")
     var logCall: CallBuilder
     p.s(cpsStmts).addStmt():
       p.s(cpsStmts).addCall(logCall, logName):
@@ -1404,7 +1404,7 @@ proc genEcho(p: BProc, n: PNode) =
           elif n.len != 0:
             a = initLocExpr(p, it)
             let ra = a.rdLoc
-            let fnName = "Genode::Cstring"
+            let fnName = cSymbol("Genode::Cstring")
             p.s(cpsStmts).addArgument(logCall):
               case detectStrVersion(p.module)
               of 2:
