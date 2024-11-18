@@ -120,6 +120,43 @@ proc cIntLiteral*(i: BiggestInt): Snippet =
 proc cIntLiteral*(i: Int128): Snippet =
   result = cIntLiteral(toInt64(i))
 
+const
+  NimInt* = "NI"
+  NimInt8* = "NI8"
+  NimInt16* = "NI16"
+  NimInt32* = "NI32"
+  NimInt64* = "NI64"
+  CInt* = "int"
+  NimUint* = "NU"
+  NimUint8* = "NU8"
+  NimUint16* = "NU16"
+  NimUint32* = "NU32"
+  NimUint64* = "NU64"
+  NimFloat* = "NF"
+  NimFloat32* = "NF32"
+  NimFloat64* = "NF64"
+  NimFloat128* = "NF128" # not actually defined
+  NimNan* = "NAN"
+  NimInf* = "INF"
+  NimBool* = "NIM_BOOL"
+  NimTrue* = "NIM_TRUE"
+  NimFalse* = "NIM_FALSE"
+  NimChar* = "NIM_CHAR"
+  CChar* = "char"
+  NimCstring* = "NCSTRING"
+  NimNil* = "NIM_NIL"
+  CNil* = "NULL"
+  NimStrlitFlag* = "NIM_STRLIT_FLAG"
+  CVoid* = "void"
+  CPointer* = "void*"
+  CConstPointer* = "NIM_CONST void*"
+
+proc cIntType*(bits: int): Snippet =
+  "NI" & $bits
+
+proc cUintType*(bits: int): Snippet =
+  "NU" & $bits
+
 type
   IfBuilderState* = enum
     WaitingIf, WaitingElseIf, InBlock

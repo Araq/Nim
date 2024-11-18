@@ -322,3 +322,8 @@ template addCPragma(builder: var Builder, val: Snippet) =
   builder.add("#pragma ")
   builder.add(val)
   builder.addNewline()
+
+proc addDiscard(builder: var Builder, val: Snippet) =
+  builder.add("(void)")
+  builder.add(val)
+  builder.addLineEnd(";")

@@ -75,21 +75,21 @@ proc specializeResetT(p: BProc, accessor: Rope, typ: PType) =
 
   of tyString, tyRef, tySequence:
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
-      cCast("void**", cAddr(accessor)),
-      "NIM_NIL")
+      cCast(ptrType(CPointer), cAddr(accessor)),
+      NimNil)
 
   of tyProc:
     if typ.callConv == ccClosure:
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "unsureAsgnRef"),
-        cCast("void**", cAddr(dotField(accessor, "ClE_0"))),
-        "NIM_NIL")
-      p.s(cpsStmts).addFieldAssignment(accessor, "ClP_0", "NIM_NIL")
+        cCast(ptrType(CPointer), cAddr(dotField(accessor, "ClE_0"))),
+        NimNil)
+      p.s(cpsStmts).addFieldAssignment(accessor, "ClP_0", NimNil)
     else:
-      p.s(cpsStmts).addAssignment(accessor, "NIM_NIL")
+      p.s(cpsStmts).addAssignment(accessor, NimNil)
   of tyChar, tyBool, tyEnum, tyRange, tyInt..tyUInt64:
     p.s(cpsStmts).addAssignment(accessor, cIntValue(0))
   of tyCstring, tyPointer, tyPtr, tyVar, tyLent:
-    p.s(cpsStmts).addAssignment(accessor, "NIM_NIL")
+    p.s(cpsStmts).addAssignment(accessor, NimNil)
   of tySet:
     case mapSetType(p.config, typ)
     of ctArray:

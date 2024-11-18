@@ -71,11 +71,11 @@ template startBlockWith(p: BProc, body: typed): int =
 proc blockBody(b: var TBlock; result: var Builder) =
   result.add extract(b.sections[cpsLocals])
   if b.frameLen > 0:
-    result.addInPlaceOp(Add, "NI", dotField("FR_", "len"), b.frameLen.rope)
+    result.addInPlaceOp(Add, NimInt, dotField("FR_", "len"), cIntValue(b.frameLen.int))
   result.add(extract(b.sections[cpsInit]))
   result.add(extract(b.sections[cpsStmts]))
   if b.frameLen > 0:
-    result.addInPlaceOp(Sub, "NI", dotField("FR_", "len"), b.frameLen.rope)
+    result.addInPlaceOp(Sub, NimInt, dotField("FR_", "len"), cIntValue(b.frameLen.int))
 
 proc endBlockInside(p: BProc) =
   let topBlock = p.blocks.len-1
@@ -144,7 +144,7 @@ proc genVarTuple(p: BProc, n: PNode) =
     field.snippet = dotField(rtup, fieldName)
     putLocIntoDest(p, v.loc, field)
     if forHcr or isGlobalInBlock:
-      hcrGlobals.add((loc: v.loc, tp: "NULL"))
+      hcrGlobals.add((loc: v.loc, tp: CNil))
 
   if forHcr:
     # end the block where the tuple gets initialized
@@ -158,18 +158,18 @@ proc genVarTuple(p: BProc, n: PNode) =
     # check if any of them is newly introduced and the initializing code has to be ran
     p.s(cpsLocals).addVar(kind = Local,
       name = hcrCond,
-      typ = "NIM_BOOL",
-      initializer = "NIM_FALSE")
+      typ = NimBool,
+      initializer = NimFalse)
     for curr in hcrGlobals:
       let rc = rdLoc(curr.loc)
-      p.s(cpsLocals).addInPlaceOp(BitOr, "NIM_BOOL",
+      p.s(cpsLocals).addInPlaceOp(BitOr, NimBool,
         hcrCond,
         cCall("hcrRegisterGlobal",
           getModuleDllPath(p.module, n[0].sym),
           '"' & curr.loc.snippet & '"',
           cSizeof(rc),
           curr.tp,
-          cCast("void**", cAddr(curr.loc.snippet))))
+          cCast(ptrType(CPointer), cAddr(curr.loc.snippet))))
 
 
 proc loadInto(p: BProc, le, ri: PNode, a: var TLoc) {.inline.} =
@@ -294,7 +294,7 @@ proc genBreakState(p: BProc, n: PNode, d: var TLoc) =
     let ra = a.rdLoc
     d.snippet = cOp(LessThan,
       subscript(
-        cCast(ptrType("NI"), ra),
+        cCast(ptrType(NimInt), ra),
         cIntValue(1)),
       cIntValue(0))
   else:
@@ -303,7 +303,7 @@ proc genBreakState(p: BProc, n: PNode, d: var TLoc) =
     # the environment is guaranteed to contain the 'state' field at offset 1:
     d.snippet = cOp(LessThan,
       subscript(
-        cCast(ptrType("NI"), dotField(ra, "ClE_0")),
+        cCast(ptrType(NimInt), dotField(ra, "ClE_0")),
         cIntValue(1)),
       cIntValue(0))
 
@@ -426,7 +426,7 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
     assignLocalVar(p, vn)
     initLocalVar(p, v, imm)
 
-  let traverseProc = "NULL"
+  let traverseProc = CNil
   # If the var is in a block (control flow like if/while or a block) in global scope just
   # register the so called "global" so it can be used later on. There is no need to close
   # and reopen of if (nim_hcr_do_init_) blocks because we are in one already anyway.
@@ -440,7 +440,7 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
       '"' & v.loc.snippet & '"',
       cSizeof(rv),
       traverseProc,
-      cCast("void**", cAddr(v.loc.snippet)))
+      cCast(ptrType(CPointer), cAddr(v.loc.snippet)))
     # nothing special left to do later on - let's avoid closing and reopening blocks
     forHcr = false
 
@@ -456,7 +456,7 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
         '"' & v.loc.snippet & '"',
         cSizeof(rdLoc(v.loc)),
         traverseProc,
-        cCast("void**", cAddr(v.loc.snippet))))
+        cCast(ptrType(CPointer), cAddr(v.loc.snippet))))
   if value.kind != nkEmpty and valueAsRope.len == 0:
     genLineDir(targetProc, vn)
     if not isCppCtorCall:
@@ -623,7 +623,7 @@ proc genComputedGoto(p: BProc; n: PNode) =
   let tmp = "TMP$1_" % [id.rope]
   p.s(cpsStmts).addArrayVarWithInitializer(kind = Global,
       name = tmp,
-      elementType = "void*",
+      elementType = CPointer,
       len = arraySize):
     var labelsInit: StructInitializer
     p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray):
@@ -877,7 +877,7 @@ proc genRaiseStmt(p: BProc, t: PNode) =
         fName,
         cIntValue(ln))
       if optOwnedRefs in p.config.globalOptions:
-        p.s(cpsStmts).addAssignment(e, "NIM_NIL")
+        p.s(cpsStmts).addAssignment(e, NimNil)
   else:
     finallyActions(p)
     genLineDir(p, t)
@@ -990,7 +990,7 @@ proc genStringCase(p: BProc, t: PNode, stringKind: TTypeKind, d: var TLoc) =
     let fnName = if stringKind == tyCstring: "hashCstring" else: "hashString"
     let ra = rdLoc(a)
     p.s(cpsStmts).addSwitchStmt(
-      cOp(BitAnd, "NI",
+      cOp(BitAnd, NimInt,
         cCall(cgsymValue(p.module, fnName), ra),
         cIntValue(bitMask))):
       for j in 0..high(branches):
@@ -1483,7 +1483,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
           isScope = true
           innerScope = initScope(p.s(cpsStmts))
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), "NIM_FALSE")
+      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
       expr(p, t[i][0], d)
     else:
       if not innerIsIf:
@@ -1518,7 +1518,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       startBlockWith(p):
         initElifBranch(p.s(cpsStmts), innerIfStmt, orExpr)
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), "NIM_FALSE")
+      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
       expr(p, t[i][^1], d)
 
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "popCurrentException"))
@@ -1549,9 +1549,9 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       genStmts(p, t[i][0])
     else:
       # pretend we did handle the error for the safe execution of the 'finally' section:
-      p.procSec(cpsLocals).addVar(kind = Local, name = "oldNimErrFin" & $lab & "_", typ = "NIM_BOOL")
+      p.procSec(cpsLocals).addVar(kind = Local, name = "oldNimErrFin" & $lab & "_", typ = NimBool)
       p.s(cpsStmts).addAssignment("oldNimErrFin" & $lab & "_", cDeref("nimErr_"))
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), "NIM_FALSE")
+      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
       genStmts(p, t[i][0])
       # this is correct for all these cases:
       # 1. finally is run during ordinary control flow
@@ -1886,8 +1886,8 @@ proc genDiscriminantCheck(p: BProc, a, tmp: TLoc, objtype: PType,
   let rtmp = rdLoc(tmp)
   let dn = discriminatorTableName(p.module, t, field)
   p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "FieldDiscriminantCheck"),
-    cCast("NI", cCast("NU", ra)),
-    cCast("NI", cCast("NU", rtmp)),
+    cCast(NimInt, cCast(NimUint, ra)),
+    cCast(NimInt, cCast(NimUint, rtmp)),
     dn,
     lit)
   if p.config.exc == excGoto:
