@@ -2,7 +2,7 @@ discard """
   cmd: "nim check --hints:off $file"
   action: "reject"
   nimout: '''
-tmetaobjectfields.nim(26, 5) Error: 'array' is not a concrete type
+tmetaobjectfields.nim(26, 5) Error: 'T' is not a concrete type for 'array'
 tmetaobjectfields.nim(30, 5) Error: 'seq' is not a concrete type
 tmetaobjectfields.nim(34, 5) Error: 'set' is not a concrete type
 tmetaobjectfields.nim(37, 3) Error: 'sink' is not a concrete type

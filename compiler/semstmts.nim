@@ -1723,10 +1723,14 @@ proc checkForMetaFields(c: PContext; n: PNode; hasError: var bool) =
     if t.kind == tyBuiltInTypeClass and t.len == 1 and t.elementType.kind == tyProc:
       localError(c.config, n.info, ("'$1' is not a concrete type; " &
         "for a callback without parameters use 'proc()'") % t.typeToString)
-    elif t.kind == tyNone and parent != nil:
+    elif parent != nil and parent != t:
       # TODO: openarray has the `tfGenericTypeParam` flag & generics
       # TODO: handle special cases (sink etc.) and views
-      localError(c.config, n.info, errTIsNotAConcreteType % parent.typeToString)
+      if t.kind == tyNone:
+        localError(c.config, n.info, errTIsNotAConcreteType % parent.typeToString)
+      else:
+        localError(c.config, n.info, (errTIsNotAConcreteType % t.typeToString) & (" for '$1'" % parent.typeToString))
+      
     else:
       localError(c.config, n.info, errTIsNotAConcreteType % t.typeToString)
 
