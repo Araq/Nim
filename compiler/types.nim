@@ -2051,9 +2051,9 @@ proc findUnspecifiedGenericsOrNil*(t: PType): PType=
        tyProc, tyGenericInvocation, tyGenericInst, tyAlias, tySink, tyOwned:
     let start = ord(t.kind in {tyGenericInvocation, tyGenericInst})
     for i in start..<t.len:
-      result = findUnspecifiedGenericsOrNil(t[i])
-      if result != nil:
-        break
+      let tmp = findUnspecifiedGenericsOrNil(t[i])
+      if tmp != nil:
+        result = tmp
   else:
     discard
   t.size = tmp
