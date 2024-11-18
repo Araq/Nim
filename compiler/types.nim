@@ -2030,3 +2030,30 @@ proc genericRoot*(t: PType): PType =
       result = t.sym.typ
     else:
       result = nil
+
+proc findUnspecifiedGenericsOrNil*(t: PType): PType=
+  result = nil
+  if t == nil:
+    return nil
+  if tfHasMeta in t.flags:
+    result = t
+  if t.size == szIllegalRecursion:
+    return nil
+  let tmp = t.size
+  t.size = szIllegalRecursion
+  case t.kind
+  of tyMetaTypes, tyNone:
+    result = t
+  of tyStatic:
+    if t.n == nil:
+      result = t
+  of tySequence, tySet, tyArray, tyOpenArray, tyVar, tyLent, tyPtr, tyRef,
+       tyProc, tyGenericInvocation, tyGenericInst, tyAlias, tySink, tyOwned:
+    let start = ord(t.kind in {tyGenericInvocation, tyGenericInst})
+    for i in start..<t.len:
+      result = findUnspecifiedGenericsOrNil(t[i])
+      if result != nil:
+        break
+  else:
+    discard
+  t.size = tmp
