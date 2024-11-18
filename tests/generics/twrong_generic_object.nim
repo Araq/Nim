@@ -1,5 +1,5 @@
 discard """
-  errormsg: "'Node' is not a concrete type"
+  errormsg: "'Node:ObjectType' is not a concrete type for 'seq[Node]'"
   line: 11
 """
 # bug #2509

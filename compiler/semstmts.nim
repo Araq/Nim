@@ -1726,7 +1726,9 @@ proc checkForMetaFields(c: PContext; n: PNode; hasError: var bool) =
     elif parent != nil and parent != t:
       # TODO: openarray has the `tfGenericTypeParam` flag & generics
       # TODO: handle special cases (sink etc.) and views
-      if t.kind == tyNone:
+      if parent.kind in {tyRef, tyPtr} and t.kind == tyObject and parent[0] == t:
+        localError(c.config, n.info, errTIsNotAConcreteType % parent.typeToString)
+      elif t.kind == tyNone:
         localError(c.config, n.info, errTIsNotAConcreteType % parent.typeToString)
       else:
         localError(c.config, n.info, (errTIsNotAConcreteType % t.typeToString) & (" for '$1'" % parent.typeToString))

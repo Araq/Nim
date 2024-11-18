@@ -1,19 +1,20 @@
 discard """
   cmd: "nim check --hints:off $file"
+  matrix: "--hints:off"
   action: "reject"
   nimout: '''
-tmetaobjectfields.nim(26, 5) Error: 'T' is not a concrete type for 'array'
-tmetaobjectfields.nim(30, 5) Error: 'seq' is not a concrete type
-tmetaobjectfields.nim(34, 5) Error: 'set' is not a concrete type
-tmetaobjectfields.nim(37, 3) Error: 'sink' is not a concrete type
-tmetaobjectfields.nim(39, 3) Error: 'lent' is not a concrete type
-tmetaobjectfields.nim(56, 16) Error: 'seq' is not a concrete type
-tmetaobjectfields.nim(60, 5) Error: 'ptr' is not a concrete type
-tmetaobjectfields.nim(61, 5) Error: 'ref' is not a concrete type
-tmetaobjectfields.nim(62, 5) Error: 'auto' is not a concrete type
-tmetaobjectfields.nim(63, 5) Error: 'UncheckedArray' is not a concrete type
-tmetaobjectfields.nim(68, 5) Error: 'object' is not a concrete type
-tmetaobjectfields.nim(72, 5) Error: 'Type3011:ObjectType' is not a concrete type
+tmetaobjectfields.nim(27, 5) Error: 'T' is not a concrete type for 'array'
+tmetaobjectfields.nim(31, 5) Error: 'seq' is not a concrete type
+tmetaobjectfields.nim(35, 5) Error: 'set' is not a concrete type
+tmetaobjectfields.nim(38, 3) Error: 'sink' is not a concrete type
+tmetaobjectfields.nim(40, 3) Error: 'lent' is not a concrete type
+tmetaobjectfields.nim(57, 16) Error: 'seq' is not a concrete type
+tmetaobjectfields.nim(61, 5) Error: 'ptr' is not a concrete type
+tmetaobjectfields.nim(62, 5) Error: 'ref' is not a concrete type
+tmetaobjectfields.nim(63, 5) Error: 'auto' is not a concrete type
+tmetaobjectfields.nim(64, 5) Error: 'UncheckedArray' is not a concrete type
+tmetaobjectfields.nim(69, 5) Error: 'object' is not a concrete type for 'ref object'
+tmetaobjectfields.nim(73, 5) Error: 'Type3011' is not a concrete type
 '''
 """
 
