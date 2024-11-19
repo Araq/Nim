@@ -327,14 +327,23 @@ proc semGenericStmt(c: PContext, n: PNode,
       of skMacro, skTemplate:
         # unambiguous macros/templates are expanded if all params are untyped
         if sfAllUntyped in s.flags and sc.safeLen <= 1:
+          # even if template is all untyped, we still need to check if it
+          # matches the call, i.e. if the parameter count matches
           onUse(fn.info, s)
-          case s.kind
-          of skMacro: result = semMacroExpr(c, n, n, s, {efNoSemCheck})
-          of skTemplate: result = semTemplateExpr(c, n, s, {efNoSemCheck})
-          else: discard # unreachable
-          c.friendModules.add(s.owner.getModule)
-          result = semGenericStmt(c, result, flags, ctx)
-          discard c.friendModules.pop()
+          var errors: CandidateErrors = @[]
+          var r = resolveOverloads(c, n, n, {skTemplate, skMacro}, {efNoDiagnostics},
+                                   errors, false)
+          if r.state == csMatch:
+            case s.kind
+            of skMacro: result = semMacroExpr(c, n, n, s, {efNoSemCheck})
+            of skTemplate: result = semTemplateExpr(c, n, s, {efNoSemCheck})
+            else: discard # unreachable
+            c.friendModules.add(s.owner.getModule)
+            result = semGenericStmt(c, result, flags, ctx)
+            discard c.friendModules.pop()
+          else:
+            n[0] = sc
+            result = n
         else:
           n[0] = sc
           result = n
