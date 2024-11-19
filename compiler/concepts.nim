@@ -177,6 +177,11 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     m.potentialImplementation = oldPotentialImplementation
     if not result:
       m.inferred.setLen oldLen
+  of tyGenericBody:
+    var ak = a
+    if a.kind == tyGenericBody:
+      ak = last(a)
+    result = matchType(c, last(f), ak, m)
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
