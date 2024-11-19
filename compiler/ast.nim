@@ -279,7 +279,7 @@ const
   GcTypeKinds* = {tyRef, tySequence, tyString}
 
   tyTypeClasses* = {tyBuiltInTypeClass, tyCompositeTypeClass,
-                    tyUserTypeClass, tyUserTypeClassInst,
+                    tyUserTypeClass, tyUserTypeClassInst, tyConcept,
                     tyAnd, tyOr, tyNot, tyAnything}
 
   tyMetaTypes* = {tyGenericParam, tyTypeDesc, tyUntyped} + tyTypeClasses
