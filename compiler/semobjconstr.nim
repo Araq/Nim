@@ -465,11 +465,14 @@ proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType 
   if t == nil:
     return localErrorNode(c, result, "object constructor needs an object type")
 
-  if t.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
-      expectedType != nil and expectedType.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
-    t = expectedType
+  when false:
+    # attempted type inference for generic object types,
+    # doesn't work since n[0] isn't set and seems underspecified
+    if t.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
+        expectedType != nil and expectedType.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
+      t = expectedType
 
   t = skipTypes(t, {tyGenericInst, tyAlias, tySink, tyOwned})
   if t.kind == tyRef:
