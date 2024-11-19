@@ -301,6 +301,8 @@ proc nimNextToken(g: var GeneralTokenizer, keywords: openArray[string] = @[]) =
           g.kind = nimGetKeyword(id)
         elif isKeyword(keywords, id) >= 0:
           g.kind = gtKeyword
+        else:
+          g.kind = gtIdentifier
     of '0':
       inc(pos)
       case g.buf[pos]
