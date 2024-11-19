@@ -151,10 +151,10 @@ const
   CPointer* = "void*"
   CConstPointer* = "NIM_CONST void*"
 
-proc cIntType*(bits: int): Snippet =
+proc cIntType*(bits: BiggestInt): Snippet =
   "NI" & $bits
 
-proc cUintType*(bits: int): Snippet =
+proc cUintType*(bits: BiggestInt): Snippet =
   "NU" & $bits
 
 type
