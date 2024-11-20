@@ -13,115 +13,240 @@ proc addVarHeader(builder: var Builder, kind: VarKind) =
   ## AlwaysConst has `static const` modifier (NIM_CONST is no-op on C++)
   ## Threadvar is unimplemented
   case kind
-  of Local: discard
+  of Local:
+    when buildNifc:
+      builder.add("var ")
   of Global:
-    builder.add("static ")
+    when buildNifc:
+      builder.add("gvar ")
+    else:
+      builder.add("static ")
   of Const:
-    builder.add("static NIM_CONST ")
+    when buildNifc:
+      builder.add("const ")
+    else:
+      builder.add("static NIM_CONST ")
   of AlwaysConst:
-    builder.add("static const ")
+    when buildNifc:
+      builder.add("const ")
+    else:
+      builder.add("static const ")
   of Threadvar:
     doAssert false, "unimplemented"
 
 proc addVar(builder: var Builder, kind: VarKind = Local, name: string, typ: Snippet, initializer: Snippet = "") =
   ## adds a variable declaration to the builder
-  builder.addVarHeader(kind)
-  builder.add(typ)
-  builder.add(" ")
-  builder.add(name)
-  if initializer.len != 0:
-    builder.add(" = ")
-    builder.add(initializer)
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    builder.add(typ)
+    builder.add(" ")
+    if initializer.len != 0:
+      builder.add(initializer)
+    else:
+      builder.add(".")
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    builder.add(typ)
+    builder.add(" ")
+    builder.add(name)
+    if initializer.len != 0:
+      builder.add(" = ")
+      builder.add(initializer)
+    builder.addLineEnd(";")
 
 template addVarWithType(builder: var Builder, kind: VarKind = Local, name: string, body: typed) =
   ## adds a variable declaration to the builder, with the `body` building the type
-  builder.addVarHeader(kind)
-  body
-  builder.add(" ")
-  builder.add(name)
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    body
+    builder.add(" .") # initializer
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    body
+    builder.add(" ")
+    builder.add(name)
+    builder.addLineEnd(";")
 
 template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                typ: Snippet, initializerBody: typed) =
   ## adds a variable declaration to the builder, with
   ## `initializerBody` building the initializer. initializer must be provided
-  builder.addVarHeader(kind)
-  builder.add(typ)
-  builder.add(" ")
-  builder.add(name)
-  builder.add(" = ")
-  initializerBody
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    builder.add(typ)
+    builder.add(" ")
+    initializerBody
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    builder.add(typ)
+    builder.add(" ")
+    builder.add(name)
+    builder.add(" = ")
+    initializerBody
+    builder.addLineEnd(";")
 
 template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                       typeBody, initializerBody: typed) =
   ## adds a variable declaration to the builder, with `typeBody` building the type, and
   ## `initializerBody` building the initializer. initializer must be provided
-  builder.addVarHeader(kind)
-  typeBody
-  builder.add(" ")
-  builder.add(name)
-  builder.add(" = ")
-  initializerBody
-  builder.addLineEnd(";")
-
-proc addArrayVar(builder: var Builder, kind: VarKind = Local, name: string, elementType: Snippet, len: int, initializer: Snippet = "") =
-  ## adds an array variable declaration to the builder
-  builder.addVarHeader(kind)
-  builder.add(elementType)
-  builder.add(" ")
-  builder.add(name)
-  builder.add("[")
-  builder.addIntValue(len)
-  builder.add("]")
-  if initializer.len != 0:
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    typeBody
+    builder.add(" ")
+    initializerBody
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    typeBody
+    builder.add(" ")
+    builder.add(name)
     builder.add(" = ")
-    builder.add(initializer)
-  builder.addLineEnd(";")
+    initializerBody
+    builder.addLineEnd(";")
 
-template addArrayVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string, elementType: Snippet, len: int, body: typed) =
+when buildNifc:
+  proc getArrayType(m: BModule, elementType: Snippet, len: int): Snippet =
+    let key = (elementType, len)
+    if key in m.arrayTypes:
+      result = m.arrayTypes[key]
+    else:
+      result = elementType & "_Arr_" & $len
+      m.s[cfsTypes].add("(type :")
+      m.s[cfsTypes].add(result)
+      m.s[cfsTypes].add(" (array ")
+      m.s[cfsTypes].add(elementType)
+      m.s[cfsTypes].add(" ")
+      m.s[cfsTypes].add(cIntValue(len))
+      m.s[cfsTypes].addLineEnd("))")
+      m.arrayTypes[key] = result
+
+proc addArrayVar(builder: var Builder, m: BModule, kind: VarKind = Local, name: string, elementType: Snippet, len: int, initializer: Snippet = "") =
+  ## adds an array variable declaration to the builder
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    builder.add(getArrayType(m, elementType, len))
+    builder.add(" ")
+    if initializer.len != 0:
+      builder.add(initializer)
+    else:
+      builder.add(".")
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    builder.add(elementType)
+    builder.add(" ")
+    builder.add(name)
+    builder.add("[")
+    builder.addIntValue(len)
+    builder.add("]")
+    if initializer.len != 0:
+      builder.add(" = ")
+      builder.add(initializer)
+    builder.addLineEnd(";")
+
+template addArrayVarWithInitializer(builder: var Builder, m: BModule, kind: VarKind = Local, name: string, elementType: Snippet, len: int, body: typed) =
   ## adds an array variable declaration to the builder with the initializer built according to `body`
-  builder.addVarHeader(kind)
-  builder.add(elementType)
-  builder.add(" ")
-  builder.add(name)
-  builder.add("[")
-  builder.addIntValue(len)
-  builder.add("] = ")
-  body
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(")
+    builder.addVarHeader(kind)
+    builder.add(":")
+    builder.add(name)
+    builder.add(" . ") # pragmas
+    builder.add(getArrayType(m, elementType, len))
+    builder.add(" ")
+    body
+    builder.addLineEnd(")")
+  else:
+    builder.addVarHeader(kind)
+    builder.add(elementType)
+    builder.add(" ")
+    builder.add(name)
+    builder.add("[")
+    builder.addIntValue(len)
+    builder.add("] = ")
+    body
+    builder.addLineEnd(";")
 
 template addTypedef(builder: var Builder, name: string, typeBody: typed) =
   ## adds a typedef declaration to the builder with name `name` and type as
   ## built in `typeBody`
-  builder.add("typedef ")
-  typeBody
-  builder.add(" ")
-  builder.add(name)
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(type :")
+    builder.add(name)
+    builder.add(" ")
+    typeBody
+    builder.addLineEnd(")")
+  else:
+    builder.add("typedef ")
+    typeBody
+    builder.add(" ")
+    builder.add(name)
+    builder.addLineEnd(";")
 
 proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
-  builder.add("typedef ")
-  builder.add(CallingConvToStr[callConv])
-  builder.add("_PTR(")
-  builder.add(rettype)
-  builder.add(", ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
-  builder.addLineEnd(";")
+  when buildNifc:
+    builder.add("(type :")
+    builder.add(name)
+    builder.add(" (proctype . ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" (pragmas ")
+    builder.add(CallingConvToStr[callConv])
+    builder.addLineEnd(")))")
+  else:
+    builder.add("typedef ")
+    builder.add(CallingConvToStr[callConv])
+    builder.add("_PTR(")
+    builder.add(rettype)
+    builder.add(", ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
+    builder.addLineEnd(";")
 
 template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, typeBody: typed) =
   ## adds an array typedef declaration to the builder with name `name`,
   ## length `len`, and element type as built in `typeBody`
-  builder.add("typedef ")
-  typeBody
-  builder.add(" ")
-  builder.add(name)
-  builder.add("[")
-  builder.addIntValue(len)
-  builder.addLineEnd("];")
+  when buildNifc:
+    builder.add("(type :")
+    builder.add(name)
+    builder.add(" (array ")
+    typeBody
+    builder.add(" ")
+    builder.addIntValue(len)
+    builder.addLineEnd("))")
+  else:
+    builder.add("typedef ")
+    typeBody
+    builder.add(" ")
+    builder.add(name)
+    builder.add("[")
+    builder.addIntValue(len)
+    builder.addLineEnd("];")
 
 type
   StructInitializerKind = enum
@@ -139,14 +264,23 @@ type
 proc initStructInitializer(builder: var Builder, kind: StructInitializerKind): StructInitializer =
   ## starts building a struct initializer, i.e. braced initializer list
   result = StructInitializer(kind: kind, needsComma: false)
-  if kind != siWrapper:
-    builder.add("{")
+  when buildNifc:
+    case kind
+    of siOrderedStruct, siNamedStruct:
+      builder.add("(oconstr ")
+    of siArray:
+      builder.add("(aconstr ")
+    of siWrapper: discard
+  else:
+    if kind != siWrapper:
+      builder.add("{")
 
 template addField(builder: var Builder, constr: var StructInitializer, name: string, valueBody: typed) =
   ## adds a field to a struct initializer, with the value built in `valueBody`
   if constr.needsComma:
     assert constr.kind != siWrapper, "wrapper constructor cannot have multiple fields"
-    builder.add(", ")
+    when not buildNifc:
+      builder.add(", ")
   else:
     constr.needsComma = true
   case constr.kind
@@ -156,18 +290,34 @@ template addField(builder: var Builder, constr: var StructInitializer, name: str
   of siOrderedStruct:
     # no name, can just add value on C
     assert name.len != 0, "name has to be given for struct initializer field"
+    when buildNifc:
+      builder.add("(kv ")
+      builder.add(name)
+      builder.add(" ")
     valueBody
+    when buildNifc:
+      builder.add(")")
   of siNamedStruct:
     assert name.len != 0, "name has to be given for struct initializer field"
-    builder.add(".")
-    builder.add(name)
-    builder.add(" = ")
+    when buildNifc:
+      builder.add("(kv ")
+      builder.add(name)
+      builder.add(" ")
+    else:
+      builder.add(".")
+      builder.add(name)
+      builder.add(" = ")
     valueBody
+    when buildNifc:
+      builder.add(")")
 
 proc finishStructInitializer(builder: var Builder, constr: StructInitializer) =
   ## finishes building a struct initializer
   if constr.kind != siWrapper:
-    builder.add("}")
+    when buildNifc:
+      builder.add(")")
+    else:
+      builder.add("}")
 
 template addStructInitializer(builder: var Builder, constr: out StructInitializer, kind: StructInitializerKind, body: typed) =
   ## builds a struct initializer, i.e. `{ field1, field2 }`
@@ -177,32 +327,46 @@ template addStructInitializer(builder: var Builder, constr: out StructInitialize
   body
   builder.finishStructInitializer(constr)
 
-proc addField(obj: var Builder; name, typ: Snippet; isFlexArray: bool = false; initializer: Snippet = "") =
+proc addField(obj: var Builder; name, typ: Snippet; isFlexArray: bool = false) =
   ## adds a field inside a struct/union type
-  obj.add('\t')
-  obj.add(typ)
-  obj.add(" ")
-  obj.add(name)
-  if isFlexArray:
-    obj.add("[SEQ_DECL_SIZE]")
-  if initializer.len != 0:
-    obj.add(initializer)
-  obj.add(";\n")
+  when buildNifc:
+    obj.add("\n\t(fld :")
+    obj.add(name)
+    obj.add(" . ") # pragmas
+    if isFlexArray:
+      obj.add("(flexarray ")
+      obj.add(typ)
+      obj.add(")")
+    else:
+      obj.add(typ)
+    obj.add(")")
+  else:
+    obj.add('\t')
+    obj.add(typ)
+    obj.add(" ")
+    obj.add(name)
+    if isFlexArray:
+      obj.add("[SEQ_DECL_SIZE]")
+    obj.add(";\n")
 
-proc addArrayField(obj: var Builder; name, elementType: Snippet; len: int; initializer: Snippet = "") =
+proc addArrayField(obj: var Builder; m: BModule, name, elementType: Snippet; len: int) =
   ## adds an array field inside a struct/union type
-  obj.add('\t')
-  obj.add(elementType)
-  obj.add(" ")
-  obj.add(name)
-  obj.add("[")
-  obj.addIntValue(len)
-  obj.add("]")
-  if initializer.len != 0:
-    obj.add(initializer)
-  obj.add(";\n")
+  when buildNifc:
+    obj.add("\n\t(fld :")
+    obj.add(name)
+    obj.add(" . ") # pragmas
+    obj.add(getArrayType(elementType, len))
+    obj.add(")")
+  else:
+    obj.add('\t')
+    obj.add(elementType)
+    obj.add(" ")
+    obj.add(name)
+    obj.add("[")
+    obj.addIntValue(len)
+    obj.add("];\n")
 
-proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bool = false; initializer: Snippet = "") =
+proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bool = false; cppInitializer: Snippet = "") =
   ## adds an field inside a struct/union type, based on an `skField` symbol
   obj.add('\t')
   if field.alignment > 0:
@@ -219,8 +383,8 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
   if field.bitsize != 0:
     obj.add(":")
     obj.addIntValue(field.bitsize)
-  if initializer.len != 0:
-    obj.add(initializer)
+  if cppInitializer.len != 0:
+    obj.add(cppInitializer)
   obj.add(";\n")
 
 proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =

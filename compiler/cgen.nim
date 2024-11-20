@@ -1918,7 +1918,8 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     let systemModulePath = getModuleDllPath(m, g.modules[g.graph.config.m.systemFileIdx.int].module)
     let mainModulePath = getModuleDllPath(m, m.module)
     hcrModuleMeta.addDeclWithVisibility(Private):
-      hcrModuleMeta.addArrayVarWithInitializer(kind = Local,
+      hcrModuleMeta.addArrayVarWithInitializer(m,
+          kind = Local,
           name = "hcr_module_list",
           elementType = ptrConstType(CChar),
           len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
@@ -2097,10 +2098,12 @@ proc genInitCode(m: BModule) =
         CNil,
         cCast(ptrType(CPointer), cAddr(m.typeNodesName)))
     else:
-      m.s[cfsTypeInit1].addArrayVar(Global, name = m.typeNodesName,
+      m.s[cfsTypeInit1].addArrayVar(m,
+        Global, name = m.typeNodesName,
         elementType = cgsymValue(m, "TNimNode"), len = m.typeNodes)
   if m.nimTypes > 0:
-    m.s[cfsTypeInit1].addArrayVar(Global, name = m.nimTypesName,
+    m.s[cfsTypeInit1].addArrayVar(m,
+      Global, name = m.nimTypesName,
       elementType = cgsymValue(m, "TNimType"), len = m.nimTypes)
 
   if m.hcrOn:

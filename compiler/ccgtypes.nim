@@ -1332,7 +1332,8 @@ proc rope(arg: Int128): Rope = rope($arg)
 proc discriminatorTableDecl(m: BModule; objtype: PType, d: PSym, result: var Builder) =
   cgsym(m, "TNimNode")
   var tmp = discriminatorTableName(m, objtype, d)
-  result.addArrayVar(kind = Local,
+  result.addArrayVar(m,
+    kind = Local,
     name = tmp,
     elementType = ptrType("TNimNode"),
     len = toInt(lengthOrd(m.config, d.typ)) + 1)
@@ -1355,7 +1356,8 @@ proc genTNimNodeArray(m: BModule; name: Rope, size: int) =
           m.hcrCreateTypeInfosProc.addCast(typ = ptrType(CPointer)):
             m.hcrCreateTypeInfosProc.add(cAddr(name))
   else:
-    m.s[cfsTypeInit1].addArrayVar(kind = Global, name = name,
+    m.s[cfsTypeInit1].addArrayVar(m,
+      kind = Global, name = name,
       elementType = ptrType("TNimNode"), len = size)
 
 proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
@@ -1395,7 +1397,8 @@ proc genObjectFields(m: BModule; typ, origType: PType, n: PNode, expr: Rope;
     m.s[cfsTypeInit3].addFieldAssignment(expr, "name", makeCString(field.name.s))
     m.s[cfsTypeInit3].addFieldAssignment(expr, "sons", cAddr(subscript(tmp, cIntValue(0))))
     m.s[cfsTypeInit3].addFieldAssignment(expr, "len", L)
-    m.s[cfsData].addArrayVar(kind = Local, name = tmp,
+    m.s[cfsData].addArrayVar(m,
+      kind = Local, name = tmp,
       elementType = ptrType("TNimNode"), len = toInt(L)+1)
     for i in 1..<n.len:
       var b = n[i]           # branch
@@ -1503,7 +1506,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   var enumArray = getTempName(m)
   var counter = getTempName(m)
   m.s[cfsTypeInit1].addVar(kind = Local, name = counter, typ = NimInt)
-  m.s[cfsTypeInit1].addArrayVarWithInitializer(
+  m.s[cfsTypeInit1].addArrayVarWithInitializer(m,
       kind = Global,
       name = enumArray,
       elementType = constPtrType(CChar),
@@ -1755,7 +1758,8 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
 
   if objDepth >= 0:
     let objDisplayStore = getTempName(m)
-    m.s[cfsVars].addArrayVarWithInitializer(kind = Global,
+    m.s[cfsVars].addArrayVarWithInitializer(m,
+        kind = Global,
         name = objDisplayStore,
         elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
         len = objDepth + 1):
@@ -1765,7 +1769,8 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
   let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
   if dispatchMethods.len > 0:
     let vTablePointerName = getTempName(m)
-    m.s[cfsVars].addArrayVarWithInitializer(kind = Global,
+    m.s[cfsVars].addArrayVarWithInitializer(m,
+        kind = Global,
         name = vTablePointerName,
         elementType = CPointer,
         len = dispatchMethods.len):
@@ -1813,7 +1818,8 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
 
         if objDepth >= 0:
           let objDisplayStore = getTempName(m)
-          m.s[cfsVars].addArrayVarWithInitializer(kind = Const,
+          m.s[cfsVars].addArrayVarWithInitializer(m,
+              kind = Const,
               name = objDisplayStore,
               elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
               len = objDepth + 1):

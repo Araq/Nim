@@ -621,7 +621,8 @@ proc genComputedGoto(p: BProc; n: PNode) =
   var id = p.labels+1
   inc p.labels, arraySize+1
   let tmp = "TMP$1_" % [id.rope]
-  p.s(cpsStmts).addArrayVarWithInitializer(kind = Global,
+  p.s(cpsStmts).addArrayVarWithInitializer(p.module,
+      kind = Global,
       name = tmp,
       elementType = CPointer,
       len = arraySize):

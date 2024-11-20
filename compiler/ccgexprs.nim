@@ -1982,7 +1982,8 @@ proc genOfHelper(p: BProc; dest: PType; a: Rope; info: TLineInfo; result: var Bu
       cgsym(p.module, "TNimType")
       inc p.module.labels
       let cache = "Nim_OfCheck_CACHE" & p.module.labels.rope
-      p.module.s[cfsVars].addArrayVar(kind = Global,
+      p.module.s[cfsVars].addArrayVar(p.module,
+        kind = Global,
         name = cache,
         elementType = ptrType("TNimType"),
         len = 2)
@@ -3892,7 +3893,7 @@ proc genConstSeq(p: BProc, n: PNode, t: PType; isConst: bool; result: var Builde
       name = tmpName):
     def.addSimpleStruct(p.module, name = "", baseType = ""):
       def.addField(name = "sup", typ = cgsymValue(p.module, "TGenericSeq"))
-      def.addArrayField(name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
+      def.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
   do:
     var structInit: StructInitializer
     def.addStructInitializer(structInit, kind = siOrderedStruct):
@@ -3925,7 +3926,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
       name = payload):
     def.addSimpleStruct(p.module, name = "", baseType = ""):
       def.addField(name = "cap", typ = NimInt)
-      def.addArrayField(name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
+      def.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
   do:
     var structInit: StructInitializer
     def.addStructInitializer(structInit, kind = siOrderedStruct):
@@ -4008,7 +4009,7 @@ proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; resul
       let arrLen = n.len
       # genConstSimpleList can modify cfsStrData, we need an intermediate builder:
       var data = newBuilder("")
-      data.addArrayVarWithInitializer(
+      data.addArrayVarWithInitializer(p.module,
           kind = if isConst: AlwaysConst else: Global,
           name = payload, elementType = ctype, len = arrLen):
         genConstSimpleList(p, n, isConst, data)

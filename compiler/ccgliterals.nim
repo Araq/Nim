@@ -40,7 +40,7 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
   res.addVarWithTypeAndInitializer(AlwaysConst, name = tmp):
     res.addSimpleStruct(m, name = "", baseType = ""):
       res.addField(name = "Sup", typ = "TGenericSeq")
-      res.addArrayField(name = "data", elementType = NimChar, len = s.len + 1)
+      res.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
   do:
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
@@ -77,7 +77,7 @@ proc genStringLiteralDataOnlyV2(m: BModule, s: string; result: Rope; isConst: bo
       name = result):
     res.addSimpleStruct(m, name = "", baseType = ""):
       res.addField(name = "cap", typ = NimInt)
-      res.addArrayField(name = "data", elementType = NimChar, len = s.len + 1)
+      res.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
   do:
     var structInit: StructInitializer
     res.addStructInitializer(structInit, kind = siOrderedStruct):
