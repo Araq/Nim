@@ -157,7 +157,7 @@ proc cIntType*(bits: int): Snippet =
 proc cUintType*(bits: int): Snippet =
   "NU" & $bits
 
-proc cSymbol*(name: string): Snippet =
+template cSymbol*(name: string): Snippet =
   ## a symbol `name` imported from C, unmangled
   name
 
