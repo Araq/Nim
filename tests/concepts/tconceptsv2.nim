@@ -2,6 +2,7 @@ discard """
 action: "run"
 output: '''
 B[system.int]
+A[system.string]
 '''
 """
 
@@ -23,3 +24,18 @@ block: # issue  #24451
   var a = A()
   a.accept()
 
+block: # typeclass
+  type
+    A[T] = object
+      x: int
+    AConcept = concept
+      proc implementation(s: Self)
+
+  proc implementation(r: A) =
+    echo typeof(r)
+
+  proc accept(r: AConcept) =
+    r.implementation()
+
+  var a = A[string]()
+  a.accept()
