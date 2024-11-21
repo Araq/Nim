@@ -789,5 +789,25 @@ template main {.dirty.} =
     var a = SearchInfo()
     a.evaluation()
 
+  block: # bug #23770
+    type
+      Enum = enum A, B
+      Object = object
+        case a: Enum
+        of A:
+          integer: int = 200
+        of B:
+          time: string
+      Simple = object
+        v = -1
+      Another = object
+        o = Object(a: A)
+        v: Simple
+
+    let s1 = Object(a: A)
+    let s2 = Another()
+    doAssert s1.integer == 200 and s2.o.integer == 200
+
+
 static: main()
 main()
