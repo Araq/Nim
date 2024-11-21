@@ -3929,6 +3929,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
     typBuilder.addSimpleStruct(p.module, name = "", baseType = ""):
       typBuilder.addField(name = "cap", typ = NimInt)
       typBuilder.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
+  p.module.s[cfsTypes].add(extract(typBuilder))
   # genBracedInit can modify cfsStrData, we need an intermediate builder:
   var def = newBuilder("")
   def.addVarWithInitializer(
