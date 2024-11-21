@@ -3886,15 +3886,19 @@ proc genConstSeq(p: BProc, n: PNode, t: PType; isConst: bool; result: var Builde
   let base = t.skipTypes(abstractInst)[0]
   let tmpName = getTempName(p.module)
 
+  let typ = tmpName & "_SeqLit"
+  var typBuilder = newBuilder("")
+  typBuilder.addTypedef(name = typ):
+    typBuilder.addSimpleStruct(p.module, name = "", baseType = ""):
+      typBuilder.addField(name = "sup", typ = cgsymValue(p.module, "TGenericSeq"))
+      typBuilder.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
+  p.module.s[cfsTypes].add(extract(typBuilder))
   # genBracedInit can modify cfsStrData, we need an intermediate builder:
   var def = newBuilder("")
-  def.addVarWithTypeAndInitializer(
+  def.addVarWithInitializer(
       if isConst: Const else: Global,
-      name = tmpName):
-    def.addSimpleStruct(p.module, name = "", baseType = ""):
-      def.addField(name = "sup", typ = cgsymValue(p.module, "TGenericSeq"))
-      def.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
-  do:
+      name = tmpName,
+      typ = typ):
     var structInit: StructInitializer
     def.addStructInitializer(structInit, kind = siOrderedStruct):
       def.addField(structInit, name = "sup"):
@@ -3919,15 +3923,18 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
   let base = t.skipTypes(abstractInst)[0]
   let payload = getTempName(p.module)
 
+  let typ = payload & "_SeqLit"
+  var typBuilder = newBuilder("")
+  typBuilder.addTypedef(name = typ):
+    typBuilder.addSimpleStruct(p.module, name = "", baseType = ""):
+      typBuilder.addField(name = "cap", typ = NimInt)
+      typBuilder.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
   # genBracedInit can modify cfsStrData, we need an intermediate builder:
   var def = newBuilder("")
-  def.addVarWithTypeAndInitializer(
+  def.addVarWithInitializer(
       if isConst: AlwaysConst else: Global,
-      name = payload):
-    def.addSimpleStruct(p.module, name = "", baseType = ""):
-      def.addField(name = "cap", typ = NimInt)
-      def.addArrayField(p.module, name = "data", elementType = getTypeDesc(p.module, base), len = n.len)
-  do:
+      name = payload,
+      typ = typ):
     var structInit: StructInitializer
     def.addStructInitializer(structInit, kind = siOrderedStruct):
       def.addField(structInit, name = "cap"):

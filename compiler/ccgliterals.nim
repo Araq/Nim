@@ -36,12 +36,15 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
   cgsym(m, "TGenericSeq")
   let tmp = getTempName(m)
   result.add tmp
+  let typ = tmp & "_StrLit"
+  var typBuilder = newBuilder("")
+  typBuilder.addTypedef(name = typ):
+    typBuilder.addSimpleStruct(m, name = "", baseType = ""):
+      typBuilder.addField(name = "Sup", typ = "TGenericSeq")
+      typBuilder.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
+  m.s[cfsTypes].add(extract(typBuilder))
   var res = newBuilder("")
-  res.addVarWithTypeAndInitializer(AlwaysConst, name = tmp):
-    res.addSimpleStruct(m, name = "", baseType = ""):
-      res.addField(name = "Sup", typ = "TGenericSeq")
-      res.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
-  do:
+  res.addVarWithInitializer(AlwaysConst, name = tmp, typ = typ):
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
       res.addField(strInit, name = "Sup"):
@@ -71,14 +74,18 @@ proc genStringLiteralV1(m: BModule; n: PNode; result: var Builder) =
 # ------ Version 2: destructor based strings and seqs -----------------------
 
 proc genStringLiteralDataOnlyV2(m: BModule, s: string; result: Rope; isConst: bool) =
+  let typ = getTempName(m) & "_StrLit"
+  var typBuilder = newBuilder("")
+  typBuilder.addTypedef(name = typ):
+    typBuilder.addSimpleStruct(m, name = "", baseType = ""):
+      typBuilder.addField(name = "cap", typ = NimInt)
+      typBuilder.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
+  m.s[cfsTypes].add(extract(typBuilder))
   var res = newBuilder("")
-  res.addVarWithTypeAndInitializer(
+  res.addVarWithInitializer(
       if isConst: AlwaysConst else: Global,
-      name = result):
-    res.addSimpleStruct(m, name = "", baseType = ""):
-      res.addField(name = "cap", typ = NimInt)
-      res.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
-  do:
+      name = result,
+      typ = typ):
     var structInit: StructInitializer
     res.addStructInitializer(structInit, kind = siOrderedStruct):
       res.addField(structInit, name = "cap"):

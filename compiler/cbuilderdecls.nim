@@ -100,29 +100,6 @@ template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name
     initializerBody
     builder.addLineEnd(";")
 
-template addVarWithTypeAndInitializer(builder: var Builder, kind: VarKind = Local, name: string,
-                                      typeBody, initializerBody: typed) =
-  ## adds a variable declaration to the builder, with `typeBody` building the type, and
-  ## `initializerBody` building the initializer. initializer must be provided
-  when buildNifc:
-    builder.add("(")
-    builder.addVarHeader(kind)
-    builder.add(":")
-    builder.add(name)
-    builder.add(" . ") # pragmas
-    typeBody
-    builder.add(" ")
-    initializerBody
-    builder.addLineEnd(")")
-  else:
-    builder.addVarHeader(kind)
-    typeBody
-    builder.add(" ")
-    builder.add(name)
-    builder.add(" = ")
-    initializerBody
-    builder.addLineEnd(";")
-
 when buildNifc:
   proc getArrayType(m: BModule, elementType: Snippet, len: int): Snippet =
     let key = (elementType, len)
@@ -368,34 +345,77 @@ proc addArrayField(obj: var Builder; m: BModule, name, elementType: Snippet; len
 
 proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bool = false; cppInitializer: Snippet = "") =
   ## adds an field inside a struct/union type, based on an `skField` symbol
-  obj.add('\t')
-  if field.alignment > 0:
-    obj.add("NIM_ALIGN(")
-    obj.addIntValue(field.alignment)
-    obj.add(") ")
-  obj.add(typ)
-  if sfNoalias in field.flags:
-    obj.add(" NIM_NOALIAS")
-  obj.add(" ")
-  obj.add(name)
-  if isFlexArray:
-    obj.add("[SEQ_DECL_SIZE]")
-  if field.bitsize != 0:
-    obj.add(":")
-    obj.addIntValue(field.bitsize)
-  if cppInitializer.len != 0:
-    obj.add(cppInitializer)
-  obj.add(";\n")
+  when buildNifc:
+    obj.add("\n\t(fld :")
+    obj.add(name)
+    var pragmasInner = ""
+    if field.alignment > 0:
+      pragmasInner.add("(align ")
+      pragmasInner.addIntValue(field.alignment)
+      pragmasInner.add(")")
+    if field.bitsize != 0:
+      if pragmasInner.len != 0: pragmasInner.add(" ")
+      pragmasInner.add("(bits ")
+      pragmasInner.addIntValue(field.bitsize)
+      pragmasInner.add(")")
+    if sfNoalias in field.flags:
+      when false: # XXX not implemented in NIFC
+        if pragmasInner.len != 0: pragmasInner.add(" ")
+        pragmasInner.add("(restrict)")
+    if pragmasInner.len != 0:
+      obj.add(" (")
+      obj.add(pragmasInner)
+      obj.add(") ")
+    else:
+      obj.add(" . ")
+    if isFlexArray:
+      obj.add("(flexarray ")
+      obj.add(typ)
+      obj.add("))")
+    else:
+      obj.add(typ)
+      obj.add(")")
+    assert cppInitializer.len == 0, "cpp initializer unsupported in nifc"
+  else:
+    obj.add('\t')
+    if field.alignment > 0:
+      obj.add("NIM_ALIGN(")
+      obj.addIntValue(field.alignment)
+      obj.add(") ")
+    obj.add(typ)
+    if sfNoalias in field.flags:
+      obj.add(" NIM_NOALIAS")
+    obj.add(" ")
+    obj.add(name)
+    if isFlexArray:
+      obj.add("[SEQ_DECL_SIZE]")
+    if field.bitsize != 0:
+      obj.add(":")
+      obj.addIntValue(field.bitsize)
+    if cppInitializer.len != 0:
+      obj.add(cppInitializer)
+    obj.add(";\n")
 
 proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
-  obj.add(CallingConvToStr[callConv])
-  obj.add("_PTR(")
-  obj.add(rettype)
-  obj.add(", ")
-  obj.add(name)
-  obj.add(")")
-  obj.add(params)
-  obj.add(";\n")
+  when buildNifc:
+    obj.add("(fld :")
+    obj.add(name)
+    obj.add(" . (proctype . ")
+    obj.add(params)
+    obj.add(" ")
+    obj.add(rettype)
+    obj.add(" (pragmas ")
+    obj.add(CallingConvToStr[callConv])
+    obj.addLineEnd(")))")
+  else:
+    obj.add(CallingConvToStr[callConv])
+    obj.add("_PTR(")
+    obj.add(rettype)
+    obj.add(", ")
+    obj.add(name)
+    obj.add(")")
+    obj.add(params)
+    obj.add(";\n")
 
 type
   BaseClassKind = enum
@@ -410,24 +430,43 @@ type
 proc structOrUnion(t: PType): Snippet =
   let t = t.skipTypes({tyAlias, tySink})
   if tfUnion in t.flags: "union"
-  else: "struct"
+  else:
+    when buildNifc:
+      "object"
+    else:
+      "struct"
 
 proc startSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: Snippet): StructBuilderInfo =
   result = StructBuilderInfo(baseKind: bcNone, named: name.len != 0)
-  obj.add("struct")
-  if result.named:
+  when buildNifc:
+    if result.named:
+      obj.add("(type :")
+      obj.add(name)
+      obj.add(" (object ")
+      if baseType.len != 0:
+        if m.compileToCpp:
+          result.baseKind = bcCppInherit
+        else:
+          result.baseKind = bcSupField
+        obj.add(baseType)
+        obj.add(" ")
+      else:
+        obj.add(". ")
+  else:
+    obj.add("struct")
+    if result.named:
+      obj.add(" ")
+      obj.add(name)
+    if baseType.len != 0:
+      if m.compileToCpp:
+        result.baseKind = bcCppInherit
+      else:
+        result.baseKind = bcSupField
+    if result.baseKind == bcCppInherit:
+      obj.add(" : public ")
+      obj.add(baseType)
     obj.add(" ")
-    obj.add(name)
-  if baseType.len != 0:
-    if m.compileToCpp:
-      result.baseKind = bcCppInherit
-    else:
-      result.baseKind = bcSupField
-  if result.baseKind == bcCppInherit:
-    obj.add(" : public ")
-    obj.add(baseType)
-  obj.add(" ")
-  obj.add("{\n")
+    obj.add("{\n")
   result.preFieldsLen = obj.buf.len
   if result.baseKind == bcSupField:
     obj.addField(name = "Sup", typ = baseType)
@@ -437,9 +476,15 @@ proc finishSimpleStruct(obj: var Builder; m: BModule; info: StructBuilderInfo) =
     # no fields were added, add dummy field
     obj.addField(name = "dummy", typ = CChar)
   if info.named:
-    obj.add("};\n")
+    when buildNifc:
+      obj.add("))\n")
+    else:
+      obj.add("};\n")
   else:
-    obj.add("}")
+    when buildNifc:
+      obj.add(")")
+    else:
+      obj.add("}")
 
 template addSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: Snippet; body: typed) =
   ## builds a struct type not based on a Nim type with fields according to `body`,
@@ -450,18 +495,31 @@ template addSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: S
 
 proc startStruct(obj: var Builder; m: BModule; t: PType; name: string; baseType: Snippet): StructBuilderInfo =
   result = StructBuilderInfo(baseKind: bcNone, named: name.len != 0)
-  if tfPacked in t.flags:
-    if hasAttribute in CC[m.config.cCompiler].props:
+  when buildNifc:
+    # XXX no attributes for object types in NIFC
+    if result.named:
+      obj.add("(type :")
+      obj.add(name)
+      obj.add(" (")
       obj.add(structOrUnion(t))
-      obj.add(" __attribute__((__packed__))")
+      obj.add(" ")
     else:
-      obj.add("#pragma pack(push, 1)\n")
+      obj.add("(")
       obj.add(structOrUnion(t))
+      obj.add(" ")
   else:
-    obj.add(structOrUnion(t))
-  if result.named:
-    obj.add(" ")
-    obj.add(name)
+    if tfPacked in t.flags:
+      if hasAttribute in CC[m.config.cCompiler].props:
+        obj.add(structOrUnion(t))
+        obj.add(" __attribute__((__packed__))")
+      else:
+        obj.add("#pragma pack(push, 1)\n")
+        obj.add(structOrUnion(t))
+    else:
+      obj.add(structOrUnion(t))
+    if result.named:
+      obj.add(" ")
+      obj.add(name)
   if t.kind == tyObject:
     if t.baseClass == nil:
       if lacksMTypeField(t):
@@ -479,11 +537,18 @@ proc startStruct(obj: var Builder; m: BModule; t: PType; name: string; baseType:
       result.baseKind = bcCppInherit
     else:
       result.baseKind = bcSupField
-  if result.baseKind == bcCppInherit:
-    obj.add(" : public ")
-    obj.add(baseType)
-  obj.add(" ")
-  obj.add("{\n")
+  when buildNifc:
+    if baseType.len != 0:
+      obj.add(baseType)
+      obj.add(" ")
+    else:
+      obj.add(". ")
+  else:
+    if result.baseKind == bcCppInherit:
+      obj.add(" : public ")
+      obj.add(baseType)
+    obj.add(" ")
+    obj.add("{\n")
   result.preFieldsLen = obj.buf.len
   case result.baseKind
   of bcNone:
@@ -509,11 +574,18 @@ proc finishStruct(obj: var Builder; m: BModule; t: PType; info: StructBuilderInf
     # no fields were added, add dummy field
     obj.addField(name = "dummy", typ = CChar)
   if info.named:
-    obj.add("};\n")
+    when buildNifc:
+      obj.add("))\n")
+    else:
+      obj.add("};\n")
   else:
-    obj.add("}")
-  if tfPacked in t.flags and hasAttribute notin CC[m.config.cCompiler].props:
-    obj.add("#pragma pack(pop)\n")
+    when buildNifc:
+      obj.add(")")
+    else:
+      obj.add("}")
+  when not buildNifc:
+    if tfPacked in t.flags and hasAttribute notin CC[m.config.cCompiler].props:
+      obj.add("#pragma pack(pop)\n")
 
 template addStruct(obj: var Builder; m: BModule; typ: PType; name: string; baseType: Snippet; body: typed) =
   ## builds a struct type directly based on `typ` with fields according to `body`,
