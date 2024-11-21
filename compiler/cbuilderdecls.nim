@@ -594,22 +594,29 @@ template addStruct(obj: var Builder; m: BModule; typ: PType; name: string; baseT
   body
   finishStruct(obj, m, typ, info)
 
-template addFieldWithStructType(obj: var Builder; m: BModule; parentTyp: PType; fieldName: string, body: typed) =
-  ## adds a field with a `struct { ... }` type, building the fields according to `body`
-  obj.add('\t')
-  if tfPacked in parentTyp.flags:
-    if hasAttribute in CC[m.config.cCompiler].props:
-      obj.add("struct __attribute__((__packed__)) {\n")
-    else:
-      obj.add("#pragma pack(push, 1)\nstruct {")
+proc addFieldStruct(obj: var Builder; m: BModule; parentTyp: PType; name: string, fields: Snippet) =
+  ## see `genRecordFieldsAux` for use
+  when buildNifc:
+    # XXX packed not implemented in nifc
+    obj.addTypedef(name):
+      obj.add(fields)
   else:
-    obj.add("struct {\n")
-  body
-  obj.add("} ")
-  obj.add(fieldName)
-  obj.add(";\n")
-  if tfPacked in parentTyp.flags and hasAttribute notin CC[m.config.cCompiler].props:
-    obj.add("#pragma pack(pop)\n")
+    obj.add('\t')
+    if tfPacked in parentTyp.flags:
+      if hasAttribute in CC[m.config.cCompiler].props:
+        obj.add("typedef struct __attribute__((__packed__)) ")
+      else:
+        obj.add("#pragma pack(push, 1)\ntypedef struct ")
+    else:
+      obj.add("typedef struct ")
+    obj.add(name)
+    obj.add(" {\n")
+    obj.add(fields)
+    obj.add("} ")
+    obj.add(name)
+    obj.add(";\n")
+    if tfPacked in parentTyp.flags and hasAttribute notin CC[m.config.cCompiler].props:
+      obj.add("#pragma pack(pop)\n")
 
 template addAnonUnion(obj: var Builder; body: typed) =
   ## adds an anonymous union i.e. `union { ... };` with fields according to `body`

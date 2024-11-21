@@ -673,6 +673,8 @@ proc genCppInitializer(m: BModule, prc: BProc; typ: PType; didGenTemp: var bool)
 proc genRecordFieldsAux(m: BModule; n: PNode,
                         rectype: PType,
                         check: var IntSet; result: var Builder; unionPrefix = "") =
+  template maybeDotField(a, b: Snippet): Snippet =
+    if a.len != 0: dotField(a, b) else: b
   case n.kind
   of nkRecList:
     for i in 0..<n.len:
@@ -688,12 +690,14 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
       of nkOfBranch, nkElse:
         let k = lastSon(n[i])
         if k.kind != nkSym:
-          let structName = "_" & mangleRecFieldName(m, n[0].sym) & "_" & $i
+          let fieldName = "_" & mangleRecFieldName(m, n[0].sym) & "_" & $i
           var a = newBuilder("")
-          genRecordFieldsAux(m, k, rectype, check, a, unionPrefix & $structName & ".")
+          genRecordFieldsAux(m, k, rectype, check, a, maybeDotField(unionPrefix, $fieldName))
           if a.buf.len != 0:
-            unionBody.addFieldWithStructType(m, rectype, structName):
-              unionBody.add(extract(a))
+            let tmp = getTempName(m)
+            let structName = tmp & "_" & fieldName & "_Struct"
+            m.s[cfsTypes].addFieldStruct(m, rectype, structName, extract(a))
+            unionBody.addField(name = fieldName, typ = structName)
         else:
           genRecordFieldsAux(m, k, rectype, check, unionBody, unionPrefix)
       else: internalError(m.config, "genRecordFieldsAux(record case branch)")
@@ -706,7 +710,7 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
     if field.typ.kind == tyVoid: return
     #assert(field.ast == nil)
     let sname = mangleRecFieldName(m, field)
-    fillLoc(field.loc, locField, n, unionPrefix & sname, OnUnknown)
+    fillLoc(field.loc, locField, n, maybeDotField(unionPrefix, sname), OnUnknown)
     # for importcpp'ed objects, we only need to set field.loc, but don't
     # have to recurse via 'getTypeDescAux'. And not doing so prevents problems
     # with heavily templatized C++ code:
