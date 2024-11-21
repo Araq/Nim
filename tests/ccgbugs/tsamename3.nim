@@ -118,3 +118,24 @@ block: # issue #22571
     foo:
       type Foo = object
     doAssert $Foo() == "()"
+
+block: # bug #7784
+  block:
+    type
+        Color = enum clrBlack, clrRed, clrGreen, clrBlue
+
+    var color = clrRed
+    doAssert(ord(color) == 1)
+    doAssert($color == "clrRed")
+
+  block:
+    type
+        Color = enum
+          clrBlack = "Black",
+          clrRed = "Red",
+          clrGreen = "Green",
+          clrBlue = "Blue"
+
+    var color = clrRed
+    doAssert(ord(color) == 1)
+    doAssert($color == "Red")
