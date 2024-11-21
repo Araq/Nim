@@ -373,7 +373,7 @@ template addFieldWithStructType(obj: var Builder; m: BModule; parentTyp: PType; 
   obj.add(fieldName)
   obj.add(";\n")
   if tfPacked in parentTyp.flags and hasAttribute notin CC[m.config.cCompiler].props:
-    result.add("#pragma pack(pop)\n")
+    obj.add("#pragma pack(pop)\n")
 
 template addAnonUnion(obj: var Builder; body: typed) =
   ## adds an anonymous union i.e. `union { ... };` with fields according to `body`
