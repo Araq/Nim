@@ -1,7 +1,7 @@
 #
 #
 #            Nim's Runtime Library
-#        (c) Copyright 2012 Andreas Rumpf
+#        (c) Copyright 2024 Andreas Rumpf
 #
 #    See the file "copying.txt", included in this
 #    distribution, for details about the copyright.
@@ -36,7 +36,9 @@ runnableExamples:
     # can't match start of string since we're starting at 1
 
 import
-  std/[pcre, strutils, rtarrays]
+  std/[strutils, rtarrays]
+
+import std/pcre2
 
 when defined(nimPreviewSlimSystem):
   import std/syncio
@@ -57,7 +59,6 @@ type
 
   RegexDesc = object
     h: ptr Pcre
-    e: ptr ExtraData
 
   Regex* = ref RegexDesc ## a compiled regular expression
 
@@ -67,14 +68,10 @@ type
 when defined(gcDestructors):
   when defined(nimAllowNonVarDestructor):
     proc `=destroy`(x: RegexDesc) =
-      pcre.free_substring(cast[cstring](x.h))
-      if not isNil(x.e):
-        pcre.free_study(x.e)
+      pcre2.code_free(x.h)
   else:
     proc `=destroy`(x: var RegexDesc) =
-      pcre.free_substring(cast[cstring](x.h))
-      if not isNil(x.e):
-        pcre.free_study(x.e)
+      pcre2.code_free(x.h)
 
 proc raiseInvalidRegex(msg: string) {.noinline, noreturn.} =
   var e: ref RegexError
@@ -82,21 +79,19 @@ proc raiseInvalidRegex(msg: string) {.noinline, noreturn.} =
   e.msg = msg
   raise e
 
-proc rawCompile(pattern: string, flags: cint): ptr Pcre =
+proc rawCompile(pattern: string, flags: csize_t, options: uint32): ptr Pcre =
   var
-    msg: cstring = ""
-    offset: cint = 0
-  result = pcre.compile(pattern, flags, addr(msg), addr(offset), nil)
+    errorCode: cint = 0
+    offset: csize_t = 0
+  result = pcre2.compile(pattern.cstring, flags, options, addr(errorCode), addr(offset), nil)
   if result == nil:
-    raiseInvalidRegex($msg & "\n" & pattern & "\n" & spaces(offset) & "^\n")
+    raiseInvalidRegex($errorCode & "\n" & pattern & "\n" & spaces(offset) & "^\n")
 
 proc finalizeRegEx(x: Regex) =
   # XXX This is a hack, but PCRE does not export its "free" function properly.
   # Sigh. The hack relies on PCRE's implementation (see `pcre_get.c`).
   # Fortunately the implementation is unlikely to change.
-  pcre.free_substring(cast[cstring](x.h))
-  if not isNil(x.e):
-    pcre.free_study(x.e)
+  pcre2.code_free(x.h)
 
 proc re*(s: string, flags = {reStudy}): Regex =
   ## Constructor of regular expressions.
@@ -112,16 +107,18 @@ proc re*(s: string, flags = {reStudy}): Regex =
     result = Regex()
   else:
     new(result, finalizeRegEx)
-  result.h = rawCompile(s, cast[cint](flags - {reStudy}))
-  if reStudy in flags:
-    var msg: cstring = ""
-    var options: cint = 0
-    var hasJit: cint = 0
-    if pcre.config(pcre.CONFIG_JIT, addr hasJit) == 0:
-      if hasJit == 1'i32:
-        options = pcre.STUDY_JIT_COMPILE
-    result.e = pcre.study(result.h, options, addr msg)
-    if not isNil(msg): raiseInvalidRegex($msg)
+  var options = 0'u32
+  if reExtended in flags:
+    options = options or EXTENDED
+
+  if reIgnoreCase in flags:
+    options = options or CASELESS
+  result.h = rawCompile(s, cast[csize_t](ZERO_TERMINATED), options)
+  if reStudy in flags: # TODO: add reJit
+    var hasJit: cint = cint(0)
+    if pcre2.config(pcre2.CONFIG_JIT, addr hasJit) == 0:
+      if hasJit == 1'i32 and jit_compile(result.h, pcre2.JIT_COMPLETE) != 0:
+        raiseInvalidRegex("JIT compilation failed.")
 
 proc rex*(s: string, flags = {reStudy, reExtended}): Regex =
   ## Constructor for extended regular expressions.
@@ -139,20 +136,23 @@ proc bufSubstr(b: cstring, sPos, ePos: int): string {.inline.} =
   result.setLen(sz)
 
 proc matchOrFind(buf: cstring, pattern: Regex, matches: var openArray[string],
-                 start, bufSize, flags: cint): cint =
+                 start, bufSize: int; options: uint32): int =
   var
-    rtarray = initRtArray[cint]((matches.len+1)*3)
+    rtarray = initRtArray[csize_t]((matches.len+1)*3)
     rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize, start, flags,
-      cast[ptr cint](rawMatches), (matches.len+1).cint*3)
-  if res < 0'i32: return res
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, options,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
+  if res < 0: return res
   for i in 1..int(res)-1:
     var a = rawMatches[i * 2]
     var b = rawMatches[i * 2 + 1]
-    if a >= 0'i32:
+    if a != UNSET:
       matches[i-1] = bufSubstr(buf, int(a), int(b))
     else: matches[i-1] = ""
-  return rawMatches[1] - rawMatches[0]
+  return int(rawMatches[1]) - int(rawMatches[0])
 
 const MaxReBufSize* = high(cint)
   ## Maximum PCRE (API 1) buffer start/size equal to `high(cint)`, which even
@@ -169,15 +169,18 @@ proc findBounds*(buf: cstring, pattern: Regex, matches: var openArray[string],
   ## Note: The memory for `matches` needs to be allocated before this function is
   ## called, otherwise it will just remain empty.
   var
-    rtarray = initRtArray[cint]((matches.len+1)*3)
+    rtarray = initRtArray[csize_t]((matches.len+1)*3)
     rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, 0'i32,
-      cast[ptr cint](rawMatches), (matches.len+1).cint*3)
-  if res < 0'i32: return (-1, 0)
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, 0'u32,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
+  if res < 0: return (-1, 0)
   for i in 1..int(res)-1:
     var a = rawMatches[i * 2]
     var b = rawMatches[i * 2 + 1]
-    if a >= 0'i32: matches[i-1] = bufSubstr(buf, int(a), int(b))
+    if a != UNSET: matches[i-1] = bufSubstr(buf, int(a), int(b))
     else: matches[i-1] = ""
   return (rawMatches[0].int, rawMatches[1].int - 1)
 
@@ -209,15 +212,18 @@ proc findBounds*(buf: cstring, pattern: Regex,
   ##
   ## .. note:: The memory for `matches` needs to be allocated before this function is called, otherwise it will just remain empty.
   var
-    rtarray = initRtArray[cint]((matches.len+1)*3)
+    rtarray = initRtArray[csize_t]((matches.len+1)*3)
     rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, 0'i32,
-      cast[ptr cint](rawMatches), (matches.len+1).cint*3)
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, 0'u32,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if res < 0'i32: return (-1, 0)
   for i in 1..int(res)-1:
     var a = rawMatches[i * 2]
     var b = rawMatches[i * 2 + 1]
-    if a >= 0'i32: matches[i-1] = (int(a), int(b)-1)
+    if a != UNSET: matches[i-1] = (int(a), int(b)-1)
     else: matches[i-1] = (-1,0)
   return (rawMatches[0].int, rawMatches[1].int - 1)
 
@@ -240,16 +246,18 @@ proc findBounds*(s: string, pattern: Regex,
       min(start, MaxReBufSize), min(s.len, MaxReBufSize))
 
 proc findBoundsImpl(buf: cstring, pattern: Regex,
-                    start = 0, bufSize = 0, flags = 0): tuple[first, last: int] =
-  var rtarray = initRtArray[cint](3)
-  let rawMatches = rtarray.getRawData
-  let res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, flags.int32,
-                cast[ptr cint](rawMatches), 3)
-
+                    start = 0, bufSize = 0, options = 0'u32): tuple[first, last: int] =
+  var rtarray = initRtArray[csize_t](3)
+  var rawMatches = rtarray.getRawData
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, options,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if res < 0'i32:
     result = (-1, 0)
   else:
-    result = (int(rawMatches[0]), int(rawMatches[1]-1))
+    result = (int(rawMatches[0]), int(rawMatches[1])-1)
 
 proc findBounds*(buf: cstring, pattern: Regex,
                  start = 0, bufSize: int): tuple[first, last: int] =
@@ -257,10 +265,13 @@ proc findBounds*(buf: cstring, pattern: Regex,
   ## where `buf` has length `bufSize` (not necessarily `'\0'` terminated).
   ## If it does not match, `(-1,0)` is returned.
   var
-    rtarray = initRtArray[cint](3)
-    rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, 0'i32,
-      cast[ptr cint](rawMatches), 3)
+    rtarray = initRtArray[csize_t](3)
+  var rawMatches = rtarray.getRawData
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, 0'u32,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if res < 0'i32: return (int(res), 0)
   return (int(rawMatches[0]), int(rawMatches[1]-1))
 
@@ -275,14 +286,18 @@ proc findBounds*(s: string, pattern: Regex,
   result = findBounds(cstring(s), pattern,
       min(start, MaxReBufSize), min(s.len, MaxReBufSize))
 
-proc matchOrFind(buf: cstring, pattern: Regex, start, bufSize: int, flags: cint): cint =
+proc matchOrFind(buf: cstring, pattern: Regex, start, bufSize: int, options: uint32): int =
   var
-    rtarray = initRtArray[cint](3)
+    rtarray = initRtArray[csize_t](3)
     rawMatches = rtarray.getRawData
-  result = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, flags,
-                    cast[ptr cint](rawMatches), 3)
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  result = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, options,
+                    matchData, nil)
+  
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if result >= 0'i32:
-    result = rawMatches[1] - rawMatches[0]
+    result = int(rawMatches[1]) - int(rawMatches[0])
 
 proc matchLen*(s: string, pattern: Regex, matches: var openArray[string],
               start = 0): int {.inline.} =
@@ -291,7 +306,7 @@ proc matchLen*(s: string, pattern: Regex, matches: var openArray[string],
   ## of zero can happen.
   ##
   ## .. note:: The memory for `matches` needs to be allocated before this function is called, otherwise it will just remain empty.
-  result = matchOrFind(cstring(s), pattern, matches, start.cint, s.len.cint, pcre.ANCHORED)
+  result = matchOrFind(cstring(s), pattern, matches, start, s.len, pcre2.ANCHORED)
 
 proc matchLen*(buf: cstring, pattern: Regex, matches: var openArray[string],
               start = 0, bufSize: int): int {.inline.} =
@@ -300,7 +315,7 @@ proc matchLen*(buf: cstring, pattern: Regex, matches: var openArray[string],
   ## of zero can happen.
   ##
   ## .. note:: The memory for `matches` needs to be allocated before this function is called, otherwise it will just remain empty.
-  return matchOrFind(buf, pattern, matches, start.cint, bufSize.cint, pcre.ANCHORED)
+  return matchOrFind(buf, pattern, matches, start, bufSize, pcre2.ANCHORED)
 
 proc matchLen*(s: string, pattern: Regex, start = 0): int {.inline.} =
   ## the same as `match`, but it returns the length of the match,
@@ -311,13 +326,13 @@ proc matchLen*(s: string, pattern: Regex, start = 0): int {.inline.} =
     doAssert matchLen("abcdefg", re"cde", 2) == 3
     doAssert matchLen("abcdefg", re"abcde") == 5
     doAssert matchLen("abcdefg", re"cde") == -1
-  result = matchOrFind(cstring(s), pattern, start.cint, s.len.cint, pcre.ANCHORED)
+  result = matchOrFind(cstring(s), pattern, start, s.len, pcre2.ANCHORED)
 
 proc matchLen*(buf: cstring, pattern: Regex, start = 0, bufSize: int): int {.inline.} =
   ## the same as `match`, but it returns the length of the match,
   ## if there is no match, `-1` is returned. Note that a match length
   ## of zero can happen.
-  result = matchOrFind(buf, pattern, start.cint, bufSize, pcre.ANCHORED)
+  result = matchOrFind(buf, pattern, start, bufSize, pcre2.ANCHORED)
 
 proc match*(s: string, pattern: Regex, start = 0): bool {.inline.} =
   ## returns `true` if `s[start..]` matches the `pattern`.
@@ -358,17 +373,20 @@ proc find*(buf: cstring, pattern: Regex, matches: var openArray[string],
   ##
   ## .. note:: The memory for `matches` needs to be allocated before this function is called, otherwise it will just remain empty.
   var
-    rtarray = initRtArray[cint]((matches.len+1)*3)
+    rtarray = initRtArray[csize_t]((matches.len+1)*3)
     rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, 0'i32,
-      cast[ptr cint](rawMatches), (matches.len+1).cint*3)
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, 0'u32,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if res < 0'i32: return res
   for i in 1..int(res)-1:
     var a = rawMatches[i * 2]
     var b = rawMatches[i * 2 + 1]
-    if a >= 0'i32: matches[i-1] = bufSubstr(buf, int(a), int(b))
+    if a != UNSET: matches[i-1] = bufSubstr(buf, int(a), int(b))
     else: matches[i-1] = ""
-  return rawMatches[0]
+  return rawMatches[0].int
 
 proc find*(s: string, pattern: Regex, matches: var openArray[string],
            start = 0): int {.inline.} =
@@ -384,12 +402,15 @@ proc find*(buf: cstring, pattern: Regex, start = 0, bufSize: int): int =
   ## where `buf` has length `bufSize` (not necessarily `'\0'` terminated).
   ## If it does not match, `-1` is returned.
   var
-    rtarray = initRtArray[cint](3)
+    rtarray = initRtArray[csize_t](3)
     rawMatches = rtarray.getRawData
-    res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, start.cint, 0'i32,
-      cast[ptr cint](rawMatches), 3)
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
+  var res = pcre2.match(pattern.h, buf, bufSize.csize_t, start.csize_t, 0'u32,
+      matchData, nil)
+  rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
   if res < 0'i32: return res
-  return rawMatches[0]
+  return rawMatches[0].int
 
 proc find*(s: string, pattern: Regex, start = 0): int {.inline.} =
   ## returns the starting position of `pattern` in `s`. If it does not
@@ -410,18 +431,21 @@ iterator findAll*(s: string, pattern: Regex, start = 0): string =
   ## Note that since this is an iterator you should not modify the string you
   ## are iterating over: bad things could happen.
   var
-    i = int32(start)
-    rtarray = initRtArray[cint](3)
+    i = start
+    rtarray = initRtArray[csize_t](3)
     rawMatches = rtarray.getRawData
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
   while true:
-    let res = pcre.exec(pattern.h, pattern.e, s, len(s).cint, i, 0'i32,
-      cast[ptr cint](rawMatches), 3)
+    let res = pcre2.match(pattern.h, s.cstring, len(s).csize_t, i.csize_t, 0'u32,
+      matchData, nil)
+    rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
     if res < 0'i32: break
     let a = rawMatches[0]
     let b = rawMatches[1]
-    if a == b and a == i: break
+    if a == b and a.int == i: break
     yield substr(s, int(a), int(b)-1)
-    i = b
+    i = b.int
 
 iterator findAll*(buf: cstring, pattern: Regex, start = 0, bufSize: int): string =
   ## Yields all matching `substrings` of `s` that match `pattern`.
@@ -430,19 +454,22 @@ iterator findAll*(buf: cstring, pattern: Regex, start = 0, bufSize: int): string
   ## are iterating over: bad things could happen.
   var
     i = int32(start)
-    rtarray = initRtArray[cint](3)
+    rtarray = initRtArray[csize_t](3)
     rawMatches = rtarray.getRawData
+  var matchData = match_data_create_from_pattern(pattern.h, nil)
+  defer: match_data_free(matchData)
   while true:
-    let res = pcre.exec(pattern.h, pattern.e, buf, bufSize.cint, i, 0'i32,
-      cast[ptr cint](rawMatches), 3)
+    let res = pcre2.match(pattern.h, buf, bufSize.csize_t, i.csize_t, 0'u32,
+      matchData, nil)
+    rawMatches = cast[ptr UncheckedArray[csize_t]](get_ovector_pointer(matchData))
     if res < 0'i32: break
     let a = rawMatches[0]
     let b = rawMatches[1]
-    if a == b and a == i: break
+    if a == b and a.int == i: break
     var str = newString(b-a)
     copyMem(str[0].addr, unsafeAddr(buf[a]), b-a)
     yield str
-    i = b
+    i = b.int32
 
 proc findAll*(s: string, pattern: Regex, start = 0): seq[string] {.inline.} =
   ## returns all matching `substrings` of `s` that match `pattern`.
@@ -499,7 +526,7 @@ proc replace*(s: string, sub: Regex, by = ""): string =
     doAssert "var1=key; var2=key2".replace(re"(\w+)=(\w+)", "?") == "?; ?"
   result = ""
   var prev = 0
-  var flags = int32(0)
+  var flags = 0'u32
   while prev < s.len:
     var match = findBoundsImpl(s.cstring, sub, prev, s.len, flags)
     flags = 0
@@ -508,7 +535,7 @@ proc replace*(s: string, sub: Regex, by = ""): string =
     add(result, by)
     if match.first > match.last:
       # 0-len match
-      flags = pcre.NOTEMPTY_ATSTART
+      flags = pcre2.NOTEMPTY_ATSTART
     prev = match.last + 1
   add(result, substr(s, prev))
 

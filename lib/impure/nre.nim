@@ -1,6 +1,6 @@
 #
 #            Nim's Runtime Library
-#        (c) Copyright 2015 Nim Contributors
+#        (c) Copyright 2024 Nim Contributors
 #
 #    See the file "copying.txt", included in this
 #    distribution, for details about the copyright.
@@ -61,7 +61,7 @@ runnableExamples:
   assert find("uxabc", re"(?<=x|y)ab", start = 1).get.captures[-1] == "ab"
   assert find("uxabc", re"ab", start = 3).isNone
 
-from std/pcre import nil
+from std/pcre2 import nil
 import nre/private/util
 import std/tables
 from std/strutils import `%`
@@ -76,8 +76,7 @@ export options
 type
   RegexDesc* = object
     pattern*: string
-    pcreObj: ptr pcre.Pcre  ## not nil
-    pcreExtra: ptr pcre.ExtraData  ## nil
+    pcreObj: ptr pcre2.Pcre  ## not nil
 
     captureNameToId: Table[string, int]
 
@@ -137,8 +136,6 @@ type
     ##     are recognized only in UTF-8 mode.
     ##     —  man pcre
     ##
-    ## -  `(*JAVASCRIPT_COMPAT)` - JavaScript compatibility
-    ## -  `(*NO_STUDY)` - turn off studying; study is enabled by default
     ##
     ## For more details on the leading option groups, see the `Option
     ## Setting <https://man7.org/linux/man-pages/man3/pcresyntax.3.html#OPTION_SETTING>`_
@@ -191,7 +188,7 @@ type
     pattern*: Regex  ## The regex doing the matching.
                      ## Not nil.
     str*: string  ## The string that was matched against.
-    pcreMatchBounds: seq[HSlice[cint, cint]] ## First item is the bounds of the match
+    pcreMatchBounds: seq[HSlice[csize_t, csize_t]] ## First item is the bounds of the match
                                             ## Other items are the captures
                                             ## `a` is inclusive start, `b` is exclusive end
 
@@ -222,37 +219,31 @@ when defined(gcDestructors):
   when defined(nimAllowNonVarDestructor) and defined(nimPreviewNonVarDestructor):
     proc `=destroy`(pattern: RegexDesc) =
       `=destroy`(pattern.pattern)
-      pcre.free_substring(cast[cstring](pattern.pcreObj))
-      if pattern.pcreExtra != nil:
-        pcre.free_study(pattern.pcreExtra)
+      pcre2.code_free(pattern.pcreObj)
       `=destroy`(pattern.captureNameToId)
   else:
     proc `=destroy`(pattern: var RegexDesc) =
       `=destroy`(pattern.pattern)
-      pcre.free_substring(cast[cstring](pattern.pcreObj))
-      if pattern.pcreExtra != nil:
-        pcre.free_study(pattern.pcreExtra)
+      pcre2.code_free(pattern.pcreObj)
       `=destroy`(pattern.captureNameToId)
 else:
   proc destroyRegex(pattern: Regex) =
     `=destroy`(pattern.pattern)
-    pcre.free_substring(cast[cstring](pattern.pcreObj))
-    if pattern.pcreExtra != nil:
-      pcre.free_study(pattern.pcreExtra)
+    pcre2.code_free(pattern.pcreObj)
     `=destroy`(pattern.captureNameToId)
 
-proc getinfo[T](pattern: Regex, opt: cint): T =
-  let retcode = pcre.fullinfo(pattern.pcreObj, pattern.pcreExtra, opt, addr result)
+proc getinfo[T](pattern: Regex, opt: uint32): T =
+  let retcode = pcre2.pattern_info(pattern.pcreObj, opt, addr result)
 
   if retcode < 0:
     # XXX Error message that doesn't expose implementation details
     raise newException(FieldDefect, "Invalid getinfo for $1, errno $2" % [$opt, $retcode])
 
 proc getNameToNumberTable(pattern: Regex): Table[string, int] =
-  let entryCount = getinfo[cint](pattern, pcre.INFO_NAMECOUNT)
-  let entrySize = getinfo[cint](pattern, pcre.INFO_NAMEENTRYSIZE)
+  let entryCount = getinfo[cint](pattern, pcre2.INFO_NAMECOUNT)
+  let entrySize = getinfo[cint](pattern, pcre2.INFO_NAMEENTRYSIZE)
   let table = cast[ptr UncheckedArray[uint8]](
-                getinfo[int](pattern, pcre.INFO_NAMETABLE))
+                getinfo[int](pattern, pcre2.INFO_NAMETABLE))
 
   result = initTable[string, int]()
 
@@ -268,53 +259,49 @@ proc getNameToNumberTable(pattern: Regex): Table[string, int] =
 
     result[name] = num
 
-proc initRegex(pattern: string, flags: int, study = true): Regex =
+proc initRegex(pattern: string, flags: csize_t, options: uint32, noJit: bool): Regex =
   when defined(gcDestructors):
     result = Regex()
   else:
     new(result, destroyRegex)
   result.pattern = pattern
 
-  var errorMsg: cstring
-  var errOffset: cint
+  var
+    errorCode: cint = 0
+    errOffset: csize_t = 0
 
-  result.pcreObj = pcre.compile(cstring(pattern),
-                                # better hope int is at least 4 bytes..
-                                cint(flags), addr errorMsg,
-                                addr errOffset, nil)
+  result.pcreObj = pcre2.compile(cstring(pattern),
+                                flags, options, addr(errorCode),
+                                addr(errOffset), nil)
   if result.pcreObj == nil:
     # failed to compile
-    raise SyntaxError(msg: $errorMsg, pos: errOffset, pattern: pattern)
+    raise SyntaxError(msg: $errorCode, pos: int errOffset, pattern: pattern)
 
-  if study:
-    var options: cint = 0
-    var hasJit: cint
-    if pcre.config(pcre.CONFIG_JIT, addr hasJit) == 0:
-      if hasJit == 1'i32:
-        options = pcre.STUDY_JIT_COMPILE
-    result.pcreExtra = pcre.study(result.pcreObj, options, addr errorMsg)
-    if errorMsg != nil:
-      raise StudyError(msg: $errorMsg)
+  if not noJit:
+    var hasJit: cint = cint(0)
+    if pcre2.config(pcre2.CONFIG_JIT, addr hasJit) == 0:
+      if hasJit == 1'i32 and pcre2.jit_compile(result.pcreObj, pcre2.JIT_COMPLETE) != 0:
+        raise StudyError(msg: "JIT compilation failed.")
 
   result.captureNameToId = result.getNameToNumberTable()
 
 proc captureCount*(pattern: Regex): int =
-  return getinfo[cint](pattern, pcre.INFO_CAPTURECOUNT)
+  return getinfo[cint](pattern, pcre2.INFO_CAPTURECOUNT)
 
 proc captureNameId*(pattern: Regex): Table[string, int] =
   return pattern.captureNameToId
 
 proc matchesCrLf(pattern: Regex): bool =
-  let flags = uint32(getinfo[culong](pattern, pcre.INFO_OPTIONS))
-  let newlineFlags = flags and (pcre.NEWLINE_CRLF or
-                                pcre.NEWLINE_ANY or
-                                pcre.NEWLINE_ANYCRLF)
+  let flags = uint32(getinfo[culong](pattern, pcre2.INFO_ALLOPTIONS))
+  let newlineFlags = flags and (pcre2.NEWLINE_CRLF or
+                                pcre2.NEWLINE_ANY or
+                                pcre2.NEWLINE_ANYCRLF)
   if newlineFlags > 0u32:
     return true
 
   # get flags from build config
   var confFlags: cint
-  if pcre.config(pcre.CONFIG_NEWLINE, addr confFlags) != 0:
+  if pcre2.config(pcre2.CONFIG_NEWLINE, addr confFlags) != 0:
     assert(false, "CONFIG_NEWLINE apparently got screwed up")
 
   case confFlags
@@ -332,7 +319,7 @@ func captures*(pattern: RegexMatch): Captures = return Captures(pattern)
 
 func contains*(pattern: CaptureBounds, i: int): bool =
   let pattern = RegexMatch(pattern)
-  pattern.pcreMatchBounds[i + 1].a != -1
+  pattern.pcreMatchBounds[i + 1].a != pcre2.UNSET
 
 func contains*(pattern: Captures, i: int): bool =
   i in CaptureBounds(pattern)
@@ -343,7 +330,7 @@ func `[]`*(pattern: CaptureBounds, i: int): HSlice[int, int] =
     raise newException(IndexDefect, "Group '" & $i & "' was not captured")
 
   let bounds = pattern.pcreMatchBounds[i + 1]
-  int(bounds.a)..int(bounds.b-1)
+  int(bounds.a)..int(bounds.b)-1
 
 func `[]`*(pattern: Captures, i: int): string =
   let pattern = RegexMatch(pattern)
@@ -431,8 +418,7 @@ proc `$`*(pattern: RegexMatch): string =
 proc `==`*(a, b: Regex): bool =
   if not a.isNil and not b.isNil:
     return a.pattern == b.pattern and
-           a.pcreObj == b.pcreObj and
-           a.pcreExtra == b.pcreExtra
+           a.pcreObj == b.pcreObj
   else:
     return system.`==`(a, b)
 
@@ -441,14 +427,14 @@ proc `==`*(a, b: RegexMatch): bool =
          a.str == b.str
 
 const PcreOptions = {
-  "NEVER_UTF": pcre.NEVER_UTF,
-  "ANCHORED": pcre.ANCHORED,
-  "DOLLAR_ENDONLY": pcre.DOLLAR_ENDONLY,
-  "FIRSTLINE": pcre.FIRSTLINE,
-  "NO_AUTO_CAPTURE": pcre.NO_AUTO_CAPTURE,
-  "JAVASCRIPT_COMPAT": pcre.JAVASCRIPT_COMPAT,
-  "U": pcre.UTF8 or pcre.UCP
+  "NEVER_UTF": pcre2.NEVER_UTF,
+  "ANCHORED": pcre2.ANCHORED,
+  "DOLLAR_ENDONLY": pcre2.DOLLAR_ENDONLY,
+  "FIRSTLINE": pcre2.FIRSTLINE,
+  "NO_AUTO_CAPTURE": pcre2.NO_AUTO_CAPTURE,
+  "U": pcre2.UTF or pcre2.UCP # TODO: UTF-8 ?
 }.toTable
+# TODO: maybe add JIT?
 
 # Options that are supported inside regular expressions themselves
 const SkipOptions = [
@@ -457,8 +443,8 @@ const SkipOptions = [
   "CR", "LF", "CRLF", "ANYCRLF", "ANY", "BSR_ANYCRLF", "BSR_UNICODE"
 ]
 
-proc extractOptions(pattern: string): tuple[pattern: string, flags: int, study: bool] =
-  result = ("", 0, true)
+proc extractOptions(pattern: string): tuple[pattern: string, options: uint32, noJit: bool] =
+  result = ("", 0'u32, false)
 
   var optionStart = 0
   var equals = false
@@ -477,9 +463,9 @@ proc extractOptions(pattern: string): tuple[pattern: string, flags: int, study: 
       if equals or name in SkipOptions:
         result.pattern.add pattern[optionStart .. i]
       elif PcreOptions.hasKey name:
-        result.flags = result.flags or PcreOptions[name]
+        result.options = result.options or PcreOptions[name]
       elif name == "NO_STUDY":
-        result.study = false
+        result.noJit = true
       else:
         break
       optionStart = i+1
@@ -496,45 +482,50 @@ proc extractOptions(pattern: string): tuple[pattern: string, flags: int, study: 
   result.pattern.add pattern[optionStart .. pattern.high]
 
 proc re*(pattern: string): Regex =
-  let (pattern, flags, study) = extractOptions(pattern)
-  initRegex(pattern, flags, study)
+  let (pattern, options, noJit) = extractOptions(pattern)
+  initRegex(pattern, pcre2.ZERO_TERMINATED, options, noJit)
 
-proc matchImpl(str: string, pattern: Regex, start, endpos: int, flags: int): Option[RegexMatch] =
+proc matchImpl(str: string, pattern: Regex, start, endpos: int, options: uint32): Option[RegexMatch] =
   var myResult = RegexMatch(pattern: pattern, str: str)
   # See PCRE man pages.
   # 2x capture count to make room for start-end pairs
   # 1x capture count as slack space for PCRE
   let vecsize = (pattern.captureCount() + 1) * 3
-  # div 2 because each element is 2 cints long
+  # div 2 because each element is 2 csize_t long
   # plus 1 because we need the ceiling, not the floor
-  myResult.pcreMatchBounds = newSeq[HSlice[cint, cint]]((vecsize + 1) div 2)
+  myResult.pcreMatchBounds = newSeq[HSlice[csize_t, csize_t]]((vecsize + 1) div 2)
   myResult.pcreMatchBounds.setLen(vecsize div 3)
 
   let strlen = if endpos == int.high: str.len else: endpos+1
   doAssert(strlen <= str.len)  # don't want buffer overflows
 
-  let execRet = pcre.exec(pattern.pcreObj,
-                          pattern.pcreExtra,
+  var matchData = pcre2.match_data_create_from_pattern(pattern.pcreObj, nil)
+  defer: pcre2.match_data_free(matchData)
+  let execRet = pcre2.match(pattern.pcreObj,
                           cstring(str),
-                          cint(strlen),
-                          cint(start),
-                          cint(flags),
-                          cast[ptr cint](addr myResult.pcreMatchBounds[0]),
-                          cint(vecsize))
+                          csize_t(strlen),
+                          csize_t(start),
+                          options,
+                          matchData,
+                          nil)
+  let ovector = cast[ptr UncheckedArray[csize_t]](pcre2.get_ovector_pointer(matchData))
+  let capture_count = pcre2.get_ovector_count(matchData)
+  let ovector_size = 2 * capture_count.int * sizeof(csize_t)
+  copyMem(addr myResult.pcreMatchBounds[0], ovector, ovector_size)
   if execRet >= 0:
     return some(myResult)
 
   case execRet:
-    of pcre.ERROR_NOMATCH:
+    of pcre2.ERROR_NOMATCH:
       return none(RegexMatch)
-    of pcre.ERROR_NULL:
+    of pcre2.ERROR_NULL:
       raise newException(AccessViolationDefect, "Expected non-null parameters")
-    of pcre.ERROR_BADOPTION:
+    of pcre2.ERROR_BADOPTION:
       raise RegexInternalError(msg: "Unknown pattern flag. Either a bug or " &
         "outdated PCRE.")
-    of pcre.ERROR_BADUTF8, pcre.ERROR_SHORTUTF8, pcre.ERROR_BADUTF8_OFFSET:
+    of pcre2.ERROR_BADUTF_OFFSET: # TODO:
       raise InvalidUnicodeError(msg: "Invalid unicode byte sequence",
-        pos: myResult.pcreMatchBounds[0].a)
+        pos: myResult.pcreMatchBounds[0].a.int)
     else:
       raise RegexInternalError(msg: "Unknown internal error: " & $execRet)
 
@@ -553,7 +544,7 @@ proc match*(str: string, pattern: Regex, start = 0, endpos = int.high): Option[R
     assert 0 in "abc".match(re"(\w)").get.captureBounds
     assert "abc".match(re"").get.captureBounds[-1] == 0 .. -1
     assert "abc".match(re"abc").get.captureBounds[-1] == 0 .. 2
-  return str.matchImpl(pattern, start, endpos, pcre.ANCHORED)
+  return str.matchImpl(pattern, start, endpos, pcre2.ANCHORED)
 
 iterator findIter*(str: string, pattern: Regex, start = 0, endpos = int.high): RegexMatch =
   ## Works the same as `find(...)<#find,string,Regex,int>`_, but finds every
@@ -569,26 +560,26 @@ iterator findIter*(str: string, pattern: Regex, start = 0, endpos = int.high): R
   ## -  `proc findAll(...)` returns a `seq[string]`
   # see pcredemo for explanation => https://www.pcre.org/original/doc/html/pcredemo.html
   let matchesCrLf = pattern.matchesCrLf()
-  let unicode = uint32(getinfo[culong](pattern, pcre.INFO_OPTIONS) and
-    pcre.UTF8) > 0u32
+  let unicode = uint32(getinfo[culong](pattern, pcre2.INFO_ALLOPTIONS) and
+    pcre2.UTF) > 0u32 # TODO:
   let strlen = if endpos == int.high: str.len else: endpos+1
   var offset = start
   var match: Option[RegexMatch]
   var neverMatched = true
 
   while true:
-    var flags = 0
+    var options = 0'u32
     if match.isSome and
        match.get.matchBounds.a > match.get.matchBounds.b:
       # 0-len match
-      flags = pcre.NOTEMPTY_ATSTART
-    match = str.matchImpl(pattern, offset, endpos, flags)
+      options = pcre2.NOTEMPTY_ATSTART
+    match = str.matchImpl(pattern, offset, endpos, options)
 
     if match.isNone:
       # either the end of the input or the string
       # cannot be split here - we also need to bail
       # if we've never matched and we've already tried to...
-      if flags == 0 or offset >= strlen or neverMatched: # All matches found
+      if options == 0 or offset >= strlen or neverMatched: # All matches found
         break
 
       if matchesCrLf and offset < (str.len - 1) and
