@@ -686,8 +686,12 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
     # since identifiers are not allowed to start with '_'
     var unionBody = newBuilder("")
     let fieldNameBase = "_" & mangleRecFieldName(m, n[0].sym)
-    let unionFieldName = fieldNameBase & "_union"
-    let unionPrefix = maybeDotField(unionPrefix, unionFieldName)
+    when buildNifc:
+      let unionFieldName = fieldNameBase & "_union"
+      let unionPrefix = maybeDotField(unionPrefix, unionFieldName)
+    else:
+      # naming the union causes problems for deleted default constructor on C++
+      let unionFieldName = ""
     for i in 1..<n.len:
       case n[i].kind
       of nkOfBranch, nkElse:
@@ -705,11 +709,18 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
           genRecordFieldsAux(m, k, rectype, check, unionBody, unionPrefix)
       else: internalError(m.config, "genRecordFieldsAux(record case branch)")
     if unionBody.buf.len != 0:
-      let tmp = getTempName(m)
-      let typName = tmp & "_" & fieldNameBase & "_Union"
-      m.s[cfsTypes].addUnion(typName):
-        m.s[cfsTypes].add(extract(unionBody))
-      result.addField(name = unionFieldName, typ = typName)
+      when buildNifc:
+        let tmp = getTempName(m)
+        let typName = tmp & "_" & fieldNameBase & "_Union"
+        template unionBuilder: untyped = m.s[cfsTypes]
+        let unionTyp = typName
+      else:
+        let typName = ""
+        var unionBuilder = newBuilder("")
+        template unionTyp: untyped = extract(unionBuilder)
+      unionBuilder.addUnion(typName):
+        unionBuilder.add(extract(unionBody))
+      result.addField(name = unionFieldName, typ = unionTyp)
   of nkSym:
     let field = n.sym
     if field.typ.kind == tyVoid: return
