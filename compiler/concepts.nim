@@ -88,6 +88,13 @@ proc existingBinding(m: MatchCon; key: PType): PType =
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
 
+proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool
+
+proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
+  result = true
+  for i in start..<f.kidsLen - ord(f.kind == tyGenericInst):
+    if not matchType(c, f[i], a[i], m): return false
+
 proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
@@ -117,9 +124,7 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = false
     if a.kind == tyGenericInst and a.genericHead.kind == tyGenericBody:
       if sameType(f.genericHead, a.genericHead) and f.kidsLen == a.kidsLen-1:
-        for i in FirstGenericParamAt ..< f.kidsLen:
-          if not matchType(c, f[i], a[i], m): return false
-        return true
+        result = matchKids(c, f, a, m, start=FirstGenericParamAt)
   of tyGenericParam:
     let ak = a.skipTypes({tyVar, tySink, tyLent, tyOwned})
     if ak.kind in {tyTypeDesc, tyStatic} and not isSelf(ak):
@@ -151,7 +156,6 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
       else:
         result = false
     #echo "B for ", result, " to ", typeToString(a), " to ", typeToString(m.potentialImplementation)
-
   of tyVar, tySink, tyLent, tyOwned:
     # modifiers in the concept must be there in the actual implementation
     # too but not vice versa.
@@ -177,15 +181,20 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     m.potentialImplementation = oldPotentialImplementation
     if not result:
       m.inferred.setLen oldLen
+  of tyGenericBody:
+    var ak = a
+    if a.kind == tyGenericBody:
+      ak = last(a)
+    result = matchType(c, last(f), ak, m)
+  of tyCompositeTypeClass:
+    result = matchType(c, last(f), a, m)
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
     result = false
     let ak = a.skipTypes(ignorableForArgType - {f.kind})
     if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
-      for i in 0..<ak.kidsLen:
-        if not matchType(c, f[i], ak[i], m): return false
-      return true
+      result = matchKids(c, f, ak, m)
   of tyOr:
     let oldLen = m.inferred.len
     if a.kind == tyOr:
