@@ -59,24 +59,6 @@ proc addVar(builder: var Builder, kind: VarKind = Local, name: string, typ: Snip
       builder.add(initializer)
     builder.addLineEnd(";")
 
-template addVarWithType(builder: var Builder, kind: VarKind = Local, name: string, body: typed) =
-  ## adds a variable declaration to the builder, with the `body` building the type
-  when buildNifc:
-    builder.add("(")
-    builder.addVarHeader(kind)
-    builder.add(":")
-    builder.add(name)
-    builder.add(" . ") # pragmas
-    body
-    builder.add(" .") # initializer
-    builder.addLineEnd(")")
-  else:
-    builder.addVarHeader(kind)
-    body
-    builder.add(" ")
-    builder.add(name)
-    builder.addLineEnd(";")
-
 template addVarWithInitializer(builder: var Builder, kind: VarKind = Local, name: string,
                                typ: Snippet, initializerBody: typed) =
   ## adds a variable declaration to the builder, with
@@ -599,7 +581,8 @@ proc addFieldStruct(obj: var Builder; m: BModule; parentTyp: PType; name: string
   when buildNifc:
     # XXX packed not implemented in nifc
     obj.addTypedef(name):
-      obj.add(fields)
+      obj.addSimpleStruct(m, "", ""):
+        obj.add(fields)
   else:
     obj.add('\t')
     if tfPacked in parentTyp.flags:
@@ -618,17 +601,35 @@ proc addFieldStruct(obj: var Builder; m: BModule; parentTyp: PType; name: string
     if tfPacked in parentTyp.flags and hasAttribute notin CC[m.config.cCompiler].props:
       obj.add("#pragma pack(pop)\n")
 
-template addAnonUnion(obj: var Builder; body: typed) =
-  ## adds an anonymous union i.e. `union { ... };` with fields according to `body`
-  obj.add "union{\n"
+template addUnion(obj: var Builder; name: string; body: typed) =
+  let named = name.len != 0
+  when buildNifc:
+    if named:
+      obj.add("(type :")
+      obj.add(name)
+      obj.add(" (union . ")
+    else:
+      obj.add("(union . ")
+  else:
+    if named:
+      obj.add("typedef union ")
+      obj.add(name)
+      obj.add(" {\n")
+    else:
+      obj.add("union {\n")
   body
-  obj.add("};\n")
-
-template addUnionType(obj: var Builder; body: typed) =
-  ## adds a union type i.e. `union { ... }` with fields according to `body`
-  obj.add "union{\n"
-  body
-  obj.add("}")
+  when buildNifc:
+    if named:
+      obj.add("))\n")
+    else:
+      obj.add(")\n")
+  else:
+    if named:
+      obj.add("} ")
+      obj.add(name)
+      obj.add(";\n")
+    else:
+      obj.add("}")
 
 type DeclVisibility = enum
   None

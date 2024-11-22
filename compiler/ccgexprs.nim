@@ -2547,19 +2547,20 @@ proc genCast(p: BProc, e: PNode, d: var TLoc) =
 
     let srcTyp = getTypeDesc(p.module, e[1].typ)
     let destTyp = getTypeDesc(p.module, e.typ)
+    let unionTyp = getTempName(p.module) & "_Cast"
     if destsize > srcsize:
-      p.s(cpsLocals).addVarWithType(kind = Local, name = "LOC" & lbl):
-        p.s(cpsLocals).addUnionType():
-          p.s(cpsLocals).addField(name = "dest", typ = destTyp)
-          p.s(cpsLocals).addField(name = "source", typ = srcTyp)
+      p.module.s[cfsTypes].addUnion(name = unionTyp):
+        p.module.s[cfsTypes].addField(name = "dest", typ = destTyp)
+        p.module.s[cfsTypes].addField(name = "source", typ = srcTyp)
+      p.s(cpsLocals).addVar(kind = Local, name = "LOC" & lbl, typ = unionTyp)
       p.s(cpsLocals).addCallStmt(cgsymValue(p.module, "nimZeroMem"),
         cAddr("LOC" & lbl),
         cSizeof("LOC" & lbl))
     else:
-      p.s(cpsLocals).addVarWithType(kind = Local, name = "LOC" & lbl):
-        p.s(cpsLocals).addUnionType():
-          p.s(cpsLocals).addField(name = "source", typ = srcTyp)
-          p.s(cpsLocals).addField(name = "dest", typ = destTyp)
+      p.module.s[cfsTypes].addUnion(name = unionTyp):
+        p.module.s[cfsTypes].addField(name = "source", typ = srcTyp)
+        p.module.s[cfsTypes].addField(name = "dest", typ = destTyp)
+      p.s(cpsLocals).addVar(kind = Local, name = "LOC" & lbl, typ = unionTyp)
     tmp.k = locExpr
     tmp.lode = lodeTyp srct
     tmp.storage = OnStack
@@ -3771,10 +3772,10 @@ proc getNullValueAux(p: BProc; t: PType; obj, constOrNil: PNode,
     # designated initilization is the only way to init non first element of unions
     # branches are allowed to have no members (b.len == 0), in this case they don't need initializer
     var fieldName: string = ""
+    let fieldNameBase = "_" & mangleRecFieldName(p.module, obj[0].sym)
     if b.kind == nkRecList and not isEmptyCaseObjectBranch(b):
-      fieldName = "_" & mangleRecFieldName(p.module, obj[0].sym) & "_" & $selectedBranch
-      result.addField(init, name = "<anonymous union>"):
-        # XXX figure out name for the union, see use of `addAnonUnion`
+      fieldName = fieldNameBase & "_" & $selectedBranch
+      result.addField(init, name = fieldNameBase & "_union"):
         var branchInit: StructInitializer
         result.addStructInitializer(branchInit, kind = siNamedStruct):
           result.addField(branchInit, name = fieldName):
@@ -3783,8 +3784,7 @@ proc getNullValueAux(p: BProc; t: PType; obj, constOrNil: PNode,
               getNullValueAux(p, t, b, constOrNil, result, branchObjInit, isConst, info)
     elif b.kind == nkSym:
       fieldName = mangleRecFieldName(p.module, b.sym)
-      result.addField(init, name = "<anonymous union>"):
-        # XXX figure out name for the union, see use of `addAnonUnion`
+      result.addField(init, name = fieldNameBase & "_union"):
         var branchInit: StructInitializer
         result.addStructInitializer(branchInit, kind = siNamedStruct):
           result.addField(branchInit, name = fieldName):

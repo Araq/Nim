@@ -685,12 +685,15 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
     # prefix mangled name with "_U" to avoid clashes with other field names,
     # since identifiers are not allowed to start with '_'
     var unionBody = newBuilder("")
+    let fieldNameBase = "_" & mangleRecFieldName(m, n[0].sym)
+    let unionFieldName = fieldNameBase & "_union"
+    let unionPrefix = maybeDotField(unionPrefix, unionFieldName)
     for i in 1..<n.len:
       case n[i].kind
       of nkOfBranch, nkElse:
         let k = lastSon(n[i])
         if k.kind != nkSym:
-          let fieldName = "_" & mangleRecFieldName(m, n[0].sym) & "_" & $i
+          let fieldName = fieldNameBase & "_" & $i
           var a = newBuilder("")
           genRecordFieldsAux(m, k, rectype, check, a, maybeDotField(unionPrefix, $fieldName))
           if a.buf.len != 0:
@@ -702,9 +705,11 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
           genRecordFieldsAux(m, k, rectype, check, unionBody, unionPrefix)
       else: internalError(m.config, "genRecordFieldsAux(record case branch)")
     if unionBody.buf.len != 0:
-      result.addAnonUnion:
-        # XXX this has to be a named field for NIFC
-        result.add(extract(unionBody))
+      let tmp = getTempName(m)
+      let typName = tmp & "_" & fieldNameBase & "_Union"
+      m.s[cfsTypes].addUnion(typName):
+        m.s[cfsTypes].add(extract(unionBody))
+      result.addField(name = unionFieldName, typ = typName)
   of nkSym:
     let field = n.sym
     if field.typ.kind == tyVoid: return
