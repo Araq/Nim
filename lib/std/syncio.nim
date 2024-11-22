@@ -320,10 +320,25 @@ elif defined(windows):
 const
   BufSize = 4000
 
-proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+template closeIgnoreError(f: File) =
   ## Closes the file.
   if not f.isNil:
     discard c_fclose(f)
+
+
+when defined(nimPreviewCheckedClose):
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    ##
+    ## Raises an IO exception in case of an error.
+    if not f.isNil:
+      let x = c_fclose(f)
+      if x < 0:
+        checkErr(f)
+else:
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    closeIgnoreError(f)
 
 proc readChar*(f: File): char {.tags: [ReadIOEffect].} =
   ## Reads a single character from the stream `f`. Should not be used in
@@ -708,12 +723,12 @@ proc open*(f: var File, filename: string,
       # be opened.
       var res {.noinit.}: Stat
       if c_fstat(getFileHandle(f2), res) >= 0'i32 and modeIsDir(res.st_mode):
-        close(f2)
+        closeIgnoreError(f2)
         return false
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f2), false):
-        close(f2)
+        closeIgnoreError(f2)
         return false
 
     result = true
@@ -736,7 +751,7 @@ proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f), false):
-        close(f)
+        closeIgnoreError(f)
         return false
     result = true
 
