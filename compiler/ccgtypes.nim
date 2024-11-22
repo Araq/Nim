@@ -920,28 +920,23 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       result = getTypeName(m, origTyp, sig)
       if not (isImportedCppType(t) or
           (sfImportc in t.sym.flags and t.sym.magic == mNone)):
-        m.typeCache[sig] = result
         var size: int
         if firstOrd(m.config, t) < 0:
-          m.s[cfsTypes].addTypedef(name = result):
-            m.s[cfsTypes].add(NimInt32)
+          result = NimInt32
           size = 4
         else:
           size = int(getSize(m.config, t))
           case size
           of 1:
-            m.s[cfsTypes].addTypedef(name = result):
-              m.s[cfsTypes].add(NimUint8)
+            result = NimUint8
           of 2:
-            m.s[cfsTypes].addTypedef(name = result):
-              m.s[cfsTypes].add(NimUint16)
+            result = NimUint16
           of 4:
-            m.s[cfsTypes].addTypedef(name = result):
-              m.s[cfsTypes].add(NimInt32)
+            result = NimInt32
           of 8:
-            m.s[cfsTypes].addTypedef(name = result):
-              m.s[cfsTypes].add(NimInt64)
+            result = NimInt64
           else: internalError(m.config, t.sym.info, "getTypeDescAux: enum")
+        m.typeCache[sig] = result
         when false:
           let owner = hashOwner(t.sym)
           if not gDebugInfo.hasEnum(t.sym.name.s, t.sym.info.line, owner):
@@ -1084,8 +1079,8 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       let s = int(getSize(m.config, t))
       case s
       of 1, 2, 4, 8:
-        m.s[cfsTypes].addTypedef(name = result):
-          m.s[cfsTypes].add(cUintType(s*8))
+        result = cUintType(s*8)
+        m.typeCache[sig] = result
       else:
         m.s[cfsTypes].addArrayTypedef(name = result, len = s):
           m.s[cfsTypes].add(NimUint8)
