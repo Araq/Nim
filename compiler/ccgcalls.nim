@@ -213,20 +213,20 @@ proc genOpenArraySlice(p: BProc; q: PNode; formalType, destType: PType; prepareF
   let ra = rdLoc(a)
   let rb = rdLoc(b)
   let rc = rdLoc(c)
-  let lengthExpr = cOp(Add, "NI", cOp(Sub, "NI", rc, rb), cIntValue(1))
+  let lengthExpr = cOp(Add, NimInt, cOp(Sub, NimInt, rc, rb), cIntValue(1))
   case ty.kind
   of tyArray:
     let first = toInt64(firstOrd(p.config, ty))
     if first == 0:
-      result = (cCast(ptrType(dest), cOp(Add, "NI", ra, rb)), lengthExpr)
+      result = (cCast(ptrType(dest), cOp(Add, NimInt, ra, rb)), lengthExpr)
     else:
       let lit = cIntLiteral(first)
-      result = (cCast(ptrType(dest), cOp(Add, "NI", ra, cOp(Sub, "NI", rb, lit))), lengthExpr)
+      result = (cCast(ptrType(dest), cOp(Add, NimInt, ra, cOp(Sub, NimInt, rb, lit))), lengthExpr)
   of tyOpenArray, tyVarargs:
     let data = if reifiedOpenArray(q[1]): dotField(ra, "Field0") else: ra
-    result = (cCast(ptrType(dest), cOp(Add, "NI", data, rb)), lengthExpr)
+    result = (cCast(ptrType(dest), cOp(Add, NimInt, data, rb)), lengthExpr)
   of tyUncheckedArray, tyCstring:
-    result = (cCast(ptrType(dest), cOp(Add, "NI", ra, rb)), lengthExpr)
+    result = (cCast(ptrType(dest), cOp(Add, NimInt, ra, rb)), lengthExpr)
   of tyString, tySequence:
     let atyp = skipTypes(a.t, abstractInst)
     if formalType.skipTypes(abstractInst).kind in {tyVar} and atyp.kind == tyString and
@@ -241,8 +241,8 @@ proc genOpenArraySlice(p: BProc; q: PNode; formalType, destType: PType; prepareF
       val = ra
     result = (
       cIfExpr(dataFieldAccessor(p, val),
-        cCast(ptrType(dest), cOp(Add, "NI", dataField(p, val), rb)),
-        "NIM_NIL"),
+        cCast(ptrType(dest), cOp(Add, NimInt, dataField(p, val), rb)),
+        NimNil),
       lengthExpr)
   else:
     result = ("", "")
@@ -295,13 +295,13 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
         let ra = a.rdLoc
         var t = TLoc(snippet: cDeref(ra))
         let lt = lenExpr(p, t)
-        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), "NIM_NIL"))
+        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), NimNil))
         result.addArgumentSeparator()
         result.add(lt)
       else:
         let ra = a.rdLoc
         let la = lenExpr(p, a)
-        result.add(cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), "NIM_NIL"))
+        result.add(cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), NimNil))
         result.addArgumentSeparator()
         result.add(la)
     of tyArray:
@@ -315,7 +315,7 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
         let ra = a.rdLoc
         var t = TLoc(snippet: cDeref(ra))
         let lt = lenExpr(p, t)
-        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), "NIM_NIL"))
+        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), NimNil))
         result.addArgumentSeparator()
         result.add(lt)
       of tyArray:
@@ -767,7 +767,7 @@ proc genPatternCall(p: BProc; ri: PNode; pat: string; typ: PType; result: var Bu
       var idx, stars: int = 0
       if scanCppGenericSlot(pat, i, idx, stars):
         var t = resolveStarsInCppType(typ, idx, stars)
-        if t == nil: result.add("void")
+        if t == nil: result.add(CVoid)
         else: result.add(getTypeDesc(p.module, t))
     else:
       let start = i

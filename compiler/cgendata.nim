@@ -115,7 +115,7 @@ type
                         # computing alive data on our own.
 
   BModuleList* = ref object of RootObj
-    mainModProcs*, mainModInit*, otherModsInit*, mainDatInit*: Rope
+    mainModProcs*, mainModInit*, otherModsInit*, mainDatInit*: Builder
     mapping*: Rope             # the generated mapping file (if requested)
     modules*: seq[BModule]     # list of all compiled modules
     modulesClosed*: seq[BModule] # list of the same compiled modules, but in the order they were closed
@@ -127,7 +127,7 @@ type
     graph*: ModuleGraph
     strVersion*, seqVersion*: int # version of the string/seq implementation to use
 
-    nimtv*: Rope            # Nim thread vars; the struct body
+    nimtv*: Builder         # Nim thread vars; the struct body
     nimtvDeps*: seq[PType]  # type deps: every module needs whole struct
     nimtvDeclared*: IntSet  # so that every var/field exists only once
                             # in the struct
@@ -163,12 +163,13 @@ type
     preInitProc*: BProc       # code executed before the init proc
     hcrCreateTypeInfosProc*: Builder # type info globals are in here when HCR=on
     inHcrInitGuard*: bool     # We are currently within a HCR reloading guard.
+    hcrInitGuard*: IfBuilder
     typeStack*: TTypeSeq      # used for type generation
     dataCache*: TNodeTable
     typeNodes*, nimTypes*: int # used for type info generation
     typeNodesName*, nimTypesName*: Rope # used for type info generation
     labels*: Natural          # for generating unique module-scope names
-    extensionLoaders*: array['0'..'9', Rope] # special procs for the
+    extensionLoaders*: array['0'..'9', Builder] # special procs for the
                                              # OpenGL wrapper
     sigConflicts*: CountTable[SigHash]
     g*: BModuleList

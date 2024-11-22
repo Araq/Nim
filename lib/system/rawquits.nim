@@ -1,5 +1,3 @@
-import system/ctypes
-
 when defined(nimNoQuit):
   proc rawQuit(errorcode: int = QuitSuccess) = discard "ignoring quit"
 

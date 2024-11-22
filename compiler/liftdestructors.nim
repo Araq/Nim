@@ -1276,6 +1276,10 @@ proc createTypeBoundOps(g: ModuleGraph; c: PContext; orig: PType; info: TLineInf
   ## The later 'injectdestructors' pass depends on it.
   if orig == nil or {tfCheckedForDestructor, tfHasMeta} * orig.flags != {}: return
   incl orig.flags, tfCheckedForDestructor
+  # for user defined generic destructors:
+  let origRoot = genericRoot(orig)
+  if origRoot != nil:
+    incl origRoot.flags, tfGenericHasDestructor
 
   let skipped = orig.skipTypes({tyGenericInst, tyAlias, tySink})
   if isEmptyContainer(skipped) or skipped.kind == tyStatic: return

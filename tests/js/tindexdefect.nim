@@ -5,5 +5,6 @@ discard """
 """
 
 var s = ['a']
-let z = s[10000] == 'a'
+let i = 10000
+let z = s[i] == 'a'
 echo z

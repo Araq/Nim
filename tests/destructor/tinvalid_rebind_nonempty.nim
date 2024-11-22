@@ -2,11 +2,12 @@ discard """
 joinable: false
 cmd: "nim check $file"
 errormsg: "cannot bind another '=destroy' to: Foo; previous declaration was constructed implicitly"
-line: 14
+line: 15
 """
 
 type
   Foo[T] = object
+    x: T
 
 proc main =
   var f: Foo[int]

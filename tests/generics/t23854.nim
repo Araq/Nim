@@ -69,3 +69,25 @@ proc main() =
   doAssert ctx.rootsOfUnity2[0].limbs.len == wordsRequired(255)
 
 main()
+
+block: # bug #24045
+  type ArrayBuf[N: static int, T] = object
+    buf: array[N, T]
+
+  func maxLen(T: type): int =
+    sizeof(T) * 2
+
+  type MyBuf[I: type] = ArrayBuf[maxLen(I), byte]
+
+  var v: MyBuf[int]
+
+block: # bug #24043
+  type ArrayBuf[N: static int, T = byte] = object
+    buf: array[N, T]
+
+  func maxLen(T: type): int =
+    sizeof(T) * 2
+
+  type MyBuf[I] = ArrayBuf[maxLen(I)]
+
+  var v: MyBuf[int]

@@ -23,7 +23,7 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc
 
 proc visit(p: BProc, data, visitor: Snippet) =
   p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCvisit"),
-    cCast("void*", data),
+    cCast(CPointer, data),
     visitor)
 
 proc genTraverseProc(c: TTraversalClosure, accessor: Rope, n: PNode;
@@ -108,7 +108,7 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType) =
       # destructor based seqs are themselves not traced but their data is, if
       # they contain a GC'ed type:
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCvisitSeq"),
-        cCast("void*", accessor),
+        cCast(CPointer, accessor),
         c.visitorFrmt)
       #genTraverseProcSeq(c, accessor, typ)
   of tyString:
@@ -164,11 +164,11 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
       genTraverseProc(c, cDeref("a"), typ.elementType)
 
   var headerBuilder = newBuilder("")
-  headerBuilder.addProcHeaderWithParams(ccNimCall, markerName, "void"):
+  headerBuilder.addProcHeaderWithParams(ccNimCall, markerName, CVoid):
     var paramBuilder: ProcParamBuilder
     headerBuilder.addProcParams(paramBuilder):
-      headerBuilder.addParam(paramBuilder, name = "p", typ = "void*")
-      headerBuilder.addParam(paramBuilder, name = "op", typ = "NI")
+      headerBuilder.addParam(paramBuilder, name = "p", typ = CPointer)
+      headerBuilder.addParam(paramBuilder, name = "op", typ = NimInt)
   let header = extract(headerBuilder)
 
   m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
@@ -185,16 +185,16 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
     var desc = newBuilder("")
     var unnamedParamBuilder: ProcParamBuilder
     desc.addProcParams(unnamedParamBuilder):
-      desc.addUnnamedParam(unnamedParamBuilder, "void*")
-      desc.addUnnamedParam(unnamedParamBuilder, "NI")
+      desc.addUnnamedParam(unnamedParamBuilder, CPointer)
+      desc.addUnnamedParam(unnamedParamBuilder, NimInt)
     let unnamedParams = extract(desc)
-    m.s[cfsProcHeaders].addProcVar(ccNimCall, result, unnamedParams, "void")
+    m.s[cfsProcHeaders].addProcVar(ccNimCall, result, unnamedParams, CVoid)
     m.s[cfsDynLibInit].addAssignmentWithValue(result):
-      m.s[cfsDynLibInit].addCast(procPtrTypeUnnamed(ccNimCall, "void", unnamedParams)):
+      m.s[cfsDynLibInit].addCast(procPtrTypeUnnamed(ccNimCall, CVoid, unnamedParams)):
         m.s[cfsDynLibInit].addCall("hcrRegisterProc",
           getModuleDllPath(m),
           '"' & result & '"',
-          cCast("void*", markerName))
+          cCast(CPointer, markerName))
 
 proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
   discard genTypeInfoV1(m, s.loc.t, info)
@@ -214,7 +214,7 @@ proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
   genTraverseProc(c, sLoc, s.loc.t)
 
   var headerBuilder = newBuilder("")
-  headerBuilder.addProcHeaderWithParams(ccNimCall, result, "void"):
+  headerBuilder.addProcHeaderWithParams(ccNimCall, result, CVoid):
     var paramBuilder: ProcParamBuilder
     headerBuilder.addProcParams(paramBuilder):
       # (void)

@@ -1201,17 +1201,19 @@ proc sameChildrenAux(a, b: PType, c: var TSameTypeClosure): bool =
     if not result: return
 
 proc isGenericAlias*(t: PType): bool =
-  return t.kind == tyGenericInst and t.skipModifier.kind == tyGenericInst
+  return t.kind == tyGenericInst and t.skipModifier.skipTypes({tyAlias}).kind == tyGenericInst
 
 proc genericAliasDepth*(t: PType): int =
   result = 0
-  var it = t
+  var it = t.skipTypes({tyAlias})
   while it.isGenericAlias:
-    it = it.skipModifier
+    it = it.skipModifier.skipTypes({tyAlias})
     inc result
 
 proc skipGenericAlias*(t: PType): PType =
-  return if t.isGenericAlias: t.skipModifier else: t
+  result = t.skipTypes({tyAlias})
+  if result.isGenericAlias:
+    result = result.skipModifier.skipTypes({tyAlias})
 
 proc sameFlags*(a, b: PType): bool {.inline.} =
   result = eqTypeFlags*a.flags == eqTypeFlags*b.flags
@@ -1304,16 +1306,34 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
       cycleCheck()
       result = sameTypeAux(a.skipModifier, b.skipModifier, c)
   of tyObject:
-    withoutShallowFlags:
+    result = sameFlags(a, b)
+    if result:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
-        result = sameObjectStructures(a, b, c) and sameFlags(a, b)
+        # should be generic, and belong to the same generic head type:
+        assert a.typeInst != nil, "generic object " & $a & " has no typeInst"
+        assert b.typeInst != nil, "generic object " & $b & " has no typeInst"
+        if result:
+          withoutShallowFlags:
+            # this is required because of generic `ref object`s,
+            # the value of their dereferences are not wrapped in `tyGenericInst`,
+            # so we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
   of tyDistinct:
     cycleCheck()
     if c.cmp == dcEq:
-      if sameFlags(a, b):
+      result = sameFlags(a, b)
+      if result:
         ifFastObjectTypeCheckFailed(a, b):
-          result = sameTypeAux(a.elementType, b.elementType, c)
+          # should be generic, and belong to the same generic head type:
+          assert a.typeInst != nil, "generic distinct type " & $a & " has no typeInst"
+          assert b.typeInst != nil, "generic distinct type " & $b & " has no typeInst"
+          withoutShallowFlags:
+            # just in case `tyGenericInst` was skipped at some point,
+            # we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
     else:
       result = sameTypeAux(a.elementType, b.elementType, c) and sameFlags(a, b)
   of tyEnum, tyForward:
@@ -1936,6 +1956,9 @@ proc isCharArrayPtr*(t: PType; allowPointerToChar: bool): bool =
   else:
     result = false
 
+proc isRefPtrObject*(t: PType): bool =
+  t.kind in {tyRef, tyPtr} and tfRefsAnonObj in t.flags
+
 proc nominalRoot*(t: PType): PType =
   ## the "name" type of a given instance of a nominal type,
   ## i.e. the type directly associated with the symbol where the root
@@ -1968,7 +1991,7 @@ proc nominalRoot*(t: PType): PType =
       result = result.skipModifier[0]
     let val = result.skipModifier
     if val.kind in {tyDistinct, tyEnum, tyObject} or
-        (val.kind in {tyRef, tyPtr} and tfRefsAnonObj in val.flags):
+        isRefPtrObject(val):
       # atomic nominal types, this generic body is attached to them
       discard
     else:
@@ -1998,3 +2021,20 @@ proc nominalRoot*(t: PType): PType =
     # skips all typeclasses
     # is this correct for `concept`?
     result = nil
+
+proc genericRoot*(t: PType): PType =
+  ## gets the root generic type (`tyGenericBody`) from `t`,
+  ## if `t` is a generic type or the body of a generic instantiation
+  case t.kind
+  of tyGenericBody:
+    result = t
+  of tyGenericInst, tyGenericInvocation:
+    result = t.genericHead
+  else:
+    if t.typeInst != nil:
+      result = t.typeInst.genericHead
+    elif t.sym != nil and t.sym.typ.kind == tyGenericBody:
+      # can happen if `t` is the last child (body) of the generic body
+      result = t.sym.typ
+    else:
+      result = nil
