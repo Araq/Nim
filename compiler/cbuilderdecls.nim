@@ -32,7 +32,10 @@ proc addVarHeader(builder: var Builder, kind: VarKind) =
     else:
       builder.add("static const ")
   of Threadvar:
-    doAssert false, "unimplemented"
+    when buildNifc:
+      builder.add("tvar ")
+    else:
+      doAssert false, "unimplemented"
 
 proc addVar(builder: var Builder, kind: VarKind = Local, name: string, typ: Snippet, initializer: Snippet = "") =
   ## adds a variable declaration to the builder
@@ -174,6 +177,7 @@ proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: st
     builder.add(" ")
     builder.add(rettype)
     builder.add(" (pragmas ")
+    # XXX varargs goes here
     builder.add(CallingConvToStr[callConv])
     builder.addLineEnd(")))")
   else:
@@ -357,7 +361,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
     else:
       obj.add(typ)
       obj.add(")")
-    assert cppInitializer.len == 0, "cpp initializer unsupported in nifc"
+    doAssert cppInitializer.len == 0, "cpp initializer unsupported in nifc"
   else:
     obj.add('\t')
     if field.alignment > 0:
@@ -387,6 +391,7 @@ proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, 
     obj.add(" ")
     obj.add(rettype)
     obj.add(" (pragmas ")
+    # XXX varargs goes here
     obj.add(CallingConvToStr[callConv])
     obj.addLineEnd(")))")
   else:
@@ -643,95 +648,176 @@ type DeclVisibility = enum
 
 proc addVisibilityPrefix(builder: var Builder, visibility: DeclVisibility) =
   # internal proc
-  case visibility
-  of None: discard
-  of Extern:
-    builder.add("extern ")
-  of ExternC:
-    builder.add("NIM_EXTERNC ")
-  of ImportLib:
-    builder.add("N_LIB_IMPORT ")
-  of ExportLib:
-    builder.add("N_LIB_EXPORT ")
-  of ExportLibVar:
-    builder.add("N_LIB_EXPORT_VAR ")
-  of Private:
-    builder.add("N_LIB_PRIVATE ")
-  of StaticProc:
-    builder.add("static ")
+  when buildNifc:
+    case visibility
+    of None: discard
+    of Extern:
+      builder.add("(imp ")
+    of ExternC, ImportLib, ExportLib, ExportLibVar:
+      doAssert false, "visibility " & $visibility & " not supported in NIFC"
+    of Private, StaticProc:
+      # also not supported but can just be ignored
+      discard
+  else:
+    case visibility
+    of None: discard
+    of Extern:
+      builder.add("extern ")
+    of ExternC:
+      builder.add("NIM_EXTERNC ")
+    of ImportLib:
+      builder.add("N_LIB_IMPORT ")
+    of ExportLib:
+      builder.add("N_LIB_EXPORT ")
+    of ExportLibVar:
+      builder.add("N_LIB_EXPORT_VAR ")
+    of Private:
+      builder.add("N_LIB_PRIVATE ")
+    of StaticProc:
+      builder.add("static ")
+
+proc addVisibilitySuffix(builder: var Builder, visibility: DeclVisibility) =
+  when buildNifc:
+    case visibility
+    of None: discard
+    of Extern:
+      builder.addLineEnd(")")
+    of ExternC, ImportLib, ExportLib, ExportLibVar:
+      doAssert false, "visibility " & $visibility & " not supported in NIFC"
+    of Private, StaticProc:
+      # also not supported but can just be ignored
+      discard
 
 template addDeclWithVisibility(builder: var Builder, visibility: DeclVisibility, declBody: typed) =
   ## adds a declaration as in `declBody` with the given visibility
   builder.addVisibilityPrefix(visibility)
   declBody
+  builder.addVisibilitySuffix(visibility)
 
 type ProcParamBuilder = object
   needsComma: bool
 
 proc initProcParamBuilder(builder: var Builder): ProcParamBuilder =
   result = ProcParamBuilder(needsComma: false)
-  builder.add("(")
+  when buildNifc:
+    builder.add("(params ")
+  else:
+    builder.add("(")
 
 proc finishProcParamBuilder(builder: var Builder, params: ProcParamBuilder) =
-  if params.needsComma:
+  when buildNifc:
     builder.add(")")
   else:
-    builder.add("void)")
+    if params.needsComma:
+      builder.add(")")
+    else:
+      builder.add("void)")
 
 template cgDeclFrmt*(s: PSym): string =
   s.constraint.strVal
 
 proc addParam(builder: var Builder, params: var ProcParamBuilder, name: string, typ: Snippet) =
   if params.needsComma:
-    builder.add(", ")
+    when buildNifc:
+      builder.add(" ")
+    else:
+      builder.add(", ")
   else:
     params.needsComma = true
-  builder.add(typ)
-  builder.add(" ")
-  builder.add(name)
+  when buildNifc:
+    builder.add("(param :")
+    builder.add(name)
+    builder.add(" . ")
+    builder.add(typ)
+    builder.add(")")
+  else:
+    builder.add(typ)
+    builder.add(" ")
+    builder.add(name)
 
 proc addParam(builder: var Builder, params: var ProcParamBuilder, param: PSym, typ: Snippet) =
   if params.needsComma:
-    builder.add(", ")
+    when buildNifc:
+      builder.add(" ")
+    else:
+      builder.add(", ")
   else:
     params.needsComma = true
-  var modifiedTyp = typ
-  if sfNoalias in param.flags:
-    modifiedTyp.add(" NIM_NOALIAS")
-  if sfCodegenDecl notin param.flags:
-    builder.add(modifiedTyp)
-    builder.add(" ")
-    builder.add(param.loc.snippet)
+  when buildNifc:
+    # XXX noalias not implemented in nifc
+    if sfCodegenDecl notin param.flags:
+      builder.add("(param :")
+      builder.add(param.loc.snippet)
+      builder.add(" . ")
+      builder.add(typ)
+      builder.add(")")
+    else:
+      doAssert false, "codegendecl not supported on NIFC"
   else:
-    builder.add runtimeFormat(param.cgDeclFrmt, [modifiedTyp, param.loc.snippet])
+    var modifiedTyp = typ
+    if sfNoalias in param.flags:
+      modifiedTyp.add(" NIM_NOALIAS")
+    if sfCodegenDecl notin param.flags:
+      builder.add(modifiedTyp)
+      builder.add(" ")
+      builder.add(param.loc.snippet)
+    else:
+      builder.add runtimeFormat(param.cgDeclFrmt, [modifiedTyp, param.loc.snippet])
 
 proc addUnnamedParam(builder: var Builder, params: var ProcParamBuilder, typ: Snippet) =
   if params.needsComma:
-    builder.add(", ")
+    when buildNifc:
+      builder.add(" ")
+    else:
+      builder.add(", ")
   else:
     params.needsComma = true
-  builder.add(typ)
+  when buildNifc:
+    builder.add("(param . . ")
+    builder.add(typ)
+    builder.add(")")
+  else:
+    builder.add(typ)
 
 proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
   if paramBuilder.needsComma:
-    builder.add(", ")
+    when buildNifc:
+      builder.add(" ")
+    else:
+      builder.add(", ")
   else:
     paramBuilder.needsComma = true
-  builder.add(CallingConvToStr[callConv])
-  builder.add("_PTR(")
-  builder.add(rettype)
-  builder.add(", ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
+  when buildNifc:
+    builder.add("(param :")
+    builder.add(name)
+    builder.add(" . (proctype . ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    # XXX varargs goes here
+    builder.add(" (pragmas ")
+    builder.add(CallingConvToStr[callConv])
+    builder.add(")))")
+  else:
+    builder.add(CallingConvToStr[callConv])
+    builder.add("_PTR(")
+    builder.add(rettype)
+    builder.add(", ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
 
 proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
   # does not exist in NIFC, needs to be proc pragma
-  if params.needsComma:
-    builder.add(", ")
+  when buildNifc:
+    # XXX not implemented
+    discard
   else:
-    params.needsComma = true
-  builder.add("...")
+    if params.needsComma:
+      builder.add(", ")
+    else:
+      params.needsComma = true
+    builder.add("...")
 
 template addProcParams(builder: var Builder, params: out ProcParamBuilder, body: typed) =
   params = initProcParamBuilder(builder)
@@ -742,171 +828,300 @@ type SimpleProcParam = tuple
   name, typ: string
 
 proc cProcParams(params: varargs[SimpleProcParam]): Snippet =
-  if params.len == 0: return "(void)"
-  result = "("
-  for i in 0 ..< params.len:
-    if i != 0: result.add(", ")
-    result.add(params[i].typ)
-    if params[i].name.len != 0:
-      result.add(" ")
-      result.add(params[i].name)
-  result.add(")")
+  when buildNifc:
+    result = "(params"
+    for i in 0 ..< params.len:
+      result.add(" (param ")
+      if params[i].name.len != 0:
+        result.add(":")
+        result.add(params[i].name)
+      else:
+        result.add(".")
+      result.add(" . ")
+      result.add(params[i].typ)
+      result.add(")")
+    result.add(")")
+  else:
+    if params.len == 0: return "(void)"
+    result = "("
+    for i in 0 ..< params.len:
+      if i != 0: result.add(", ")
+      result.add(params[i].typ)
+      if params[i].name.len != 0:
+        result.add(" ")
+        result.add(params[i].name)
+    result.add(")")
 
 template addProcHeaderWithParams(builder: var Builder, callConv: TCallingConvention,
                                  name: string, rettype: Snippet, paramBuilder: typed) =
-  # on nifc should build something like (proc name params type pragmas
-  # with no body given
-  # or enforce this with secondary builder object
-  builder.add(CallingConvToStr[callConv])
-  builder.add("(")
-  builder.add(rettype)
-  builder.add(", ")
-  builder.add(name)
-  builder.add(")")
+  when buildNifc:
+    builder.add("(proc :")
+    builder.add(name)
+    builder.add(" ")
+  else:
+    builder.add(CallingConvToStr[callConv])
+    builder.add("(")
+    builder.add(rettype)
+    builder.add(", ")
+    builder.add(name)
+    builder.add(")")
   paramBuilder
+  when buildNifc:
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" (pragmas ")
+    # XXX varargs goes here
+    builder.add(CallingConvToStr[callConv])
+    builder.add(") ")
 
 proc addProcHeader(builder: var Builder, callConv: TCallingConvention,
                    name: string, rettype, params: Snippet) =
-  # on nifc should build something like (proc name params type pragmas
-  # with no body given
-  # or enforce this with secondary builder object
   addProcHeaderWithParams(builder, callConv, name, rettype):
     builder.add(params)
 
 proc addProcHeader(builder: var Builder, name: string, rettype, params: Snippet, isConstructor = false) =
   # no callconv
-  builder.add(rettype)
-  builder.add(" ")
-  if isConstructor:
-    builder.add("__attribute__((constructor)) ")
-  builder.add(name)
-  builder.add(params)
+  when buildNifc:
+    builder.add("(proc :")
+    builder.add(name)
+    builder.add(" ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    if isConstructor:
+      builder.add(" (pragmas (attr \"constructor\")) ")
+    else:
+      builder.add(" . ")
+  else:
+    builder.add(rettype)
+    builder.add(" ")
+    if isConstructor:
+      builder.add("__attribute__((constructor)) ")
+    builder.add(name)
+    builder.add(params)
 
 proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool) =
-  # on nifc should build something like (proc name params type pragmas
-  # with no body given
-  # or enforce this with secondary builder object
   let noreturn = isNoReturn(m, prc)
-  if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
-    builder.add("__declspec(naked) ")
-  if noreturn and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
-    builder.add("__declspec(noreturn) ")
-  builder.add(CallingConvToStr[prc.typ.callConv])
-  builder.add("(")
-  builder.add(rettype)
-  builder.add(", ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
-  if addAttributes:
-    if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-      builder.add(" __attribute__((naked))")
-    if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-      builder.add(" __attribute__((noreturn))")
-
-proc finishProcHeaderAsProto(builder: var Builder) =
-  builder.addLineEnd(";")
-
-template finishProcHeaderWithBody(builder: var Builder, body: typed) =
-  builder.addLineEndIndent(" {")
-  body
-  builder.addLineEndDedent("}")
-  builder.addNewline
-
-proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet,
-                isStatic = false, ignoreAttributes = false) =
-  # on nifc, builds full variable
-  if isStatic:
-    builder.add("static ")
-  let noreturn = isNoReturn(m, prc)
-  if not ignoreAttributes:
+  when buildNifc:
+    # XXX no declspec on nifc
+    builder.add("(proc :")
+    builder.add(name)
+    builder.add(" ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" (pragmas ")
+    builder.add(CallingConvToStr[prc.typ.callConv])
+    if addAttributes:
+      if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" (attr \"naked\")")
+      if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" (attr \"noreturn\")")
+    builder.add(") ")
+  else:
     if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
       builder.add("__declspec(naked) ")
     if noreturn and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
       builder.add("__declspec(noreturn) ")
-  builder.add(CallingConvToStr[prc.typ.callConv])
-  builder.add("_PTR(")
-  builder.add(rettype)
-  builder.add(", ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
-  if not ignoreAttributes:
-    if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-      builder.add(" __attribute__((naked))")
-    if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
-      builder.add(" __attribute__((noreturn))")
-  # ensure we are just adding a variable:
-  builder.addLineEnd(";")
+    builder.add(CallingConvToStr[prc.typ.callConv])
+    builder.add("(")
+    builder.add(rettype)
+    builder.add(", ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
+    if addAttributes:
+      if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" __attribute__((naked))")
+      if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" __attribute__((noreturn))")
+
+proc finishProcHeaderAsProto(builder: var Builder) =
+  when buildNifc:
+    builder.addLineEnd(".)")
+  else:
+    builder.addLineEnd(";")
+
+template finishProcHeaderWithBody(builder: var Builder, body: typed) =
+  when buildNifc:
+    builder.addLineEndIndent(" (stmts")
+    body
+    builder.addLineEndDedent("))")
+  else:
+    builder.addLineEndIndent(" {")
+    body
+    builder.addLineEndDedent("}")
+  builder.addNewline()
+
+proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet,
+                isStatic = false, ignoreAttributes = false) =
+  let noreturn = isNoReturn(m, prc)
+  when buildNifc:
+    # XXX declspec not supported in NIFC
+    builder.add("(")
+    builder.addVarHeader(if isStatic: Global else: Local)
+    builder.add(" :")
+    builder.add(name)
+    builder.add(" . (proctype . ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" (pragmas ")
+    builder.add(CallingConvToStr[prc.typ.callConv])
+    if not ignoreAttributes:
+      if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" (attr \"naked\")")
+      if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" (attr \"noreturn\")")
+    # ensure we are just adding a variable:
+    builder.addLineEnd(")) .)")
+  else:
+    if isStatic:
+      builder.add("static ")
+    if not ignoreAttributes:
+      if sfPure in prc.flags and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+        builder.add("__declspec(naked) ")
+      if noreturn and hasDeclspec in extccomp.CC[m.config.cCompiler].props:
+        builder.add("__declspec(noreturn) ")
+    builder.add(CallingConvToStr[prc.typ.callConv])
+    builder.add("_PTR(")
+    builder.add(rettype)
+    builder.add(", ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
+    if not ignoreAttributes:
+      if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" __attribute__((naked))")
+      if noreturn and hasAttribute in extccomp.CC[m.config.cCompiler].props:
+        builder.add(" __attribute__((noreturn))")
+    # ensure we are just adding a variable:
+    builder.addLineEnd(";")
 
 proc addProcVar(builder: var Builder, callConv: TCallingConvention,
                 name: string, params, rettype: Snippet,
                 isStatic = false, isVolatile = false) =
-  # on nifc, builds full variable
-  if isStatic:
-    builder.add("static ")
-  builder.add(CallingConvToStr[callConv])
-  builder.add("_PTR(")
-  builder.add(rettype)
-  builder.add(", ")
-  if isVolatile:
-    builder.add("volatile ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
-  # ensure we are just adding a variable:
-  builder.addLineEnd(";")
+  when buildNifc:
+    # XXX volatile not supported in nifc
+    builder.add("(")
+    builder.addVarHeader(if isStatic: Global else: Local)
+    builder.add(" :")
+    builder.add(name)
+    builder.add(" . (proctype . ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" (pragmas ")
+    builder.add(CallingConvToStr[callConv])
+    # ensure we are just adding a variable:
+    builder.addLineEnd(")) .)")
+  else:
+    if isStatic:
+      builder.add("static ")
+    builder.add(CallingConvToStr[callConv])
+    builder.add("_PTR(")
+    builder.add(rettype)
+    builder.add(", ")
+    if isVolatile:
+      builder.add("volatile ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
+    # ensure we are just adding a variable:
+    builder.addLineEnd(";")
 
 proc addProcVar(builder: var Builder,
                 name: string, params, rettype: Snippet,
                 isStatic = false, isVolatile = false) =
   # no callconv
-  if isStatic:
-    builder.add("static ")
-  builder.add(rettype)
-  builder.add(" (*")
-  if isVolatile:
-    builder.add("volatile ")
-  builder.add(name)
-  builder.add(")")
-  builder.add(params)
-  # ensure we are just adding a variable:
-  builder.addLineEnd(";")
+  when buildNifc:
+    # XXX volatile not supported in nifc
+    builder.add("(")
+    builder.addVarHeader(if isStatic: Global else: Local)
+    builder.add(" :")
+    builder.add(name)
+    builder.add(" . (proctype . ")
+    builder.add(params)
+    builder.add(" ")
+    builder.add(rettype)
+    builder.add(" .) .)")
+  else:
+    if isStatic:
+      builder.add("static ")
+    builder.add(rettype)
+    builder.add(" (*")
+    if isVolatile:
+      builder.add("volatile ")
+    builder.add(name)
+    builder.add(")")
+    builder.add(params)
+    # ensure we are just adding a variable:
+    builder.addLineEnd(";")
 
 type VarInitializerKind = enum
   Assignment, CppConstructor
 
 proc addVar(builder: var Builder, m: BModule, s: PSym, name: string, typ: Snippet, kind = Local, visibility: DeclVisibility = None, initializer: Snippet = "", initializerKind: VarInitializerKind = Assignment) =
   if sfCodegenDecl in s.flags:
-    builder.add(runtimeFormat(s.cgDeclFrmt, [typ, name]))
+    when buildNifc:
+      doAssert false, "codegendecl not supported in nifc"
+    else:
+      builder.add(runtimeFormat(s.cgDeclFrmt, [typ, name]))
+      if initializer.len != 0:
+        if initializerKind == Assignment:
+          builder.add(" = ")
+        builder.add(initializer)
+      builder.addLineEnd(";")
+    return
+  when buildNifc:
+    builder.addDeclWithVisibility(visibility):
+      builder.add("(")
+      builder.addVarHeader(kind)
+      builder.add(" :")
+      builder.add(name)
+      # XXX register, volatile, noalias not implemented in nifc
+      if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
+        builder.add(" (pragmas (align ")
+        builder.addIntValue(s.alignment)
+        builder.add(")) ")
+      else:
+        builder.add(" . ")
+      builder.add(typ)
+      if initializer.len != 0:
+        # XXX c++ initializers not supported?
+        builder.add(" ")
+        builder.add(initializer)
+        builder.addLineEnd(")")
+      else:
+        builder.addLineEnd(" .)")
+  else:
+    if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
+      builder.add("NIM_ALIGN(" & $s.alignment & ") ")
+    builder.addVisibilityPrefix(visibility)
+    if kind == Threadvar:
+      if optThreads in m.config.globalOptions:
+        let sym = s.typ.sym
+        if sym != nil and sfCppNonPod in sym.flags:
+          builder.add("NIM_THREAD_LOCAL ")
+        else: builder.add("NIM_THREADVAR ")
+    else:
+      builder.addVarHeader(kind)
+    builder.add(typ)
+    if sfRegister in s.flags: builder.add(" register")
+    if sfVolatile in s.flags: builder.add(" volatile")
+    if sfNoalias in s.flags: builder.add(" NIM_NOALIAS")
+    builder.add(" ")
+    builder.add(name)
     if initializer.len != 0:
       if initializerKind == Assignment:
         builder.add(" = ")
       builder.add(initializer)
     builder.addLineEnd(";")
-    return
-  if s.kind in {skLet, skVar, skField, skForVar} and s.alignment > 0:
-    builder.add("NIM_ALIGN(" & $s.alignment & ") ")
-  builder.addVisibilityPrefix(visibility)
-  if kind == Threadvar:
-    if optThreads in m.config.globalOptions:
-      let sym = s.typ.sym
-      if sym != nil and sfCppNonPod in sym.flags:
-        builder.add("NIM_THREAD_LOCAL ")
-      else: builder.add("NIM_THREADVAR ")
-  else:
-    builder.addVarHeader(kind)
-  builder.add(typ)
-  if sfRegister in s.flags: builder.add(" register")
-  if sfVolatile in s.flags: builder.add(" volatile")
-  if sfNoalias in s.flags: builder.add(" NIM_NOALIAS")
-  builder.add(" ")
-  builder.add(name)
-  if initializer.len != 0:
-    if initializerKind == Assignment:
-      builder.add(" = ")
-    builder.add(initializer)
-  builder.addLineEnd(";")
 
 proc addInclude(builder: var Builder, value: Snippet) =
-  builder.addLineEnd("#include " & value)
+  when buildNifc:
+    builder.add("(incl ")
+    builder.add(makeCString(value))
+    builder.addLineEnd(")")
+  else:
+    builder.addLineEnd("#include " & value)
