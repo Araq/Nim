@@ -12,6 +12,8 @@ rounding guarantees (via the
   avoid conflicts with `system.default`, so named argument usage for this
   parameter like `getOrDefault(..., default = ...)` will have to be changed.
 
+- With `-d:nimPreviewCheckedClose`, the `close` function in the `std/syncio` module now raises an IO exception in case of an error.
+
 ## Standard library additions and changes
 
 [//]: # "Additions:"
