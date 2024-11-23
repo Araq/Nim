@@ -2973,5 +2973,6 @@ proc arrayWith*[T](y: T, size: static int): array[size, T] {.raises: [].} =
 
 proc arrayWithDefault*[T](size: static int): array[size, T] {.raises: [].} =
   ## Creates a new array filled with `default(T)`.
+  result = zeroDefault(array[size, T])
   for i in 0..size-1:
     result[i] = default(T)
