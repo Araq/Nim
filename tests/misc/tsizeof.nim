@@ -740,3 +740,39 @@ type
 
 doAssert sizeof(ChunkObj) == 1
 doAssert offsetOf(ChunkObj, data) == 1
+
+
+block: # bug #13945
+  template c_sizeof(T: typedesc): int =
+    block:
+      # proc needed pending https://github.com/nim-lang/Nim/issues/13943 D20200409T215527
+      proc fun2(): int =
+        {.emit:[result," = sizeof(", T, ");"].}
+      fun2()
+
+  macro test(body: untyped): untyped =
+    result = newStmtList()
+    for T in body:
+      result.add quote do:
+        let s1 = `T`.sizeof
+        let s2 = `T`.c_sizeof
+        doAssert s1 == s2
+
+  type FooEmpty = object
+  const N = 10
+  type FooEmptyArr = array[N, FooEmpty]
+  type Bar = object
+    x: FooEmpty
+    y: cint
+
+  type BarTup = (FooEmpty, cint)
+  type BarTup2 = (().type, cint)
+
+  test:
+    FooEmpty
+    FooEmptyArr
+    Bar
+    BarTup
+    BarTup2
+
+
