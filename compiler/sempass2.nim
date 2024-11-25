@@ -90,7 +90,6 @@ type
     graph: ModuleGraph
     c: PContext
     escapingParams: IntSet
-    inWhenNimvm: bool
   PEffects = var TEffects
 
 const
@@ -213,14 +212,12 @@ proc varDecl(a: PEffects; n: PNode) {.inline.} =
 proc skipHiddenDeref(n: PNode): PNode {.inline.} =
   result = if n.kind == nkHiddenDeref: n[0] else: n
 
-template isGenSymInWhenNimvm(a: PEffects, s: PSym): bool =
-  a.inWhenNimvm and sfWasGenSym in s.flags
 
 proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
   let n = skipHiddenDeref(n)
   if n.kind != nkSym: return
   let s = n.sym
-  if isLocalSym(a, s) and not isGenSymInWhenNimvm(a, s):
+  if isLocalSym(a, s):
     if volatileCheck: makeVolatile(a, s)
     for x in a.init:
       if x == s.id:
@@ -374,7 +371,7 @@ proc useVar(a: PEffects, n: PNode) =
   let s = n.sym
   if a.inExceptOrFinallyStmt > 0:
     incl s.flags, sfUsedInFinallyOrExcept
-  if isLocalSym(a, s) and not isGenSymInWhenNimvm(a, s):
+  if isLocalSym(a, s):
     if sfNoInit in s.flags:
       # If the variable is explicitly marked as .noinit. do not emit any error
       a.init.add s.id
@@ -1306,9 +1303,9 @@ proc track(tracked: PEffects, n: PNode) =
       track(tracked, last)
   of nkCaseStmt: trackCase(tracked, n)
   of nkWhen: # This should be a "when nimvm" node.
-    tracked.inWhenNimvm = true
+    let oldState = tracked.init.len
     track(tracked, n[0][1])
-    tracked.inWhenNimvm = false
+    tracked.init.setLen(oldState)
     track(tracked, n[1][0])
   of nkIfStmt, nkIfExpr: trackIf(tracked, n)
   of nkBlockStmt, nkBlockExpr: trackBlock(tracked, n[1])
