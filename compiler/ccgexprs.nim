@@ -2235,7 +2235,7 @@ proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
   var pExpr: Snippet
   if not p.module.compileToCpp:
     var data = getTempName(p.module)
-    let payloadTyp = getSeqDataPtrType(p.module, t)
+    let payloadTyp = ptrType(cgsymValue(p.module, "TGenericSeq"))
     p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
     p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, ra, NimNil)):
       p.s(cpsStmts).addAssignment(data, cAddr(derefField(ra, "Sup")))
