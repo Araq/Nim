@@ -768,16 +768,21 @@ proc genParForStmt(p: BProc, t: PNode) =
       stepNode = call[3]
       p.s(cpsStmts).addCPragma("omp " & call[4].getStr)
 
+    let iTyp = getTypeDesc(p.module, forLoopVar.loc.t)
+    var step: TLoc = default(TLoc)
     p.breakIdx = startBlockWith(p):
       if stepNode == nil:
         initForRange(p.s(cpsStmts), forLoopVar.loc.rdLoc, rangeA.rdLoc, rangeB.rdLoc, true)
       else:
-        var step: TLoc = initLocExpr(p, stepNode)
+        step = initLocExpr(p, stepNode)
         initForStep(p.s(cpsStmts), forLoopVar.loc.rdLoc, rangeA.rdLoc, rangeB.rdLoc, step.rdLoc, true)
     p.blocks[p.breakIdx].isLoop = true
     genStmts(p, t[2])
     endBlockWith(p):
-      finishFor(p.s(cpsStmts))
+      if stepNode == nil:
+        finishForRange(p.s(cpsStmts), forLoopVar.loc.rdLoc, iTyp)
+      else:
+        finishForStep(p.s(cpsStmts), forLoopVar.loc.rdLoc, step.rdLoc, iTyp)
 
   dec(p.withinLoop)
 
@@ -1037,25 +1042,26 @@ proc ifSwitchSplitPoint(p: BProc, n: PNode): int =
         result = i
 
 proc genCaseRange(p: BProc, branch: PNode, info: var SwitchCaseBuilder) =
-  for j in 0..<branch.len-1:
-    if branch[j].kind == nkRange:
-      if hasSwitchRange in CC[p.config.cCompiler].props:
-        var litA = newBuilder("")
-        var litB = newBuilder("")
-        genLiteral(p, branch[j][0], litA)
-        genLiteral(p, branch[j][1], litB)
-        p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
-      else:
-        var v = copyNode(branch[j][0])
-        while v.intVal <= branch[j][1].intVal:
+  p.s(cpsStmts).addCaseRanges(info):
+    for j in 0..<branch.len-1:
+      if branch[j].kind == nkRange:
+        if hasSwitchRange in CC[p.config.cCompiler].props:
           var litA = newBuilder("")
-          genLiteral(p, v, litA)
-          p.s(cpsStmts).addCase(info, extract(litA))
-          inc(v.intVal)
-    else:
-      var litA = newBuilder("")
-      genLiteral(p, branch[j], litA)
-      p.s(cpsStmts).addCase(info, extract(litA))
+          var litB = newBuilder("")
+          genLiteral(p, branch[j][0], litA)
+          genLiteral(p, branch[j][1], litB)
+          p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
+        else:
+          var v = copyNode(branch[j][0])
+          while v.intVal <= branch[j][1].intVal:
+            var litA = newBuilder("")
+            genLiteral(p, v, litA)
+            p.s(cpsStmts).addCase(info, extract(litA))
+            inc(v.intVal)
+      else:
+        var litA = newBuilder("")
+        genLiteral(p, branch[j], litA)
+        p.s(cpsStmts).addCase(info, extract(litA))
 
 proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
   # analyse 'case' statement:

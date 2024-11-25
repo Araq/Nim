@@ -1529,7 +1529,8 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
     m.s[cfsTypeInit1].add(extract(enumNames))
   m.s[cfsTypeInit3].addForRangeExclusive(i = counter,
       start = cIntValue(0),
-      bound = cIntValue(typ.n.len)):
+      bound = cIntValue(typ.n.len),
+      typ = NimInt):
     let nodeLoc = subscript(m.typeNodesName,
       cOp(Add, NimInt, counter, cIntValue(firstNimNode)))
     m.s[cfsTypeInit3].addFieldAssignment(nodeLoc, "kind", cIntValue(1))

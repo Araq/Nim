@@ -1565,7 +1565,7 @@ proc genSeqElemAppend(p: BProc, e: PNode, d: var TLoc) =
   var dest = initLoc(locExpr, e[2], OnHeap)
   var tmpL = getIntTemp(p)
   p.s(cpsStmts).addAssignment(tmpL.snippet, lenField(p, ra))
-  p.s(cpsStmts).addIncr(lenField(p, ra))
+  p.s(cpsStmts).addIncr(lenField(p, ra), NimInt)
   dest.snippet = subscript(dataField(p, ra), tmpL.snippet)
   genAssignment(p, dest, b, {needToCopy})
   gcUsage(p.config, e)
@@ -1935,7 +1935,7 @@ proc genArrToSeq(p: BProc, n: PNode, d: var TLoc) =
       genAssignment(p, elem, arr, {needToCopy})
   else:
     var i: TLoc = getTemp(p, getSysType(p.module.g.graph, unknownLineInfo, tyInt))
-    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(L)):
+    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(L), NimInt):
       elem = initLoc(locExpr, lodeTyp elemType(skipTypes(n.typ, abstractInst)), OnHeap)
       elem.snippet = subscript(dataField(p, rdLoc(d)), rdLoc(i))
       elem.storage = OnHeap # we know that sequences are on the heap
@@ -2432,7 +2432,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       let rd = rdLoc(d)
       let ra = rdLoc(a)
       let rb = rdLoc(b)
-      p.s(cpsStmts).addForRangeExclusive(ri, cIntValue(0), cIntValue(size)):
+      p.s(cpsStmts).addForRangeExclusive(ri, cIntValue(0), cIntValue(size), NimInt):
         p.s(cpsStmts).addAssignment(rd, cOp(Equal,
           cOp(BitAnd, NimUint8,
             subscript(ra, ri),
@@ -2466,7 +2466,7 @@ proc genSetOp(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       let rd = rdLoc(d)
       let ra = rdLoc(a)
       let rb = rdLoc(b)
-      p.s(cpsStmts).addForRangeExclusive(ri, cIntValue(0), cIntValue(size)):
+      p.s(cpsStmts).addForRangeExclusive(ri, cIntValue(0), cIntValue(size), NimInt):
         p.s(cpsStmts).addAssignmentWithValue(subscript(rd, ri)):
           let x = subscript(ra, ri)
           let y = subscript(rb, ri)
@@ -3074,7 +3074,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           rdSetElemLoc(p.config, b, e.typ, bb)
           let ri = rdLoc(idx)
           let rd = rdLoc(d)
-          p.s(cpsStmts).addForRangeInclusive(ri, aa, bb):
+          p.s(cpsStmts).addForRangeInclusive(ri, aa, bb, NimInt):
             p.s(cpsStmts).addInPlaceOp(BitOr, NimUint8,
               subscript(rd, cOp(Shr, NimUint, cCast(NimUint, ri), cIntValue(3))),
               cOp(Shl, NimUint8, cUintValue(1),
@@ -3103,7 +3103,7 @@ proc genSetConstr(p: BProc, e: PNode, d: var TLoc) =
           rdSetElemLoc(p.config, b, e.typ, bb)
           let ri = rdLoc(idx)
           let rd = rdLoc(d)
-          p.s(cpsStmts).addForRangeInclusive(ri, aa, bb):
+          p.s(cpsStmts).addForRangeInclusive(ri, aa, bb, NimInt):
             p.s(cpsStmts).addInPlaceOp(BitOr, ts, rd,
               cOp(Shl, ts, cCast(ts, cIntValue(1)),
                 cOp(Mod, ts, ri, cOp(Mul, ts, cIntValue(size), cIntValue(8)))))
