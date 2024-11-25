@@ -543,7 +543,7 @@ proc genPrefixCall(p: BProc, le, ri: PNode, d: var TLoc) =
 
 proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
 
-  template callProc(rp, params, pTyp: Snippet): Snippet =
+  template withCallProc(builder: var Builder, rp, params, pTyp: Snippet, body: untyped) =
     let e = dotField(rp, "ClE_0")
     let p = dotField(rp, "ClP_0")
     let eCall =
@@ -552,9 +552,16 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
         cCall(p, e)
       else:
         cCall(p, params, e)
-    cIfExpr(e,
-      eCall, 
-      cCall(cCast(pTyp, p), params))
+    var ifStmt: IfBuilder
+    builder.addIfStmt(ifStmt):
+      builder.addElifBranch(ifStmt, e):
+        block:
+          let it {.inject.} = eCall
+          body
+      builder.addElseBranch(ifStmt):
+        block:
+          let it {.inject.} = cCall(cCast(pTyp, p), params)
+          body
 
   template callIter(rp, params: Snippet): Snippet =
     # we know the env exists
@@ -565,6 +572,26 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       cCall(p, e)
     else:
       cCall(p, params, e)
+
+  template addCallProc(builder: var Builder, rp, params, pTyp: Snippet) =
+    let e = dotField(rp, "ClE_0")
+    let p = dotField(rp, "ClP_0")
+    let eCall =
+      # note `params` here is actually multiple params
+      if params.len == 0:
+        cCall(p, e)
+      else:
+        cCall(p, params, e)
+    var ifStmt: IfBuilder
+    builder.addIfStmt(ifStmt):
+      builder.addElifBranch(ifStmt, e):
+        builder.addStmt():
+          builder.add(eCall)
+      builder.addElseBranch(ifStmt):
+        builder.addCallStmt(cCast(pTyp, p), params)
+
+  template addCallIter(builder: var Builder, rp, params: Snippet) =
+    builder.add(callIter(rp, params))
 
   var op = initLocExpr(p, ri[0])
 
@@ -581,9 +608,9 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
     let pars = extract(params)
     p.s(cpsStmts).addStmt():
       if tfIterator in typ.flags:
-        p.s(cpsStmts).add(callIter(rp, pars))
+        p.s(cpsStmts).addCallIter(rp, pars)
       else:
-        p.s(cpsStmts).add(callProc(rp, pars, rawProc))
+        p.s(cpsStmts).addCallProc(rp, pars, rawProc)
 
   let rawProc = getClosureType(p.module, typ, clHalf)
   let canRaise = p.config.exc == excGoto and canRaiseDisp(p, ri[0])
@@ -616,9 +643,11 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       let pars = extract(params)
       if tfIterator in typ.flags:
         list.snippet = callIter(rp, pars)
+        genAssignment(p, d, list, {}) # no need for deep copying
       else:
-        list.snippet = callProc(rp, pars, rawProc)
-      genAssignment(p, d, list, {}) # no need for deep copying
+        p.s(cpsStmts).withCallProc(rp, pars, rawProc):
+          list.snippet = it
+          genAssignment(p, d, list, {}) # no need for deep copying
       if canRaise: raiseExit(p)
     else:
       var tmp: TLoc = getTemp(p, typ.returnType)
@@ -628,9 +657,11 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       let pars = extract(params)
       if tfIterator in typ.flags:
         list.snippet = callIter(rp, pars)
+        genAssignment(p, tmp, list, {})
       else:
-        list.snippet = callProc(rp, pars, rawProc)
-      genAssignment(p, tmp, list, {})
+        p.s(cpsStmts).withCallProc(rp, pars, rawProc):
+          list.snippet = it
+          genAssignment(p, tmp, list, {})
       if canRaise: raiseExit(p)
       genAssignment(p, d, tmp, {})
   else:
