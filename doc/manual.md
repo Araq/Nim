@@ -3470,7 +3470,7 @@ A `when nimvm` statement must meet the following requirements:
 * It must contain an `else` branch.
 * Code in branches must not affect semantics of the code that follows the
   `when nimvm` statement. E.g. it must not define symbols that are used in
-  the following code.
+  the following code. A new scope is opened for each branch to prevent this.
 
 Return statement
 ----------------
