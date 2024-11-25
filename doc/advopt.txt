@@ -51,7 +51,7 @@ Advanced options:
   --spellSuggest:num        show at most `num >= 0` spelling suggestions on typos.
                             if `num` is not specified (or `auto`), return
                             an implementation defined set of suggestions.
-  --hints:on|off|list.      `on|off` enables or disables hints.
+  --hints:on|off|list       `on|off` enables or disables hints.
                             `list` reports which hints are selected.
   --hint:X:on|off           turn specific hint X on|off. `hint:X` means `hint:X:on`,
                             as with similar flags. `all` is the set of all hints
