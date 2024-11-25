@@ -278,7 +278,8 @@ proc genOpenArrayConv(p: BProc; d: TLoc; a: TLoc; flags: TAssignmentFlags) =
   assert d.k != locNone
   #  getTemp(p, d.t, d)
 
-  case a.t.skipTypes(abstractVar).kind
+  let et = a.t.skipTypes(abstractVar)
+  case et.kind
   of tyOpenArray, tyVarargs:
     if reifiedOpenArray(a.lode):
       if needTempForOpenArray in flags:
@@ -303,8 +304,12 @@ proc genOpenArrayConv(p: BProc; d: TLoc; a: TLoc; flags: TAssignmentFlags) =
     let rd = d.rdLoc
     let ra = a.rdLoc
     let la = lenExpr(p, a)
-    p.s(cpsStmts).addFieldAssignment(rd, "Field0",
-      cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), NimNil))
+    var data = getTempName(p.module)
+    let payloadTyp = getSeqDataPtrType(p.module, et)
+    p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, ra), NimNil)):
+      p.s(cpsStmts).addAssignment(data, dataField(p, ra))
+    p.s(cpsStmts).addFieldAssignment(rd, "Field0", data)
     p.s(cpsStmts).addFieldAssignment(rd, "Field1", la)
   of tyArray:
     let rd = d.rdLoc
@@ -321,8 +326,11 @@ proc genOpenArrayConv(p: BProc; d: TLoc; a: TLoc; flags: TAssignmentFlags) =
 
     let rd = d.rdLoc
     let ra = a.rdLoc
-    p.s(cpsStmts).addFieldAssignment(rd, "Field0",
-      cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), NimNil))
+    var data = getTempName(p.module)
+    p.s(cpsLocals).addVar(Local, name = data, typ = ptrType(NimChar), initializer = NimNil)
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, ra), NimNil)):
+      p.s(cpsStmts).addAssignment(data, dataFieldAccessor(p, ra))
+    p.s(cpsStmts).addFieldAssignment(rd, "Field0", data)
     let la = lenExpr(p, a)
     p.s(cpsStmts).addFieldAssignment(rd, "Field1", la)
   else:
@@ -2056,15 +2064,23 @@ proc genRepr(p: BProc, e: PNode, d: var TLoc) =
     putIntoDest(p, d, e, cgCall("reprSet", raa, rti), a.storage)
   of tyOpenArray, tyVarargs:
     var b: TLoc = default(TLoc)
-    case skipTypes(a.t, abstractVarRange).kind
+    let et = skipTypes(a.t, abstractVarRange)
+    case et.kind
     of tyOpenArray, tyVarargs:
       let ra = rdLoc(a)
       putIntoDest(p, b, e, ra & cArgumentSeparator & ra & "Len_0", a.storage)
     of tyString, tySequence:
       let ra = rdLoc(a)
       let la = lenExpr(p, a)
+      var data = getTempName(p.module)
+      let payloadTyp =
+        if et.kind == tyString: ptrType(NimChar)
+        else: getSeqDataPtrType(p.module, et)
+      p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+      p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, ra), NimNil)):
+        p.s(cpsStmts).addAssignment(data, dataField(p, ra))
       putIntoDest(p, b, e,
-        cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), NimNil) &
+        data &
           cArgumentSeparator & la,
         a.storage)
     of tyArray:
@@ -2218,7 +2234,12 @@ proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
   let rti = genTypeInfoV1(p.module, t.skipTypes(abstractInst), e.info)
   var pExpr: Snippet
   if not p.module.compileToCpp:
-    pExpr = cIfExpr(ra, cAddr(derefField(ra, "Sup")), NimNil)
+    var data = getTempName(p.module)
+    let payloadTyp = getSeqDataPtrType(p.module, t)
+    p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, ra, NimNil)):
+      p.s(cpsStmts).addAssignment(data, cAddr(derefField(ra, "Sup")))
+    pExpr = data
   else:
     pExpr = ra
   call.snippet = cCast(rt, cgCall(p, "setLengthSeqV2", pExpr, rti, rb))

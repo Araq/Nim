@@ -379,7 +379,11 @@ proc lenExpr(p: BProc; a: TLoc): Rope =
     result = dotField(rdLoc(a), "len")
   else:
     let ra = rdLoc(a)
-    result = cIfExpr(ra, lenField(p, ra), cIntValue(0))
+    let len = getTempName(p.module)
+    p.s(cpsLocals).addVar(name = len, typ = NimInt, initializer = cIntValue(0))
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, ra, NimNil)):
+      p.s(cpsStmts).addAssignment(len, lenField(p, ra))
+    result = len
 
 proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
   if optSeqDestructors in p.config.globalOptions:

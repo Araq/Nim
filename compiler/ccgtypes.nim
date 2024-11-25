@@ -376,9 +376,13 @@ proc addForwardStructFormat(m: BModule; structOrUnion: Rope, typename: Rope) =
   else:
     m.s[cfsForwardTypes].addf "typedef $1 $2 $2;$n", [structOrUnion, typename]
 
-proc seqStar(m: BModule): string =
-  if optSeqDestructors in m.config.globalOptions: result = ""
-  else: result = "*"
+proc seqStar(m: BModule): bool {.inline.} =
+  if optSeqDestructors in m.config.globalOptions: result = false
+  else: result = true
+
+proc wrapSeqStar(m: BModule, t: Snippet): Snippet {.inline.} =
+  if seqStar(m): result = ptrType(t)
+  else: result = t
 
 proc getTypeForward(m: BModule; typ: PType; sig: SigHash): Rope =
   result = cacheGetType(m.forwTypeCache, sig)
@@ -432,7 +436,7 @@ proc getTypeDescWeak(m: BModule; t: PType; check: var IntSet; kind: TypeDescKind
           m.s[cfsTypes].addField(name = "p", typ = ptrType(result & "_Content"))
         pushType(m, t)
     else:
-      result = getTypeForward(m, t, sig) & seqStar(m)
+      result = wrapSeqStar(m, getTypeForward(m, t, sig))
       pushType(m, t)
   else:
     result = getTypeDescAux(m, t, check, kind)
@@ -441,6 +445,10 @@ proc getSeqPayloadType(m: BModule; t: PType): Rope =
   var check = initIntSet()
   result = getTypeDescWeak(m, t, check, dkParam) & "_Content"
   #result = getTypeForward(m, t, hashType(t)) & "_Content"
+
+proc getSeqDataPtrType(m: BModule; t: PType): Rope =
+  var check = initIntSet()
+  result = ptrType(getTypeDescWeak(m, t.elementType, check, dkParam))
 
 proc seqV2ContentType(m: BModule; t: PType; check: var IntSet) =
   let sig = hashType(t, m.config)
@@ -840,7 +848,7 @@ proc resolveStarsInCppType(typ: PType, idx, stars: int): PType =
 proc getOpenArrayDesc(m: BModule; t: PType, check: var IntSet; kind: TypeDescKind): Rope =
   let sig = hashType(t, m.config)
   if kind == dkParam:
-    result = getTypeDescWeak(m, t.elementType, check, kind) & "*"
+    result = ptrType(getTypeDescWeak(m, t.elementType, check, kind))
   else:
     result = cacheGetType(m.typeCache, sig)
     if result == "":
@@ -878,8 +886,14 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     return
   case t.kind
   of tyRef, tyPtr, tyVar, tyLent:
+    type StarKind = enum Ptr, CppRef
     var star = if t.kind in {tyVar} and tfVarIsPtr notin origTyp.flags and
-                    compileToCpp(m): "&" else: "*"
+                    compileToCpp(m): CppRef else: Ptr
+    template wrapStar(t: Snippet): Snippet =
+      let tt = t
+      case star
+      of Ptr: ptrType(tt)
+      of CppRef: cppRefType(tt)
     var et = origTyp.skipTypes(abstractInst).elementType
     var etB = et.skipTypes(abstractInst)
     if mapType(m.config, t, kind == dkParam) == ctPtrToArray and (etB.kind != tyOpenArray or kind == dkParam):
@@ -888,29 +902,29 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       else:
         et = elemType(etB)
       etB = et.skipTypes(abstractInst)
-      star[0] = '*'
+      star = Ptr
     case etB.kind
     of tyObject, tyTuple:
       if isImportedCppType(etB) and et.kind == tyGenericInst:
-        result = getTypeDescAux(m, et, check, kind) & star
+        result = wrapStar(getTypeDescAux(m, et, check, kind))
       else:
         # no restriction! We have a forward declaration for structs
         let name = getTypeForward(m, et, hashType(et, m.config))
-        result = name & star
+        result = wrapStar(name)
         m.typeCache[sig] = result
     of tySequence:
       if optSeqDestructors in m.config.globalOptions:
-        result = getTypeDescWeak(m, et, check, kind) & star
+        result = wrapStar(getTypeDescWeak(m, et, check, kind))
         m.typeCache[sig] = result
       else:
         # no restriction! We have a forward declaration for structs
         let name = getTypeForward(m, et, hashType(et, m.config))
-        result = name & seqStar(m) & star
+        result = wrapStar(wrapSeqStar(m, name))
         m.typeCache[sig] = result
         pushType(m, et)
     else:
       # else we have a strong dependency  :-(
-      result = getTypeDescAux(m, et, check, kind) & star
+      result = wrapStar(getTypeDescAux(m, et, check, kind))
       m.typeCache[sig] = result
   of tyOpenArray, tyVarargs:
     result = getOpenArrayDesc(m, t, check, kind)
@@ -975,7 +989,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
           addForwardStructFormat(m, structOrUnion(t), result)
         m.forwTypeCache[sig] = result
       assert(cacheGetType(m.typeCache, sig) == "")
-      m.typeCache[sig] = result & seqStar(m)
+      m.typeCache[sig] = wrapSeqStar(m, result)
       if not isImportedType(t):
         if skipTypes(t.elementType, typedescInst).kind != tyEmpty:
           let et = getTypeDescAux(m, t.elementType, check, kind)
@@ -987,7 +1001,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
               isFlexArray = true)
         else:
           result = rope("TGenericSeq")
-      result.add(seqStar(m))
+      result = wrapSeqStar(m, result)
   of tyUncheckedArray:
     result = getTypeName(m, origTyp, sig)
     m.typeCache[sig] = result
