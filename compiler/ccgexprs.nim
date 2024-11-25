@@ -329,7 +329,7 @@ proc genOpenArrayConv(p: BProc; d: TLoc; a: TLoc; flags: TAssignmentFlags) =
     var data = getTempName(p.module)
     p.s(cpsLocals).addVar(Local, name = data, typ = ptrType(NimChar), initializer = NimNil)
     p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, ra), NimNil)):
-      p.s(cpsStmts).addAssignment(data, dataFieldAccessor(p, ra))
+      p.s(cpsStmts).addAssignment(data, dataField(p, ra))
     p.s(cpsStmts).addFieldAssignment(rd, "Field0", data)
     let la = lenExpr(p, a)
     p.s(cpsStmts).addFieldAssignment(rd, "Field1", la)
