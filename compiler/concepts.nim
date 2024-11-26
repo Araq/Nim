@@ -230,6 +230,19 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = true
   of tyOrdinal:
     result = isOrdinalType(a, allowEnumWithHoles = false) or a.kind == tyGenericParam
+  of tyStatic:
+    result = false
+    var scomp: PType
+    if f.kidsLen > 0:
+      if f[0].kind == tyGenericParam:
+        if f[0].kidsLen > 0:
+          result = matchType(c, f[0][0], a, m)
+        else:
+          result = true
+      elif a.kind == tyStatic:
+        result = matchType(c, f.base, a.base, m)
+      else:
+        result = false
   else:
     result = false
 
@@ -280,7 +293,8 @@ proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
 proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bool =
   ## Walk the current scope, extract candidates which the same name as 'n[namePos]',
   ## 'n' is the nkProcDef or similar from the concept that we try to match.
-  let candidates = searchInScopesAllCandidatesFilterBy(c, n[namePos].sym.name, kinds)
+  var candidates = searchScopes(c, n[namePos].sym.name, kinds)
+  searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
   for candidate in candidates:
     #echo "considering ", typeToString(candidate.typ), " ", candidate.magic
     m.magic = candidate.magic

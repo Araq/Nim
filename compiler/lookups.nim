@@ -221,7 +221,14 @@ proc debugScopes*(c: PContext; limit=0, max = int.high) {.deprecated.} =
     if i == limit: return
     inc i
 
-proc searchInScopesAllCandidatesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+proc searchImportsAll*(c: PContext, s: PIdent, filter: TSymKinds, holding: var seq[PSym]) =
+  var marked = initIntSet()
+  for im in c.imports.mitems:
+    for s in symbols(im, marked, s, c.graph):
+      if s.kind in filter:
+        holding.add s
+
+proc searchScopes*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
   result = @[]
   for scope in allScopes(c.currentScope):
     var ti: TIdentIter = default(TIdentIter)
@@ -231,14 +238,12 @@ proc searchInScopesAllCandidatesFilterBy*(c: PContext, s: PIdent, filter: TSymKi
         result.add candidate
       candidate = nextIdentIter(ti, scope.symbols)
 
+proc searchScopesAll*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+  result = searchScopes(c,s,filter)
   if result.len == 0:
-    var marked = initIntSet()
-    for im in c.imports.mitems:
-      for s in symbols(im, marked, s, c.graph):
-        if s.kind in filter:
-          result.add s
+    searchImportsAll(c, s, filter, result)
 
-proc searchInScopesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+proc selectFromScopesElseAll*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
   result = @[]
   block outer:
     for scope in allScopes(c.currentScope):
@@ -252,11 +257,7 @@ proc searchInScopesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSy
         candidate = nextIdentIter(ti, scope.symbols)
 
   if result.len == 0:
-    var marked = initIntSet()
-    for im in c.imports.mitems:
-      for s in symbols(im, marked, s, c.graph):
-        if s.kind in filter:
-          result.add s
+    searchImportsAll(c, s, filter, result)
 
 proc cmpScopes*(ctx: PContext, s: PSym): int =
   # Do not return a negative number
@@ -644,7 +645,7 @@ const allExceptModule = {low(TSymKind)..high(TSymKind)} - {skModule, skPackage}
 
 proc lookUpCandidates*(c: PContext, ident: PIdent, filter: set[TSymKind],
                        includePureEnum = false): seq[PSym] =
-  result = searchInScopesFilterBy(c, ident, filter)
+  result = selectFromScopesElseAll(c, ident, filter)
   if skEnumField in filter and (result.len == 0 or includePureEnum):
     result.add allPureEnumFields(c, ident)
 
