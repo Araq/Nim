@@ -19,9 +19,8 @@ template volatileLoad*[T](src: ptr T): T =
     when defined(js):
       src[]
     else:
-      var res: T
-      {.emit: [res, " = (*(", typeof(src[]), " volatile*)", src, ");"].}
-      res
+      result = default(T)
+      {.emit: [result, " = (*(", typeof(src[]), " volatile*)", src, ");"].}
 
 template volatileStore*[T](dest: ptr T, val: T) =
   ## Generates a volatile store into the container `dest` of the value

@@ -177,6 +177,7 @@ proc varDecl(a: PEffects; n: PNode) {.inline.} =
 proc skipHiddenDeref(n: PNode): PNode {.inline.} =
   result = if n.kind == nkHiddenDeref: n[0] else: n
 
+
 proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
   let n = skipHiddenDeref(n)
   if n.kind != nkSym: return
@@ -1144,7 +1145,12 @@ proc track(tracked: PEffects, n: PNode) =
       let last = lastSon(child)
       track(tracked, last)
   of nkCaseStmt: trackCase(tracked, n)
-  of nkWhen, nkIfStmt, nkIfExpr: trackIf(tracked, n)
+  of nkWhen: # This should be a "when nimvm" node.
+    let oldState = tracked.init.len
+    track(tracked, n[0][1])
+    tracked.init.setLen(oldState)
+    track(tracked, n[1][0])
+  of nkIfStmt, nkIfExpr: trackIf(tracked, n)
   of nkBlockStmt, nkBlockExpr: trackBlock(tracked, n[1])
   of nkWhileStmt:
     # 'while true' loop?
