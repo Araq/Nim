@@ -1262,7 +1262,7 @@ proc getProcTypeCast(m: BModule, prc: PSym): Rope =
     var check = initIntSet()
     genProcParams(m, prc.typ, rettype, desc, check)
     let params = extract(desc)
-    result = procPtrTypeUnnamed(rettype = rettype, params = params)
+    result = procPtrTypeUnnamed(rettype = rettype, params = params, isVarargs = tfVarargs in prc.typ.flags)
 
 proc genProcBody(p: BProc; procBody: PNode) =
   genStmts(p, procBody) # modifies p.locals, p.init, etc.

@@ -970,11 +970,11 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
     let params = extract(desc)
     if not isImportedType(t):
       if t.callConv != ccClosure: # procedure vars may need a closure!
-        m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
+        m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params, isVarargs = tfVarargs in t.flags)
       else:
         m.s[cfsTypes].addTypedef(name = result):
           m.s[cfsTypes].addSimpleStruct(m, name = "", baseType = ""):
-            m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
+            m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params, isVarargs = tfVarargs in t.flags)
             m.s[cfsTypes].addField(name = "ClE_0", typ = CPointer)
   of tySequence:
     if optSeqDestructors in m.config.globalOptions:
@@ -1128,11 +1128,11 @@ proc getClosureType(m: BModule; t: PType, kind: TClosureTypeKind): Rope =
   let params = extract(desc)
   if not isImportedType(t):
     if t.callConv != ccClosure or kind != clFull:
-      m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params)
+      m.s[cfsTypes].addProcTypedef(callConv = t.callConv, name = result, rettype = rettype, params = params, isVarargs = tfVarargs in t.flags)
     else:
       m.s[cfsTypes].addTypedef(name = result):
         m.s[cfsTypes].addSimpleStruct(m, name = "", baseType = ""):
-          m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params)
+          m.s[cfsTypes].addProcField(name = "ClP_0", callConv = ccNimCall, rettype = rettype, params = params, isVarargs = tfVarargs in t.flags)
           m.s[cfsTypes].addField(name = "ClE_0", typ = CPointer)
 
 proc finishTypeDescriptions(m: BModule) =
@@ -1254,9 +1254,9 @@ proc genProcHeader(m: BModule; prc: PSym; result: var Builder; visibility: var D
     elif sfImportc notin prc.flags:
       visibility = Private
     if asPtr:
-      result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar, ignoreAttributes = true)
+      result.addProcVar(m, prc, name, params, rettype, isStatic = isStaticVar, ignoreAttributes = true, isVarargs = tfVarargs in prc.typ.flags)
     else:
-      result.addProcHeader(m, prc, name, params, rettype, addAttributes)
+      result.addProcHeader(m, prc, name, params, rettype, addAttributes, isVarargs = tfVarargs in prc.typ.flags)
   else:
     let asPtrStr = if asPtr: (rope("(*") & name & ")") else: name
     result.add runtimeFormat(prc.cgDeclFrmt, [rettype, asPtrStr, params])

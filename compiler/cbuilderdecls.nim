@@ -168,7 +168,7 @@ template addTypedef(builder: var Builder, name: string, typeBody: typed) =
     builder.add(name)
     builder.addLineEnd(";")
 
-proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet, isVarargs = false) =
   when buildNifc:
     builder.add("(type :")
     builder.add(name)
@@ -177,8 +177,9 @@ proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: st
     builder.add(" ")
     builder.add(rettype)
     builder.add(" (pragmas ")
-    # XXX varargs goes here
     builder.add(CallingConvToStr[callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     builder.addLineEnd(")))")
   else:
     builder.add("typedef ")
@@ -382,7 +383,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
       obj.add(cppInitializer)
     obj.add(";\n")
 
-proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet, isVarargs = false) =
   when buildNifc:
     obj.add("(fld :")
     obj.add(name)
@@ -391,8 +392,9 @@ proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, 
     obj.add(" ")
     obj.add(rettype)
     obj.add(" (pragmas ")
-    # XXX varargs goes here
     obj.add(CallingConvToStr[callConv])
+    if isVarargs:
+      obj.add(" (varargs)")
     obj.addLineEnd(")))")
   else:
     obj.add(CallingConvToStr[callConv])
@@ -779,7 +781,7 @@ proc addUnnamedParam(builder: var Builder, params: var ProcParamBuilder, typ: Sn
   else:
     builder.add(typ)
 
-proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder, callConv: TCallingConvention, name: string, rettype, params: Snippet) =
+proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder, callConv: TCallingConvention, name: string, rettype, params: Snippet, isVarargs = false) =
   if paramBuilder.needsComma:
     when buildNifc:
       builder.add(" ")
@@ -794,9 +796,10 @@ proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder,
     builder.add(params)
     builder.add(" ")
     builder.add(rettype)
-    # XXX varargs goes here
     builder.add(" (pragmas ")
     builder.add(CallingConvToStr[callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     builder.add(")))")
   else:
     builder.add(CallingConvToStr[callConv])
@@ -808,9 +811,8 @@ proc addProcTypedParam(builder: var Builder, paramBuilder: var ProcParamBuilder,
     builder.add(params)
 
 proc addVarargsParam(builder: var Builder, params: var ProcParamBuilder) =
-  # does not exist in NIFC, needs to be proc pragma
   when buildNifc:
-    # XXX not implemented
+    # information needs to be provided to proc type generators
     discard
   else:
     if params.needsComma:
@@ -853,7 +855,7 @@ proc cProcParams(params: varargs[SimpleProcParam]): Snippet =
     result.add(")")
 
 template addProcHeaderWithParams(builder: var Builder, callConv: TCallingConvention,
-                                 name: string, rettype: Snippet, paramBuilder: typed) =
+                                 name: string, rettype: Snippet, isVarargs: bool, paramBuilder: typed) =
   when buildNifc:
     builder.add("(proc :")
     builder.add(name)
@@ -870,13 +872,19 @@ template addProcHeaderWithParams(builder: var Builder, callConv: TCallingConvent
     builder.add(" ")
     builder.add(rettype)
     builder.add(" (pragmas ")
-    # XXX varargs goes here
     builder.add(CallingConvToStr[callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     builder.add(") ")
 
+template addProcHeaderWithParams(builder: var Builder, callConv: TCallingConvention,
+                                 name: string, rettype: Snippet, paramBuilder: typed) =
+  # overload without isVarargs
+  addProcHeaderWithParams(builder, callConv, name, rettype, isVarargs = false, paramBuilder)
+
 proc addProcHeader(builder: var Builder, callConv: TCallingConvention,
-                   name: string, rettype, params: Snippet) =
-  addProcHeaderWithParams(builder, callConv, name, rettype):
+                   name: string, rettype, params: Snippet, isVarargs = false) =
+  addProcHeaderWithParams(builder, callConv, name, rettype, isVarargs):
     builder.add(params)
 
 proc addProcHeader(builder: var Builder, name: string, rettype, params: Snippet, isConstructor = false) =
@@ -900,7 +908,7 @@ proc addProcHeader(builder: var Builder, name: string, rettype, params: Snippet,
     builder.add(name)
     builder.add(params)
 
-proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool) =
+proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet, addAttributes: bool, isVarargs = false) =
   let noreturn = isNoReturn(m, prc)
   when buildNifc:
     # XXX no declspec on nifc
@@ -912,6 +920,8 @@ proc addProcHeader(builder: var Builder, m: BModule, prc: PSym, name: string, pa
     builder.add(rettype)
     builder.add(" (pragmas ")
     builder.add(CallingConvToStr[prc.typ.callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     if addAttributes:
       if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
         builder.add(" (attr \"naked\")")
@@ -954,7 +964,7 @@ template finishProcHeaderWithBody(builder: var Builder, body: typed) =
   builder.addNewline()
 
 proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, params, rettype: Snippet,
-                isStatic = false, ignoreAttributes = false) =
+                isStatic = false, ignoreAttributes = false, isVarargs = false) =
   let noreturn = isNoReturn(m, prc)
   when buildNifc:
     # XXX declspec not supported in NIFC
@@ -968,6 +978,8 @@ proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, param
     builder.add(rettype)
     builder.add(" (pragmas ")
     builder.add(CallingConvToStr[prc.typ.callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     if not ignoreAttributes:
       if sfPure in prc.flags and hasAttribute in extccomp.CC[m.config.cCompiler].props:
         builder.add(" (attr \"naked\")")
@@ -1000,7 +1012,7 @@ proc addProcVar(builder: var Builder, m: BModule, prc: PSym, name: string, param
 
 proc addProcVar(builder: var Builder, callConv: TCallingConvention,
                 name: string, params, rettype: Snippet,
-                isStatic = false, isVolatile = false) =
+                isStatic = false, isVolatile = false, isVarargs = false) =
   when buildNifc:
     # XXX volatile not supported in nifc
     builder.add("(")
@@ -1013,6 +1025,8 @@ proc addProcVar(builder: var Builder, callConv: TCallingConvention,
     builder.add(rettype)
     builder.add(" (pragmas ")
     builder.add(CallingConvToStr[callConv])
+    if isVarargs:
+      builder.add(" (varargs)")
     # ensure we are just adding a variable:
     builder.addLineEnd(")) .)")
   else:
@@ -1032,7 +1046,7 @@ proc addProcVar(builder: var Builder, callConv: TCallingConvention,
 
 proc addProcVar(builder: var Builder,
                 name: string, params, rettype: Snippet,
-                isStatic = false, isVolatile = false) =
+                isStatic = false, isVolatile = false, isVarargs = false) =
   # no callconv
   when buildNifc:
     # XXX volatile not supported in nifc
@@ -1044,7 +1058,11 @@ proc addProcVar(builder: var Builder,
     builder.add(params)
     builder.add(" ")
     builder.add(rettype)
-    builder.add(" .) .)")
+    if isVarargs:
+      builder.add(" (pragmas (varargs))")
+    else:
+      builder.add(" .")
+    builder.add(") .)")
   else:
     if isStatic:
       builder.add("static ")

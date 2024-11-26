@@ -46,9 +46,10 @@ else:
       "N_NOCONV" #ccMember is N_NOCONV
       ]
 
-proc procPtrTypeUnnamed(rettype, params: Snippet): Snippet =
+proc procPtrTypeUnnamed(rettype, params: Snippet, isVarargs = false): Snippet =
   when buildNifc:
-    "(proctype . " & params & " " & rettype & " .)"
+    "(proctype . " & params & " " & rettype & " " &
+      (if isVarargs: "(pragmas (varargs))" else: ".") & ")"
   else:
     rettype & "(*)" & params
 
