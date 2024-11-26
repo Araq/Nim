@@ -5,6 +5,7 @@ B[system.int]
 A[system.string]
 '''
 """
+import conceptsv2Helper
 
 block: # issue  #24451
   type
@@ -39,3 +40,21 @@ block: # typeclass
 
   var a = A[string]()
   a.accept()
+
+block:
+  proc iGetShadowed(s: int)=
+    discard
+  proc spring(x: ShadowConcept)=
+    discard
+  let a = DummyFitsObj()
+  spring(a)
+
+block:
+  type
+    Buffer = concept
+      proc put(s: Self)
+    ArrayBuffer[T: static int] = object
+  proc put(x: ArrayBuffer)=discard
+  proc p(a: Buffer)=discard
+  var buffer = ArrayBuffer[5]()
+  p(buffer)
