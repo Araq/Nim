@@ -716,10 +716,16 @@ proc unaryArithOverflow(p: BProc, e: PNode, d: var TLoc, m: TMagic) =
   of mUnaryMinusI64:
     putIntoDest(p, d, e, cOp(Neg, getTypeDesc(p.module, t), ra))
   of mAbsI:
-    putIntoDest(p, d, e,
-      cIfExpr(cOp(GreaterThan, ra, cIntValue(0)),
-        wrapPar(ra),
-        cOp(Neg, getTypeDesc(p.module, t), ra)))
+    let rt = getTypeDesc(p.module, t)
+    let tmp = getTempName(p.module)
+    p.s(cpsLocals).addVar(name = tmp, typ = rt)
+    var ifStmt: IfBuilder
+    p.s(cpsStmts).addIfStmt(ifStmt):
+      p.s(cpsStmts).addElifBranch(ifStmt, cOp(GreaterThan, ra, cIntValue(0))):
+        p.s(cpsStmts).addAssignment(tmp, ra)
+      p.s(cpsStmts).addElseBranch(ifStmt):
+        p.s(cpsStmts).addAssignment(tmp, cOp(Neg, rt, ra))
+    putIntoDest(p, d, e, tmp)
   else:
     assert(false, $m)
 
@@ -777,9 +783,27 @@ proc binaryArith(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     let t = getType()
     res = cCast(t, cOp(BitXor, t, ra, rb))
   of mMinI:
-    res = cIfExpr(cOp(LessEqual, ra, rb), ra, rb)
+    let t = getType()
+    let tmp = getTempName(p.module)
+    p.s(cpsLocals).addVar(name = tmp, typ = t)
+    var ifStmt: IfBuilder
+    p.s(cpsStmts).addIfStmt(ifStmt):
+      p.s(cpsStmts).addElifBranch(ifStmt, cOp(LessEqual, ra, rb)):
+        p.s(cpsStmts).addAssignment(tmp, ra)
+      p.s(cpsStmts).addElseBranch(ifStmt):
+        p.s(cpsStmts).addAssignment(tmp, rb)
+    res = tmp
   of mMaxI:
-    res = cIfExpr(cOp(GreaterEqual, ra, rb), ra, rb)
+    let t = getType()
+    let tmp = getTempName(p.module)
+    p.s(cpsLocals).addVar(name = tmp, typ = t)
+    var ifStmt: IfBuilder
+    p.s(cpsStmts).addIfStmt(ifStmt):
+      p.s(cpsStmts).addElifBranch(ifStmt, cOp(GreaterEqual, ra, rb)):
+        p.s(cpsStmts).addAssignment(tmp, ra)
+      p.s(cpsStmts).addElseBranch(ifStmt):
+        p.s(cpsStmts).addAssignment(tmp, rb)
+    res = tmp
   of mAddU:
     let t = getType()
     let ot = cUintType(s)
