@@ -69,7 +69,7 @@ type CppCaptureKind = enum None, ByReference, ByCopy
 
 template addCppLambda(builder: var Builder, captures: CppCaptureKind, params: Snippet, body: typed) =
   when buildNifc:
-    doAssert false, "not implemented"
+    raiseAssert "not implemented"
   else:
     builder.add("[")
     case captures
@@ -123,7 +123,7 @@ proc cAddr(value: Snippet): Snippet =
 
 proc cLabelAddr(value: TLabel): Snippet =
   when buildNifc:
-    doAssert false, "unimplemented"
+    raiseAssert "unimplemented"
   else:
     "&&" & value
 
@@ -141,13 +141,13 @@ proc subscript(a, b: Snippet): Snippet =
 
 proc dotField(a, b: Snippet): Snippet =
   when buildNifc:
-    "(dot " & a & " " & b & " 0)"
+    "(dot " & a & " " & b & " +0)" # XXX inheritance field
   else:
     a & "." & b
 
 proc derefField(a, b: Snippet): Snippet =
   when buildNifc:
-    "(dot " & cDeref(a) & " " & b & " 0)"
+    "(dot " & cDeref(a) & " " & b & " +0)" # XXX inheritance field
   else:
     a & "->" & b
 
@@ -370,7 +370,7 @@ proc addOp(builder: var Builder, binOp: TypedBinaryOp, t: Snippet, a, b: Snippet
 proc addOp(builder: var Builder, unOp: TypedUnaryOp, t: Snippet, a: Snippet) =
   when buildNifc:
     builder.add('(')
-    builder.add(typedUnaryOperators[binOp])
+    builder.add(typedUnaryOperators[unOp])
     builder.add(' ')
     builder.add(t)
     builder.add(' ')

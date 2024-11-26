@@ -515,7 +515,7 @@ proc addGoto(builder: var Builder, label: TLabel) =
 
 proc addComputedGoto(builder: var Builder, value: Snippet) =
   when buildNifc:
-    doAssert false, "not implemented in nifc"
+    raiseAssert "not implemented in nifc"
   else:
     builder.add("goto *")
     builder.add(value)
@@ -523,7 +523,7 @@ proc addComputedGoto(builder: var Builder, value: Snippet) =
 
 template addCPragma(builder: var Builder, val: Snippet) =
   when buildNifc:
-    doAssert false, "not implememented in nifc"
+    raiseAssert "not implememented in nifc"
   else:
     builder.addNewline()
     builder.add("#pragma ")

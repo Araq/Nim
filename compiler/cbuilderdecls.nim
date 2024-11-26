@@ -35,7 +35,7 @@ proc addVarHeader(builder: var Builder, kind: VarKind) =
     when buildNifc:
       builder.add("tvar ")
     else:
-      doAssert false, "unimplemented"
+      raiseAssert "unimplemented"
 
 proc addVar(builder: var Builder, kind: VarKind = Local, name: string, typ: Snippet, initializer: Snippet = "") =
   ## adds a variable declaration to the builder
@@ -91,6 +91,7 @@ when buildNifc:
     if key in m.arrayTypes:
       result = m.arrayTypes[key]
     else:
+      # XXX elementType can be a non-name
       result = elementType & "_Arr_" & $len
       m.s[cfsTypes].add("(type :")
       m.s[cfsTypes].add(result)
@@ -319,7 +320,7 @@ proc addArrayField(obj: var Builder; m: BModule, name, elementType: Snippet; len
     obj.add("\n\t(fld :")
     obj.add(name)
     obj.add(" . ") # pragmas
-    obj.add(getArrayType(elementType, len))
+    obj.add(getArrayType(m, elementType, len))
     obj.add(")")
   else:
     obj.add('\t')
@@ -338,12 +339,12 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
     var pragmasInner = ""
     if field.alignment > 0:
       pragmasInner.add("(align ")
-      pragmasInner.addIntValue(field.alignment)
+      pragmasInner.add(cIntValue(field.alignment))
       pragmasInner.add(")")
     if field.bitsize != 0:
       if pragmasInner.len != 0: pragmasInner.add(" ")
       pragmasInner.add("(bits ")
-      pragmasInner.addIntValue(field.bitsize)
+      pragmasInner.add(cIntValue(field.bitsize))
       pragmasInner.add(")")
     if sfNoalias in field.flags:
       when false: # XXX not implemented in NIFC
@@ -431,16 +432,17 @@ proc startSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: Sni
     if result.named:
       obj.add("(type :")
       obj.add(name)
-      obj.add(" (object ")
-      if baseType.len != 0:
-        if m.compileToCpp:
-          result.baseKind = bcCppInherit
-        else:
-          result.baseKind = bcSupField
-        obj.add(baseType)
-        obj.add(" ")
+      obj.add(" ")
+    obj.add("(object ")
+    if baseType.len != 0:
+      if m.compileToCpp:
+        result.baseKind = bcCppInherit
       else:
-        obj.add(". ")
+        result.baseKind = bcSupField
+      obj.add(baseType)
+      obj.add(" ")
+    else:
+      obj.add(". ")
   else:
     obj.add("struct")
     if result.named:
@@ -656,7 +658,7 @@ proc addVisibilityPrefix(builder: var Builder, visibility: DeclVisibility) =
     of Extern:
       builder.add("(imp ")
     of ExternC, ImportLib, ExportLib, ExportLibVar:
-      doAssert false, "visibility " & $visibility & " not supported in NIFC"
+      raiseAssert "visibility " & $visibility & " not supported in NIFC"
     of Private, StaticProc:
       # also not supported but can just be ignored
       discard
@@ -685,7 +687,7 @@ proc addVisibilitySuffix(builder: var Builder, visibility: DeclVisibility) =
     of Extern:
       builder.addLineEnd(")")
     of ExternC, ImportLib, ExportLib, ExportLibVar:
-      doAssert false, "visibility " & $visibility & " not supported in NIFC"
+      raiseAssert "visibility " & $visibility & " not supported in NIFC"
     of Private, StaticProc:
       # also not supported but can just be ignored
       discard
@@ -754,7 +756,7 @@ proc addParam(builder: var Builder, params: var ProcParamBuilder, param: PSym, t
       builder.add(typ)
       builder.add(")")
     else:
-      doAssert false, "codegendecl not supported on NIFC"
+      raiseAssert "codegendecl not supported on NIFC"
   else:
     var modifiedTyp = typ
     if sfNoalias in param.flags:
@@ -1082,7 +1084,7 @@ type VarInitializerKind = enum
 proc addVar(builder: var Builder, m: BModule, s: PSym, name: string, typ: Snippet, kind = Local, visibility: DeclVisibility = None, initializer: Snippet = "", initializerKind: VarInitializerKind = Assignment) =
   if sfCodegenDecl in s.flags:
     when buildNifc:
-      doAssert false, "codegendecl not supported in nifc"
+      raiseAssert "codegendecl not supported in nifc"
     else:
       builder.add(runtimeFormat(s.cgDeclFrmt, [typ, name]))
       if initializer.len != 0:
