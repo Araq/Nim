@@ -191,10 +191,15 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
-    result = false
-    let ak = a.skipTypes(ignorableForArgType - {f.kind})
-    if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
-      result = matchKids(c, f, ak, m)
+    if f.kind == tyArray and f.kidsLen == 3:
+      # XXX: this is a work-around!
+      # system.nim creates these for the magic array typeclass
+      result = true
+    else:
+      result = false
+      let ak = a.skipTypes(ignorableForArgType - {f.kind})
+      if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
+        result = matchKids(c, f, ak, m)
   of tyOr:
     let oldLen = m.inferred.len
     if a.kind == tyOr:
