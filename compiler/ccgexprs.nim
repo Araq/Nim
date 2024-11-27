@@ -2159,6 +2159,8 @@ proc genSomeCast(p: BProc, e: PNode, d: var TLoc) =
           [getTypeDesc(p.module, e.typ), rdCharLoc(a)], a.storage)
     elif etyp.kind == tyBool and srcTyp.kind in IntegralTypes:
       putIntoDest(p, d, e, "(($1) != 0)" % [rdCharLoc(a)], a.storage)
+    elif etyp.kind == tyProc and srcTyp.kind == tyProc and sameBackendType(etyp, srcTyp):
+      expr(p, e[1], d)
     else:
       if etyp.kind == tyPtr:
         # generates the definition of structs for casts like cast[ptr object](addr x)[]
