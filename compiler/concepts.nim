@@ -237,17 +237,14 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = isOrdinalType(a, allowEnumWithHoles = false) or a.kind == tyGenericParam
   of tyStatic:
     result = false
-    var scomp: PType
-    if f.kidsLen > 0:
-      if f[0].kind == tyGenericParam:
-        if f[0].kidsLen > 0:
-          result = matchType(c, f[0][0], a, m)
-        else:
-          result = true
-      elif a.kind == tyStatic:
-        result = matchType(c, f.base, a.base, m)
-      else:
-        result = false
+    var scomp = f.base
+    if scomp.kind == tyGenericParam:
+      if f.base.kidsLen > 0:
+        scomp = scomp.base
+    if a.kind == tyStatic:
+      result = matchType(c, scomp, a.base, m)
+    else:
+      result = matchType(c, scomp, a, m)
   else:
     result = false
 
