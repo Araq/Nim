@@ -549,6 +549,7 @@ type
 
   SqlParser* = object of SqlLexer ## SQL parser object
     tok: Token
+    considerTypeParams: bool ## Determines whether type parameters (e.g., sizes in types like VARCHAR(255)) are included in the SQL AST.
 
 proc newNode*(k: SqlNodeKind): SqlNode =
   when defined(js): # bug #14117
@@ -641,16 +642,21 @@ proc parseDataType(p: var SqlParser): SqlNode =
     expectIdent(p)
     result = newNode(nkIdent, p.tok.literal)
     getTok(p)
-    # ignore (12, 13) part:
     if p.tok.kind == tkParLe:
+      var complexType = newNode(nkCall)
+      complexType.add(result)
       getTok(p)
+      complexType.add(newNode(nkIntegerLit, p.tok.literal))
       expect(p, tkInteger)
       getTok(p)
       while p.tok.kind == tkComma:
         getTok(p)
+        complexType.add(newNode(nkIntegerLit, p.tok.literal))
         expect(p, tkInteger)
         getTok(p)
       eat(p, tkParRi)
+      if p.considerTypeParams: 
+        result = complexType
 
 proc getPrecedence(p: SqlParser): int =
   if isOpr(p, "*") or isOpr(p, "/") or isOpr(p, "%"):
@@ -1565,19 +1571,20 @@ proc open(p: var SqlParser, input: Stream, filename: string) =
   p.tok.literal = ""
   getTok(p)
 
-proc parseSql*(input: Stream, filename: string): SqlNode =
+proc parseSql*(input: Stream, filename: string, considerTypeParams = false): SqlNode =
   ## parses the SQL from `input` into an AST and returns the AST.
   ## `filename` is only used for error messages.
   ## Syntax errors raise an `SqlParseError` exception.
   var p: SqlParser
+  p.considerTypeParams = considerTypeParams
   open(p, input, filename)
   try:
     result = parse(p)
   finally:
     close(p)
 
-proc parseSql*(input: string, filename = ""): SqlNode =
+proc parseSql*(input: string, filename = "", considerTypeParams = false): SqlNode =
   ## parses the SQL from `input` into an AST and returns the AST.
   ## `filename` is only used for error messages.
   ## Syntax errors raise an `SqlParseError` exception.
-  parseSql(newStringStream(input), "")
+  parseSql(newStringStream(input), "", considerTypeParams)
