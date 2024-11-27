@@ -288,19 +288,21 @@ proc genPostprocessDir(field1, field2, field3: string): string =
 
 proc genCLineDir(r: var Builder, fileIdx: FileIndex, line: int; conf: ConfigRef) =
   assert line >= 0
-  if optLineDir in conf.options and line > 0:
-    if fileIdx == InvalidFileIdx:
-      r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
-    else:
-      r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
+  when not buildNifc:
+    if optLineDir in conf.options and line > 0:
+      if fileIdx == InvalidFileIdx:
+        r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
+      else:
+        r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
 
 proc genCLineDir(r: var Builder, fileIdx: FileIndex, line: int; p: BProc; info: TLineInfo; lastFileIndex: FileIndex) =
   assert line >= 0
-  if optLineDir in p.config.options and line > 0:
-    if fileIdx == InvalidFileIdx:
-      r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
-    else:
-      r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
+  when not buildNifc:
+    if optLineDir in p.config.options and line > 0:
+      if fileIdx == InvalidFileIdx:
+        r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
+      else:
+        r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
 
 proc genCLineDir(r: var Builder, info: TLineInfo; conf: ConfigRef) =
   if optLineDir in conf.options:
@@ -326,7 +328,7 @@ proc genLineDir(p: BProc, t: PNode) =
   let line = t.info.safeLineNm
 
   if optEmbedOrigSrc in p.config.globalOptions:
-    p.s(cpsStmts).add("//" & sourceLine(p.config, t.info) & "\L")
+    p.s(cpsStmts).addLineComment(sourceLine(p.config, t.info))
   let lastFileIndex = p.lastLineInfo.fileIndex
   let freshLine = freshLineInfo(p, t.info)
   if freshLine:
@@ -824,24 +826,34 @@ proc initLocExprSingleUse(p: BProc, e: PNode): TLoc =
 include ccgcalls, "ccgstmts.nim"
 
 proc initFrame(p: BProc, procname, filename: Rope): Rope =
-  # XXX cbuilder
-  const frameDefines = """
-$1define nimfr_(proc, file) \
-  TFrame FR_; \
-  FR_.procname = proc; FR_.filename = file; FR_.line = 0; FR_.len = 0; #nimFrame(&FR_);
+  when not buildNifc:
+    const frameDefines = """
+  $1define nimfr_(proc, file) \
+    TFrame FR_; \
+    FR_.procname = proc; FR_.filename = file; FR_.line = 0; FR_.len = 0; #nimFrame(&FR_);
 
-$1define nimln_(n) \
-  FR_.line = n;
+  $1define nimln_(n) \
+    FR_.line = n;
 
-$1define nimlf_(n, file) \
-  FR_.line = n; FR_.filename = file;
+  $1define nimlf_(n, file) \
+    FR_.line = n; FR_.filename = file;
 
-"""
-  if p.module.s[cfsFrameDefines].buf.len == 0:
-    appcg(p.module, p.module.s[cfsFrameDefines], frameDefines, ["#"])
+  """
+    if p.module.s[cfsFrameDefines].buf.len == 0:
+      appcg(p.module, p.module.s[cfsFrameDefines], frameDefines, ["#"])
 
   cgsym(p.module, "nimFrame")
-  result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
+  when buildNifc:
+    var res = newBuilder("")
+    res.addVar(name = "FR_", typ = "TFrame")
+    res.addFieldAssignment("FR_", "procname", procname)
+    res.addFieldAssignment("FR_", "filename", filename)
+    res.addFieldAssignment("FR_", "line", cIntValue(0))
+    res.addFieldAssignment("FR_", "len", cIntValue(0))
+    res.addCallStmt("nimFrame", cAddr("FR_"))
+    result = extract(res)
+  else:
+    result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
 
 proc initFrameNoDebug(p: BProc; frame, procname, filename: Snippet; line: int): Snippet =
   cgsym(p.module, "nimFrame")
@@ -1038,9 +1050,10 @@ proc cgsymValue(m: BModule, name: string): Rope =
     result.addActualSuffixForHCR(m.module, sym)
 
 proc generateHeaders(m: BModule) =
-  var nimbase = m.config.nimbasePattern
-  if nimbase == "": nimbase = "nimbase.h"
-  m.s[cfsHeaders].addInclude('"' & nimbase & '"')
+  when not buildNifc:
+    var nimbase = m.config.nimbasePattern
+    if nimbase == "": nimbase = "nimbase.h"
+    m.s[cfsHeaders].addInclude('"' & nimbase & '"')
 
   for it in m.headerFiles:
     if it[0] == '#':
@@ -1049,7 +1062,8 @@ proc generateHeaders(m: BModule) =
       m.s[cfsHeaders].addInclude('"' & $it & '"')
     else:
       m.s[cfsHeaders].addInclude($it)
-  m.s[cfsHeaders].add("""#undef LANGUAGE_C
+  when not buildNifc:
+    m.s[cfsHeaders].add("""#undef LANGUAGE_C
 #undef MIPSEB
 #undef MIPSEL
 #undef PPC
@@ -1586,31 +1600,37 @@ proc genVarPrototype(m: BModule, n: PNode) =
               '"' & sym.loc.snippet & '"')))
 
 proc addNimDefines(result: var Builder; conf: ConfigRef) {.inline.} =
-  result.addf("#define NIM_INTBITS $1\L", [
-    platform.CPU[conf.target.targetCPU].intSize.rope])
-  if conf.cppCustomNamespace.len > 0:
-    result.add("#define USE_NIM_NAMESPACE ")
-    result.add(conf.cppCustomNamespace)
-    result.add("\L")
-  if conf.isDefined("nimEmulateOverflowChecks"):
-    result.add("#define NIM_EmulateOverflowChecks\L")
+  when not buildNifc:
+    result.addf("#define NIM_INTBITS $1\L", [
+      platform.CPU[conf.target.targetCPU].intSize.rope])
+    if conf.cppCustomNamespace.len > 0:
+      result.add("#define USE_NIM_NAMESPACE ")
+      result.add(conf.cppCustomNamespace)
+      result.add("\L")
+    if conf.isDefined("nimEmulateOverflowChecks"):
+      result.add("#define NIM_EmulateOverflowChecks\L")
 
 proc headerTop(): Rope =
-  result = "/* Generated by Nim Compiler v$1 */$N" % [rope(VersionAsString)]
+  when buildNifc:
+    result = "(.nif24)\n(stmts\n"
+  else:
+    result = "/* Generated by Nim Compiler v$1 */$N" % [rope(VersionAsString)]
 
 proc getCopyright(conf: ConfigRef; cfile: Cfile): Rope =
   result = headerTop()
-  if optCompileOnly notin conf.globalOptions:
-    result.add ("/* Compiled for: $1, $2, $3 */$N" &
-        "/* Command for C compiler:$n   $4 */$N") %
-        [rope(platform.OS[conf.target.targetOS].name),
-        rope(platform.CPU[conf.target.targetCPU].name),
-        rope(extccomp.CC[conf.cCompiler].name),
-        rope(getCompileCFileCmd(conf, cfile))]
+  when not buildNifc:
+    if optCompileOnly notin conf.globalOptions:
+      result.add ("/* Compiled for: $1, $2, $3 */$N" &
+          "/* Command for C compiler:$n   $4 */$N") %
+          [rope(platform.OS[conf.target.targetOS].name),
+          rope(platform.CPU[conf.target.targetCPU].name),
+          rope(extccomp.CC[conf.cCompiler].name),
+          rope(getCompileCFileCmd(conf, cfile))]
 
 proc getFileHeader(conf: ConfigRef; cfile: Cfile): Rope =
   var res = newBuilder(getCopyright(conf, cfile))
-  if conf.hcrOn: res.add("#define NIM_HOT_CODE_RELOADING\L")
+  when not buildNifc:
+    if conf.hcrOn: res.add("#define NIM_HOT_CODE_RELOADING\L")
   addNimDefines(res, conf)
   result = extract(res)
 
@@ -2240,17 +2260,26 @@ proc postprocessCode(conf: ConfigRef, r: var Rope) =
   var
     nimlnDirLastF = ""
 
-  var res: Rope = r.substr(0, f - 1)
+  var res = newBuilder(r.substr(0, f - 1))
   while f != -1:
     var
       e = r.find(postprocessDirEnd, f + 1)
       dir = r.substr(f + 1, e - 1).split(postprocessDirSep)
     case dir[0]
     of "nimln":
+      let line = dir[1]
       if dir[2] == nimlnDirLastF:
-        res.add("nimln_(" & dir[1] & ");")
+        when buildNifc:
+          res.addFieldAssignment("FR_", "line", line)
+        else:
+          res.add("nimln_(" & line & ");")
       else:
-        res.add("nimlf_(" & dir[1] & ", " & quotedFilename(conf, dir[2].parseInt.FileIndex) & ");")
+        let filename = quotedFilename(conf, dir[2].parseInt.FileIndex)
+        when buildNifc:
+          res.addFieldAssignment("FR_", "line", line)
+          res.addFieldAssignment("FR_", "filename", filename)
+        else:
+          res.add("nimlf_(" & line & ", " & filename & ");")
         nimlnDirLastF = dir[2]
     else:
       raiseAssert "unexpected postprocess directive"
@@ -2263,7 +2292,7 @@ proc postprocessCode(conf: ConfigRef, r: var Rope) =
     else:
       res.add(r.substr(e + 1))
 
-  r = res
+  r = extract(res)
 
 proc genModule(m: BModule, cfile: Cfile): Rope =
   var moduleIsEmpty = true
@@ -2293,12 +2322,17 @@ proc genModule(m: BModule, cfile: Cfile): Rope =
   if m.config.cppCustomNamespace.len > 0:
     closeNamespaceNim(res)
 
+  when buildNifc:
+    # finish (stmts
+    res.add(")")
+
   result = extract(res)
-  if optLineDir in m.config.options:
-    var srcFileDefs = ""
-    for fi in 0..m.config.m.fileInfos.high:
-      srcFileDefs.add("#define FX_" & $fi & " " & makeSingleLineCString(toFullPath(m.config, fi.FileIndex)) & "\n")
-    result = srcFileDefs & result
+  when not buildNifc:
+    if optLineDir in m.config.options:
+      var srcFileDefs = ""
+      for fi in 0..m.config.m.fileInfos.high:
+        srcFileDefs.add("#define FX_" & $fi & " " & makeSingleLineCString(toFullPath(m.config, fi.FileIndex)) & "\n")
+      result = srcFileDefs & result
 
   if moduleIsEmpty:
     result = ""
@@ -2392,6 +2426,9 @@ proc writeHeader(m: BModule) =
 
 proc getCFile(m: BModule): AbsoluteFile =
   let ext =
+    when buildNifc:
+      ".nif"
+    else:
       if m.compileToCpp: ".nim.cpp"
       elif m.config.backend == backendObjc or sfCompileToObjc in m.module.flags: ".nim.m"
       else: ".nim.c"
@@ -2611,4 +2648,5 @@ proc cgenWriteModules*(backend: RootRef, config: ConfigRef) =
   for m in cgenModules(g):
     m.writeModule(pending=true)
   writeMapping(config, g.mapping)
-  if g.generatedHeader != nil: writeHeader(g.generatedHeader)
+  when not buildNifc:
+    if g.generatedHeader != nil: writeHeader(g.generatedHeader)

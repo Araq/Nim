@@ -370,11 +370,11 @@ proc getTypePre(m: BModule; typ: PType; sig: SigHash): Rope =
     if result == "": result = cacheGetType(m.typeCache, sig)
 
 proc addForwardStructFormat(m: BModule; structOrUnion: Rope, typename: Rope) =
-  # XXX should be no-op in NIFC
-  if m.compileToCpp:
-    m.s[cfsForwardTypes].addf "$1 $2;$n", [structOrUnion, typename]
-  else:
-    m.s[cfsForwardTypes].addf "typedef $1 $2 $2;$n", [structOrUnion, typename]
+  when not buildNifc:
+    if m.compileToCpp:
+      m.s[cfsForwardTypes].addf "$1 $2;$n", [structOrUnion, typename]
+    else:
+      m.s[cfsForwardTypes].addf "typedef $1 $2 $2;$n", [structOrUnion, typename]
 
 proc seqStar(m: BModule): bool {.inline.} =
   if optSeqDestructors in m.config.globalOptions: result = false
