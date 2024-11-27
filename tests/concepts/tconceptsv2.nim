@@ -121,6 +121,7 @@ block: # more complex recursion
     WritableImpl = object
 
   proc launch(a: var Buffer, b: Writable)= discard
+  proc put(x: var Buffer, i: object)= discard
   proc put(x: var BufferImpl, i: object)= discard
   proc second(x: BufferImpl)= discard
   proc put(x: var Buffer, y: WritableImpl)= discard
