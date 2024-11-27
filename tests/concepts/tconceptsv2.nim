@@ -77,3 +77,17 @@ block:
   proc p(a: Buffer)=discard
   var buffer = ArrayBuffer[5]()
   p(buffer)
+
+block: # composite typeclass matching
+  type
+    A[T] = object
+    Buffer = concept
+      proc put(s: Self, i: A)
+    BufferImpl = object
+    WritableImpl = object
+
+  proc launch(a: var Buffer)=discard
+  proc put(x: BufferImpl, i: A)=discard
+
+  var a = BufferImpl()
+  launch(a)

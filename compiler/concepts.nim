@@ -187,7 +187,8 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
       ak = last(a)
     result = matchType(c, last(f), ak, m)
   of tyCompositeTypeClass:
-    result = matchType(c, last(f), a, m)
+    var ak = if a.kind == tyCompositeTypeClass: a.last else: a
+    result = matchType(c, last(f), ak, m)
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
