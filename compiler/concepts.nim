@@ -78,6 +78,7 @@ type
     magic: TMagic  ## mArrGet and mArrPut is wrong in system.nim and
                    ## cannot be fixed that easily.
                    ## Thus we special case it here.
+    concpt: PType
 
 proc existingBinding(m: MatchCon; key: PType): PType =
   ## checks if we bound the type variable 'key' already to some
@@ -174,13 +175,23 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = ak.kind == f.kind or ak.kind == tyOrdinal or
        (ak.kind == tyGenericParam and ak.hasElementType and ak.elementType.kind == tyOrdinal)
   of tyConcept:
-    let oldLen = m.inferred.len
-    let oldPotentialImplementation = m.potentialImplementation
-    m.potentialImplementation = a
-    result = conceptMatchNode(c, f.n.lastSon, m)
-    m.potentialImplementation = oldPotentialImplementation
-    if not result:
-      m.inferred.setLen oldLen
+    if a.kind == tyConcept and f.n == a.n:
+      result = true
+    elif m.concpt.size == szIllegalRecursion:
+      result = false
+    else:
+      let oldLen = m.inferred.len
+      let oldPotentialImplementation = m.potentialImplementation
+      m.potentialImplementation = a
+      m.concpt.size = szIllegalRecursion
+      let oldConcept = m.concpt
+      m.concpt = f
+      result = conceptMatchNode(c, f.n.lastSon, m)
+      m.potentialImplementation = oldPotentialImplementation
+      m.concpt = oldConcept
+      m.concpt.size = szUnknownSize
+      if not result:
+        m.inferred.setLen oldLen
   of tyGenericBody:
     var ak = a
     if a.kind == tyGenericBody:
@@ -344,7 +355,7 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   ## `C[S, T]` parent type that we look for. We need this because we need to store bindings
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
-  var m = MatchCon(inferred: @[], potentialImplementation: arg)
+  var m = MatchCon(inferred: @[], potentialImplementation: arg, concpt: concpt)
   result = conceptMatchNode(c, concpt.n.lastSon, m)
   if result:
     for (a, b) in m.inferred:

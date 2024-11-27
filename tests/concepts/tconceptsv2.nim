@@ -91,3 +91,39 @@ block: # composite typeclass matching
 
   var a = BufferImpl()
   launch(a)
+
+block: # simple recursion
+  type
+    Buffer = concept
+      proc put(s: var Self, i: auto)
+      proc second(s: Self)
+    Writable = concept
+      proc put(w: var Buffer, s: Self)
+    BufferImpl[T: static int] = object
+    WritableImpl = object
+
+  proc launch(a: var Buffer, b: Writable)= discard
+  proc put(x: var BufferImpl, i: object)= discard
+  proc second(x: BufferImpl)= discard
+  proc put(x: var Buffer, y: WritableImpl)= discard
+
+  var a = BufferImpl[5]()
+  launch(a, WritableImpl())
+
+block: # more complex recursion
+  type
+    Buffer = concept
+      proc put(s: var Self, i: auto)
+      proc second(s: Self)
+    Writable = concept
+      proc put(w: var Buffer, s: Self)
+    BufferImpl[T: static int] = object
+    WritableImpl = object
+
+  proc launch(a: var Buffer, b: Writable)= discard
+  proc put(x: var BufferImpl, i: object)= discard
+  proc second(x: BufferImpl)= discard
+  proc put(x: var Buffer, y: WritableImpl)= discard
+
+  var a = BufferImpl[5]()
+  launch(a, WritableImpl())
