@@ -15,7 +15,6 @@ proc dispatch(x: Base, params: ...) =
 
   var disp = newNodeI(nkIfStmt, base.info)
 
-  var vTableAccess = newNodeIT(nkBracketExpr, base.info, base.typ)
   let nimGetVTableSym = getCompilerProc(g, "nimGetVTable")
   let ptrPNimType = nimGetVTableSym.typ.n[1].sym.typ
 
@@ -33,7 +32,7 @@ proc dispatch(x: Base, params: ...) =
     dispatchObject,
     newIntNode(nkIntLit, index)
   )
-  getVTableCall.typ() = base.typ
+  getVTableCall.typ() = getSysType(g, unknownLineInfo, tyPointer)
   var vTableCall = newNodeIT(nkCall, base.info, base.typ.returnType)
   var castNode = newTree(nkCast,
         newNodeIT(nkType, base.info, base.typ),
