@@ -19,6 +19,7 @@ proc volatileLoad*[T](src: ptr T): T {.inline, noinit.} =
     when defined(js):
       result = src[]
     else:
+      result = default(T)
       {.emit: [result, " = (*(", typeof(src[]), " volatile*)", src, ");"].}
 
 proc volatileStore*[T](dest: ptr T, val: T) {.inline.} =
