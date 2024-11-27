@@ -32,16 +32,16 @@ when defined(nimPreviewSlimSystem):
 
 
 proc newEIO(msg: string): ref IOError =
-  new(result)
-  result.msg = msg
+  result = (ref IOError)(msg: msg)
 
 proc setFileSize(fh: FileHandle, newFileSize = -1, oldSize = -1): OSErrorCode =
   ## Set the size of open file pointed to by `fh` to `newFileSize` if != -1,
   ## allocating | freeing space from the file system.  This routine returns the
   ## last OSErrorCode found rather than raising to support old rollback/clean-up
   ## code style. [ Should maybe move to std/osfiles. ]
+  result = OSErrorCode(0)
   if newFileSize < 0 or newFileSize == oldSize:
-    return
+    return result
   when defined(windows):
     var sizeHigh = int32(newFileSize shr 32)
     let sizeLow = int32(newFileSize and 0xffffffff)
@@ -56,7 +56,7 @@ proc setFileSize(fh: FileHandle, newFileSize = -1, oldSize = -1): OSErrorCode =
       when declared(posix_fallocate):
         while (e = posix_fallocate(fh, 0, newFileSize); e == EINTR):
           discard
-      if e in [EINVAL, EOPNOTSUPP] and ftruncate(fh, newFileSize) == -1:
+      if (e == EINVAL or e == EOPNOTSUPP) and ftruncate(fh, newFileSize) == -1:
         result = osLastError() # fallback arguable; Most portable BUT allows SEGV
       elif e != 0:
         result = osLastError()
@@ -268,10 +268,10 @@ proc open*(filename: string, mode: FileMode = fmRead,
     if result.handle == -1:
       fail(osLastError(), "error opening file")
 
-    if mappedSize != -1: #XXX Logic here differs from `when windows` branch ..
-      result.size = mappedSize #.. which always fstats&Uses min(mappedSize, st).
+    if mappedSize != -1: # XXX Logic here differs from `when windows` branch ..
+      result.size = mappedSize # .. which always fstats&Uses min(mappedSize, st).
     else: # if newFileSize!=-1: result.size=newFileSize # if trust setFileSize
-      var stat: Stat  #^^.. BUT some FSes (eg. Linux HugeTLBfs) round to 2MiB.
+      var stat: Stat  # ^^.. BUT some FSes (eg. Linux HugeTLBfs) round to 2MiB.
       if fstat(result.handle, stat) != -1:
         result.size = stat.st_size.int # int may be 32-bit-unsafe for 2..<4 GiB
       else:
@@ -336,8 +336,9 @@ proc resize*(f: var MemFile, newFileSize: int) {.raises: [IOError, OSError].} =
     f.mapHandle = createFileMappingW(f.fHandle, nil, PAGE_READWRITE, 0,0,nil)
     if f.mapHandle == 0:                                             # Re-do map
       raiseOSError(osLastError())
-    if (let m = mapViewOfFileEx(f.mapHandle, FILE_MAP_READ or FILE_MAP_WRITE,
-                                0, 0, WinSizeT(newFileSize), nil); m != nil):
+    let m = mapViewOfFileEx(f.mapHandle, FILE_MAP_READ or FILE_MAP_WRITE,
+                            0, 0, WinSizeT(newFileSize), nil)
+    if m != nil:
       f.mem  = m
       f.size = newFileSize
     else:
@@ -347,8 +348,8 @@ proc resize*(f: var MemFile, newFileSize: int) {.raises: [IOError, OSError].} =
       raise newException(IOError,
                          "Cannot resize MemFile opened with allowRemap=false")
     if newFileSize != f.size:
-      if (let e = setFileSize(f.handle.FileHandle, newFileSize, f.size);
-          e != 0.OSErrorCode): raiseOSError(e)
+      let e = setFileSize(f.handle.FileHandle, newFileSize, f.size)
+      if e != 0.OSErrorCode: raiseOSError(e)
     when defined(linux): #Maybe NetBSD, too?
       # On Linux this can be over 100 times faster than a munmap,mmap cycle.
       proc mremap(old: pointer; oldSize, newSize: csize_t; flags: cint):
@@ -401,9 +402,10 @@ proc close*(f: var MemFile) =
 
   if error: raiseOSError(lastErr)
 
-type MemSlice* = object ## represent slice of a MemFile for iteration over delimited lines/records
-  data*: pointer
-  size*: int
+type
+  MemSlice* = object ## represent slice of a MemFile for iteration over delimited lines/records
+    data*: pointer
+    size*: int
 
 proc `==`*(x, y: MemSlice): bool =
   ## Compare a pair of MemSlice for strict equality.
@@ -411,7 +413,7 @@ proc `==`*(x, y: MemSlice): bool =
 
 proc `$`*(ms: MemSlice): string {.inline.} =
   ## Return a Nim string built from a MemSlice.
-  result.setLen(ms.size)
+  result = newString(ms.size)
   copyMem(result.cstring, ms.data, ms.size)
 
 iterator memSlices*(mfile: MemFile, delim = '\l', eat = '\r'): MemSlice {.inline.} =
@@ -449,9 +451,8 @@ iterator memSlices*(mfile: MemFile, delim = '\l', eat = '\r'): MemSlice {.inline
   proc c_memchr(cstr: pointer, c: char, n: csize_t): pointer {.
        importc: "memchr", header: "<string.h>".}
   proc `-!`(p, q: pointer): int {.inline.} = return cast[int](p) -% cast[int](q)
-  var ms: MemSlice
   var ending: pointer
-  ms.data = mfile.mem
+  var ms = MemSlice(data: mfile.mem, size: 0)
   var remaining = mfile.size
   while remaining > 0:
     ending = c_memchr(ms.data, delim, csize_t(remaining))
@@ -479,7 +480,6 @@ iterator lines*(mfile: MemFile, buf: var string, delim = '\l',
   ##   for line in lines(memfiles.open("foo"), buffer):
   ##     echo line
   ##   ```
-
   for ms in memSlices(mfile, delim, eat):
     setLen(buf, ms.size)
     if ms.size > 0:
@@ -497,7 +497,6 @@ iterator lines*(mfile: MemFile, delim = '\l', eat = '\r'): string {.inline.} =
   ##   for line in lines(memfiles.open("foo")):
   ##     echo line
   ##   ```
-
   var buf = newStringOfCap(80)
   for line in lines(mfile, buf, delim, eat):
     yield buf
@@ -507,7 +506,7 @@ type
   MemMapFileStreamObj* = object of Stream
     mf: MemFile
     mode: FileMode
-    pos: ByteAddress
+    pos: int
 
 proc mmsClose(s: Stream) =
   MemMapFileStream(s).pos = -1
@@ -555,14 +554,15 @@ proc newMemMapFileStream*(filename: string, mode: FileMode = fmRead,
   ## `fileSize` can only be set if the file does not exist and is opened
   ## with write access (e.g., with fmReadWrite).
   var mf: MemFile = open(filename, mode, newFileSize = fileSize)
-  new(result)
-  result.mode = mode
-  result.mf = mf
-  result.closeImpl = mmsClose
-  result.atEndImpl = mmsAtEnd
-  result.setPositionImpl = mmsSetPosition
-  result.getPositionImpl = mmsGetPosition
-  result.readDataImpl = mmsReadData
-  result.peekDataImpl = mmsPeekData
-  result.writeDataImpl = mmsWriteData
-  result.flushImpl = mmsFlush
+  result = MemMapFileStream(
+    mode: mode,
+    mf: mf,
+    closeImpl: mmsClose,
+    atEndImpl: mmsAtEnd,
+    setPositionImpl: mmsSetPosition,
+    getPositionImpl: mmsGetPosition,
+    readDataImpl: mmsReadData,
+    peekDataImpl: mmsPeekData,
+    writeDataImpl: mmsWriteData,
+    flushImpl: mmsFlush
+  )
