@@ -7,7 +7,7 @@ A[array[0..0, int]]
 A[seq[int]]
 '''
 """
-import conceptsv2Helper
+import conceptsv2_helper
 
 block: # issue  #24451
   type
