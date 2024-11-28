@@ -282,3 +282,48 @@ type
     WaitingIf, WaitingElseIf, InBlock
   IfBuilder* = object
     state*: IfBuilderState
+
+when buildNifc:
+  import std/assertions
+
+  proc cSymbol*(s: string): Snippet =
+    result = newStringOfCap(s.len)
+    for c in s:
+      case c
+      of 'A'..'Z', 'a'..'z', '0'..'9', '_':
+        result.add(c)
+      else:
+        const HexChars = "0123456789ABCDEF"
+        result.add('\\')
+        result.add(HexChars[(c.byte shr 4) and 0xF])
+        result.add(HexChars[c.byte and 0xF])
+    result.add(".c")
+  
+  proc getHexChar(c: char): byte =
+    case c
+    of '0'..'9': c.byte - '0'.byte
+    of 'A'..'Z': c.byte - 'A'.byte + 10
+    of 'a'..'z': c.byte - 'a'.byte + 10
+    else: raiseAssert "invalid hex char " & c
+
+  proc unescapeCSymbol*(s: string): Snippet =
+    assert s.len >= 2 and s[^2 .. ^1] == ".c"
+    let viewLen = s.len - 2
+    result = newStringOfCap(viewLen)
+    var i = 0
+    while i < viewLen:
+      case s[i]
+      of 'A'..'Z', 'a'..'z', '0'..'9', '_':
+        result.add(s[i])
+      of '\\':
+        assert i + 2 < viewLen
+        let b = (getHexChar(s[i + 1]) shl 4) or getHexChar(s[i + 2])
+        result.add(char(b))
+        inc i, 2
+      else:
+        raiseAssert "invalid char in escaped c symbol " & s[i]
+      inc i
+
+else:
+  template cSymbol*(x: string): Snippet = x
+  template unescapeCSymbol*(x: Snippet): string = x

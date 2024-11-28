@@ -1104,10 +1104,10 @@ proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
       if not hasDefault:
         if hasBuiltinUnreachable in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__builtin_unreachable")
+            p.s(cpsStmts).addCallStmt(cSymbol("__builtin_unreachable"))
         elif hasAssume in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__assume", cIntValue(0))
+            p.s(cpsStmts).addCallStmt(cSymbol("__assume"), cIntValue(0))
   if lend != "": fixLabel(p, lend)
 
 proc genCase(p: BProc, t: PNode, d: var TLoc) =
@@ -1618,20 +1618,20 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "pushSafePoint"), cAddr(safePoint))
     if isDefined(p.config, "nimStdSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
     elif isDefined(p.config, "nimSigSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("sigsetjmp", dotField(safePoint, "context"), cIntValue(0))
+        p.s(cpsStmts).addCall(cSymbol("sigsetjmp"), dotField(safePoint, "context"), cIntValue(0))
     elif isDefined(p.config, "nimBuiltinSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("__builtin_setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("__builtin_setjmp"), dotField(safePoint, "context"))
     elif isDefined(p.config, "nimRawSetjmp"):
       if isDefined(p.config, "mswindows"):
         if isDefined(p.config, "vcc") or isDefined(p.config, "clangcl"):
           # For the vcc compiler, use `setjmp()` with one argument.
           # See https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setjmp?view=msvc-170
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+            p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
         else:
           # The Windows `_setjmp()` takes two arguments, with the second being an
           # undocumented buffer used by the SEH mechanism for stack unwinding.
@@ -1640,13 +1640,13 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
           # it to NULL.
           # More details: https://github.com/status-im/nimbus-eth2/issues/3121
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("_setjmp", dotField(safePoint, "context"), cIntValue(0))
+            p.s(cpsStmts).addCall(cSymbol("_setjmp"), dotField(safePoint, "context"), cIntValue(0))
       else:
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("_setjmp", dotField(safePoint, "context"))
+            p.s(cpsStmts).addCall(cSymbol("_setjmp"), dotField(safePoint, "context"))
     else:
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
     nonQuirkyIf = initIfStmt(p.s(cpsStmts))
     initElifBranch(p.s(cpsStmts), nonQuirkyIf, removeSinglePar(
       cOp(Equal, dotField(safePoint, "status"), cIntValue(0))))

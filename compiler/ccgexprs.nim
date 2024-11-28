@@ -1425,7 +1425,7 @@ proc genEcho(p: BProc, n: PNode) =
     p.module.includeHeader("<base/log.h>")
     p.module.includeHeader("<util/string.h>")
     var a: TLoc
-    let logName = "Genode::log"
+    let logName = cSymbol("Genode::log")
     var logCall: CallBuilder
     p.s(cpsStmts).addStmt():
       p.s(cpsStmts).addCall(logCall, logName):
@@ -1436,7 +1436,7 @@ proc genEcho(p: BProc, n: PNode) =
           elif n.len != 0:
             a = initLocExpr(p, it)
             let ra = a.rdLoc
-            let fnName = "Genode::Cstring"
+            let fnName = cSymbol("Genode::Cstring")
             p.s(cpsStmts).addArgument(logCall):
               case detectStrVersion(p.module)
               of 2:
@@ -3019,8 +3019,8 @@ proc genMagicExpr(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     # - not sure, and it wouldn't work if the symbol behind the magic isn't
     #   somehow forward-declared from some other usage, but it is *possible*
     if lfNoDecl notin opr.loc.flags:
-      let prc = magicsys.getCompilerProc(p.module.g.graph, $opr.loc.snippet)
-      assert prc != nil, $opr.loc.snippet
+      let prc = magicsys.getCompilerProc(p.module.g.graph, unescapeCSymbol(opr.loc.snippet))
+      assert prc != nil, unescapeCSymbol(opr.loc.snippet)
       # HACK:
       # Explicitly add this proc as declared here so the cgsym call doesn't
       # add a forward declaration - without this we could end up with the same
@@ -3033,7 +3033,7 @@ proc genMagicExpr(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
       let wasDeclared = containsOrIncl(p.module.declaredProtos, prc.id)
       # Make the function behind the magic get actually generated - this will
       # not lead to a forward declaration! The genCall will lead to one.
-      cgsym(p.module, $opr.loc.snippet)
+      cgsym(p.module, unescapeCSymbol(opr.loc.snippet))
       # make sure we have pointer-initialising code for hot code reloading
       if not wasDeclared and p.hcrOn:
         let name = mangleDynLibProc(prc)

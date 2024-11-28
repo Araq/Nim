@@ -12,7 +12,8 @@
 import
   condsyms, ast, astalgo, idents, semdata, msgs, renderer,
   wordrecg, ropes, options, extccomp, magicsys, trees,
-  types, lookups, lineinfos, pathutils, linter, modulepaths
+  types, lookups, lineinfos, pathutils, linter, modulepaths,
+  cbuilderbase
 
 from sigmatch import trySuggestPragmas
 
@@ -156,12 +157,12 @@ proc pragmaEnsures(c: PContext, n: PNode) =
 proc setExternName(c: PContext; s: PSym, extname: string, info: TLineInfo) =
   # special cases to improve performance:
   if extname == "$1":
-    s.loc.snippet = rope(s.name.s)
+    s.loc.snippet = cSymbol(s.name.s)
   elif '$' notin extname:
-    s.loc.snippet = rope(extname)
+    s.loc.snippet = cSymbol(extname)
   else:
     try:
-      s.loc.snippet = rope(extname % s.name.s)
+      s.loc.snippet = cSymbol(extname % s.name.s)
     except ValueError:
       localError(c.config, info, "invalid extern name: '" & extname & "'. (Forgot to escape '$'?)")
   when hasFFI:
