@@ -91,7 +91,8 @@ when buildNifc:
     if key in m.arrayTypes:
       result = m.arrayTypes[key]
     else:
-      result = cEscape(elementType) & "_Arr_" & $len
+      let tmp = getTempName(m)
+      result = tmp & "_Arr_" & $len
       m.s[cfsTypes].add("(type :")
       m.s[cfsTypes].add(result)
       m.s[cfsTypes].add(" . (array ")

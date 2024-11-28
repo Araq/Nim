@@ -2017,7 +2017,7 @@ proc genOfHelper(p: BProc; dest: PType; a: Rope; info: TLineInfo; result: var Bu
       p.module.s[cfsVars].addArrayVar(p.module,
         kind = Global,
         name = cache,
-        elementType = ptrType("TNimType"),
+        elementType = ptrType(cgsymValue(p.module, "TNimType")),
         len = 2)
       result.addCall(cgsymValue(p.module, "isObjWithCache"),
         dotField(a, "m_type"),

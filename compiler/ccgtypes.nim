@@ -327,10 +327,10 @@ proc getSimpleTypeDesc(m: BModule; typ: PType): Rope =
     of 2:
       cgsym(m, "NimStrPayload")
       cgsym(m, "NimStringV2")
-      result = typeNameOrLiteral(m, typ, "NimStringV2")
+      result = typeNameOrLiteral(m, typ, cgsymValue(m, "NimStringV2"))
     else:
       cgsym(m, "NimStringDesc")
-      result = typeNameOrLiteral(m, typ, "NimStringDesc*")
+      result = typeNameOrLiteral(m, typ, ptrType(cgsymValue(m, "NimStringDesc")))
   of tyCstring: result = typeNameOrLiteral(m, typ, NimCstring)
   of tyBool: result = typeNameOrLiteral(m, typ, NimBool)
   of tyChar: result = typeNameOrLiteral(m, typ, NimChar)
@@ -1313,7 +1313,7 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
     m.s[cfsTypeInit3].addAssignment("nimTypeRoot", cAddr(nameHcr))
 
   if m.hcrOn:
-    m.s[cfsStrData].addVar(kind = Global, name = name, typ = ptrType("TNimType"))
+    m.s[cfsStrData].addVar(kind = Global, name = name, typ = ptrType(cgsymValue(m, "TNimType")))
     m.hcrCreateTypeInfosProc.add('\t')
     var registerHcr: CallBuilder
     m.hcrCreateTypeInfosProc.addStmt():
@@ -1323,7 +1323,7 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
           m.hcrCreateTypeInfosProc.add(makeCString(name))
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
-          m.hcrCreateTypeInfosProc.addSizeof("TNimType")
+          m.hcrCreateTypeInfosProc.addSizeof(cgsymValue(m, "TNimType"))
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
           m.hcrCreateTypeInfosProc.add(CNil)
         m.hcrCreateTypeInfosProc.addArgument(registerHcr):
@@ -1331,7 +1331,7 @@ proc genTypeInfoAuxBase(m: BModule; typ, origType: PType;
             m.hcrCreateTypeInfosProc.add(cAddr(name))
   else:
     m.s[cfsStrData].addDeclWithVisibility(Private):
-      m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimType")
+      m.s[cfsStrData].addVar(kind = Local, name = name, typ = cgsymValue(m, "TNimType"))
 
 proc genTypeInfoAux(m: BModule; typ, origType: PType, name: Rope;
                     info: TLineInfo) =
@@ -1751,7 +1751,7 @@ proc genVTable(result: var Builder, seqs: seq[PSym]) =
 proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLineInfo) =
   cgsym(m, "TNimTypeV2")
   m.s[cfsStrData].addDeclWithVisibility(Private):
-    m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimTypeV2")
+    m.s[cfsStrData].addVar(kind = Local, name = name, typ = cgsymValue(m, "TNimTypeV2"))
 
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
@@ -1817,14 +1817,14 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
 proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineInfo) =
   cgsym(m, "TNimTypeV2")
   m.s[cfsStrData].addDeclWithVisibility(Private):
-    m.s[cfsStrData].addVar(kind = Local, name = name, typ = "TNimTypeV2")
+    m.s[cfsStrData].addVar(kind = Local, name = name, typ = cgsymValue(m, "TNimTypeV2"))
 
   var flags = 0
   if not canFormAcycle(m.g.graph, t): flags = flags or 1
 
   var typeEntry = newBuilder("")
   typeEntry.addDeclWithVisibility(Private):
-    typeEntry.addVarWithInitializer(kind = Local, name = name, typ = "TNimTypeV2"):
+    typeEntry.addVarWithInitializer(kind = Local, name = name, typ = cgsymValue(m, "TNimTypeV2")):
       var typeInit: StructInitializer
       typeEntry.addStructInitializer(typeInit, kind = siNamedStruct):
         typeEntry.addField(typeInit, name = "destructor"):
@@ -1903,7 +1903,7 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
   let marker = m.g.typeInfoMarkerV2.getOrDefault(sig)
   if marker.str != "":
     cgsym(m, "TNimTypeV2")
-    declareNimType(m, "TNimTypeV2", marker.str, marker.owner)
+    declareNimType(m, cgsymValue(m, "TNimTypeV2"), marker.str, marker.owner)
     # also store in local type section:
     m.typeInfoMarkerV2[sig] = marker.str
     return prefixTI(marker.str)
@@ -1917,7 +1917,7 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
     discard genTypeInfoV2(m.g.modules[owner], origType, info)
     # reference the type info as extern here
     cgsym(m, "TNimTypeV2")
-    declareNimType(m, "TNimTypeV2", result, owner)
+    declareNimType(m, cgsymValue(m, "TNimTypeV2"), result, owner)
     return prefixTI(result)
 
   m.g.typeInfoMarkerV2[sig] = (str: result, owner: owner)
@@ -1981,7 +1981,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
   if marker.str != "":
     cgsym(m, "TNimType")
     cgsym(m, "TNimNode")
-    declareNimType(m, "TNimType", marker.str, marker.owner)
+    declareNimType(m, cgsymValue(m, "TNimType"), marker.str, marker.owner)
     # also store in local type section:
     m.typeInfoMarker[sig] = marker.str
     return prefixTI(marker.str)
@@ -1993,7 +1993,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
   if old != FileIndex(0):
     cgsym(m, "TNimType")
     cgsym(m, "TNimNode")
-    declareNimType(m, "TNimType", result, old.int)
+    declareNimType(m, cgsymValue(m, "TNimType"), result, old.int)
     return prefixTI(result)
 
   var owner = t.skipTypes(typedescPtrs).itemId.module
@@ -2003,7 +2003,7 @@ proc genTypeInfoV1(m: BModule; t: PType; info: TLineInfo): Rope =
     # reference the type info as extern here
     cgsym(m, "TNimType")
     cgsym(m, "TNimNode")
-    declareNimType(m, "TNimType", result, owner)
+    declareNimType(m, cgsymValue(m, "TNimType"), result, owner)
     return prefixTI(result)
   else:
     owner = m.module.position.int32

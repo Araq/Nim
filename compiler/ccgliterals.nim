@@ -111,7 +111,7 @@ proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Builder
   res.addVarWithInitializer(
       if isConst: AlwaysConst else: Global,
       name = tmp,
-      typ = "NimStringV2"):
+      typ = cgsymValue(m, "NimStringV2")):
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
       res.addField(strInit, name = "len"):
