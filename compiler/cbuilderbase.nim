@@ -286,7 +286,7 @@ type
 when buildNifc:
   import std/assertions
 
-  proc cSymbol*(s: string): Snippet =
+  proc cEscape*(s: string): string =
     result = newStringOfCap(s.len)
     for c in s:
       case c
@@ -297,6 +297,9 @@ when buildNifc:
         result.add('\\')
         result.add(HexChars[(c.byte shr 4) and 0xF])
         result.add(HexChars[c.byte and 0xF])
+
+  proc cSymbol*(s: string): Snippet =
+    result = cEscape(s)
     result.add(".c")
   
   proc getHexChar(c: char): byte =

@@ -91,11 +91,10 @@ when buildNifc:
     if key in m.arrayTypes:
       result = m.arrayTypes[key]
     else:
-      # XXX elementType can be a non-name
-      result = elementType & "_Arr_" & $len
+      result = cEscape(elementType) & "_Arr_" & $len
       m.s[cfsTypes].add("(type :")
       m.s[cfsTypes].add(result)
-      m.s[cfsTypes].add(" (array ")
+      m.s[cfsTypes].add(" . (array ")
       m.s[cfsTypes].add(elementType)
       m.s[cfsTypes].add(" ")
       m.s[cfsTypes].add(cIntValue(len))
@@ -159,7 +158,7 @@ template addTypedef(builder: var Builder, name: string, typeBody: typed) =
   when buildNifc:
     builder.add("(type :")
     builder.add(name)
-    builder.add(" ")
+    builder.add(" . ")
     typeBody
     builder.addLineEnd(")")
   else:
@@ -173,7 +172,7 @@ proc addProcTypedef(builder: var Builder, callConv: TCallingConvention, name: st
   when buildNifc:
     builder.add("(type :")
     builder.add(name)
-    builder.add(" (proctype . ")
+    builder.add(" . (proctype . ")
     builder.add(params)
     builder.add(" ")
     builder.add(rettype)
@@ -199,7 +198,7 @@ template addArrayTypedef(builder: var Builder, name: string, len: BiggestInt, ty
   when buildNifc:
     builder.add("(type :")
     builder.add(name)
-    builder.add(" (array ")
+    builder.add(" . (array ")
     typeBody
     builder.add(" ")
     builder.addIntValue(len)
@@ -432,7 +431,7 @@ proc startSimpleStruct(obj: var Builder; m: BModule; name: string; baseType: Sni
     if result.named:
       obj.add("(type :")
       obj.add(name)
-      obj.add(" ")
+      obj.add(" . ")
     obj.add("(object ")
     if baseType.len != 0:
       if m.compileToCpp:
@@ -491,7 +490,7 @@ proc startStruct(obj: var Builder; m: BModule; t: PType; name: string; baseType:
     if result.named:
       obj.add("(type :")
       obj.add(name)
-      obj.add(" (")
+      obj.add(" . (")
       obj.add(structOrUnion(t))
       obj.add(" ")
     else:
@@ -616,7 +615,7 @@ template addUnion(obj: var Builder; name: string; body: typed) =
     if named:
       obj.add("(type :")
       obj.add(name)
-      obj.add(" (union . ")
+      obj.add(" . (union . ")
     else:
       obj.add("(union . ")
   else:
