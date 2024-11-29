@@ -40,16 +40,16 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
   var typBuilder = newBuilder("")
   typBuilder.addTypedef(name = typ):
     typBuilder.addSimpleStruct(m, name = "", baseType = ""):
-      typBuilder.addField(name = "Sup", typ = "TGenericSeq")
+      typBuilder.addField(name = "Sup", typ = cSymbol("TGenericSeq"))
       typBuilder.addArrayField(m, name = "data", elementType = NimChar, len = s.len + 1)
   m.s[cfsTypes].add(extract(typBuilder))
   var res = newBuilder("")
   res.addVarWithInitializer(AlwaysConst, name = tmp, typ = typ):
     var strInit: StructInitializer
-    res.addStructInitializer(strInit, kind = siOrderedStruct):
+    res.addStructInitializer(strInit, kind = siOrderedStruct, typ = typ):
       res.addField(strInit, name = "Sup"):
         var seqInit: StructInitializer
-        res.addStructInitializer(seqInit, kind = siOrderedStruct):
+        res.addStructInitializer(seqInit, kind = siOrderedStruct, typ = cSymbol("TGenericSeq")):
           res.addField(seqInit, name = "len"):
             res.addIntValue(s.len)
           res.addField(seqInit, name = "reserved"):
@@ -87,7 +87,7 @@ proc genStringLiteralDataOnlyV2(m: BModule, s: string; result: Rope; isConst: bo
       name = result,
       typ = typ):
     var structInit: StructInitializer
-    res.addStructInitializer(structInit, kind = siOrderedStruct):
+    res.addStructInitializer(structInit, kind = siOrderedStruct, typ = typ):
       res.addField(structInit, name = "cap"):
         res.add(cOp(BitOr, NimInt, cIntValue(s.len), NimStrlitFlag))
       res.addField(structInit, name = "data"):
@@ -113,11 +113,11 @@ proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Builder
       name = tmp,
       typ = cgsymValue(m, "NimStringV2")):
     var strInit: StructInitializer
-    res.addStructInitializer(strInit, kind = siOrderedStruct):
+    res.addStructInitializer(strInit, kind = siOrderedStruct, typ = cgsymValue(m, "NimStringV2")):
       res.addField(strInit, name = "len"):
         res.addIntValue(n.strVal.len)
       res.addField(strInit, name = "p"):
-        res.add(cCast(ptrType("NimStrPayload"), cAddr(litName)))
+        res.add(cCast(ptrType(cgsymValue(m, "NimStrPayload")), cAddr(litName)))
   m.s[cfsStrData].add(extract(res))
 
 proc genStringLiteralV2Const(m: BModule; n: PNode; isConst: bool; result: var Builder) =
@@ -132,11 +132,11 @@ proc genStringLiteralV2Const(m: BModule; n: PNode; isConst: bool; result: var Bu
   else:
     pureLit = m.tmpBase & rope(id)
   var strInit: StructInitializer
-  result.addStructInitializer(strInit, kind = siOrderedStruct):
+  result.addStructInitializer(strInit, kind = siOrderedStruct, typ = cgsymValue(m, "NimStringV2")):
     result.addField(strInit, name = "len"):
       result.addIntValue(n.strVal.len)
     result.addField(strInit, name = "p"):
-      result.add(cCast(ptrType("NimStrPayload"), cAddr(pureLit)))
+      result.add(cCast(ptrType(cgsymValue(m, "NimStrPayload")), cAddr(pureLit)))
 
 # ------ Version selector ---------------------------------------------------
 

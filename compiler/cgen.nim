@@ -611,7 +611,7 @@ proc initLocalVar(p: BProc, v: PSym, immediateAsgn: bool) =
 
 proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp, lode: lodeTyp t,
                 storage: OnStack, flags: {})
   if p.module.compileToCpp and isOrHasImportedCppType(t):
     var didGenTemp = false
@@ -633,7 +633,7 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
 
 proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp, lode: lodeTyp t,
                 storage: OnStack, flags: {})
   p.s(cpsStmts).addVar(kind = Local,
     name = result.snippet,
@@ -642,7 +642,7 @@ proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
 
 proc getIntTemp(p: BProc): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp,
                 storage: OnStack, lode: lodeTyp getSysType(p.module.g.graph, unknownLineInfo, tyInt),
                 flags: {})
   p.s(cpsLocals).addVar(kind = Local, name = result.snippet, typ = NimInt)
@@ -801,7 +801,7 @@ proc genStmts(p: BProc, t: PNode)
 proc expr(p: BProc, n: PNode, d: var TLoc)
 
 proc putLocIntoDest(p: BProc, d: var TLoc, s: TLoc)
-proc genLiteral(p: BProc, n: PNode; result: var Builder)
+proc genLiteral(p: BProc, n: PNode; result: var Builder, noCast = false)
 proc genOtherArg(p: BProc; ri: PNode; i: int; typ: PType; result: var Builder; argBuilder: var CallBuilder)
 proc raiseExit(p: BProc)
 proc raiseExitCleanup(p: BProc, destroy: string)
@@ -1283,8 +1283,8 @@ proc genProcBody(p: BProc; procBody: PNode) =
   if {nimErrorFlagAccessed, nimErrorFlagDeclared, nimErrorFlagDisabled} * p.flags == {nimErrorFlagAccessed}:
     p.flags.incl nimErrorFlagDeclared
     p.blocks[0].sections[cpsLocals].addVar(kind = Local,
-      name = "nimErr_", typ = ptrType(NimBool))
-    p.blocks[0].sections[cpsInit].addAssignmentWithValue("nimErr_"):
+      name = cSymbol("nimErr_"), typ = ptrType(NimBool))
+    p.blocks[0].sections[cpsInit].addAssignmentWithValue(cSymbol("nimErr_")):
       p.blocks[0].sections[cpsInit].addCall(cgsymValue(p.module, "nimErrorFlag"))
 
 proc genProcAux*(m: BModule, prc: PSym) =
@@ -1945,15 +1945,20 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     let systemModulePath = getModuleDllPath(m, g.modules[g.graph.config.m.systemFileIdx.int].module)
     let mainModulePath = getModuleDllPath(m, m.module)
     hcrModuleMeta.addDeclWithVisibility(Private):
+      let len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
+        ord(sfMainModule in m.module.flags) +
+        1
       hcrModuleMeta.addArrayVarWithInitializer(m,
           kind = Local,
           name = "hcr_module_list",
           elementType = ptrConstType(CChar),
-          len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
-            ord(sfMainModule in m.module.flags) +
-            1):
+          len = len):
         var modules: StructInitializer
-        hcrModuleMeta.addStructInitializer(modules, siArray):
+        when buildNifc:
+          let arrTyp = getArrayType(m, ptrConstType(CChar), len)
+        else:
+          let arrTyp = ""
+        hcrModuleMeta.addStructInitializer(modules, siArray, typ = arrTyp):
           if sfMainModule in m.module.flags:
             hcrModuleMeta.addField(modules, ""):
               hcrModuleMeta.add(systemModulePath)

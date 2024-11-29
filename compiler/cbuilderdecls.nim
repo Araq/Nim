@@ -226,17 +226,17 @@ type
       ## if true, fields will not be named, instead values are placed in order
     needsComma: bool
 
-proc initStructInitializer(builder: var Builder, kind: StructInitializerKind#[, typ: Snippet]#): StructInitializer =
+proc initStructInitializer(builder: var Builder, kind: StructInitializerKind, typ: Snippet): StructInitializer =
   ## starts building a struct initializer, i.e. braced initializer list
   result = StructInitializer(kind: kind, needsComma: false)
   when buildNifc:
     case kind
     of siOrderedStruct, siNamedStruct:
       builder.add("(oconstr ")
-      #builder.add(typ)
+      builder.add(typ)
     of siArray:
       builder.add("(aconstr ")
-      #builder.add(typ)
+      builder.add(typ)
     of siWrapper: discard
   else:
     if kind != siWrapper:
@@ -289,11 +289,11 @@ proc finishStructInitializer(builder: var Builder, constr: StructInitializer) =
     else:
       builder.add("}")
 
-template addStructInitializer(builder: var Builder, constr: out StructInitializer, kind: StructInitializerKind, body: typed) =
+template addStructInitializer(builder: var Builder, constr: out StructInitializer, kind: StructInitializerKind, typ: Snippet, body: typed) =
   ## builds a struct initializer, i.e. `{ field1, field2 }`
   ## a `var StructInitializer` must be declared and passed as a parameter so
   ## that it can be used with `addField`
-  constr = builder.initStructInitializer(kind)
+  constr = builder.initStructInitializer(kind, typ)
   body
   builder.finishStructInitializer(constr)
 
@@ -356,7 +356,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
         if pragmasInner.len != 0: pragmasInner.add(" ")
         pragmasInner.add("(restrict)")
     if pragmasInner.len != 0:
-      obj.add(" (")
+      obj.add(" (pragmas ")
       obj.add(pragmasInner)
       obj.add(") ")
     else:

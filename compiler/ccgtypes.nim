@@ -707,7 +707,7 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
     var unionBody = newBuilder("")
     let fieldNameBase = "_" & mangleRecFieldName(m, n[0].sym)
     when buildNifc:
-      let unionFieldName = fieldNameBase & "_union"
+      let unionFieldName = cSymbol(fieldNameBase & "_union")
       let unionPrefix = maybeDotField(unionPrefix, unionFieldName)
     else:
       # naming the union causes problems for deleted default constructor on C++
@@ -721,8 +721,11 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
           var a = newBuilder("")
           genRecordFieldsAux(m, k, rectype, check, a, maybeDotField(unionPrefix, $fieldName))
           if a.buf.len != 0:
-            let tmp = getTempName(m)
-            let structName = tmp & "_" & fieldName & "_Struct"
+            when buildNifc:
+              let structName = rectype.loc.snippet & ".branch." & fieldName
+            else:
+              let tmp = getTempName(m)
+              let structName = tmp & "_" & fieldName & "_Struct"
             m.s[cfsTypes].addFieldStruct(m, rectype, structName, extract(a))
             unionBody.addField(name = fieldName, typ = structName)
         else:
@@ -730,8 +733,7 @@ proc genRecordFieldsAux(m: BModule; n: PNode,
       else: internalError(m.config, "genRecordFieldsAux(record case branch)")
     if unionBody.buf.len != 0:
       when buildNifc:
-        let tmp = getTempName(m)
-        let typName = tmp & "_" & fieldNameBase & "_Union"
+        let typName = rectype.loc.snippet & "." & fieldNameBase & ".union"
         template unionBuilder: untyped = m.s[cfsTypes]
         let unionTyp = typName
       else:
@@ -1530,7 +1532,7 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   var specialCases = newBuilder("")
   var firstNimNode = m.typeNodes
   var hasHoles = false
-  enumNames.addStructInitializer(enumNamesInit, kind = siArray):
+  enumNames.addStructInitializer(enumNamesInit, kind = siArray, typ = getArrayType(m, constPtrType(CChar), typ.n.len)):
     for i in 0..<typ.n.len:
       assert(typ.n[i].kind == nkSym)
       var field = typ.n[i].sym
@@ -1735,7 +1737,7 @@ proc genDisplayElem(d: MD5Digest): uint32 =
     result += uint32(d[i])
     result = result shl 8
 
-proc genDisplay(result: var Builder, m: BModule; t: PType, depth: int) =
+proc genDisplay(result: var Builder, m: BModule; t: PType, depth: int; arrTyp: Snippet = "") =
   var x = t
   var seqs = newSeq[Snippet](depth+1)
   var i = 0
@@ -1746,16 +1748,16 @@ proc genDisplay(result: var Builder, m: BModule; t: PType, depth: int) =
     inc i
 
   var arr: StructInitializer
-  result.addStructInitializer(arr, siArray):
+  result.addStructInitializer(arr, siArray, typ = arrTyp):
     for i in countdown(depth, 1):
       result.addField(arr, ""):
         result.add(seqs[i])
     result.addField(arr, ""):
       result.add(seqs[0])
 
-proc genVTable(result: var Builder, seqs: seq[PSym]) =
+proc genVTable(result: var Builder, seqs: seq[PSym], arrTyp: Snippet = "") =
   var table: StructInitializer
-  result.addStructInitializer(table, siArray):
+  result.addStructInitializer(table, siArray, typ = arrTyp):
     for i in 0..<seqs.len:
       result.addField(table, ""):
         result.add(cCast(CPointer, seqs[i].loc.snippet))
@@ -1800,12 +1802,17 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
 
   if objDepth >= 0:
     let objDisplayStore = getTempName(m)
+    let et = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar)
     m.s[cfsVars].addArrayVarWithInitializer(m,
         kind = Global,
         name = objDisplayStore,
-        elementType = getTypeDesc(m, getSysType(m.g.graph, unknownLineInfo, tyUInt32), dkVar),
+        elementType = et,
         len = objDepth + 1):
-      genDisplay(m.s[cfsVars], m, t, objDepth)
+      when buildNifc:
+        let arrTyp = getArrayType(m, et, objDepth + 1)
+      else:
+        let arrTyp = ""
+      genDisplay(m.s[cfsVars], m, t, objDepth, arrTyp)
     typeEntry.addFieldAssignment(name, "display", objDisplayStore)
 
   let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
@@ -1816,7 +1823,8 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
         name = vTablePointerName,
         elementType = CPointer,
         len = dispatchMethods.len):
-      genVTable(m.s[cfsVars], dispatchMethods)
+      let arrTyp = getArrayType(m, CPointer, dispatchMethods.len)
+      genVTable(m.s[cfsVars], dispatchMethods, arrTyp)
     for i in dispatchMethods:
       genProcPrototype(m, i)
     typeEntry.addFieldAssignment(name, "vTable", vTablePointerName)
@@ -1838,7 +1846,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
   typeEntry.addDeclWithVisibility(Private):
     typeEntry.addVarWithInitializer(kind = Local, name = name, typ = cgsymValue(m, "TNimTypeV2")):
       var typeInit: StructInitializer
-      typeEntry.addStructInitializer(typeInit, kind = siNamedStruct):
+      typeEntry.addStructInitializer(typeInit, kind = siNamedStruct, typ = cgsymValue(m, "TNimTypeV2")):
         typeEntry.addField(typeInit, name = "destructor"):
           typeEntry.addCast(CPointer):
             genHook(m, t, info, attachedDestructor, typeEntry)
@@ -1920,7 +1928,7 @@ proc genTypeInfoV2(m: BModule; t: PType; info: TLineInfo): Rope =
     m.typeInfoMarkerV2[sig] = marker.str
     return prefixTI(marker.str)
 
-  result = "NTIv2$1_" % [rope($sig)]
+  result = cSymbol("NTIv2$1_" % [rope($sig)])
   m.typeInfoMarkerV2[sig] = result
 
   let owner = t.skipTypes(typedescPtrs).itemId.module

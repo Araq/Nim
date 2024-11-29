@@ -73,6 +73,13 @@ proc addIntValue*(builder: var Builder, val: Int128) =
       builder.buf.add('+')
   builder.buf.addInt128(val)
 
+proc addUintValue*(builder: var Builder, val: uint64) =
+  when buildNifc:
+    builder.buf.add('+')
+  builder.buf.addInt(val)
+  when buildNifc:
+    builder.buf.add('u')
+
 when not buildNifc:
   template cIntValue*(val: int): Snippet = $val
   template cIntValue*(val: int64): Snippet = $val
@@ -229,7 +236,7 @@ when buildNifc:
     NimCstring* = "(ptr (c +8))"
     NimNil* = "(nil)"
     CNil* = "(nil)" # NULL.c
-    NimStrlitFlag* = "NIM_STRLIT_FLAG" # XXX
+    NimStrlitFlag* = "(shl (u -1) +1 (sub (u -1) (sizeof (i -1)) +2))" # ((NU)(1) << ((NIM_INTBITS) - 2))
     CVoid* = "(void)"
     CPointer* = "(ptr (void))"
     CConstPointer* = "(ptr (void))" # (void (ro)) illegal

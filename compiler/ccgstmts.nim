@@ -627,7 +627,11 @@ proc genComputedGoto(p: BProc; n: PNode) =
       elementType = CPointer,
       len = arraySize):
     var labelsInit: StructInitializer
-    p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray):
+    when buildNifc:
+      let arrTyp = getArrayType(p.module, CPointer, arraySize)
+    else:
+      let arrTyp = ""
+    p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray, typ = arrTyp):
       for i in 1..arraySize:
         p.s(cpsStmts).addField(labelsInit, ""):
           p.s(cpsStmts).add(cLabelAddr("TMP" & $(id+i) & "_"))
@@ -810,7 +814,7 @@ proc raiseExit(p: BProc) =
   assert p.config.exc == excGoto
   if nimErrorFlagDisabled notin p.flags:
     p.flags.incl nimErrorFlagAccessed
-    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref("nimErr_"))):
+    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref(cSymbol("nimErr_")))):
       if p.nestedTryStmts.len == 0:
         p.flags.incl beforeRetNeeded
         # easy case, simply goto 'ret':
@@ -822,7 +826,7 @@ proc raiseExitCleanup(p: BProc, destroy: string) =
   assert p.config.exc == excGoto
   if nimErrorFlagDisabled notin p.flags:
     p.flags.incl nimErrorFlagAccessed
-    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref("nimErr_"))):
+    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref(cSymbol("nimErr_")))):
       p.s(cpsStmts).addStmt():
         p.s(cpsStmts).add(destroy)
       if p.nestedTryStmts.len == 0:
@@ -1048,19 +1052,19 @@ proc genCaseRange(p: BProc, branch: PNode, info: var SwitchCaseBuilder) =
         if hasSwitchRange in CC[p.config.cCompiler].props:
           var litA = newBuilder("")
           var litB = newBuilder("")
-          genLiteral(p, branch[j][0], litA)
-          genLiteral(p, branch[j][1], litB)
+          genLiteral(p, branch[j][0], litA, noCast = buildNifc)
+          genLiteral(p, branch[j][1], litB, noCast = buildNifc)
           p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
         else:
           var v = copyNode(branch[j][0])
           while v.intVal <= branch[j][1].intVal:
             var litA = newBuilder("")
-            genLiteral(p, v, litA)
+            genLiteral(p, v, litA, noCast = buildNifc)
             p.s(cpsStmts).addCase(info, extract(litA))
             inc(v.intVal)
       else:
         var litA = newBuilder("")
-        genLiteral(p, branch[j], litA)
+        genLiteral(p, branch[j], litA, noCast = buildNifc)
         p.s(cpsStmts).addCase(info, extract(litA))
 
 proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
@@ -1461,7 +1465,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
     startBlockWith(p):
       isIf = true
       ifStmt = initIfStmt(p.s(cpsStmts))
-      initElifBranch(p.s(cpsStmts), ifStmt, cUnlikely(cDeref("nimErr_")))
+      initElifBranch(p.s(cpsStmts), ifStmt, cUnlikely(cDeref(cSymbol("nimErr_"))))
   else:
     startBlockWith(p):
       scope = initScope(p.s(cpsStmts))
@@ -1490,7 +1494,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
           isScope = true
           innerScope = initScope(p.s(cpsStmts))
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       expr(p, t[i][0], d)
     else:
       if not innerIsIf:
@@ -1525,7 +1529,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       startBlockWith(p):
         initElifBranch(p.s(cpsStmts), innerIfStmt, orExpr)
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       expr(p, t[i][^1], d)
 
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "popCurrentException"))
