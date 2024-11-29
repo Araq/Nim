@@ -1655,10 +1655,9 @@ proc getSomeInitName(m: BModule, suffix: string): Rope =
 proc getInitName(m: BModule): Rope =
   if sfMainModule in m.module.flags:
     # generate constant name for main module, for "easy" debugging.
-    result = rope(m.config.nimMainPrefix) & rope"NimMainModule"
+    result = cSymbol(rope(m.config.nimMainPrefix) & rope"NimMainModule")
   else:
     result = getSomeInitName(m, "Init000")
-  result = cSymbol(result)
 
 proc getDatInitName(m: BModule): Rope = getSomeInitName(m, "DatInit000")
 proc getHcrInitName(m: BModule): Rope = getSomeInitName(m, "HcrInit000")

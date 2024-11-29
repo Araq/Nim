@@ -926,6 +926,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
         let name = getTypeForward(m, et, hashType(et, m.config))
         result = wrapStar(name)
         m.typeCache[sig] = result
+        pushType(m, et)
     of tySequence:
       if optSeqDestructors in m.config.globalOptions:
         result = wrapStar(getTypeDescWeak(m, et, check, kind))

@@ -1720,11 +1720,16 @@ when not defined(nimscript):
 when not declared(sysFatal):
   include "system/fatal"
 
+when defined(nifc):
+  {.pragma: tframe, compilerproc.}
+else:
+  {.pragma: tframe, importc, nodecl.}
+
 type
   PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
                         ## part of the debugger API.
   # keep in sync with nimbase.h `struct TFrame_`
-  TFrame* {.importc, nodecl, final.} = object ## The frame itself.
+  TFrame* {.tframe, final.} = object ## The frame itself.
     prev*: PFrame       ## Previous frame; used for chaining the call stack.
     procname*: cstring  ## Name of the proc that is currently executing.
     line*: int          ## Line number of the proc that is currently executing.
