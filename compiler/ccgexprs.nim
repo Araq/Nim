@@ -3734,7 +3734,7 @@ proc getDefaultValue(p: BProc; typ: PType; info: TLineInfo; result: var Builder)
   of tyString, tySequence:
     if optSeqDestructors in p.config.globalOptions:
       var seqInit: StructInitializer
-      result.addStructInitializer(seqInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+      result.addStructInitializer(seqInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
         result.addField(seqInit, name = "len"):
           result.addIntValue(0)
         result.addField(seqInit, name = "p"):
@@ -3746,18 +3746,18 @@ proc getDefaultValue(p: BProc; typ: PType; info: TLineInfo; result: var Builder)
       result.add NimNil
     else:
       var closureInit: StructInitializer
-      result.addStructInitializer(closureInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+      result.addStructInitializer(closureInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
         result.addField(closureInit, name = "ClP_0"):
           result.add(NimNil)
         result.addField(closureInit, name = "ClE_0"):
           result.add(NimNil)
   of tyObject:
     var objInit: StructInitializer
-    result.addStructInitializer(objInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+    result.addStructInitializer(objInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
       getNullValueAuxT(p, t, t, t.n, nil, result, objInit, true, info)
   of tyTuple:
     var tupleInit: StructInitializer
-    result.addStructInitializer(tupleInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+    result.addStructInitializer(tupleInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
       if p.vccAndC and t.isEmptyTupleType:
         result.addField(tupleInit, name = "dummy"):
           result.addIntValue(0)
@@ -3766,14 +3766,14 @@ proc getDefaultValue(p: BProc; typ: PType; info: TLineInfo; result: var Builder)
           getDefaultValue(p, a, info, result)
   of tyArray:
     var arrInit: StructInitializer
-    result.addStructInitializer(arrInit, kind = siArray, typ = getTypeDesc(p.module, t)):
+    result.addStructInitializer(arrInit, kind = siArray, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
       for i in 0..<toInt(lengthOrd(p.config, t.indexType)):
         result.addField(arrInit, name = ""):
           getDefaultValue(p, t.elementType, info, result)
     #result = rope"{}"
   of tyOpenArray, tyVarargs:
     var openArrInit: StructInitializer
-    result.addStructInitializer(openArrInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+    result.addStructInitializer(openArrInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
       result.addField(openArrInit, name = "Field0"):
         result.add(NimNil)
       result.addField(openArrInit, name = "Field1"):
@@ -3781,7 +3781,7 @@ proc getDefaultValue(p: BProc; typ: PType; info: TLineInfo; result: var Builder)
   of tySet:
     if mapSetType(p.config, t) == ctArray:
       var setInit: StructInitializer
-      result.addStructInitializer(setInit, kind = siArray, typ = getTypeDesc(p.module, t)):
+      result.addStructInitializer(setInit, kind = siArray, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
         discard
     else: result.addIntValue(0)
   else:
@@ -3884,7 +3884,7 @@ proc getNullValueAuxT(p: BProc; orig, t: PType; obj, constOrNil: PNode,
     base = skipTypes(base, skipPtrs)
     result.addField(init, name = "Sup"):
       var baseInit: StructInitializer
-      result.addStructInitializer(baseInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, base)):
+      result.addStructInitializer(baseInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, base))):
         getNullValueAuxT(p, orig, base, base.n, constOrNil, result, baseInit, isConst, info)
   elif not isObjLackingTypeField(t):
     result.addField(init, name = "m_type"):
@@ -3903,13 +3903,13 @@ proc genConstObjConstr(p: BProc; n: PNode; isConst: bool; result: var Builder) =
   #  result.addf("{$1}", [genTypeInfo(p.module, t)])
   #  inc count
   var objInit: StructInitializer
-  result.addStructInitializer(objInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+  result.addStructInitializer(objInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
     if t.kind == tyObject:
       getNullValueAuxT(p, t, t, t.n, n, result, objInit, isConst, n.info)
 
 proc genConstSimpleList(p: BProc, n: PNode; isConst: bool; result: var Builder) =
   var arrInit: StructInitializer
-  result.addStructInitializer(arrInit, kind = siArray, typ = getTypeDesc(p.module, n.typ)):
+  result.addStructInitializer(arrInit, kind = siArray, typ = nifcOrEmpty(getTypeDesc(p.module, n.typ))):
     if p.vccAndC and n.len == 0 and n.typ.kind == tyArray:
       result.addField(arrInit, name = ""):
         getDefaultValue(p, n.typ.elementType, n.info, result)
@@ -3927,7 +3927,7 @@ proc genConstSimpleList(p: BProc, n: PNode; isConst: bool; result: var Builder) 
 
 proc genConstTuple(p: BProc, n: PNode; isConst: bool; tup: PType; result: var Builder) =
   var tupleInit: StructInitializer
-  result.addStructInitializer(tupleInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, n.typ)):
+  result.addStructInitializer(tupleInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, n.typ))):
     if p.vccAndC and n.len == 0:
       result.addField(tupleInit, name = "dummy"):
         result.addIntValue(0)
@@ -4016,7 +4016,7 @@ proc genConstSeqV2(p: BProc, n: PNode, t: PType; isConst: bool; result: var Buil
   p.module.s[cfsStrData].add extract(def)
 
   var resultInit: StructInitializer
-  result.addStructInitializer(resultInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, t)):
+  result.addStructInitializer(resultInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, t))):
     result.addField(resultInit, name = "len"):
       result.addIntValue(n.len)
     result.addField(resultInit, name = "p"):
@@ -4058,7 +4058,7 @@ proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; resul
         # leading to duplicate code like this:
         # "{NIM_NIL,NIM_NIL}, {NIM_NIL,NIM_NIL}"
         var closureInit: StructInitializer
-        result.addStructInitializer(closureInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, typ)):
+        result.addStructInitializer(closureInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, typ))):
           result.addField(closureInit, name = "ClP_0"):
             if n[0].kind == nkNilLit:
               result.add(NimNil)
@@ -4089,7 +4089,7 @@ proc genBracedInit(p: BProc, n: PNode; isConst: bool; optionalType: PType; resul
         genConstSimpleList(p, n, isConst, data)
       p.module.s[cfsStrData].add(extract(data))
       var openArrInit: StructInitializer
-      result.addStructInitializer(openArrInit, kind = siOrderedStruct, typ = getTypeDesc(p.module, typ)):
+      result.addStructInitializer(openArrInit, kind = siOrderedStruct, typ = nifcOrEmpty(getTypeDesc(p.module, typ))):
         result.addField(openArrInit, name = "Field0"):
           result.add(cCast(typ = ptrType(ctype), value = cAddr(payload)))
         result.addField(openArrInit, name = "Field1"):

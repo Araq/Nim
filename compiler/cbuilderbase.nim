@@ -338,8 +338,11 @@ when buildNifc:
     result = s
     if '.' notin s:
       result.add ".c"
+  
+  template nifcOrEmpty*(x: Snippet): Snippet = x
 else:
   template cSymbol*(x: string): Snippet = x
   template unescapeCSymbol*(x: Snippet): string = x
 
   template rawFieldName*(s: string): Snippet = s
+  template nifcOrEmpty*(x: Snippet): Snippet = ""
