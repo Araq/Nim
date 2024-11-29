@@ -92,7 +92,7 @@ when buildNifc:
       result = m.arrayTypes[key]
     else:
       let tmp = getTempName(m)
-      result = tmp & "_Arr_" & $len
+      result = tmp & (when buildNifc: ".arr." else: "_Arr_") & $len
       m.s[cfsTypes].add("(type :")
       m.s[cfsTypes].add(result)
       m.s[cfsTypes].add(" . (array ")
@@ -226,15 +226,17 @@ type
       ## if true, fields will not be named, instead values are placed in order
     needsComma: bool
 
-proc initStructInitializer(builder: var Builder, kind: StructInitializerKind): StructInitializer =
+proc initStructInitializer(builder: var Builder, kind: StructInitializerKind#[, typ: Snippet]#): StructInitializer =
   ## starts building a struct initializer, i.e. braced initializer list
   result = StructInitializer(kind: kind, needsComma: false)
   when buildNifc:
     case kind
     of siOrderedStruct, siNamedStruct:
       builder.add("(oconstr ")
+      #builder.add(typ)
     of siArray:
       builder.add("(aconstr ")
+      #builder.add(typ)
     of siWrapper: discard
   else:
     if kind != siWrapper:
@@ -251,13 +253,16 @@ template addField(builder: var Builder, constr: var StructInitializer, name: str
   case constr.kind
   of siArray, siWrapper:
     # no name, can just add value
+    when buildNifc:
+      if constr.kind == siArray:
+        builder.add(" ")
     valueBody
   of siOrderedStruct:
     # no name, can just add value on C
     assert name.len != 0, "name has to be given for struct initializer field"
     when buildNifc:
-      builder.add("(kv ")
-      builder.add(name)
+      builder.add(" (kv ")
+      builder.add(rawFieldName(name))
       builder.add(" ")
     valueBody
     when buildNifc:
@@ -265,8 +270,8 @@ template addField(builder: var Builder, constr: var StructInitializer, name: str
   of siNamedStruct:
     assert name.len != 0, "name has to be given for struct initializer field"
     when buildNifc:
-      builder.add("(kv ")
-      builder.add(name)
+      builder.add(" (kv ")
+      builder.add(rawFieldName(name))
       builder.add(" ")
     else:
       builder.add(".")
@@ -296,7 +301,7 @@ proc addField(obj: var Builder; name, typ: Snippet; isFlexArray: bool = false) =
   ## adds a field inside a struct/union type
   when buildNifc:
     obj.add("\n\t(fld :")
-    obj.add(name)
+    obj.add(rawFieldName(name))
     obj.add(" . ") # pragmas
     if isFlexArray:
       obj.add("(flexarray ")
@@ -318,7 +323,7 @@ proc addArrayField(obj: var Builder; m: BModule, name, elementType: Snippet; len
   ## adds an array field inside a struct/union type
   when buildNifc:
     obj.add("\n\t(fld :")
-    obj.add(name)
+    obj.add(rawFieldName(name))
     obj.add(" . ") # pragmas
     obj.add(getArrayType(m, elementType, len))
     obj.add(")")
@@ -335,7 +340,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
   ## adds an field inside a struct/union type, based on an `skField` symbol
   when buildNifc:
     obj.add("\n\t(fld :")
-    obj.add(name)
+    obj.add(rawFieldName(name))
     var pragmasInner = ""
     if field.alignment > 0:
       pragmasInner.add("(align ")
@@ -387,7 +392,7 @@ proc addField(obj: var Builder; field: PSym; name, typ: Snippet; isFlexArray: bo
 proc addProcField(obj: var Builder, callConv: TCallingConvention, name: string, rettype, params: Snippet, isVarargs = false) =
   when buildNifc:
     obj.add("(fld :")
-    obj.add(name)
+    obj.add(rawFieldName(name))
     obj.add(" . (proctype . ")
     obj.add(params)
     obj.add(" ")

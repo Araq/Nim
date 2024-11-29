@@ -1140,11 +1140,11 @@ proc genRestoreFrameAfterException(p: BProc) =
     if hasCurFramePointer notin p.flags:
       p.flags.incl hasCurFramePointer
       p.procSec(cpsLocals).add('\t')
-      p.procSec(cpsLocals).addVar(kind = Local, name = "_nimCurFrame", typ = ptrType("TFrame"))
+      p.procSec(cpsLocals).addVar(kind = Local, name = cSymbol("_nimCurFrame"), typ = ptrType(cSymbol("TFrame")))
       p.procSec(cpsInit).add('\t')
-      p.procSec(cpsInit).addAssignmentWithValue("_nimCurFrame"):
+      p.procSec(cpsInit).addAssignmentWithValue(cSymbol("_nimCurFrame")):
         p.procSec(cpsInit).addCall(cgsymValue(p.module, "getFrame"))
-    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "setFrame"), "_nimCurFrame")
+    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "setFrame"), cSymbol("_nimCurFrame"))
 
 proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
   #[ code to generate:
@@ -1556,9 +1556,10 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       genStmts(p, t[i][0])
     else:
       # pretend we did handle the error for the safe execution of the 'finally' section:
-      p.procSec(cpsLocals).addVar(kind = Local, name = "oldNimErrFin" & $lab & "_", typ = NimBool)
-      p.s(cpsStmts).addAssignment("oldNimErrFin" & $lab & "_", cDeref("nimErr_"))
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      let name = cSymbol("oldNimErrFin" & $lab & "_")
+      p.procSec(cpsLocals).addVar(kind = Local, name = name, typ = NimBool)
+      p.s(cpsStmts).addAssignment(name, cDeref(cSymbol("nimErr_")))
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       genStmts(p, t[i][0])
       # this is correct for all these cases:
       # 1. finally is run during ordinary control flow
@@ -1566,7 +1567,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       #    error back to nil.
       # 3. finally is run for exception handling code without any 'except'
       #    handler present or only handlers that did not match.
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), "oldNimErrFin" & $lab & "_")
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), name)
     endSimpleBlock(p, finallyScope)
   raiseExit(p)
   if hasExcept: inc p.withinTryWithExcept

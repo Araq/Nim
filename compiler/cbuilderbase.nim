@@ -327,6 +327,12 @@ when buildNifc:
         raiseAssert "invalid char in escaped c symbol " & s[i]
       inc i
 
+  proc rawFieldName*(s: string): Snippet =
+    result = s
+    if '.' notin s:
+      result.add ".c"
 else:
   template cSymbol*(x: string): Snippet = x
   template unescapeCSymbol*(x: Snippet): string = x
+
+  template rawFieldName*(s: string): Snippet = s

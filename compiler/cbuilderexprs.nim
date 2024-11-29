@@ -141,13 +141,13 @@ proc subscript(a, b: Snippet): Snippet =
 
 proc dotField(a, b: Snippet): Snippet =
   when buildNifc:
-    "(dot " & a & " " & b & " +0)" # XXX inheritance field
+    "(dot " & a & " " & rawFieldName(b) & " +0)" # XXX inheritance field
   else:
     a & "." & b
 
 proc derefField(a, b: Snippet): Snippet =
   when buildNifc:
-    "(dot " & cDeref(a) & " " & b & " +0)" # XXX inheritance field
+    "(dot " & cDeref(a) & " " & rawFieldName(b) & " +0)" # XXX inheritance field
   else:
     a & "->" & b
 

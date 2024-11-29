@@ -56,7 +56,10 @@ proc mangleField(m: BModule; name: PIdent): string =
     result.add "_0"
 
 proc mangleProc(m: BModule; s: PSym; makeUnique: bool): string =
-  result = "_Z"  # Common prefix in Itanium ABI
+  when buildNifc:
+    result = ".Z"
+  else:
+    result = "_Z"  # Common prefix in Itanium ABI
   result.add encodeSym(m, s, makeUnique)
   if s.typ.len > 1: #we dont care about the return param
     for i in 1..<s.typ.len:
@@ -112,11 +115,15 @@ proc fillLocalName(p: BProc; s: PSym) =
     var key = s.name.s.mangle
     let counter = p.sigConflicts.getOrDefault(key)
     var result = key.rope
-    if s.kind == skTemp:
-      # speed up conflict search for temps (these are quite common):
-      if counter != 0: result.add "_" & rope(counter+1)
-    elif counter != 0 or isKeyword(s.name) or p.module.g.config.cppDefines.contains(key):
-      result.add "_" & rope(counter+1)
+    when buildNifc:
+      result.add "."
+      result.addInt counter+1
+    else:
+      if s.kind == skTemp:
+        # speed up conflict search for temps (these are quite common):
+        if counter != 0: result.add "_" & rope(counter+1)
+      elif counter != 0 or isKeyword(s.name) or p.module.g.config.cppDefines.contains(key):
+        result.add "_" & rope(counter+1)
     p.sigConflicts.inc(key)
     s.loc.snippet = result
 
@@ -137,7 +144,10 @@ proc typeName(typ: PType; result: var Rope) =
   let typ = typ.skipTypes(irrelevantForBackend)
   result.add $typ.kind
   if typ.sym != nil and typ.kind in {tyObject, tyEnum}:
-    result.add "_"
+    when buildNifc:
+      result.add "."
+    else:
+      result.add "_"
     result.add typ.sym.name.s.mangle
 
 proc getTypeName(m: BModule; typ: PType; sig: SigHash): Rope =
@@ -153,6 +163,8 @@ proc getTypeName(m: BModule; typ: PType; sig: SigHash): Rope =
   let typ = if typ.kind in {tyAlias, tySink, tyOwned}: typ.elementType else: typ
   if typ.loc.snippet == "":
     typ.typeName(typ.loc.snippet)
+    when buildNifc:
+      typ.loc.snippet.add "."
     typ.loc.snippet.add $sig
   else:
     when defined(debugSigHashes):

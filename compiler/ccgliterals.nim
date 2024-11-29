@@ -36,7 +36,7 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
   cgsym(m, "TGenericSeq")
   let tmp = getTempName(m)
   result.add tmp
-  let typ = tmp & "_StrLit"
+  let typ = tmp & (when buildNifc: ".strlit" else: "_StrLit")
   var typBuilder = newBuilder("")
   typBuilder.addTypedef(name = typ):
     typBuilder.addSimpleStruct(m, name = "", baseType = ""):
@@ -74,7 +74,7 @@ proc genStringLiteralV1(m: BModule; n: PNode; result: var Builder) =
 # ------ Version 2: destructor based strings and seqs -----------------------
 
 proc genStringLiteralDataOnlyV2(m: BModule, s: string; result: Rope; isConst: bool) =
-  let typ = getTempName(m) & "_StrLit"
+  let typ = getTempName(m) & (when buildNifc: ".strlit" else: "_StrLit")
   var typBuilder = newBuilder("")
   typBuilder.addTypedef(name = typ):
     typBuilder.addSimpleStruct(m, name = "", baseType = ""):

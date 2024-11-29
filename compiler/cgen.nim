@@ -845,19 +845,19 @@ proc initFrame(p: BProc, procname, filename: Rope): Rope =
   cgsym(p.module, "nimFrame")
   when buildNifc:
     var res = newBuilder("")
-    res.addVar(name = "FR_", typ = "TFrame")
-    res.addFieldAssignment("FR_", "procname", procname)
-    res.addFieldAssignment("FR_", "filename", filename)
-    res.addFieldAssignment("FR_", "line", cIntValue(0))
-    res.addFieldAssignment("FR_", "len", cIntValue(0))
-    res.addCallStmt("nimFrame", cAddr("FR_"))
+    res.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+    res.addFieldAssignment(cSymbol("FR_"), "procname", procname)
+    res.addFieldAssignment(cSymbol("FR_"), "filename", filename)
+    res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(0))
+    res.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
+    res.addCallStmt(cSymbol("nimFrame"), cAddr(cSymbol("FR_")))
     result = extract(res)
   else:
     result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
 
 proc initFrameNoDebug(p: BProc; frame, procname, filename: Snippet; line: int): Snippet =
   cgsym(p.module, "nimFrame")
-  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = "TFrame")
+  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = cSymbol("TFrame"))
   var res = newBuilder("")
   res.add('\t')
   res.addFieldAssignment(frame, "procname", procname)
@@ -955,9 +955,9 @@ proc mangleDynLibProc(sym: PSym): Rope =
   # optimization in genInfixCall, see test tests/cpp/t8241.nim
   if sfCompilerProc in sym.flags:
     # NOTE: sym.loc.snippet is the external name!
-    result = rope(sym.name.s)
+    result = cSymbol(sym.name.s)
   else:
-    result = rope(strutils.`%`("Dl_$1_", $sym.id))
+    result = cSymbol(strutils.`%`("Dl_$1_", $sym.id))
 
 proc symInDynamicLib(m: BModule, sym: PSym) =
   var lib = sym.annex
@@ -1650,6 +1650,7 @@ proc getSomeInitName(m: BModule, suffix: string): Rope =
   else:
     result = ""
   result.add suffix
+  result = cSymbol(result)
 
 proc getInitName(m: BModule): Rope =
   if sfMainModule in m.module.flags:
@@ -1657,6 +1658,7 @@ proc getInitName(m: BModule): Rope =
     result = rope(m.config.nimMainPrefix) & rope"NimMainModule"
   else:
     result = getSomeInitName(m, "Init000")
+  result = cSymbol(result)
 
 proc getDatInitName(m: BModule): Rope = getSomeInitName(m, "DatInit000")
 proc getHcrInitName(m: BModule): Rope = getSomeInitName(m, "HcrInit000")
@@ -1671,41 +1673,41 @@ proc isInnerMainVolatile(m: BModule): bool =
 
 proc genPreMain(m: BModule) =
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMainInner", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(cSymbol(m.config.nimMainPrefix & "PreMainInner"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       m.s[cfsProcs].add(extract(m.g.otherModsInit))
   if optNoMain notin m.config.globalOptions:
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "cmdCount", typ = CInt)
+      m.s[cfsProcs].addVar(name = cSymbol("cmdCount"), typ = CInt)
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "cmdLine", typ = ptrType(ptrType(CChar)))
+      m.s[cfsProcs].addVar(name = cSymbol("cmdLine"), typ = ptrType(ptrType(CChar)))
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "gEnv", typ = ptrType(ptrType(CChar)))
+      m.s[cfsProcs].addVar(name = cSymbol("gEnv"), typ = ptrType(ptrType(CChar)))
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMain", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(cSymbol(m.config.nimMainPrefix & "PreMain"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       if isInnerMainVolatile(m):
-        m.s[cfsProcs].addProcVar(name = "inner", rettype = CVoid, params = cProcParams(), isVolatile = true)
-        m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "PreMainInner")
+        m.s[cfsProcs].addProcVar(name = cSymbol("inner"), rettype = CVoid, params = cProcParams(), isVolatile = true)
+        m.s[cfsProcs].addAssignment(cSymbol("inner"), cSymbol(m.config.nimMainPrefix & "PreMainInner"))
         m.s[cfsProcs].add(extract(m.g.mainDatInit))
-        m.s[cfsProcs].addCallStmt(cDeref("inner"))
+        m.s[cfsProcs].addCallStmt(cDeref(cSymbol("inner")))
       else:
         # not volatile
         m.s[cfsProcs].add(extract(m.g.mainDatInit))
-        m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "PreMainInner")
+        m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMainInner"))
 
 proc genMainProcs(m: BModule) =
-  m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMain")
+  m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "NimMain"))
 
 proc genMainProcsWithResult(m: BModule) =
   genMainProcs(m)
-  var res = "nim_program_result"
+  var res = cSymbol("nim_program_result")
   if m.hcrOn: res = cDeref(res)
   m.s[cfsProcs].addReturn(res)
 
 proc genNimMainInner(m: BModule) =
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMainInner", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMainInner"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       m.s[cfsProcs].add(extract(m.g.mainModInit))
   m.s[cfsProcs].addNewline()
@@ -1714,21 +1716,22 @@ proc initStackBottom(m: BModule): bool =
   not (m.config.target.targetOS == osStandalone or m.config.selectedGC in {gcNone, gcArc, gcAtomicArc, gcOrc})
 
 proc genNimMainProc(m: BModule, preMainCode: Snippet) =
-  m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMain", CVoid, cProcParams())
+  m.s[cfsProcs].addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMain"), CVoid, cProcParams())
   m.s[cfsProcs].finishProcHeaderWithBody():
+    let inner = cSymbol("inner")
     if isInnerMainVolatile(m):
-      m.s[cfsProcs].addProcVar(name = "inner", rettype = CVoid, params = cProcParams(), isVolatile = true)
+      m.s[cfsProcs].addProcVar(name = inner, rettype = CVoid, params = cProcParams(), isVolatile = true)
       m.s[cfsProcs].add(preMainCode)
-      m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "NimMainInner")
+      m.s[cfsProcs].addAssignment(inner, cSymbol(m.config.nimMainPrefix & "NimMainInner"))
       if initStackBottom(m):
-        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast(CPointer, cAddr("inner")))
-      m.s[cfsProcs].addCallStmt(cDeref("inner"))
+        m.s[cfsProcs].addCallStmt(cSymbol("initStackBottomWith"), cCast(CPointer, cAddr(inner)))
+      m.s[cfsProcs].addCallStmt(cDeref(inner))
     else:
       # not volatile
       m.s[cfsProcs].add(preMainCode)
       if initStackBottom(m):
-        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast(CPointer, cAddr("inner")))
-      m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMainInner")
+        m.s[cfsProcs].addCallStmt(cSymbol("initStackBottomWith"), cCast(CPointer, cAddr(inner)))
+      m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "NimMainInner"))
   m.s[cfsProcs].addNewline()
 
 proc genNimMainBody(m: BModule, preMainCode: Snippet) =
@@ -1737,13 +1740,13 @@ proc genNimMainBody(m: BModule, preMainCode: Snippet) =
 
 proc genPosixCMain(m: BModule) =
   m.s[cfsProcs].addProcHeader(cSymbol("main"), CInt, cProcParams(
-    (name: "argc", typ: CInt),
-    (name: "args", typ: ptrType(ptrType(CChar))),
-    (name: "env", typ: ptrType(ptrType(CChar)))))
+    (name: cSymbol("argc"), typ: CInt),
+    (name: cSymbol("args"), typ: ptrType(ptrType(CChar))),
+    (name: cSymbol("env"), typ: ptrType(ptrType(CChar)))))
   m.s[cfsProcs].finishProcHeaderWithBody():
-    m.s[cfsProcs].addAssignment("cmdLine", "args")
-    m.s[cfsProcs].addAssignment("cmdCount", "argc")
-    m.s[cfsProcs].addAssignment("gEnv", "env")
+    m.s[cfsProcs].addAssignment(cSymbol("cmdLine"), cSymbol("args"))
+    m.s[cfsProcs].addAssignment(cSymbol("cmdCount"), cSymbol("argc"))
+    m.s[cfsProcs].addAssignment(cSymbol("gEnv"), cSymbol("env"))
     genMainProcsWithResult(m)
   m.s[cfsProcs].addNewline()
 
@@ -1842,7 +1845,7 @@ proc genMainProc(m: BModule) =
 
     loadLib(preMainBuilder, "hcr_handle", "hcrGetProc")
     if m.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
-      preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
+      preMainBuilder.addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMain"))
     else:
       preMainBuilder.addVar(name = "rtl_handle", typ = CPointer)
       loadLib(preMainBuilder, "rtl_handle", "nimGC_setStackBottom")
@@ -1851,7 +1854,7 @@ proc genMainProc(m: BModule) =
       preMainBuilder.addCallStmt("initStackBottomWith_actual", cCast(CPointer, cAddr("inner")))
       preMainBuilder.addCallStmt(cDeref("inner"))
   else:
-    preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
+    preMainBuilder.addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMain"))
   let preMainCode = extract(preMainBuilder)
 
   if m.config.target.targetOS == osWindows and
@@ -2155,8 +2158,8 @@ proc genInitCode(m: BModule) =
     # Give this small function its own scope
     prcBody.addScope():
       # Keep a bogus frame in case the code needs one
-      prcBody.addVar(name = "FR_", typ = "TFrame")
-      prcBody.addFieldAssignment("FR_", "len", cIntValue(0))
+      prcBody.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+      prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(preInitProc, cpsLocals)
       writeSection(preInitProc, cpsInit, m.hcrOn)
@@ -2181,8 +2184,8 @@ proc genInitCode(m: BModule) =
           var procname = makeCString(m.module.name.s)
           prcBody.add(initFrame(m.initProc, procname, quotedFilename(m.config, m.module.info)))
         else:
-          prcBody.addVar(name = "FR_", typ = "TFrame")
-          prcBody.addFieldAssignment("FR_", "len", cIntValue(0))
+          prcBody.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+          prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(initProc, cpsInit, m.hcrOn)
       writeSection(initProc, cpsStmts)
@@ -2270,14 +2273,14 @@ proc postprocessCode(conf: ConfigRef, r: var Rope) =
       let line = dir[1]
       if dir[2] == nimlnDirLastF:
         when buildNifc:
-          res.addFieldAssignment("FR_", "line", line)
+          res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(parseInt(line)))
         else:
           res.add("nimln_(" & line & ");")
       else:
         let filename = quotedFilename(conf, dir[2].parseInt.FileIndex)
         when buildNifc:
-          res.addFieldAssignment("FR_", "line", line)
-          res.addFieldAssignment("FR_", "filename", filename)
+          res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(parseInt(line)))
+          res.addFieldAssignment(cSymbol("FR_"), "filename", filename)
         else:
           res.add("nimlf_(" & line & ", " & filename & ");")
         nimlnDirLastF = dir[2]
@@ -2346,7 +2349,10 @@ proc initProcOptions(m: BModule): TOptions =
 proc rawNewModule(g: BModuleList; module: PSym, filename: AbsoluteFile): BModule =
   new(result)
   result.g = g
-  result.tmpBase = rope("TM" & $hashOwner(module) & "_")
+  when buildNifc:
+    result.tmpBase = "tmp." & $hashOwner(module) & "."
+  else:
+    result.tmpBase = rope("TM" & $hashOwner(module) & "_")
   result.headerFiles = @[]
   result.declaredThings = initIntSet()
   result.declaredProtos = initIntSet()
@@ -2417,7 +2423,7 @@ proc writeHeader(m: BModule) =
 
   let vis = if optGenDynLib in m.config.globalOptions: ImportLib else: None
   result.addDeclWithVisibility(vis):
-    result.addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMain", CVoid, cProcParams())
+    result.addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMain"), CVoid, cProcParams())
     result.finishProcHeaderAsProto()
   if m.config.cppCustomNamespace.len > 0: closeNamespaceNim(result)
   result.addf("#endif /* $1 */$n", [guard])

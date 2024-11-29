@@ -480,8 +480,8 @@ template addScope(builder: var Builder, body: typed) =
 
 proc addLabel(builder: var Builder, name: TLabel) =
   when buildNifc:
-    builder.add("(lab ")
-    builder.add(name)
+    builder.add("(lab :")
+    builder.add(cSymbol(name))
     builder.addLineEnd(")")
   else:
     builder.add(name)
@@ -506,7 +506,7 @@ proc addReturn(builder: var Builder, value: Snippet) =
 proc addGoto(builder: var Builder, label: TLabel) =
   when buildNifc:
     builder.add("(jmp ")
-    builder.add(label)
+    builder.add(cSymbol(label))
     builder.addLineEnd(")")
   else:
     builder.add("goto ")

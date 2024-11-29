@@ -54,7 +54,7 @@ proc genLiteral(p: BProc, n: PNode, ty: PType; result: var Builder) =
         let t = getTypeDesc(p.module, ty)
         p.module.s[cfsStrData].addVarWithInitializer(kind = Const, name = tmpName, typ = t):
           var closureInit: StructInitializer
-          p.module.s[cfsStrData].addStructInitializer(closureInit, kind = siOrderedStruct):
+          p.module.s[cfsStrData].addStructInitializer(closureInit, kind = siOrderedStruct#[, typ = t]#):
             p.module.s[cfsStrData].addField(closureInit, name = "ClP_0"):
               p.module.s[cfsStrData].add(NimNil)
             p.module.s[cfsStrData].addField(closureInit, name = "ClE_0"):
@@ -92,10 +92,10 @@ proc genLiteral(p: BProc, n: PNode, ty: PType; result: var Builder) =
 proc genLiteral(p: BProc, n: PNode; result: var Builder) =
   genLiteral(p, n, n.typ, result)
 
-proc genRawSetData(cs: TBitSet, size: int; result: var Builder) =
+proc genRawSetData(cs: TBitSet, size: int;#[ t: Snippet;]# result: var Builder) =
   if size > 8:
     var setInit: StructInitializer
-    result.addStructInitializer(setInit, kind = siArray):
+    result.addStructInitializer(setInit, kind = siArray#[, typ = t]#):
       for i in 0..<size:
         if i mod 8 == 0:
           result.addNewline()
@@ -117,10 +117,10 @@ proc genSetNode(p: BProc, n: PNode; result: var Builder) =
       inc(p.module.labels)
       let td = getTypeDesc(p.module, n.typ)
       p.module.s[cfsStrData].addVarWithInitializer(kind = Const, name = tmpName, typ = td):
-        genRawSetData(cs, size, p.module.s[cfsStrData])
+        genRawSetData(cs, size, #[td, ]# p.module.s[cfsStrData])
     result.add tmpName
   else:
-    genRawSetData(cs, size, result)
+    genRawSetData(cs, size, #[getTypeDesc(p.module, n.typ), ]# result)
 
 proc getStorageLoc(n: PNode): TStorageLoc =
   ## deadcode
