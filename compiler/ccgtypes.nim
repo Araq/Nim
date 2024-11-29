@@ -1827,7 +1827,10 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
         name = vTablePointerName,
         elementType = CPointer,
         len = dispatchMethods.len):
-      let arrTyp = getArrayType(m, CPointer, dispatchMethods.len)
+      when buildNifc:
+        let arrTyp = getArrayType(m, CPointer, dispatchMethods.len)
+      else:
+        let arrTyp = ""
       genVTable(m.s[cfsVars], dispatchMethods, arrTyp)
     for i in dispatchMethods:
       genProcPrototype(m, i)
