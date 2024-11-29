@@ -1532,7 +1532,11 @@ proc genEnumInfo(m: BModule; typ: PType, name: Rope; info: TLineInfo) =
   var specialCases = newBuilder("")
   var firstNimNode = m.typeNodes
   var hasHoles = false
-  enumNames.addStructInitializer(enumNamesInit, kind = siArray, typ = getArrayType(m, constPtrType(CChar), typ.n.len)):
+  when buildNifc:
+    let enumNamesTyp = getArrayType(m, constPtrType(CChar), typ.n.len)
+  else:
+    let enumNamesTyp = ""
+  enumNames.addStructInitializer(enumNamesInit, kind = siArray, typ = enumNamesTyp):
     for i in 0..<typ.n.len:
       assert(typ.n[i].kind == nkSym)
       var field = typ.n[i].sym
