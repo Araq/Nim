@@ -1867,7 +1867,7 @@ proc applyTypeSectionPragmas(c: PContext; pragmas, operand: PNode): PNode =
           x.add(operand.copyTreeWithoutNode(p))
           # recursion assures that this works for multiple macro annotations too:
           var r = semOverloadedCall(c, x, x, {skMacro, skTemplate}, {efNoUndeclared})
-          if r != nil:
+          if r != nil and (r.typ == nil or r.typ.kind != tyFromExpr):
             doAssert r[0].kind == nkSym
             let m = r[0].sym
             case m.kind
