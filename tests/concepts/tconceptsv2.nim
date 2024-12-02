@@ -103,7 +103,7 @@ block: # simple recursion
     WritableImpl = object
 
   proc launch(a: var Buffer, b: Writable)= discard
-  proc put(x: var BufferImpl, i: object)= discard
+  proc put[T](x: var BufferImpl, i: T)= discard
   proc second(x: BufferImpl)= discard
   proc put(x: var Buffer, y: WritableImpl)= discard
 
@@ -121,10 +121,181 @@ block: # more complex recursion
     WritableImpl = object
 
   proc launch(a: var Buffer, b: Writable)= discard
-  proc put(x: var Buffer, i: object)= discard
+  proc put[T](x: var Buffer, i: T)= discard
   proc put(x: var BufferImpl, i: object)= discard
   proc second(x: BufferImpl)= discard
   proc put(x: var Buffer, y: WritableImpl)= discard
 
   var a = BufferImpl[5]()
   launch(a, WritableImpl())
+
+block: # not type
+  type
+    C1 = concept
+      proc p(s: Self, a: int)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: not float)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # not type parameterized
+  type
+    C1[T: not int] = concept
+      proc p(s: Self, a: T)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: float)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # not type each
+  type
+    C1 = concept
+      proc p(s: Self, a: each typedesc[not int])
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: float)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # typedesc
+  type
+    C1 = concept
+      proc p(s: Self, a: typedesc[SomeInteger])
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: typedesc)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+
+block: # or
+  type
+    C1 = concept
+      proc p(s: Self, a: int | float)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: int | float | string)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # or mixed generic param
+  type
+    C1 = concept
+      proc p(s: Self, a: int | float)
+    C1Impl = object
+    
+  proc p[T: string | float](x: C1Impl, a: int | T)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # or parameterized
+  type
+    C1[T: int | float | string] = concept
+      proc p(s: Self, a: T)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: int | float)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # or each
+  type
+    C1 = concept
+      proc p(s: Self, a: each typedesc[int | float | string])
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: int | float)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # unconstrained param
+  type
+    A = object
+    C1[T] = concept
+      proc p(s: Self, a: T)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: A)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # unconstrained param sanity check
+  type
+    A = object
+    C1[T: auto] = concept
+      proc p(s: Self, a: T)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: A)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # parameterization via `each`
+  type
+    A = object
+    C1 = concept
+      proc p(s: Self, a: each auto)
+    C1Impl = object
+    
+  proc p(x: C1Impl, a: A)= discard
+  proc spring(x: C1)= discard
+
+  spring(C1Impl())
+
+block: # exact nested concept binding
+  #[
+    prove ArrayImpl is serializable (spring)
+      prove Buffer is Buffer (w)
+      prove ArrayImpl is ArrayLike (w)
+        prove ArrayImpl is ArrayImpl (len)
+  ]#
+  type
+    Sizeable = concept
+      proc size(s: Self): int
+    Buffer = concept
+      proc w(s: Self, data: Sizeable)
+    Serializable = concept
+      proc w(b: Buffer, s: Self)
+    ArrayLike = concept
+      proc len(s: Self): int
+    ArrayImpl = object
+
+  proc len(s: ArrayImpl): int = discard
+  proc w(x: Buffer, d: ArrayLike)=discard
+
+  proc spring(data: Serializable)=discard
+  spring(ArrayImpl())
+
+block: # co-dependent implicit
+  #[
+    prove ArrayImpl is Serializable (spring)
+      fail to find a binding for Serializable.w
+      Serializable and Buffer are co-dependent, assume Buffer.w exists
+        prove ArrayImpl is Sizeable (Buffer.w)
+          prove ArrayImpl is ArrayImpl (len)
+  ]#
+  type
+    Sizeable = concept
+      proc size(s: Self): int
+    Buffer = concept
+      proc w(s: Self, data: Sizeable)
+    Serializable = concept
+      proc w(b: Buffer, s: Self)
+    ArrayImpl = object
+
+  proc size(x: ArrayImpl): int= discard
+
+  proc spring(data: Serializable)= discard
+  spring(ArrayImpl())
