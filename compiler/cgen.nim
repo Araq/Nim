@@ -2497,12 +2497,13 @@ proc updateCachedModule(m: BModule) =
   addFileToCompile(m.config, cf)
 
 proc generateLibraryDestroyGlobals(graph: ModuleGraph; m: BModule; body: PNode; isDynlib: bool): PSym =
-  let procname = getIdent(graph.cache, "NimDestroyGlobals")
+  let prefixedName = m.config.nimMainPrefix & "NimDestroyGlobals"
+  let procname = getIdent(graph.cache, prefixedName)
   result = newSym(skProc, procname, m.idgen, m.module.owner, m.module.info)
   result.typ = newProcType(m.module.info, m.idgen, m.module.owner)
   result.typ.callConv = ccCDecl
   incl result.flags, sfExportc
-  result.loc.snippet = "NimDestroyGlobals"
+  result.loc.snippet = prefixedName
   if isDynlib:
     incl(result.loc.flags, lfExportLib)
 
