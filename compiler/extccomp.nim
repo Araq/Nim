@@ -293,6 +293,32 @@ compiler envcc:
     cppXsupport: "",
     props: {hasGnuAsm})
 
+compiler nifc:
+  # no purpose other than config/exe path
+  result = (
+    name: "nifc",
+    objExt: "o",
+    optSpeed: "",
+    optSize: "",
+    compilerExe: "nifc",
+    cppCompiler: "",
+    compileTmpl: "",
+    buildGui: "",
+    buildDll: "",
+    buildLib: "",
+    linkerExe: "",
+    linkTmpl: "",
+    includeCmd: "",
+    linkDirCmd: "",
+    linkLibCmd: "",
+    debug: " -g ",
+    pic: "",
+    asmStmtFrmt: "",
+    structStmtFmt: "",
+    produceAsm: "",
+    cppXsupport: "",
+    props: {})
+
 const
   CC*: array[succ(low(TSystemCC))..high(TSystemCC), TInfoCC] = [
     gcc(),
@@ -307,7 +333,8 @@ const
     icc(),
     clangcl(),
     hipcc(),
-    nvcc()]
+    nvcc(),
+    nifc()]
 
   hExt* = ".h"
 
@@ -995,6 +1022,9 @@ proc callCCompiler*(conf: ConfigRef) =
     script.add(linkCmd)
     script.add("\n")
     generateScript(conf, script)
+
+proc callNifc*(conf: ConfigRef) =
+  discard
 
 template hashNimExe(): string = $secureHashFile(os.getAppFilename())
 
