@@ -13,6 +13,7 @@ foo
 foo
 false
 true
+0
 '''
 """
 
@@ -302,3 +303,10 @@ block: # bug #21920
     discard
 
   t[void]() # Error: expression has no type: discard
+
+template m(a: uint, p: int) = discard
+
+block: # bug #23680
+  template m(x: untyped, i: int) = echo x
+  proc j(n: int | int) = m([0][0], 0)
+  j(0)
