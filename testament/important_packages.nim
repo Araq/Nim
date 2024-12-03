@@ -35,7 +35,7 @@ proc pkg(name: string; cmd = "nimble test"; url = "", useHead = true, allowFailu
 
 pkg "alea"
 pkg "argparse"
-pkg "arraymancer", "nim c tests/tests_cpu.nim"
+pkg "arraymancer", "nimble install -y; nimble uninstall -i -y nimcuda; nimble install nimcuda@0.2.1; nim c tests/tests_cpu.nim"
 pkg "ast_pattern_matching", "nim c -r tests/test1.nim"
 pkg "asyncftpclient", "nimble compileExample"
 pkg "asyncthreadpool", "nimble test --mm:refc"
