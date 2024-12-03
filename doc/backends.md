@@ -249,7 +249,7 @@ which will likely make your program crash at runtime.
 The name `NimMain` can be influenced via the `--nimMainPrefix:prefix` switch.
 Use `--nimMainPrefix:MyLib` and the function to call is named `MyLibNimMain`.
 
-When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors.
+When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors. It is influenced by the `--nimMainPrefix:prefix` switch, too.
 
 
 ### Nim invocation example from C

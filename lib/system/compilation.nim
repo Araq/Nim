@@ -6,7 +6,7 @@ const
     ##   ```
     # see also std/private/since
 
-  NimMinor* {.intdefine.}: int = 2
+  NimMinor* {.intdefine.}: int = 3
     ## is the minor number of Nim's version.
     ## Odd for devel, even for releases.
 

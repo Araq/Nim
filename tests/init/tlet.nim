@@ -83,3 +83,21 @@ proc foo2 =
   doAssert z == 3
 
 foo2()
+
+# bug #24472
+template bar1314(): bool =
+  let hello = true
+  hello
+
+template foo1314*(val: bool): bool =
+  when nimvm:
+    val
+  else:
+    val
+
+proc test() = # Doesn't fail when top level
+  # Original code is calling `unlikely` which has a `nimvm` branch
+  let s = foo1314(bar1314())
+  doAssert s
+
+test()

@@ -78,6 +78,7 @@ type
     magic: TMagic  ## mArrGet and mArrPut is wrong in system.nim and
                    ## cannot be fixed that easily.
                    ## Thus we special case it here.
+    concpt: PType
 
 proc existingBinding(m: MatchCon; key: PType): PType =
   ## checks if we bound the type variable 'key' already to some
@@ -174,27 +175,43 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = ak.kind == f.kind or ak.kind == tyOrdinal or
        (ak.kind == tyGenericParam and ak.hasElementType and ak.elementType.kind == tyOrdinal)
   of tyConcept:
-    let oldLen = m.inferred.len
-    let oldPotentialImplementation = m.potentialImplementation
-    m.potentialImplementation = a
-    result = conceptMatchNode(c, f.n.lastSon, m)
-    m.potentialImplementation = oldPotentialImplementation
-    if not result:
-      m.inferred.setLen oldLen
+    if a.kind == tyConcept and f.n == a.n:
+      result = true
+    elif m.concpt.size == szIllegalRecursion:
+      result = false
+    else:
+      let oldLen = m.inferred.len
+      let oldPotentialImplementation = m.potentialImplementation
+      m.potentialImplementation = a
+      m.concpt.size = szIllegalRecursion
+      let oldConcept = m.concpt
+      m.concpt = f
+      result = conceptMatchNode(c, f.n.lastSon, m)
+      m.potentialImplementation = oldPotentialImplementation
+      m.concpt = oldConcept
+      m.concpt.size = szUnknownSize
+      if not result:
+        m.inferred.setLen oldLen
   of tyGenericBody:
     var ak = a
     if a.kind == tyGenericBody:
       ak = last(a)
     result = matchType(c, last(f), ak, m)
   of tyCompositeTypeClass:
-    result = matchType(c, last(f), a, m)
+    var ak = if a.kind == tyCompositeTypeClass: a.last else: a
+    result = matchType(c, last(f), ak, m)
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
-    result = false
-    let ak = a.skipTypes(ignorableForArgType - {f.kind})
-    if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
-      result = matchKids(c, f, ak, m)
+    if f.kind == tyArray and f.kidsLen == 3:
+      # XXX: this is a work-around!
+      # system.nim creates these for the magic array typeclass
+      result = true
+    else:
+      result = false
+      let ak = a.skipTypes(ignorableForArgType - {f.kind})
+      if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
+        result = matchKids(c, f, ak, m)
   of tyOr:
     let oldLen = m.inferred.len
     if a.kind == tyOr:
@@ -230,6 +247,16 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = true
   of tyOrdinal:
     result = isOrdinalType(a, allowEnumWithHoles = false) or a.kind == tyGenericParam
+  of tyStatic:
+    result = false
+    var scomp = f.base
+    if scomp.kind == tyGenericParam:
+      if f.base.kidsLen > 0:
+        scomp = scomp.base
+    if a.kind == tyStatic:
+      result = matchType(c, scomp, a.base, m)
+    else:
+      result = matchType(c, scomp, a, m)
   else:
     result = false
 
@@ -280,7 +307,8 @@ proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
 proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bool =
   ## Walk the current scope, extract candidates which the same name as 'n[namePos]',
   ## 'n' is the nkProcDef or similar from the concept that we try to match.
-  let candidates = searchInScopesAllCandidatesFilterBy(c, n[namePos].sym.name, kinds)
+  var candidates = searchScopes(c, n[namePos].sym.name, kinds)
+  searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
   for candidate in candidates:
     #echo "considering ", typeToString(candidate.typ), " ", candidate.magic
     m.magic = candidate.magic
@@ -327,7 +355,7 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   ## `C[S, T]` parent type that we look for. We need this because we need to store bindings
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
-  var m = MatchCon(inferred: @[], potentialImplementation: arg)
+  var m = MatchCon(inferred: @[], potentialImplementation: arg, concpt: concpt)
   result = conceptMatchNode(c, concpt.n.lastSon, m)
   if result:
     for (a, b) in m.inferred:

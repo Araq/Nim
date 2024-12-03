@@ -183,7 +183,7 @@ proc close*(s: Stream) =
       let strm = newStringStream("The first line\nthe second line\nthe third line")
       ## do something...
       strm.close()
-      
+
     block:
       let strm = newFileStream("amissingfile.txt")
       # deferring works even if newFileStream fails
@@ -286,9 +286,9 @@ when (NimMajor, NimMinor) >= (1, 3) or not defined(js):
       strm.close()
 
     const bufferSize = 1024
+    result = ""
     jsOrVmBlock:
-      var buffer2: string
-      buffer2.setLen(bufferSize)
+      var buffer2 = newString(bufferSize)
       while true:
         let readBytes = readDataStr(s, buffer2, 0..<bufferSize)
         if readBytes == 0:
