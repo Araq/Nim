@@ -171,9 +171,10 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
       headerBuilder.addParam(paramBuilder, name = "op", typ = NimInt)
   let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
-    m.s[cfsProcHeaders].add(header)
-    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  when not buildNifc:
+    m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+      m.s[cfsProcHeaders].add(header)
+      m.s[cfsProcHeaders].finishProcHeaderAsProto()
   m.s[cfsProcs].addDeclWithVisibility(StaticProc):
     m.s[cfsProcs].add(header)
     m.s[cfsProcs].finishProcHeaderWithBody():
@@ -221,9 +222,10 @@ proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
       discard
   let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
-    m.s[cfsProcHeaders].add(header)
-    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  when not buildNifc:
+    m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+      m.s[cfsProcHeaders].add(header)
+      m.s[cfsProcHeaders].finishProcHeaderAsProto()
   m.s[cfsProcs].addDeclWithVisibility(StaticProc):
     m.s[cfsProcs].add(header)
     m.s[cfsProcs].finishProcHeaderWithBody():

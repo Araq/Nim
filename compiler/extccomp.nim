@@ -1024,7 +1024,36 @@ proc callCCompiler*(conf: ConfigRef) =
     generateScript(conf, script)
 
 proc callNifc*(conf: ConfigRef) =
-  discard
+  var exe = getConfigVar(conf, ccNifc, ".exe")
+  if exe.len == 0: exe = getCompilerExe(conf, ccNifc, false)
+  if needsExeExt(conf): exe = addFileExt(exe, "exe")
+
+  var cmd = @[exe, "c"]
+  cmd.add("--nifcache:" & conf.getNimcacheDir().string)
+  cmd.add("--cc:" & CC[conf.cCompiler].name)
+  cmd.add("--out:" & conf.absOutFile.string)
+  let opts = conf.options * {optOptimizeSpeed, optOptimizeSize}
+  if opts == {optOptimizeSpeed}:
+    cmd.add("--opt:speed")
+  elif opts == {optOptimizeSize}:
+    cmd.add("--opt:size")
+  if optLineDir in conf.options:
+    cmd.add("--linedir:on")
+  for idx, it in conf.toCompile:
+    let cf = if noAbsolutePaths(conf): extractFilename(it.cname.string)
+             else: it.cname.string
+    cmd.add(cf)
+  execExternalProgram(conf, quoteShellCommand(cmd), hintExecuting)
+
+  if optCompileOnly in conf.globalOptions: return
+  let appName = splitFile(conf.toCompile[^1].cname).name
+  when defined(windows):
+    let makefilePath = conf.getNimcacheDir().string / "Makefile." & appName & ".bat"
+    let makeCmd = expandFilename(makefilePath)
+  else:
+    let makefilePath = s.config.nifcacheDir / "Makefile." & appName
+    let makeCmd = "make -f " & makefilePath
+  execExternalProgram(conf, makeCmd, hintExecuting)
 
 template hashNimExe(): string = $secureHashFile(os.getAppFilename())
 

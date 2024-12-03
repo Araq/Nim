@@ -1144,7 +1144,7 @@ proc genRestoreFrameAfterException(p: BProc) =
     if hasCurFramePointer notin p.flags:
       p.flags.incl hasCurFramePointer
       p.procSec(cpsLocals).add('\t')
-      p.procSec(cpsLocals).addVar(kind = Local, name = cSymbol("_nimCurFrame"), typ = ptrType(cSymbol("TFrame")))
+      p.procSec(cpsLocals).addVar(kind = Local, name = cSymbol("_nimCurFrame"), typ = ptrType(getTFrame(p.module)))
       p.procSec(cpsInit).add('\t')
       p.procSec(cpsInit).addAssignmentWithValue(cSymbol("_nimCurFrame")):
         p.procSec(cpsInit).addCall(cgsymValue(p.module, "getFrame"))

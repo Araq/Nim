@@ -396,7 +396,7 @@ proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
 proc dataField(p: BProc, val: Rope): Rope {.inline.} =
   result = derefField(dataFieldAccessor(p, val), "data")
 
-proc genProcPrototype(m: BModule, sym: PSym)
+proc genProcPrototype(m: BModule, sym: PSym, thisModule: bool = true)
 
 include ccgliterals
 include ccgtypes
@@ -823,6 +823,21 @@ proc initLocExprSingleUse(p: BProc, e: PNode): TLoc =
     result.flags.incl lfSingleUse
   expr(p, e, result)
 
+proc getProgramResult(m: BModule): Snippet =
+  if sfSystemModule in m.module.flags:
+    cSymbol("nim_program_result")
+  else:
+    cgsymValue(m, "programResult")
+
+proc getTFrame(m: BModule): Snippet =
+  when buildNifc:
+    if sfSystemModule in m.module.flags:
+      cSymbol("TFrame")
+    else:
+      cgsymValue(m, "TFrame")
+  else:
+    cSymbol("TFrame")
+
 include ccgcalls, "ccgstmts.nim"
 
 proc initFrame(p: BProc, procname, filename: Rope): Rope =
@@ -845,7 +860,7 @@ proc initFrame(p: BProc, procname, filename: Rope): Rope =
   cgsym(p.module, "nimFrame")
   when buildNifc:
     var res = newBuilder("")
-    res.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+    res.addVar(name = cSymbol("FR_"), typ = getTFrame(p.module))
     res.addFieldAssignment(cSymbol("FR_"), "procname", procname)
     res.addFieldAssignment(cSymbol("FR_"), "filename", filename)
     res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(0))
@@ -857,7 +872,7 @@ proc initFrame(p: BProc, procname, filename: Rope): Rope =
 
 proc initFrameNoDebug(p: BProc; frame, procname, filename: Snippet; line: int): Snippet =
   cgsym(p.module, "nimFrame")
-  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = cSymbol("TFrame"))
+  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = getTFrame(p.module))
   var res = newBuilder("")
   res.add('\t')
   res.addFieldAssignment(frame, "procname", procname)
@@ -1422,7 +1437,7 @@ proc requiresExternC(m: BModule; sym: PSym): bool {.inline.} =
            sym.magic == mNone and
            m.config.backend == backendCpp)
 
-proc genProcPrototype(m: BModule, sym: PSym) =
+proc genProcPrototype(m: BModule, sym: PSym, thisModule: bool = true) =
   useHeader(m, sym)
   if lfNoDecl in sym.loc.flags or sfCppMember * sym.flags != {}: return
   if lfDynamicLib in sym.loc.flags:
@@ -1455,12 +1470,15 @@ proc genProcPrototype(m: BModule, sym: PSym) =
       let extraVis =
         if sym.typ.callConv != ccInline and requiresExternC(m, sym):
           ExternC
+        elif not thisModule and visibility notin {ImportLib, ExportLib}:
+          Extern
         else:
           None
-      m.s[cfsProcHeaders].addDeclWithVisibility(extraVis):
-        m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
-          m.s[cfsProcHeaders].add(extract(header))
-          m.s[cfsProcHeaders].finishProcHeaderAsProto()
+      if not buildNifc or {visibility, extraVis} * {Extern, ExternC, ImportLib} != {}:
+        m.s[cfsProcHeaders].addDeclWithVisibility(extraVis):
+          m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+            m.s[cfsProcHeaders].add(extract(header))
+            m.s[cfsProcHeaders].finishProcHeaderAsProto()
 
 # TODO: figure out how to rename this - it DOES generate a forward declaration
 proc genProcNoForward(m: BModule, prc: PSym) =
@@ -1476,7 +1494,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
   elif lfDynamicLib in prc.loc.flags:
     var q = findPendingModule(m, prc)
     fillProcLoc(q, prc.ast[namePos])
-    genProcPrototype(m, prc)
+    genProcPrototype(m, prc, q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       symInDynamicLib(q, prc)
       # register the procedure even though it is in a different dynamic library and will not be
@@ -1524,7 +1542,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
           cCall("hcrGetProc",
             getModuleDllPath(m, prc),
             '"' & prc.loc.snippet & '"')))
-    genProcPrototype(m, prc)
+    genProcPrototype(m, prc, q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       # make sure there is a "prototype" in the external module
       # which will actually become a function pointer
@@ -1700,7 +1718,7 @@ proc genMainProcs(m: BModule) =
 
 proc genMainProcsWithResult(m: BModule) =
   genMainProcs(m)
-  var res = cSymbol("nim_program_result")
+  var res = getProgramResult(m)
   if m.hcrOn: res = cDeref(res)
   m.s[cfsProcs].addReturn(res)
 
@@ -1908,12 +1926,14 @@ proc registerInitProcs*(g: BModuleList; m: PSym; flags: set[ModuleBackendFlag]) 
   ## Called from the IC backend.
   if HasDatInitProc in flags:
     let datInit = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "DatInit000"
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private
+    g.mainModProcs.addDeclWithVisibility(vis):
       g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     g.mainDatInit.addCallStmt(datInit)
   if HasModuleInitProc in flags:
     let init = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "Init000"
+    let vis = when buildNifc: Extern else: Private
     g.mainModProcs.addDeclWithVisibility(Private):
       g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
@@ -1979,24 +1999,25 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       g.mainModProcs.add(extract(hcrModuleMeta))
       g.mainModProcs.addDeclWithVisibility(StaticProc):
         g.mainModProcs.addVar(name = "hcr_handle", typ = CPointer)
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeaderWithParams(ccNimCall, m.getHcrInitName, CVoid):
-          var hcrInitParams: ProcParamBuilder
-          g.mainModProcs.addProcParams(hcrInitParams):
-            g.mainModProcs.addUnnamedParam(hcrInitParams, CPointer)
-            g.mainModProcs.addProcTypedParam(hcrInitParams, ccNimCall, "getProcAddr", CPointer, cProcParams(
-              (name: "", typ: CPointer),
-              (name: "", typ: ptrType(CChar))))
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
+      when not buildNifc:
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeaderWithParams(ccNimCall, m.getHcrInitName, CVoid):
+            var hcrInitParams: ProcParamBuilder
+            g.mainModProcs.addProcParams(hcrInitParams):
+              g.mainModProcs.addUnnamedParam(hcrInitParams, CPointer)
+              g.mainModProcs.addProcTypedParam(hcrInitParams, ccNimCall, "getProcAddr", CPointer, cProcParams(
+                (name: "", typ: CPointer),
+                (name: "", typ: ptrType(CChar))))
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
       g.mainModInit.addCallStmt(init)
       g.otherModsInit.addCallStmt("hcrInit",
         cCast(ptrType(CPointer), "hcr_module_list"),
@@ -2039,7 +2060,8 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     return
 
   if m.s[cfsDatInitProc].buf.len > 0:
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private 
+    g.mainModProcs.addDeclWithVisibility(Extern):
       g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     g.mainDatInit.addCallStmt(datInit)
@@ -2054,7 +2076,8 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
         cCast(CPointer, cAddr("inner")))
 
   if m.s[cfsInitProc].buf.len > 0:
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private 
+    g.mainModProcs.addDeclWithVisibility(vis):
       g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     if sfMainModule in m.module.flags:
@@ -2162,7 +2185,7 @@ proc genInitCode(m: BModule) =
     # Give this small function its own scope
     prcBody.addScope():
       # Keep a bogus frame in case the code needs one
-      prcBody.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+      prcBody.addVar(name = cSymbol("FR_"), typ = getTFrame(m))
       prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(preInitProc, cpsLocals)
@@ -2188,7 +2211,7 @@ proc genInitCode(m: BModule) =
           var procname = makeCString(m.module.name.s)
           prcBody.add(initFrame(m.initProc, procname, quotedFilename(m.config, m.module.info)))
         else:
-          prcBody.addVar(name = cSymbol("FR_"), typ = cSymbol("TFrame"))
+          prcBody.addVar(name = cSymbol("FR_"), typ = getTFrame(m))
           prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(initProc, cpsInit, m.hcrOn)

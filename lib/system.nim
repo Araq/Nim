@@ -512,6 +512,63 @@ type
     ## you're doing.
 
 type
+  Endianness* = enum ## Type describing the endianness of a processor.
+    littleEndian, bigEndian
+
+const
+  cpuEndian* {.magic: "CpuEndian".}: Endianness = littleEndian
+    ## The endianness of the target CPU. This is a valuable piece of
+    ## information for low-level code only. This works thanks to compiler
+    ## magic.
+
+  hostOS* {.magic: "HostOS".}: string = ""
+    ## A string that describes the host operating system.
+    ##
+    ## Possible values:
+    ## `"windows"`, `"macosx"`, `"linux"`, `"netbsd"`, `"freebsd"`,
+    ## `"openbsd"`, `"solaris"`, `"aix"`, `"haiku"`, `"standalone"`.
+
+  hostCPU* {.magic: "HostCPU".}: string = ""
+    ## A string that describes the host CPU.
+    ##
+    ## Possible values:
+    ## `"i386"`, `"alpha"`, `"powerpc"`, `"powerpc64"`, `"powerpc64el"`,
+    ## `"sparc"`, `"amd64"`, `"mips"`, `"mipsel"`, `"arm"`, `"arm64"`,
+    ## `"mips64"`, `"mips64el"`, `"riscv32"`, `"riscv64"`, `"loongarch64"`.
+
+const
+  QuitSuccess* = 0
+    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
+    ## success.
+
+  QuitFailure* = 1
+    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
+    ## failure.
+
+when not defined(js) and hostOS != "standalone":
+  var programResult* {.compilerproc, exportc: "nim_program_result".}: int
+    ## deprecated, prefer `quit` or `exitprocs.getProgramResult`, `exitprocs.setProgramResult`.
+
+when defined(nimNifc):
+  {.pragma: tframe, compilerproc.}
+else:
+  {.pragma: tframe, importc, nodecl.}
+
+type
+  PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
+                        ## part of the debugger API.
+  # keep in sync with nimbase.h `struct TFrame_`
+  TFrame* {.tframe, final.} = object ## The frame itself.
+    prev*: PFrame       ## Previous frame; used for chaining the call stack.
+    procname*: cstring  ## Name of the proc that is currently executing.
+    line*: int          ## Line number of the proc that is currently executing.
+    filename*: cstring  ## Filename of the proc that is currently executing.
+    len*: int16         ## Length of the inspectable slots.
+    calldepth*: int16   ## Used for max call depth checking.
+    when NimStackTraceMsgs:
+      frameMsgLen*: int   ## end position in frameMsgBuf for this frame.
+
+type
   StackTraceEntry* = object ## In debug mode exceptions store the stack trace that led
                             ## to them. A `StackTraceEntry` is a single entry of the
                             ## stack trace.
@@ -1032,37 +1089,12 @@ proc add*(x: var string, y: string) {.magic: "AppendStrStr", noSideEffect.} =
     tmp.add("cd")
     assert tmp == "abcd"
 
-type
-  Endianness* = enum ## Type describing the endianness of a processor.
-    littleEndian, bigEndian
-
 const
-  cpuEndian* {.magic: "CpuEndian".}: Endianness = littleEndian
-    ## The endianness of the target CPU. This is a valuable piece of
-    ## information for low-level code only. This works thanks to compiler
-    ## magic.
-
-  hostOS* {.magic: "HostOS".}: string = ""
-    ## A string that describes the host operating system.
-    ##
-    ## Possible values:
-    ## `"windows"`, `"macosx"`, `"linux"`, `"netbsd"`, `"freebsd"`,
-    ## `"openbsd"`, `"solaris"`, `"aix"`, `"haiku"`, `"standalone"`.
-
-  hostCPU* {.magic: "HostCPU".}: string = ""
-    ## A string that describes the host CPU.
-    ##
-    ## Possible values:
-    ## `"i386"`, `"alpha"`, `"powerpc"`, `"powerpc64"`, `"powerpc64el"`,
-    ## `"sparc"`, `"amd64"`, `"mips"`, `"mipsel"`, `"arm"`, `"arm64"`,
-    ## `"mips64"`, `"mips64el"`, `"riscv32"`, `"riscv64"`, `"loongarch64"`.
-
   seqShallowFlag = low(int)
   strlitFlag = 1 shl (sizeof(int)*8 - 2) # later versions of the codegen \
   # emit this flag
   # for string literals, it allows for some optimizations.
 
-const
   hasThreadSupport = compileOption("threads") and not defined(nimscript)
   hasSharedHeap = defined(boehmgc) or defined(gogc) # don't share heaps; every thread has its own
 
@@ -1100,19 +1132,6 @@ when hasThreadSupport:
   {.pragma: rtlThreadVar, threadvar.}
 else:
   {.pragma: rtlThreadVar.}
-
-const
-  QuitSuccess* = 0
-    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
-    ## success.
-
-  QuitFailure* = 1
-    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
-    ## failure.
-
-when not defined(js) and hostOS != "standalone":
-  var programResult* {.compilerproc, exportc: "nim_program_result".}: int
-    ## deprecated, prefer `quit` or `exitprocs.getProgramResult`, `exitprocs.setProgramResult`.
 
 import std/private/since
 import system/ctypes
@@ -1719,25 +1738,6 @@ when not defined(nimscript):
 
 when not declared(sysFatal):
   include "system/fatal"
-
-when defined(nifc):
-  {.pragma: tframe, compilerproc.}
-else:
-  {.pragma: tframe, importc, nodecl.}
-
-type
-  PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
-                        ## part of the debugger API.
-  # keep in sync with nimbase.h `struct TFrame_`
-  TFrame* {.tframe, final.} = object ## The frame itself.
-    prev*: PFrame       ## Previous frame; used for chaining the call stack.
-    procname*: cstring  ## Name of the proc that is currently executing.
-    line*: int          ## Line number of the proc that is currently executing.
-    filename*: cstring  ## Filename of the proc that is currently executing.
-    len*: int16         ## Length of the inspectable slots.
-    calldepth*: int16   ## Used for max call depth checking.
-    when NimStackTraceMsgs:
-      frameMsgLen*: int   ## end position in frameMsgBuf for this frame.
 
 when defined(nimV2):
   var
