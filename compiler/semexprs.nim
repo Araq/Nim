@@ -725,7 +725,7 @@ proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
   # nkBracket nodes can also be produced by the VM as seq constant nodes
   # in which case, we cannot produce a new array type for the node,
   # as this might lose type info even when the node has array type
-  let constructType = n.typ.isNil
+  let constructType = n.typ.isNil or n.typ.kind == tyFromExpr
   var expectedElementType, expectedIndexType: PType = nil
   var expectedBase: PType = nil
   if constructType:
@@ -797,17 +797,26 @@ proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
           localError(c.config, x.info, "invalid order in array constructor")
         x = x[1]
 
-      let xx = semExprWithType(c, x, {efTypeAllowed}, expectedElementType)
-      result.add xx
-      if constructType:
-        typ = commonType(c, typ, xx.typ)
+      if typ.kind == tyFromExpr and c.inGenericContext > 0:
+        result.add semGenericStmt(c, x)
+      else:
+        let xx = semExprWithType(c, x, {efTypeAllowed}, expectedElementType)
+        result.add xx
+        if constructType:
+          typ = commonType(c, typ, xx.typ)
       #n[i] = semExprWithType(c, x, {})
       #result.add fitNode(c, typ, n[i])
       inc(lastIndex)
-    if constructType:
-      addSonSkipIntLit(result.typ, typ, c.idgen)
-    for i in 0..<result.len:
-      result[i] = fitNode(c, typ, result[i], result[i].info)
+    if typ.kind == tyFromExpr and c.inGenericContext > 0:
+      if constructType:
+        result.typ() = nil # current result.typ is invalid, index type is nil
+        result.typ() = makeTypeFromExpr(c, result.copyTree)
+      return
+    else:
+      if constructType:
+        addSonSkipIntLit(result.typ, typ, c.idgen)
+      for i in 0..<result.len:
+        result[i] = fitNode(c, typ, result[i], result[i].info)
   if constructType:
     result.typ.setIndexType(
       makeRangeType(c,
@@ -2810,7 +2819,9 @@ proc semSetConstr(c: PContext, n: PNode, expectedType: PType = nil): PNode =
     var typ: PType = nil
     for i in 0..<n.len:
       let doSetType = typ == nil
-      if isRange(n[i]):
+      if not doSetType and typ.kind == tyFromExpr and c.inGenericContext > 0:
+        n[i] = semGenericStmt(c, n[i])
+      elif isRange(n[i]):
         checkSonsLen(n[i], 3, c.config)
         n[i][1] = semExprWithType(c, n[i][1], {efTypeAllowed}, expectedElementType)
         n[i][2] = semExprWithType(c, n[i][2], {efTypeAllowed}, expectedElementType)
@@ -2828,7 +2839,10 @@ proc semSetConstr(c: PContext, n: PNode, expectedType: PType = nil): PNode =
         if doSetType:
           typ = skipTypes(n[i].typ, {tyGenericInst, tyVar, tyLent, tyOrdinal, tyAlias, tySink})
       if doSetType:
-        if not isOrdinalType(typ, allowEnumWithHoles=true):
+        if typ.kind == tyFromExpr and c.inGenericContext > 0:
+          # propagate it as set element type
+          discard
+        elif not isOrdinalType(typ, allowEnumWithHoles=true):
           localError(c.config, n.info, errOrdinalTypeExpected % typeToString(typ, preferDesc))
           typ = makeRangeType(c, 0, MaxSetElements-1, n.info)
         elif isIntLit(typ):
@@ -2842,11 +2856,16 @@ proc semSetConstr(c: PContext, n: PNode, expectedType: PType = nil): PNode =
           typ = makeRangeType(c, 0, MaxSetElements-1, n.info)
         if expectedElementType == nil:
           expectedElementType = typ
-    addSonSkipIntLit(result.typ, typ, c.idgen)
+    if typ.kind == tyFromExpr and c.inGenericContext > 0:
+      result.typ() = makeTypeFromExpr(c, result.copyTree)
+    else:
+      addSonSkipIntLit(result.typ, typ, c.idgen)
     for i in 0..<n.len:
       var m: PNode
       let info = n[i].info
-      if isRange(n[i]):
+      if typ.kind == tyFromExpr and c.inGenericContext > 0:
+        m = n[i]
+      elif isRange(n[i]):
         m = newNodeI(nkRange, info)
         m.add fitNode(c, typ, n[i][1], info)
         m.add fitNode(c, typ, n[i][2], info)
