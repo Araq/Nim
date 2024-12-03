@@ -1473,7 +1473,7 @@ proc genProcPrototype(m: BModule, sym: PSym, thisModule: bool = true) =
       let extraVis =
         if sym.typ.callConv != ccInline and requiresExternC(m, sym):
           ExternC
-        elif not thisModule and visibility notin {ImportLib, ExportLib}:
+        elif buildNifc and not thisModule and visibility notin {ImportLib, ExportLib}:
           Extern
         else:
           None
@@ -1497,7 +1497,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
   elif lfDynamicLib in prc.loc.flags:
     var q = findPendingModule(m, prc)
     fillProcLoc(q, prc.ast[namePos])
-    genProcPrototype(m, prc, q.module.id == m.module.id)
+    genProcPrototype(m, prc, q != nil and q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       symInDynamicLib(q, prc)
       # register the procedure even though it is in a different dynamic library and will not be
@@ -1545,7 +1545,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
           cCall("hcrGetProc",
             getModuleDllPath(m, prc),
             '"' & prc.loc.snippet & '"')))
-    genProcPrototype(m, prc, q.module.id == m.module.id)
+    genProcPrototype(m, prc, q != nil and q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       # make sure there is a "prototype" in the external module
       # which will actually become a function pointer
