@@ -3083,8 +3083,7 @@ proc semTupleConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
   # convert `tupexp` to typedesc if necessary:
   if tupexp.typ.kind == tyFromExpr:
     # tyFromExpr is already ambivalent between types and values
-    result = tupexp
-    return
+    return tupexp
   var isTupleType: bool = false
   if tupexp.len > 0: # don't interpret () as type
     isTupleType = tupexp[0].typ.kind == tyTypeDesc
