@@ -512,23 +512,19 @@ type
     ## you're doing.
 
 when defined(nimNifc):
-  {.pragma: tframe, compilerproc.}
-else:
-  {.pragma: tframe, importc, nodecl.}
-
-type
-  PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
-                        ## part of the debugger API.
-  # keep in sync with nimbase.h `struct TFrame_`
-  TFrame* {.tframe, final.} = object ## The frame itself.
-    prev*: PFrame       ## Previous frame; used for chaining the call stack.
-    procname*: cstring  ## Name of the proc that is currently executing.
-    line*: int          ## Line number of the proc that is currently executing.
-    filename*: cstring  ## Filename of the proc that is currently executing.
-    len*: int16         ## Length of the inspectable slots.
-    calldepth*: int16   ## Used for max call depth checking.
-    when NimStackTraceMsgs:
-      frameMsgLen*: int   ## end position in frameMsgBuf for this frame.
+  type
+    PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
+                          ## part of the debugger API.
+    # keep in sync with nimbase.h `struct TFrame_`
+    TFrame* {.compilerproc, final.} = object ## The frame itself.
+      prev*: PFrame       ## Previous frame; used for chaining the call stack.
+      procname*: cstring  ## Name of the proc that is currently executing.
+      line*: int          ## Line number of the proc that is currently executing.
+      filename*: cstring  ## Filename of the proc that is currently executing.
+      len*: int16         ## Length of the inspectable slots.
+      calldepth*: int16   ## Used for max call depth checking.
+      when NimStackTraceMsgs:
+        frameMsgLen*: int   ## end position in frameMsgBuf for this frame.
 
 type
   StackTraceEntry* = object ## In debug mode exceptions store the stack trace that led
@@ -1738,6 +1734,21 @@ when not defined(nimscript):
 
 when not declared(sysFatal):
   include "system/fatal"
+
+when not defined(nimNifc):
+  type
+    PFrame* = ptr TFrame  ## Represents a runtime frame of the call stack;
+                          ## part of the debugger API.
+    # keep in sync with nimbase.h `struct TFrame_`
+    TFrame* {.importc, nodecl, final.} = object ## The frame itself.
+      prev*: PFrame       ## Previous frame; used for chaining the call stack.
+      procname*: cstring  ## Name of the proc that is currently executing.
+      line*: int          ## Line number of the proc that is currently executing.
+      filename*: cstring  ## Filename of the proc that is currently executing.
+      len*: int16         ## Length of the inspectable slots.
+      calldepth*: int16   ## Used for max call depth checking.
+      when NimStackTraceMsgs:
+        frameMsgLen*: int   ## end position in frameMsgBuf for this frame.
 
 when defined(nimV2):
   var
