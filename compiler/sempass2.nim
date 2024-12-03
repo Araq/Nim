@@ -1665,7 +1665,8 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
        noStrictDefs notin c.config.legacyFeatures) and
-     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone:
+     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone and
+     sfNoInit notin s.flags:
     var res = s.ast[resultPos].sym # get result symbol
     if res.id notin t.init and breaksBlock(body) != bsNoReturn:
       if tfRequiresInit in s.typ.returnType.flags:
