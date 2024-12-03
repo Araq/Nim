@@ -2976,14 +2976,20 @@ proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedT
   var typ = newTypeS(tyTuple, c)  # leave typ.n nil!
   for i in 0..<n.len:
     let expectedElemType = if expected != nil: expected[i] else: nil
-    n[i] = semExprWithType(c, n[i], {}, expectedElemType)
-    if expectedElemType != nil and
-        (expectedElemType.kind != tyNil and not hasEmpty(expectedElemType)):
-      # hasEmpty/nil check is to not break existing code like
-      # `const foo = [(1, {}), (2, {false})]`,
-      # `const foo = if true: (0, nil) else: (1, new(int))`
-      n[i] = fitNode(c, expectedElemType, n[i], n[i].info)
-    addSonSkipIntLit(typ, n[i].typ.skipTypes({tySink}), c.idgen)
+    if typ.kind == tyFromExpr:
+      n[i] = semGenericStmt(c, n[i])
+    else:
+      n[i] = semExprWithType(c, n[i], {}, expectedElemType)
+      if n[i].typ != nil and n[i].typ.kind == tyFromExpr and c.inGenericContext > 0:
+        typ = makeTypeFromExpr(c, n.copyTree)
+      else:
+        if expectedElemType != nil and
+            (expectedElemType.kind != tyNil and not hasEmpty(expectedElemType)):
+          # hasEmpty/nil check is to not break existing code like
+          # `const foo = [(1, {}), (2, {false})]`,
+          # `const foo = if true: (0, nil) else: (1, new(int))`
+          n[i] = fitNode(c, expectedElemType, n[i], n[i].info)
+        addSonSkipIntLit(typ, n[i].typ.skipTypes({tySink}), c.idgen)
   result.typ() = typ
 
 include semobjconstr
@@ -3074,6 +3080,11 @@ proc semExport(c: PContext, n: PNode): PNode =
 
 proc semTupleConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
   var tupexp = semTuplePositionsConstr(c, n, flags, expectedType)
+  # convert `tupexp` to typedesc if necessary:
+  if tupexp.typ.kind == tyFromExpr:
+    # tyFromExpr is already ambivalent between types and values
+    result = tupexp
+    return
   var isTupleType: bool = false
   if tupexp.len > 0: # don't interpret () as type
     isTupleType = tupexp[0].typ.kind == tyTypeDesc
