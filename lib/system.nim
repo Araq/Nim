@@ -511,44 +511,6 @@ type
     ## Each effect should inherit from `RootEffect` unless you know what
     ## you're doing.
 
-type
-  Endianness* = enum ## Type describing the endianness of a processor.
-    littleEndian, bigEndian
-
-const
-  cpuEndian* {.magic: "CpuEndian".}: Endianness = littleEndian
-    ## The endianness of the target CPU. This is a valuable piece of
-    ## information for low-level code only. This works thanks to compiler
-    ## magic.
-
-  hostOS* {.magic: "HostOS".}: string = ""
-    ## A string that describes the host operating system.
-    ##
-    ## Possible values:
-    ## `"windows"`, `"macosx"`, `"linux"`, `"netbsd"`, `"freebsd"`,
-    ## `"openbsd"`, `"solaris"`, `"aix"`, `"haiku"`, `"standalone"`.
-
-  hostCPU* {.magic: "HostCPU".}: string = ""
-    ## A string that describes the host CPU.
-    ##
-    ## Possible values:
-    ## `"i386"`, `"alpha"`, `"powerpc"`, `"powerpc64"`, `"powerpc64el"`,
-    ## `"sparc"`, `"amd64"`, `"mips"`, `"mipsel"`, `"arm"`, `"arm64"`,
-    ## `"mips64"`, `"mips64el"`, `"riscv32"`, `"riscv64"`, `"loongarch64"`.
-
-const
-  QuitSuccess* = 0
-    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
-    ## success.
-
-  QuitFailure* = 1
-    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
-    ## failure.
-
-when not defined(js) and hostOS != "standalone":
-  var programResult* {.compilerproc, exportc: "nim_program_result".}: int
-    ## deprecated, prefer `quit` or `exitprocs.getProgramResult`, `exitprocs.setProgramResult`.
-
 when defined(nimNifc):
   {.pragma: tframe, compilerproc.}
 else:
@@ -1089,12 +1051,37 @@ proc add*(x: var string, y: string) {.magic: "AppendStrStr", noSideEffect.} =
     tmp.add("cd")
     assert tmp == "abcd"
 
+type
+  Endianness* = enum ## Type describing the endianness of a processor.
+    littleEndian, bigEndian
+
 const
+  cpuEndian* {.magic: "CpuEndian".}: Endianness = littleEndian
+    ## The endianness of the target CPU. This is a valuable piece of
+    ## information for low-level code only. This works thanks to compiler
+    ## magic.
+
+  hostOS* {.magic: "HostOS".}: string = ""
+    ## A string that describes the host operating system.
+    ##
+    ## Possible values:
+    ## `"windows"`, `"macosx"`, `"linux"`, `"netbsd"`, `"freebsd"`,
+    ## `"openbsd"`, `"solaris"`, `"aix"`, `"haiku"`, `"standalone"`.
+
+  hostCPU* {.magic: "HostCPU".}: string = ""
+    ## A string that describes the host CPU.
+    ##
+    ## Possible values:
+    ## `"i386"`, `"alpha"`, `"powerpc"`, `"powerpc64"`, `"powerpc64el"`,
+    ## `"sparc"`, `"amd64"`, `"mips"`, `"mipsel"`, `"arm"`, `"arm64"`,
+    ## `"mips64"`, `"mips64el"`, `"riscv32"`, `"riscv64"`, `"loongarch64"`.
+
   seqShallowFlag = low(int)
   strlitFlag = 1 shl (sizeof(int)*8 - 2) # later versions of the codegen \
   # emit this flag
   # for string literals, it allows for some optimizations.
 
+const
   hasThreadSupport = compileOption("threads") and not defined(nimscript)
   hasSharedHeap = defined(boehmgc) or defined(gogc) # don't share heaps; every thread has its own
 
@@ -1132,6 +1119,19 @@ when hasThreadSupport:
   {.pragma: rtlThreadVar, threadvar.}
 else:
   {.pragma: rtlThreadVar.}
+
+const
+  QuitSuccess* = 0
+    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
+    ## success.
+
+  QuitFailure* = 1
+    ## is the value that should be passed to `quit <#quit,int>`_ to indicate
+    ## failure.
+
+when not defined(js) and hostOS != "standalone":
+  var programResult* {.compilerproc, exportc: "nim_program_result".}: int
+    ## deprecated, prefer `quit` or `exitprocs.getProgramResult`, `exitprocs.setProgramResult`.
 
 import std/private/since
 import system/ctypes

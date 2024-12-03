@@ -824,10 +824,13 @@ proc initLocExprSingleUse(p: BProc, e: PNode): TLoc =
   expr(p, e, result)
 
 proc getProgramResult(m: BModule): Snippet =
-  if sfSystemModule in m.module.flags:
-    cSymbol("nim_program_result")
+  when buildNifc:
+    if sfSystemModule in m.module.flags:
+      cSymbol("nim_program_result")
+    else:
+      cgsymValue(m, "programResult")
   else:
-    cgsymValue(m, "programResult")
+    cSymbol("nim_program_result")
 
 proc getTFrame(m: BModule): Snippet =
   when buildNifc:
