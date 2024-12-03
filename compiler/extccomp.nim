@@ -1051,7 +1051,7 @@ proc callNifc*(conf: ConfigRef) =
     let makefilePath = conf.getNimcacheDir().string / "Makefile." & appName & ".bat"
     let makeCmd = expandFilename(makefilePath)
   else:
-    let makefilePath = s.config.nifcacheDir / "Makefile." & appName
+    let makefilePath = conf.getNimcacheDir().string / "Makefile." & appName
     let makeCmd = "make -f " & makefilePath
   execExternalProgram(conf, makeCmd, hintExecuting)
 
