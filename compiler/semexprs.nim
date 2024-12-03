@@ -1680,29 +1680,46 @@ proc builtinFieldAccess(c: PContext; n: PNode; flags: var TExprFlags): PNode =
     result = tryReadingGenericParam(c, n, i, t)
     flags.incl efCannotBeDotCall
 
-proc dotTransformation(c: PContext, n: PNode): PNode =
+proc hiddenDerefDepth(n: PNode): int =
+  result = 0
+  var n = n
+  while n.kind == nkHiddenDeref:
+    inc result
+    n = n[0]
+
+proc dotTransformation(c: PContext, n: PNode, initialDerefs: int): PNode =
+  var root = n[0]
+  let currentDerefs = hiddenDerefDepth(root)
+  if currentDerefs > initialDerefs:
+    # hidden derefs were inserted by `builtinFieldAccess` for fields of
+    # `ref object` etc.
+    # undo the derefs for overload resolution
+    for _ in initialDerefs ..< currentDerefs:
+      root = root[0]
+  root = copyTree(root)
   if isSymChoice(n[1]) or
       # generics usually leave field names as symchoices, but not types
       (n[1].kind == nkSym and n[1].sym.kind == skType):
     result = newNodeI(nkDotCall, n.info)
     result.add n[1]
-    result.add copyTree(n[0])
+    result.add root
   else:
     var i = considerQuotedIdent(c, n[1], n)
     result = newNodeI(nkDotCall, n.info)
     result.flags.incl nfDotField
     result.add newIdentNode(i, n[1].info)
-    result.add copyTree(n[0])
+    result.add root
 
 proc semFieldAccess(c: PContext, n: PNode, flags: TExprFlags): PNode =
   # this is difficult, because the '.' is used in many different contexts
   # in Nim. We first allow types in the semantic checking.
   var f = flags - {efIsDotCall}
+  let initialDerefDepth = hiddenDerefDepth(n[0])
   result = builtinFieldAccess(c, n, f)
   if result == nil or ((result.typ == nil or result.typ.skipTypes(abstractInst).kind != tyProc) and
       efIsDotCall in flags and callOperator notin c.features and
       efCannotBeDotCall notin f):
-    result = dotTransformation(c, n)
+    result = dotTransformation(c, n, initialDerefDepth)
 
 proc buildOverloadedSubscripts(n: PNode, ident: PIdent): PNode =
   result = newNodeI(nkCall, n.info)
@@ -2004,13 +2021,14 @@ proc semAsgn(c: PContext, n: PNode; mode=asgnNormal): PNode =
     # --> `f=` (r, x)
     let nOrig = n.copyTree
     var flags = {efLValue}
+    let initialDerefDepth = hiddenDerefDepth(a[0])
     a = builtinFieldAccess(c, a, flags)
     if a == nil:
       a = propertyWriteAccess(c, n, nOrig, n[0])
       if a != nil: return a
       # we try without the '='; proc that return 'var' or macros are still
       # possible:
-      a = dotTransformation(c, n[0])
+      a = dotTransformation(c, n[0], initialDerefDepth)
       if a.kind == nkDotCall:
         a.transitionSonsKind(nkCall)
         a = semExprWithType(c, a, {efLValue})
