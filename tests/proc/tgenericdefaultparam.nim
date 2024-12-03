@@ -96,3 +96,25 @@ block: # issue #24121
   proc baz[T: FooBar](x: T, y = foo(x)): string = y
   doAssert baz(Foo(123)) == "b"
   doAssert baz(Bar(123)) == "c"
+
+block: # issue #24484
+  type E = enum A
+  proc foo[T](t: set[T] = {T.A}) =
+    discard
+  foo[E]()
+
+  proc bar[T](t: set[T] = {T(0), 5}) =
+    doAssert t == {0, 5}
+  bar[uint8]()
+  doAssert not compiles(bar[string]())
+
+block: # issue #24484, array version
+  type E = enum A
+  proc foo[T](t: openArray[T] = [T.A]) =
+    discard
+  foo[E]()
+
+  proc bar[T](t: openArray[T] = [T(0), 5]) =
+    doAssert t == [T(0), 5]
+  bar[uint8]()
+
