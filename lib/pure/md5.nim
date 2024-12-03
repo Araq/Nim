@@ -100,32 +100,19 @@ proc decode(dest: var openArray[uint8], src: openArray[uint32]) =
     dest[i+3] = uint8(src[j] shr 24 and 0xff'u32)
     inc(i, 4)
 
-template slice(s: string, a, b): openArray[uint8] =
-  when nimvm:
-    # toOpenArray is not implemented in VM
-    var s2 = newSeq[uint8](s.len)
-    for i in 0 ..< s2.len:
-      s2[i] = uint8(s[i])
-    s2
-  else:
-    s.toOpenArrayByte(a, b)
-
 template slice(s: cstring, a, b): openArray[uint8] =
   when nimvm:
     # toOpenArray is not implemented in VM
-    slice($s, a, b)
+    toOpenArrayByte($s, a, b)
   else:
     when defined(js):
       # toOpenArrayByte for cstring is not implemented in JS
-      slice($s, a, b)
+      toOpenArrayByte($s, a, b)
     else:
       s.toOpenArrayByte(a, b)
 
 template slice(s: openArray[uint8], a, b): openArray[uint8] =
-  when nimvm:
-    s[a .. b]
-  else:
-    s.toOpenArray(a, b)
+  s.toOpenArray(a, b)
 
 const useMem = declared(copyMem)
 

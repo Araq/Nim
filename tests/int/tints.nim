@@ -1,11 +1,12 @@
 discard """
-  matrix: "; --backend:js --jsbigint64:off; --backend:js --jsbigint64:on"
+  matrix: "; --backend:js --jsbigint64:off -d:nimStringHash2; --backend:js --jsbigint64:on"
   output: '''
 0 0
 0 0
 Success'''
 """
 # Test the different integer operations
+
 
 import std/private/jsutils
 
@@ -26,8 +27,7 @@ template test(opr, a, b, c: untyped): untyped =
 
 test(`+`, 12'i8, -13'i16, -1'i16)
 test(`shl`, 0b11, 0b100, 0b110000)
-whenJsNoBigInt64: discard
-do:
+when hasWorkingInt64:
   test(`shl`, 0b11'i64, 0b100'i64, 0b110000'i64)
 when not defined(js):
   # mixed type shr needlessly complicates codegen with bigint
@@ -38,25 +38,21 @@ test(`shl`, 0b11'i32, 0b100'i32, 0b110000'i32)
 test(`or`, 0xf0f0'i16, 0x0d0d'i16, 0xfdfd'i16)
 test(`and`, 0xf0f0'i16, 0xfdfd'i16, 0xf0f0'i16)
 
-whenJsNoBigInt64: discard
-do:
+when hasWorkingInt64:
   test(`shr`, 0xffffffffffffffff'i64, 0x4'i64, 0xffffffffffffffff'i64)
 test(`shr`, 0xffff'i16, 0x4'i16, 0xffff'i16)
 test(`shr`, 0xff'i8, 0x4'i8, 0xff'i8)
 
-whenJsNoBigInt64: discard
-do:
+when hasWorkingInt64:
   test(`shr`, 0xffffffff'i64, 0x4'i64, 0x0fffffff'i64)
 test(`shr`, 0xffffffff'i32, 0x4'i32, 0xffffffff'i32)
 
-whenJsNoBigInt64: discard
-do:
+when hasWorkingInt64:
   test(`shl`, 0xffffffffffffffff'i64, 0x4'i64, 0xfffffffffffffff0'i64)
 test(`shl`, 0xffff'i16, 0x4'i16, 0xfff0'i16)
 test(`shl`, 0xff'i8, 0x4'i8, 0xf0'i8)
 
-whenJsNoBigInt64: discard
-do:
+when hasWorkingInt64:
   test(`shl`, 0xffffffff'i64, 0x4'i64, 0xffffffff0'i64)
 test(`shl`, 0xffffffff'i32, 0x4'i32, 0xfffffff0'i32)
 
@@ -140,5 +136,10 @@ block: # shl
   doAssert u32 shl 1 == u32 - 1
   when not defined(js) or (defined(js) and compileOption("jsbigint64")):
     doAssert u64 shl 1 == u64 - 1
+
+block: # bug #23378
+  var neg = -1  # prevent compile-time evaluation
+  let n = abs BiggestInt neg
+  doAssert n == 1
 
 echo("Success") #OUT Success

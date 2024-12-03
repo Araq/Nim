@@ -1,4 +1,5 @@
 discard """
+  matrix: "-d:nimInternalNonVtablesTesting"
   output: '''(peel: 0, color: 15)
 (color: 15)
 17

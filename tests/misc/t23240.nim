@@ -1,0 +1,6 @@
+discard """
+  cmd: "nim c foo/bar.nim"
+  action: "reject"
+  errormsg: "cannot open 'foo/'"
+  file: ""
+"""

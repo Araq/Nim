@@ -67,6 +67,7 @@ func len*[T](c: CritBitTree[T]): int {.inline.} =
   result = c.count
 
 proc rawGet[T](c: CritBitTree[T], key: string): Node[T] =
+  result = nil
   var it = c.root
   while it != nil:
     if not it.isLeaf:
@@ -145,7 +146,7 @@ func exclImpl[T](c: var CritBitTree[T], key: string): int =
   var whereq: ptr Node[T] = nil
   if p == nil: return c.count
   var dir = 0
-  var q: Node[T]
+  var q: Node[T] = nil
   while not p.isLeaf:
     whereq = wherep
     q = p
@@ -394,6 +395,7 @@ iterator mpairs*[T](c: var CritBitTree[T]): tuple[key: string, val: var T] =
   for x in leaves(c.root): yield (x.key, x.val)
 
 proc allprefixedAux[T](c: CritBitTree[T], key: string): Node[T] =
+  result = nil
   var p = c.root
   var top = p
   if p != nil:

@@ -342,7 +342,7 @@ proc open*(destEncoding = "UTF-8", srcEncoding = "CP1252"): EncodingConverter =
   ## Raises `EncodingError` if it cannot fulfill the request.
   when not defined(windows):
     result = iconvOpen(destEncoding, srcEncoding)
-    if result == nil:
+    if result == cast[EncodingConverter](-1):
       raise newException(EncodingError,
         "cannot create encoding converter from " &
         srcEncoding & " to " & destEncoding)

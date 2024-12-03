@@ -380,8 +380,8 @@ type
     kind: FootnoteType  # discriminator
     number: int         # valid for fnManualNumber (always) and fnAutoNumber,
                         # fnAutoNumberLabel after resolveSubs is called
-    autoNumIdx: int     # order of occurence: fnAutoNumber, fnAutoNumberLabel
-    autoSymIdx: int     # order of occurence: fnAutoSymbol
+    autoNumIdx: int     # order of occurrence: fnAutoNumber, fnAutoNumberLabel
+    autoSymIdx: int     # order of occurrence: fnAutoSymbol
     label: string       # valid for fnAutoNumberLabel
   RstFileTable* = object
     filenameToIdx*: Table[string, FileIndex]
@@ -507,7 +507,7 @@ proc len(filenames: RstFileTable): int = filenames.idxToFilename.len
 proc addFilename*(s: PRstSharedState, file1: string): FileIndex =
   ## Returns index of filename, adding it if it has not been used before
   let nextIdx = s.filenames.len.FileIndex
-  result = getOrDefault(s.filenames.filenameToIdx, file1, default = nextIdx)
+  result = getOrDefault(s.filenames.filenameToIdx, file1, nextIdx)
   if result == nextIdx:
     s.filenames.filenameToIdx[file1] = result
     s.filenames.idxToFilename.add file1
@@ -1526,7 +1526,7 @@ proc parseMarkdownCodeblockFields(p: var RstParser): PRstNode =
     result = nil
   else:
     result = newRstNode(rnFieldList)
-  while currentTok(p).kind != tkIndent:
+  while currentTok(p).kind notin {tkIndent, tkEof}:
     if currentTok(p).kind == tkWhite:
       inc p.idx
     else:
@@ -1603,6 +1603,7 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
   else:
     args = nil
   var n = newLeaf("")
+  var isFirstLine = true
   while true:
     if currentTok(p).kind == tkEof:
       rstMessage(p, meMissingClosing,
@@ -1614,7 +1615,8 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
       inc p.idx, 2
       break
     elif currentTok(p).kind == tkIndent:
-      n.text.add "\n"
+      if not isFirstLine:
+        n.text.add "\n"
       if currentTok(p).ival > baseCol:
         n.text.add " ".repeat(currentTok(p).ival - baseCol)
       elif currentTok(p).ival < baseCol:
@@ -1624,6 +1626,7 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
     else:
       n.text.add(currentTok(p).symbol)
       inc p.idx
+    isFirstLine = false
   result.sons[0] = args
   if result.sons[2] == nil:
     var lb = newRstNode(rnLiteralBlock)
@@ -3361,7 +3364,7 @@ proc dirCodeBlock(p: var RstParser, nimExtension = false): PRstNode =
   ## description of ``parseDirective`` for further structure information.
   ##
   ## Code blocks can come in two forms, the standard `code directive
-  ## <http://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
+  ## <https://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
   ## the nim extension ``.. code-block::``. If the block is an extension, we
   ## want the default language syntax highlighting to be Nim, so we create a
   ## fake internal field to communicate with the generator. The field is named
@@ -3652,114 +3655,114 @@ proc preparePass2*(s: var PRstSharedState, mainNode: PRstNode, importdoc = true)
       loadIdxFile(s, origFilename)
 
 proc resolveLink(s: PRstSharedState, n: PRstNode) : PRstNode =
-    # Associate this link alias with its target and change node kind to
-    # rnHyperlink or rnInternalRef appropriately.
-    var desc, alias: PRstNode
-    if n.kind == rnPandocRef:  # link like [desc][alias]
-      desc = n.sons[0]
-      alias = n.sons[1]
-    else:  # n.kind == rnRstRef, link like `desc=alias`_
-      desc = n
-      alias = n
-    type LinkDef = object
-      ar: AnchorRule
-      priority: int
-      tooltip: string
-      target: PRstNode
-      info: TLineInfo
-      externFilename: string
-        # when external anchor: origin filename where anchor was defined
-      isTitle: bool
-    proc cmp(x, y: LinkDef): int =
-      result = cmp(x.priority, y.priority)
-      if result == 0:
-        result = cmp(x.target, y.target)
-    var foundLinks: seq[LinkDef]
-    let refn = rstnodeToRefname(alias)
-    var hyperlinks = findRef(s, refn)
-    for y in hyperlinks:
-      foundLinks.add LinkDef(ar: arHyperlink, priority: refPriority(y.kind),
-                             target: y.value, info: y.info,
-                             tooltip: "(" & $y.kind & ")")
-    let substRst = findMainAnchorRst(s, alias.addNodes, n.info)
-    template getExternFilename(subst: AnchorSubst): string =
-      if subst.kind == arExternalRst or
-          (subst.kind == arNim and subst.external):
-        getFilename(s, subst)
-      else: ""
-    for subst in substRst:
-      var refname, fullRefname: string
-      if subst.kind == arInternalRst:
-        refname = subst.target.anchor
-        fullRefname = refname
-      else:  # arExternalRst
-        refname = subst.refnameExt
-        fullRefname = s.idxImports[getFilename(s, subst)].linkRelPath &
-                        "/" & refname
-      let anchorType =
-        if subst.kind == arInternalRst: subst.anchorType
-        else: subst.anchorTypeExt  # arExternalRst
+  # Associate this link alias with its target and change node kind to
+  # rnHyperlink or rnInternalRef appropriately.
+  var desc, alias: PRstNode
+  if n.kind == rnPandocRef:  # link like [desc][alias]
+    desc = n.sons[0]
+    alias = n.sons[1]
+  else:  # n.kind == rnRstRef, link like `desc=alias`_
+    desc = n
+    alias = n
+  type LinkDef = object
+    ar: AnchorRule
+    priority: int
+    tooltip: string
+    target: PRstNode
+    info: TLineInfo
+    externFilename: string
+      # when external anchor: origin filename where anchor was defined
+    isTitle: bool
+  proc cmp(x, y: LinkDef): int =
+    result = cmp(x.priority, y.priority)
+    if result == 0:
+      result = cmp(x.target, y.target)
+  var foundLinks: seq[LinkDef]
+  let refn = rstnodeToRefname(alias)
+  var hyperlinks = findRef(s, refn)
+  for y in hyperlinks:
+    foundLinks.add LinkDef(ar: arHyperlink, priority: refPriority(y.kind),
+                           target: y.value, info: y.info,
+                           tooltip: "(" & $y.kind & ")")
+  let substRst = findMainAnchorRst(s, alias.addNodes, n.info)
+  template getExternFilename(subst: AnchorSubst): string =
+    if subst.kind == arExternalRst or
+        (subst.kind == arNim and subst.external):
+      getFilename(s, subst)
+    else: ""
+  for subst in substRst:
+    var refname, fullRefname: string
+    if subst.kind == arInternalRst:
+      refname = subst.target.anchor
+      fullRefname = refname
+    else:  # arExternalRst
+      refname = subst.refnameExt
+      fullRefname = s.idxImports[getFilename(s, subst)].linkRelPath &
+                      "/" & refname
+    let anchorType =
+      if subst.kind == arInternalRst: subst.anchorType
+      else: subst.anchorTypeExt  # arExternalRst
+    foundLinks.add LinkDef(ar: subst.kind, priority: subst.priority,
+                           target: newLeaf(fullRefname),
+                           info: subst.info,
+                           externFilename: getExternFilename(subst),
+                           isTitle: isDocumentationTitle(refname),
+                           tooltip: "(" & $anchorType & ")")
+  # find anchors automatically generated from Nim symbols
+  if roNimFile in s.options or s.nimFileImported:
+    let substNim = findMainAnchorNim(s, signature=alias, n.info)
+    for subst in substNim:
+      let fullRefname =
+        if subst.external:
+          s.idxImports[getFilename(s, subst)].linkRelPath &
+              "/" & subst.refname
+        else: subst.refname
       foundLinks.add LinkDef(ar: subst.kind, priority: subst.priority,
                              target: newLeaf(fullRefname),
-                             info: subst.info,
                              externFilename: getExternFilename(subst),
-                             isTitle: isDocumentationTitle(refname),
-                             tooltip: "(" & $anchorType & ")")
-    # find anchors automatically generated from Nim symbols
-    if roNimFile in s.options or s.nimFileImported:
-      let substNim = findMainAnchorNim(s, signature=alias, n.info)
-      for subst in substNim:
-        let fullRefname =
-          if subst.external:
-            s.idxImports[getFilename(s, subst)].linkRelPath &
-                "/" & subst.refname
-          else: subst.refname
-        foundLinks.add LinkDef(ar: subst.kind, priority: subst.priority,
-                               target: newLeaf(fullRefname),
-                               externFilename: getExternFilename(subst),
-                               isTitle: isDocumentationTitle(subst.refname),
-                               info: subst.info, tooltip: subst.tooltip)
-    foundLinks.sort(cmp = cmp, order = Descending)
-    let aliasStr = addNodes(alias)
-    if foundLinks.len >= 1:
+                             isTitle: isDocumentationTitle(subst.refname),
+                             info: subst.info, tooltip: subst.tooltip)
+  foundLinks.sort(cmp = cmp, order = Descending)
+  let aliasStr = addNodes(alias)
+  if foundLinks.len >= 1:
+    if foundLinks[0].externFilename != "":
+      s.idxImports[foundLinks[0].externFilename].used = true
+    let kind = if foundLinks[0].ar in {arHyperlink, arExternalRst}: rnHyperlink
+               elif foundLinks[0].ar == arNim:
+                 if foundLinks[0].externFilename == "": rnNimdocRef
+                 else: rnHyperlink
+               else: rnInternalRef
+    result = newRstNode(kind)
+    let documentName =  # filename without ext for `.nim`, title for `.md`
+      if foundLinks[0].ar == arNim:
+        changeFileExt(foundLinks[0].externFilename.extractFilename, "")
+      elif foundLinks[0].externFilename != "":
+        s.idxImports[foundLinks[0].externFilename].title
+      else: foundLinks[0].externFilename.extractFilename
+    let linkText =
       if foundLinks[0].externFilename != "":
-        s.idxImports[foundLinks[0].externFilename].used = true
-      let kind = if foundLinks[0].ar in {arHyperlink, arExternalRst}: rnHyperlink
-                 elif foundLinks[0].ar == arNim:
-                   if foundLinks[0].externFilename == "": rnNimdocRef
-                   else: rnHyperlink
-                 else: rnInternalRef
-      result = newRstNode(kind)
-      let documentName =  # filename without ext for `.nim`, title for `.md`
-        if foundLinks[0].ar == arNim:
-          changeFileExt(foundLinks[0].externFilename.extractFilename, "")
-        elif foundLinks[0].externFilename != "":
-          s.idxImports[foundLinks[0].externFilename].title
-        else: foundLinks[0].externFilename.extractFilename
-      let linkText =
-        if foundLinks[0].externFilename != "":
-          if foundLinks[0].isTitle: newLeaf(addNodes(desc))
-          else: newLeaf(documentName & ": " & addNodes(desc))
-        else:
-          newRstNode(rnInner, desc.sons)
-      result.sons = @[linkText, foundLinks[0].target]
-      if kind == rnNimdocRef: result.tooltip = foundLinks[0].tooltip
-      if foundLinks.len > 1:  # report ambiguous link
-        var targets = newSeq[string]()
-        for l in foundLinks:
-          var t = "    "
-          if s.filenames.len > 1:
-            t.add getFilename(s.filenames, l.info.fileIndex)
-          let n = l.info.line
-          let c = l.info.col + ColRstOffset
-          t.add "($1, $2): $3" % [$n, $c, l.tooltip]
-          targets.add t
-        rstMessage(s.filenames, s.msgHandler, n.info, mwAmbiguousLink,
-                   "`$1`\n  clash:\n$2" % [
-                     aliasStr, targets.join("\n")])
-    else:  # nothing found
-      result = n
-      rstMessage(s.filenames, s.msgHandler, n.info, mwBrokenLink, aliasStr)
+        if foundLinks[0].isTitle: newLeaf(addNodes(desc))
+        else: newLeaf(documentName & ": " & addNodes(desc))
+      else:
+        newRstNode(rnInner, desc.sons)
+    result.sons = @[linkText, foundLinks[0].target]
+    if kind == rnNimdocRef: result.tooltip = foundLinks[0].tooltip
+    if foundLinks.len > 1:  # report ambiguous link
+      var targets = newSeq[string]()
+      for l in foundLinks:
+        var t = "    "
+        if s.filenames.len > 1:
+          t.add getFilename(s.filenames, l.info.fileIndex)
+        let n = l.info.line
+        let c = l.info.col + ColRstOffset
+        t.add "($1, $2): $3" % [$n, $c, l.tooltip]
+        targets.add t
+      rstMessage(s.filenames, s.msgHandler, n.info, mwAmbiguousLink,
+                 "`$1`\n  clash:\n$2" % [
+                   aliasStr, targets.join("\n")])
+  else:  # nothing found
+    result = n
+    rstMessage(s.filenames, s.msgHandler, n.info, mwBrokenLink, aliasStr)
 
 proc resolveSubs*(s: PRstSharedState, n: PRstNode): PRstNode =
   ## Makes pass 2 of RST parsing.

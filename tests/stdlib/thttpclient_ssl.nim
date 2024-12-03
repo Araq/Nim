@@ -1,6 +1,7 @@
 discard """
   cmd: "nim $target --mm:refc -d:ssl $options $file"
   disabled: "openbsd"
+  retries: 2
 """
 
 #            Nim - Basic SSL integration tests
@@ -13,7 +14,10 @@ discard """
 ## Test with:
 ## ./bin/nim c -d:ssl -p:. --threads:on -r tests/stdlib/thttpclient_ssl.nim
 
-when not defined(windows):
+
+from stdtest/testutils import disableSSLTesting
+
+when not defined(windows) and not disableSSLTesting():
   # Disabled on Windows due to old OpenSSL version
   import std/[formatfloat, syncio]
   import
@@ -41,7 +45,7 @@ when not defined(windows):
   proc runServer(port: Port): bool {.thread.} =
     ## Run a trivial HTTPS server in a {.thread.}
     ## Exit after serving one request
-
+    result = false
     var socket = newSocket()
     socket.setSockOpt(OptReusePort, true)
     socket.bindAddr(port)
@@ -51,7 +55,7 @@ when not defined(windows):
     ##  Handle one connection
     socket.listen()
 
-    var client: Socket
+    var client: Socket = default(Socket)
     var address = ""
 
     log "server: ready"

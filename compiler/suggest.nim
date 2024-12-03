@@ -32,13 +32,13 @@
 
 # included from sigmatch.nim
 
-import prefixmatches
+import prefixmatches, suggestsymdb
 from wordrecg import wDeprecated, wError, wAddr, wYield
 
 import std/[algorithm, sets, parseutils, tables]
 
 when defined(nimsuggest):
-  import std/tables, pathutils # importer
+  import pathutils # importer
 
 const
   sep = '\t'
@@ -85,7 +85,16 @@ proc cmpSuggestions(a, b: Suggest): int =
   # independent of hashing order:
   result = cmp(a.name[], b.name[])
 
-proc getTokenLenFromSource(conf: ConfigRef; ident: string; info: TLineInfo): int =
+proc scanForTrailingAsterisk(line: string, start: int): int =
+  result = 0
+  while start+result < line.len and line[start+result] in {' ', '\t'}:
+    inc result
+  if start+result < line.len and line[start+result] == '*':
+    inc result
+  else:
+    result = 0
+
+proc getTokenLenFromSource(conf: ConfigRef; ident: string; info: TLineInfo; skipTrailingAsterisk: bool = false): int =
   let
     line = sourceLine(conf, info)
     column = toColumn(info)
@@ -105,10 +114,16 @@ proc getTokenLenFromSource(conf: ConfigRef; ident: string; info: TLineInfo): int
     result = skipUntil(line, '`', column)
     if cmpIgnoreStyle(line[column..column + result - 1], ident) != 0:
       result = 0
+  elif column >= 0 and line[column] == '`' and isOpeningBacktick(column):
+    result = skipUntil(line, '`', column + 1) + 2
+    if cmpIgnoreStyle(line[column + 1..column + result - 2], ident) != 0:
+      result = 0
   elif ident[0] in linter.Letters and ident[^1] != '=':
     result = identLen(line, column)
     if cmpIgnoreStyle(line[column..column + result - 1], ident[0..min(result-1,len(ident)-1)]) != 0:
       result = 0
+    if skipTrailingAsterisk and result > 0:
+      result += scanForTrailingAsterisk(line, column + result)
   else:
     var sourceIdent: string = ""
     result = parseWhile(line, sourceIdent,
@@ -126,7 +141,7 @@ proc symToSuggest*(g: ModuleGraph; s: PSym, isLocal: bool, section: IdeCmd, info
                   inTypeContext: bool; scope: int;
                   useSuppliedInfo = false,
                   endLine: uint16 = 0,
-                  endCol = 0): Suggest =
+                  endCol = 0, extractDocs = true): Suggest =
   new(result)
   result.section = section
   result.quality = quality
@@ -161,11 +176,12 @@ proc symToSuggest*(g: ModuleGraph; s: PSym, isLocal: bool, section: IdeCmd, info
       if section == ideInlayHints:
         result.forth = typeToString(s.typ, preferInlayHint)
       else:
-        result.forth = typeToString(s.typ)
+        result.forth = typeToString(s.typ, preferInferredEffects)
     else:
       result.forth = ""
     when defined(nimsuggest) and not defined(noDocgen) and not defined(leanCompiler):
-      result.doc = extractDocComment(g, s)
+      if extractDocs:
+        result.doc = extractDocComment(g, s)
   if s.kind == skModule and s.ast.len != 0 and section != ideHighlight:
     result.filePath = toFullPath(g.config, s.ast[0].info)
     result.line = 1
@@ -183,7 +199,7 @@ proc symToSuggest*(g: ModuleGraph; s: PSym, isLocal: bool, section: IdeCmd, info
     result.tokenLen = if section notin {ideHighlight, ideInlayHints}:
                         s.name.s.len
                       else:
-                        getTokenLenFromSource(g.config, s.name.s, infox)
+                        getTokenLenFromSource(g.config, s.name.s, infox, section == ideInlayHints)
   result.version = g.config.suggestVersion
   result.endLine = endLine
   result.endCol = endCol
@@ -253,7 +269,7 @@ proc `$`*(suggest: Suggest): string =
       result.add(sep)
       result.add($suggest.endCol)
 
-proc suggestToSuggestInlayHint*(sug: Suggest): SuggestInlayHint =
+proc suggestToSuggestInlayTypeHint*(sug: Suggest): SuggestInlayHint =
   SuggestInlayHint(
     kind: sihkType,
     line: sug.line,
@@ -263,6 +279,30 @@ proc suggestToSuggestInlayHint*(sug: Suggest): SuggestInlayHint =
     paddingRight: false,
     allowInsert: true,
     tooltip: ""
+  )
+
+proc suggestToSuggestInlayExceptionHintLeft*(sug: Suggest, propagatedExceptions: seq[PType]): SuggestInlayHint =
+  SuggestInlayHint(
+    kind: sihkException,
+    line: sug.line,
+    column: sug.column,
+    label: "try ",
+    paddingLeft: false,
+    paddingRight: false,
+    allowInsert: false,
+    tooltip: "propagated exceptions: " & $propagatedExceptions
+  )
+
+proc suggestToSuggestInlayExceptionHintRight*(sug: Suggest, propagatedExceptions: seq[PType]): SuggestInlayHint =
+  SuggestInlayHint(
+    kind: sihkException,
+    line: sug.line,
+    column: sug.column + sug.tokenLen,
+    label: "!",
+    paddingLeft: false,
+    paddingRight: false,
+    allowInsert: false,
+    tooltip: "propagated exceptions: " & $propagatedExceptions
   )
 
 proc suggestResult*(conf: ConfigRef; s: Suggest) =
@@ -325,8 +365,8 @@ proc fieldVisible*(c: PContext, f: PSym): bool {.inline.} =
 
 proc getQuality(s: PSym): range[0..100] =
   result = 100
-  if s.typ != nil and s.typ.len > 1:
-    var exp = s.typ[1].skipTypes({tyGenericInst, tyVar, tyLent, tyAlias, tySink})
+  if s.typ != nil and s.typ.paramsLen > 0:
+    var exp = s.typ.firstParamType.skipTypes({tyGenericInst, tyVar, tyLent, tyAlias, tySink})
     if exp.kind == tyVarargs: exp = elemType(exp)
     if exp.kind in {tyUntyped, tyTyped, tyGenericParam, tyAnything}: result = 50
 
@@ -395,17 +435,17 @@ proc suggestVar(c: PContext, n: PNode, outputs: var Suggestions) =
   wholeSymTab(nameFits(c, it, n), ideCon)
 
 proc typeFits(c: PContext, s: PSym, firstArg: PType): bool {.inline.} =
-  if s.typ != nil and s.typ.len > 1 and s.typ[1] != nil:
+  if s.typ != nil and s.typ.paramsLen > 0 and s.typ.firstParamType != nil:
     # special rule: if system and some weird generic match via 'tyUntyped'
     # or 'tyGenericParam' we won't list it either to reduce the noise (nobody
     # wants 'system.`-|` as suggestion
     let m = s.getModule()
     if m != nil and sfSystemModule in m.flags:
       if s.kind == skType: return
-      var exp = s.typ[1].skipTypes({tyGenericInst, tyVar, tyLent, tyAlias, tySink})
+      var exp = s.typ.firstParamType.skipTypes({tyGenericInst, tyVar, tyLent, tyAlias, tySink})
       if exp.kind == tyVarargs: exp = elemType(exp)
       if exp.kind in {tyUntyped, tyTyped, tyGenericParam, tyAnything}: return
-    result = sigmatch.argtypeMatches(c, s.typ[1], firstArg)
+    result = sigmatch.argtypeMatches(c, s.typ.firstParamType, firstArg)
   else:
     result = false
 
@@ -475,13 +515,13 @@ proc suggestFieldAccess(c: PContext, n, field: PNode, outputs: var Suggestions) 
       var t = typ
       while t != nil:
         suggestSymList(c, t.n, field, n.info, outputs)
-        t = t[0]
+        t = t.baseClass
     elif typ.kind == tyObject:
       var t = typ
       while true:
         suggestObject(c, t.n, field, n.info, outputs)
-        if t[0] == nil: break
-        t = skipTypes(t[0], skipPtrs)
+        if t.baseClass == nil: break
+        t = skipTypes(t.baseClass, skipPtrs)
     elif typ.kind == tyTuple and typ.n != nil:
       # All tuple fields are in scope
       # So go through each field and add it to the suggestions (If it passes the filter)
@@ -514,6 +554,16 @@ proc inCheckpoint*(current, trackPos: TLineInfo): TCheckPointResult =
 
 proc isTracked*(current, trackPos: TLineInfo, tokenLen: int): bool =
   if current.fileIndex==trackPos.fileIndex and current.line==trackPos.line:
+    let col = trackPos.col
+    if col >= current.col and col <= current.col+tokenLen-1:
+      result = true
+    else:
+      result = false
+  else:
+    result = false
+
+proc isTracked*(current, trackPos: TinyLineInfo, tokenLen: int): bool =
+  if current.line==trackPos.line:
     let col = trackPos.col
     if col >= current.col and col <= current.col+tokenLen-1:
       result = true
@@ -557,7 +607,7 @@ proc findDefinition(g: ModuleGraph; info: TLineInfo; s: PSym; usageSym: var PSym
   if s.isNil: return
   if isTracked(info, g.config.m.trackPos, s.name.s.len) or (s == usageSym and sfForward notin s.flags):
     suggestResult(g.config, symToSuggest(g, s, isLocal=false, ideDef, info, 100, PrefixMatch.None, false, 0, useSuppliedInfo = s == usageSym))
-    if sfForward notin s.flags and g.config.suggestVersion != 3:
+    if sfForward notin s.flags and g.config.suggestVersion < 3:
       suggestQuit()
     else:
       usageSym = s
@@ -572,7 +622,7 @@ proc suggestSym*(g: ModuleGraph; info: TLineInfo; s: PSym; usageSym: var PSym; i
   ## misnamed: should be 'symDeclared'
   let conf = g.config
   when defined(nimsuggest):
-    g.suggestSymbols.mgetOrPut(info.fileIndex, @[]).add SymInfoPair(sym: s, info: info, isDecl: isDecl)
+    g.suggestSymbols.add SymInfoPair(sym: s, info: info, isDecl: isDecl), optIdeExceptionInlayHints in g.config.globalOptions
 
     if conf.suggestVersion == 0:
       if s.allUsages.len == 0:
@@ -646,7 +696,7 @@ proc markOwnerModuleAsUsed(c: PContext; s: PSym) =
       else:
         inc i
 
-proc markUsed(c: PContext; info: TLineInfo; s: PSym) =
+proc markUsed(c: PContext; info: TLineInfo; s: PSym; checkStyle = true) =
   let conf = c.config
   incl(s.flags, sfUsed)
   if s.kind == skEnumField and s.owner != nil:
@@ -663,7 +713,8 @@ proc markUsed(c: PContext; info: TLineInfo; s: PSym) =
     if sfError in s.flags: userError(conf, info, s)
   when defined(nimsuggest):
     suggestSym(c.graph, info, s, c.graph.usageSym, false)
-  styleCheckUse(c, info, s)
+  if checkStyle:
+    styleCheckUse(c, info, s)
   markOwnerModuleAsUsed(c, s)
 
 proc safeSemExpr*(c: PContext, n: PNode): PNode =
@@ -732,6 +783,9 @@ proc suggestDecl*(c: PContext, n: PNode; s: PSym) =
   if attached: inc(c.inTypeContext)
   defer:
     if attached: dec(c.inTypeContext)
+  # If user is typing out an enum field, then don't provide suggestions
+  if s.kind == skEnumField and c.config.cmd == cmdIdeTools and exactEquals(c.config.m.trackPos, n.info):
+    suggestQuit()
   suggestExpr(c, n)
 
 proc suggestStmt*(c: PContext, n: PNode) =
@@ -742,6 +796,38 @@ proc suggestEnum*(c: PContext; n: PNode; t: PType) =
   suggestSymList(c, t.n, nil, n.info, outputs)
   produceOutput(outputs, c.config)
   if outputs.len > 0: suggestQuit()
+
+proc suggestPragmas*(c: PContext, n: PNode) =
+  ## Suggests anything that might be a pragma
+  ## - template that has {.pragma.}
+  ## - macros
+  ## - user pragmas
+  let info = n.info
+  var outputs: Suggestions = @[]
+  # First filter for template/macros
+  wholeSymTab(filterSym(it, n, pm) and
+    (sfCustomPragma in it.flags or it.kind == skMacro),
+    ideSug)
+
+  # Now show suggestions for user pragmas
+  for pragma in c.userPragmas:
+    var pm = default(PrefixMatch)
+    if filterSym(pragma, n, pm):
+      outputs &= symToSuggest(c.graph, pragma, isLocal=true, ideSug, info,
+                                pragma.getQuality, pm, c.inTypeContext > 0, 0,
+                                extractDocs=false)
+
+  produceOutput(outputs, c.config)
+  if outputs.len > 0:
+    suggestQuit()
+
+template trySuggestPragmas*(c: PContext, n: PNode) =
+  ## Runs [suggestPragmas] when compiling nimsuggest and
+  ## we are querying the node
+  when defined(nimsuggest):
+    let tmp = n
+    if c.config.ideCmd == ideSug and exactEquals(c.config.m.trackPos, tmp.info):
+      suggestPragmas(c, tmp)
 
 proc suggestSentinel*(c: PContext) =
   if c.config.ideCmd != ideSug or c.module.position != c.config.m.trackPos.fileIndex.int32: return
@@ -761,7 +847,7 @@ proc suggestSentinel*(c: PContext) =
 
 when defined(nimsuggest):
   proc onDef(graph: ModuleGraph, s: PSym, info: TLineInfo) =
-    if graph.config.suggestVersion == 3 and info.exactEquals(s.info):
+    if graph.config.suggestVersion >= 3 and info.exactEquals(s.info):
        suggestSym(graph, info, s, graph.usageSym)
 
   template getPContext(): untyped =

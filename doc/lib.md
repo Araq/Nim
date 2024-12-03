@@ -578,7 +578,7 @@ Modules for the JavaScript backend
   The wrapper of core JavaScript functions. For most purposes, you should be using
   the `math`, `json`, and `times` stdlib modules instead of this module.
 
-* [jsfetch](jshttp.html)
+* [jsfetch](jsfetch.html)
   Wrapper for `fetch`.
 
 * [jsffi](jsffi.html)

@@ -1063,7 +1063,7 @@ proc pleViaModel(model: TModel; aa, bb: PNode): TImplication =
       let b = fact[2]
       if a.kind == nkSym: replacements.add((a,b))
       else: replacements.add((b,a))
-  var m: TModel
+  var m = TModel()
   var a = aa
   var b = bb
   if replacements.len > 0:
@@ -1098,13 +1098,13 @@ proc addFactLt*(m: var TModel; a, b: PNode) =
   addFactLe(m, a, bb)
 
 proc settype(n: PNode): PType =
-  result = newType(tySet, ItemId(module: -1, item: -1), n.typ.owner)
-  var idgen: IdGenerator = nil
+  var idgen = idGeneratorForPackage(-1'i32)
+  result = newType(tySet, idgen, n.typ.owner)
   addSonSkipIntLit(result, n.typ, idgen)
 
 proc buildOf(it, loc: PNode; o: Operators): PNode =
   var s = newNodeI(nkCurly, it.info, it.len-1)
-  s.typ = settype(loc)
+  s.typ() = settype(loc)
   for i in 0..<it.len-1: s[i] = it[i]
   result = newNodeI(nkCall, it.info, 3)
   result[0] = newSymNode(o.opContains)
@@ -1165,8 +1165,12 @@ proc buildProperFieldCheck(access, check: PNode; o: Operators): PNode =
   if check[1].kind == nkCurly:
     result = copyTree(check)
     if access.kind == nkDotExpr:
+      # change the access to the discriminator field access
       var a = copyTree(access)
+      # set field name to discriminator field name
       a[1] = check[2]
+      # set discriminator field type: important for `neg`
+      a.typ() = check[2].typ
       result[2] = a
       # 'access.kind != nkDotExpr' can happen for object constructors
       # which we don't check yet

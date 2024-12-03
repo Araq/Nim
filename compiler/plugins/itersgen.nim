@@ -25,14 +25,14 @@ proc iterToProcImpl*(c: PContext, n: PNode): PNode =
     return
 
   let t = n[2].typ.skipTypes({tyTypeDesc, tyGenericInst})
-  if t.kind notin {tyRef, tyPtr} or t.lastSon.kind != tyObject:
+  if t.kind notin {tyRef, tyPtr} or t.elementType.kind != tyObject:
     localError(c.config, n[2].info,
         "type must be a non-generic ref|ptr to object with state field")
     return
   let body = liftIterToProc(c.graph, iter.sym, getBody(c.graph, iter.sym), t, c.idgen)
 
   let prc = newSym(skProc, n[3].ident, c.idgen, iter.sym.owner, iter.sym.info)
-  prc.typ = copyType(iter.sym.typ, nextTypeId c.idgen, prc)
+  prc.typ = copyType(iter.sym.typ, c.idgen, prc)
   excl prc.typ.flags, tfCapturesEnv
   prc.typ.n.add newSymNode(getEnvParam(iter.sym))
   prc.typ.rawAddSon t

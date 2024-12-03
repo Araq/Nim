@@ -106,6 +106,7 @@ type
     unanalysableMutation: bool
     inAsgnSource, inConstructor, inNoSideEffectSection: int
     inConditional, inLoop: int
+    inConvHasDestructor: int
     owner: PSym
     g: ModuleGraph
 
@@ -400,15 +401,14 @@ proc allRoots(n: PNode; result: var seq[(PSym, int)]; level: int) =
         if typ != nil:
           typ = skipTypes(typ, abstractInst)
           if typ.kind != tyProc: typ = nil
-          else: assert(typ.len == typ.n.len)
 
         for i in 1 ..< n.len:
           let it = n[i]
-          if typ != nil and i < typ.len:
+          if typ != nil and i < typ.n.len:
             assert(typ.n[i].kind == nkSym)
             let paramType = typ.n[i].typ
-            if not paramType.isCompileTimeOnly and not typ[0].isEmptyType and
-                canAlias(paramType, typ[0]):
+            if not paramType.isCompileTimeOnly and not typ.returnType.isEmptyType and
+                canAlias(paramType, typ.returnType):
               allRoots(it, result, RootEscapes)
           else:
             allRoots(it, result, RootEscapes)
@@ -428,16 +428,28 @@ proc destMightOwn(c: var Partitions; dest: var VarIndex; n: PNode) =
     # primitive literals including the empty are harmless:
     discard
 
-  of nkExprEqExpr, nkExprColonExpr, nkHiddenStdConv, nkHiddenSubConv, nkCast, nkConv:
+  of nkExprEqExpr, nkExprColonExpr, nkHiddenStdConv, nkHiddenSubConv, nkCast:
     destMightOwn(c, dest, n[1])
+
+  of nkConv:
+    if hasDestructor(n.typ):
+      inc c.inConvHasDestructor
+      destMightOwn(c, dest, n[1])
+      dec c.inConvHasDestructor
+    else:
+      destMightOwn(c, dest, n[1])
 
   of nkIfStmt, nkIfExpr:
     for i in 0..<n.len:
+      inc c.inConditional
       destMightOwn(c, dest, n[i].lastSon)
+      dec c.inConditional
 
   of nkCaseStmt:
     for i in 1..<n.len:
+      inc c.inConditional
       destMightOwn(c, dest, n[i].lastSon)
+      dec c.inConditional
 
   of nkStmtList, nkStmtListExpr:
     if n.len > 0:
@@ -482,7 +494,7 @@ proc destMightOwn(c: var Partitions; dest: var VarIndex; n: PNode) =
 
   of nkCallKinds:
     if n.typ != nil:
-      if hasDestructor(n.typ):
+      if hasDestructor(n.typ) or c.inConvHasDestructor > 0:
         # calls do construct, what we construct must be destroyed,
         # so dest cannot be a cursor:
         dest.flags.incl ownsData
@@ -490,8 +502,17 @@ proc destMightOwn(c: var Partitions; dest: var VarIndex; n: PNode) =
         # we know the result is derived from the first argument:
         var roots: seq[(PSym, int)] = @[]
         allRoots(n[1], roots, RootEscapes)
-        for r in roots:
-          connect(c, dest.sym, r[0], n[1].info)
+        if roots.len == 0 and c.inConditional > 0:
+          # when in a conditional expression,
+          # to ensure that the first argument isn't outlived
+          # by the lvalue, we need find the root, otherwise
+          # it is probably a local temporary
+          # (e.g. a return value from a call),
+          # we should prevent cursorfication
+          dest.flags.incl preventCursor
+        else:
+          for r in roots:
+            connect(c, dest.sym, r[0], n[1].info)
 
       else:
         let magic = if n[0].kind == nkSym: n[0].sym.magic else: mNone
@@ -707,7 +728,7 @@ proc traverse(c: var Partitions; n: PNode) =
     for child in n: traverse(c, child)
 
     let parameters = n[0].typ
-    let L = if parameters != nil: parameters.len else: 0
+    let L = if parameters != nil: parameters.signatureLen else: 0
     let m = getMagic(n)
 
     if m == mEnsureMove and n[1].kind == nkSym:
@@ -858,7 +879,7 @@ proc computeLiveRanges(c: var Partitions; n: PNode) =
     for child in n: computeLiveRanges(c, child)
 
     let parameters = n[0].typ
-    let L = if parameters != nil: parameters.len else: 0
+    let L = if parameters != nil: parameters.signatureLen else: 0
 
     for i in 1..<n.len:
       let it = n[i]
@@ -986,7 +1007,9 @@ proc computeCursors*(s: PSym; n: PNode; g: ModuleGraph) =
     if v.flags * {ownsData, preventCursor, isConditionallyReassigned} == {} and
         v.sym.kind notin {skParam, skResult} and
         v.sym.flags * {sfThread, sfGlobal} == {} and hasDestructor(v.sym.typ) and
-        v.sym.typ.skipTypes({tyGenericInst, tyAlias}).kind != tyOwned:
+        v.sym.typ.skipTypes({tyGenericInst, tyAlias}).kind != tyOwned and
+        (getAttachedOp(g, v.sym.typ, attachedAsgn) == nil or
+        sfError notin getAttachedOp(g, v.sym.typ, attachedAsgn).flags):
       let rid = root(par, i)
       if par.s[rid].con.kind == isRootOf and dangerousMutation(par.graphs[par.s[rid].con.graphIndex], par.s[i]):
         discard "cannot cursor into a graph that is mutated"

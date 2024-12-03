@@ -1,0 +1,12 @@
+SomeNumber = concept
+
+#[!]#
+discard """
+$nimsuggest --tester $file
+>chk $1
+chk;;skUnknown;;;;Hint;;???;;0;;-1;;">> (toplevel): import(dirty): tests/tconcept1.nim [Processing]";;0
+chk;;skUnknown;;;;Error;;$file;;1;;13;;"the \'concept\' keyword is only valid in \'type\' sections";;0
+chk;;skUnknown;;;;Error;;$file;;1;;13;;"invalid indentation";;0
+chk;;skUnknown;;;;Error;;$file;;1;;13;;"expression expected, but found \'keyword concept\'";;0
+chk;;skUnknown;;;;Error;;$file;;1;;0;;"\'SomeNumber\' cannot be assigned to";;0
+"""

@@ -1,15 +1,12 @@
 discard """
   matrix: "--mm:arc; --mm:refc"
   output: '''
-do nothing
 HELLO WORLD!
 '''
 """
 
 
-# tmethods1
-method somethin(obj: RootObj) {.base.} =
-  echo "do nothing"
+
 
 type
   TNode* {.inheritable.} = object
@@ -23,8 +20,6 @@ type
 method foo(a: PNode, b: PSomethingElse) {.base.} = discard
 method foo(a: PNodeFoo, b: PSomethingElse) = discard
 
-var o: RootObj
-o.somethin()
 
 
 

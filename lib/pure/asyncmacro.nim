@@ -267,9 +267,9 @@ proc asyncSingleProc(prc: NimNode): NimNode =
     procBody.insert(0): quote do:
       {.push warning[resultshadowed]: off.}
       when `subRetType` isnot void:
-        var `resultIdent`: `subRetType`
+        var `resultIdent`: `subRetType` = default(`subRetType`)
       else:
-        var `resultIdent`: Future[void]
+        var `resultIdent`: Future[void] = nil
       {.pop.}
 
       var `needsCompletionSym` = false

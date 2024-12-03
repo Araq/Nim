@@ -17,9 +17,9 @@ proc bar(x: proc (x: int)) =
 let x = t #[tt.Error
         ^ 't' has unspecified generic parameters]#
 bar t #[tt.Error
-    ^ 't' has unspecified generic parameters]#
+^ type mismatch: got <template [*missing parameters*]()>]#
 
 let y = m #[tt.Error
         ^ 'm' has unspecified generic parameters]#
 bar m #[tt.Error
-    ^ 'm' has unspecified generic parameters]#
+^ type mismatch: got <macro [*missing parameters*](): untyped{.noSideEffect, gcsafe.}>]#

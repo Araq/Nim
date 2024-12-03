@@ -1655,7 +1655,7 @@ proc item*(list: TouchList, i: int): Touch
 proc clearData*(dt: DataTransfer, format: cstring)
 proc getData*(dt: DataTransfer, format: cstring): cstring
 proc setData*(dt: DataTransfer, format: cstring, data: cstring)
-proc setDragImage*(dt: DataTransfer, img: Element, xOffset: int64, yOffset: int64)
+proc setDragImage*(dt: DataTransfer, img: Element, xOffset: int, yOffset: int)
 
 # DataTransferItem "methods"
 proc getAsFile*(dti: DataTransferItem): File

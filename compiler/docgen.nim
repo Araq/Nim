@@ -115,7 +115,7 @@ proc add(dest: var ItemPre, str: string) = dest.add ItemFragment(isRst: false, s
 
 proc addRstFileIndex(d: PDoc, fileIndex: lineinfos.FileIndex): rstast.FileIndex =
   let invalid = rstast.FileIndex(-1)
-  result = d.nimToRstFid.getOrDefault(fileIndex, default = invalid)
+  result = d.nimToRstFid.getOrDefault(fileIndex, invalid)
   if result == invalid:
     let fname = toFullPath(d.conf, fileIndex)
     result = addFilename(d.sharedState, fname)
@@ -289,7 +289,7 @@ template declareClosures(currentFilename: AbsoluteFile, destFile: string) =
     let outDirPath: RelativeFile =
         presentationPath(conf, AbsoluteFile(basedir / targetRelPath))
           # use presentationPath because `..` path can be be mangled to `_._`
-    result.targetPath = string(conf.outDir / outDirPath)
+    result = (string(conf.outDir / outDirPath), "")
     if not fileExists(result.targetPath):
       # this can happen if targetRelPath goes to parent directory `OUTDIR/..`.
       # Trying it, this may cause ambiguities, but allows us to insert
@@ -830,8 +830,8 @@ proc getName(n: PNode): string =
   of nkAccQuoted:
     result = "`"
     for i in 0..<n.len: result.add(getName(n[i]))
-    result = "`"
-  of nkOpenSymChoice, nkClosedSymChoice:
+    result.add('`')
+  of nkOpenSymChoice, nkClosedSymChoice, nkOpenSym:
     result = getName(n[0])
   else:
     result = ""
@@ -849,7 +849,7 @@ proc getNameIdent(cache: IdentCache; n: PNode): PIdent =
     var r = ""
     for i in 0..<n.len: r.add(getNameIdent(cache, n[i]).s)
     result = getIdent(cache, r)
-  of nkOpenSymChoice, nkClosedSymChoice:
+  of nkOpenSymChoice, nkClosedSymChoice, nkOpenSym:
     result = getNameIdent(cache, n[0])
   else:
     result = nil
@@ -863,7 +863,7 @@ proc getRstName(n: PNode): PRstNode =
   of nkAccQuoted:
     result = getRstName(n[0])
     for i in 1..<n.len: result.text.add(getRstName(n[i]).text)
-  of nkOpenSymChoice, nkClosedSymChoice:
+  of nkOpenSymChoice, nkClosedSymChoice, nkOpenSym:
     result = getRstName(n[0])
   else:
     result = nil
@@ -1000,8 +1000,9 @@ proc getTypeKind(n: PNode): string =
 proc toLangSymbol(k: TSymKind, n: PNode, baseName: string): LangSymbol =
   ## Converts symbol info (names/types/parameters) in `n` into format
   ## `LangSymbol` convenient for ``rst.nim``/``dochelpers.nim``.
-  result.name = baseName.nimIdentNormalize
-  result.symKind = k.toHumanStr
+  result = LangSymbol(name: baseName.nimIdentNormalize,
+      symKind: k.toHumanStr
+  )
   if k in routineKinds:
     var
       paramTypes: seq[string] = @[]
@@ -1030,7 +1031,7 @@ proc toLangSymbol(k: TSymKind, n: PNode, baseName: string): LangSymbol =
     if genNode != nil:
       var literal = ""
       var r: TSrcGen = initTokRender(genNode, {renderNoBody, renderNoComments,
-        renderNoPragmas, renderNoProcDefs, renderExpandUsing})
+        renderNoPragmas, renderNoProcDefs, renderExpandUsing, renderNoPostfix})
       var kind = tkEof
       while true:
         getNextTok(r, kind, literal)
@@ -1058,7 +1059,7 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
 
   # Obtain the plain rendered string for hyperlink titles.
   var r: TSrcGen = initTokRender(n, {renderNoBody, renderNoComments, renderDocComments,
-    renderNoPragmas, renderNoProcDefs, renderExpandUsing})
+    renderNoPragmas, renderNoProcDefs, renderExpandUsing, renderNoPostfix})
   while true:
     getNextTok(r, kind, literal)
     if kind == tkEof:
@@ -1085,6 +1086,9 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
     symbolOrIdEnc = encodeUrl(symbolOrId, usePlus = false)
     deprecationMsg = genDeprecationMsg(d, pragmaNode)
     rstLangSymbol = toLangSymbol(k, n, cleanPlainSymbol)
+    symNameNode =
+      if nameNode.kind == nkPostfix: nameNode[1]
+      else: nameNode
 
   # we generate anchors automatically for subsequent use in doc comments
   let lineinfo = rstast.TLineInfo(
@@ -1095,10 +1099,10 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
                priority = symbolPriority(k), info = lineinfo,
                module = addRstFileIndex(d, FileIndex d.module.position))
 
-  let renderFlags =
-    if nonExports: {renderNoBody, renderNoComments, renderDocComments, renderSyms,
-      renderExpandUsing, renderNonExportedFields}
-    else: {renderNoBody, renderNoComments, renderDocComments, renderSyms, renderExpandUsing}
+  var renderFlags = {renderNoBody, renderNoComments, renderDocComments,
+    renderSyms, renderExpandUsing, renderNoPostfix}
+  if nonExports:
+    renderFlags.incl renderNonExportedFields
   nodeToHighlightedHtml(d, n, result, renderFlags, symbolOrIdEnc)
 
   let seeSrc = genSeeSrc(d, toFullPath(d.conf, n.info), n.info.line.int)
@@ -1121,18 +1125,19 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
   let external = d.destFile.AbsoluteFile.relativeTo(d.conf.outDir, '/').changeFileExt(HtmlExt).string
 
   var attype = ""
-  if k in routineKinds and nameNode.kind == nkSym:
+  if k in routineKinds and symNameNode.kind == nkSym:
     let att = attachToType(d, nameNode.sym)
     if att != nil:
       attype = esc(d.target, att.name.s)
-  elif k == skType and nameNode.kind == nkSym and nameNode.sym.typ.kind in {tyEnum, tyBool}:
-    let etyp = nameNode.sym.typ
+  elif k == skType and symNameNode.kind == nkSym and
+      symNameNode.sym.typ.kind in {tyEnum, tyBool}:
+    let etyp = symNameNode.sym.typ
     for e in etyp.n:
       if e.sym.kind != skEnumField: continue
       let plain = renderPlainSymbolName(e)
       let symbolOrId = d.newUniquePlainSymbol(plain)
       setIndexTerm(d[], ieNim, htmlFile = external, id = symbolOrId,
-                   term = plain, linkTitle = nameNode.sym.name.s & '.' & plain,
+                   term = plain, linkTitle = symNameNode.sym.name.s & '.' & plain,
                    linkDesc = xmltree.escape(getPlainDocstring(e).docstringSummary),
                    line = n.info.line.int)
 
@@ -1153,8 +1158,8 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
                linkTitle = detailedName,
                linkDesc = xmltree.escape(plainDocstring.docstringSummary),
                line = n.info.line.int)
-  if k == skType and nameNode.kind == nkSym:
-    d.types.strTableAdd nameNode.sym
+  if k == skType and symNameNode.kind == nkSym:
+    d.types.strTableAdd symNameNode.sym
 
 proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): JsonItem =
   if not isVisible(d, nameNode): return
@@ -1162,12 +1167,14 @@ proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): 
     name = getNameEsc(d, nameNode)
     comm = genRecComment(d, n)
     r: TSrcGen
-    renderFlags = {renderNoBody, renderNoComments, renderDocComments, renderExpandUsing}
+    renderFlags = {renderNoBody, renderNoComments, renderDocComments,
+      renderExpandUsing, renderNoPostfix}
   if nonExports:
     renderFlags.incl renderNonExportedFields
   r = initTokRender(n, renderFlags)
-  result.json = %{ "name": %name, "type": %($k), "line": %n.info.line.int,
+  result = JsonItem(json: %{ "name": %name, "type": %($k), "line": %n.info.line.int,
                    "col": %n.info.col}
+  )
   if comm != nil:
     result.rst = comm
     result.rstField = "description"
@@ -1199,8 +1206,7 @@ proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): 
         var param = %{"name": %($genericParam)}
         if genericParam.sym.typ.len > 0:
           param["types"] = newJArray()
-        for kind in genericParam.sym.typ:
-          param["types"].add %($kind)
+          param["types"] = %($genericParam.sym.typ.elementType)
         result.json["signature"]["genericParams"].add param
   if optGenIndex in d.conf.globalOptions:
     genItem(d, n, nameNode, k, kForceExport)
@@ -1314,7 +1320,7 @@ proc documentEffect(cache: IdentCache; n, x: PNode, effectType: TSpecialWord, id
       if t.startsWith("ref "): t = substr(t, 4)
       effects[i] = newIdentNode(getIdent(cache, t), n.info)
       # set the type so that the following analysis doesn't screw up:
-      effects[i].typ = real[i].typ
+      effects[i].typ() = real[i].typ
 
     result = newTreeI(nkExprColonExpr, n.info,
       newIdentNode(getIdent(cache, $effectType), n.info), effects)
@@ -1400,7 +1406,8 @@ proc generateDoc*(d: PDoc, n, orig: PNode, config: ConfigRef, docFlags: DocFlags
     for it in n: traceDeps(d, it)
   of nkExportStmt:
     for it in n:
-      if it.kind == nkSym:
+      # bug #23051; don't generate documentation for exported symbols again
+      if it.kind == nkSym and sfExported notin it.sym.flags:
         if d.module != nil and d.module == it.sym.owner:
           generateDoc(d, it.sym.ast, orig, config, kForceExport)
         elif it.sym.ast != nil:

@@ -117,9 +117,10 @@ proc option*[T](val: sink T): Option[T] {.inline.} =
     assert option[Foo](nil).isNone
     assert option(42).isSome
 
-  result.val = val
-  when T isnot SomePointer:
-    result.has = true
+  when T is SomePointer:
+    result = Option[T](val: val)
+  else:
+    result = Option[T](has: true, val: val)
 
 proc some*[T](val: sink T): Option[T] {.inline.} =
   ## Returns an `Option` that has the value `val`.
@@ -136,10 +137,9 @@ proc some*[T](val: sink T): Option[T] {.inline.} =
 
   when T is SomePointer:
     assert not val.isNil
-    result.val = val
+    result = Option[T](val: val)
   else:
-    result.has = true
-    result.val = val
+    result = Option[T](has: true, val: val)
 
 proc none*(T: typedesc): Option[T] {.inline.} =
   ## Returns an `Option` for this type that has no value.

@@ -1,8 +1,3 @@
-
-discard """
-  action: "compile"
-  disabled: true
-"""
 import std/sugar
 
 type Tensor[T] = object

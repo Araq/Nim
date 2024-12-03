@@ -238,3 +238,17 @@ block: # issue #8390
     $y.type
 
   doAssert x(@[1.0]) == $1.0.type
+
+
+block: # issue #9381
+  var evalCount {.compileTime.} = 0
+
+  macro test(t: typed): untyped =
+    inc evalCount
+    t
+
+  type GenericObj[T] = object
+    f: test(T)
+
+  var x: GenericObj[int]
+  static: doAssert evalCount == 1

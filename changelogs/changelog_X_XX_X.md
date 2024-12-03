@@ -1,4 +1,4 @@
-# v1.xx.x - yyyy-mm-dd
+# v2.xx.x - yyyy-mm-dd
 
 This is an example file.
 The changes should go to changelog.md!

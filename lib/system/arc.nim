@@ -26,6 +26,9 @@ else:
     rcMask = 0b111
     rcShift = 3      # shift by rcShift to get the reference counter
 
+const
+  orcLeakDetector = defined(nimOrcLeakDetector)
+
 type
   RefHeader = object
     rc: int # the object header is now a single RC field.
@@ -36,8 +39,20 @@ type
                    # in O(1) without doubly linked lists
     when defined(nimArcDebug) or defined(nimArcIds):
       refId: int
+    when defined(gcOrc) and orcLeakDetector:
+      filename: cstring
+      line: int
 
   Cell = ptr RefHeader
+
+template setFrameInfo(c: Cell) =
+  when orcLeakDetector:
+    if framePtr != nil and framePtr.prev != nil:
+      c.filename = framePtr.prev.filename
+      c.line = framePtr.prev.line
+    else:
+      c.filename = nil
+      c.line = 0
 
 template head(p: pointer): Cell =
   cast[Cell](cast[int](p) -% sizeof(RefHeader))
@@ -87,6 +102,7 @@ proc nimNewObj(size, alignment: int): pointer {.compilerRtl.} =
       cfprintf(cstderr, "[nimNewObj] %p %ld\n", result, head(result).count)
   when traceCollector:
     cprintf("[Allocated] %p result: %p\n", result -! sizeof(RefHeader), result)
+  setFrameInfo head(result)
 
 proc nimNewObjUninit(size, alignment: int): pointer {.compilerRtl.} =
   # Same as 'newNewObj' but do not initialize the memory to zero.
@@ -109,6 +125,7 @@ proc nimNewObjUninit(size, alignment: int): pointer {.compilerRtl.} =
 
   when traceCollector:
     cprintf("[Allocated] %p result: %p\n", result -! sizeof(RefHeader), result)
+  setFrameInfo head(result)
 
 proc nimDecWeakRef(p: pointer) {.compilerRtl, inl.} =
   decrement head(p)
@@ -204,7 +221,7 @@ proc nimDecRefIsLast(p: pointer): bool {.compilerRtl, inl.} =
 
     when defined(gcAtomicArc) and hasThreadSupport:
       # `atomicDec` returns the new value
-      if atomicDec(cell.rc, rcIncrement) == -1:
+      if atomicDec(cell.rc, rcIncrement) == -rcIncrement:
         result = true
         when traceCollector:
           cprintf("[ABOUT TO DESTROY] %p\n", cell)
@@ -243,3 +260,8 @@ template tearDownForeignThreadGc* =
 
 proc isObjDisplayCheck(source: PNimTypeV2, targetDepth: int16, token: uint32): bool {.compilerRtl, inl.} =
   result = targetDepth <= source.depth and source.display[targetDepth] == token
+
+when defined(gcDestructors):
+  proc nimGetVTable(p: pointer, index: int): pointer
+        {.compilerRtl, inline, raises: [].} =
+    result = cast[ptr PNimTypeV2](p).vTable[index]

@@ -1,6 +1,6 @@
 discard """
   cmd: "nim check $options $file"
-  errormsg: "wrong number of variables"
+  errormsg: "tuple expected for tuple unpacking, but got 'array[0..2, int]'"
 """
 
 iterator xclusters*[T](a: openArray[T]; s: static[int]): array[s, T] {.inline.} =

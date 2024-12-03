@@ -27,20 +27,17 @@ func expandTabs*(s: string, tabSize: int = 8): string =
     doAssert expandTabs("a\tb\n\txy\t", 3) == "a  b\n   xy "
 
   result = newStringOfCap(s.len + s.len shr 2)
-  var pos = 0
 
   template addSpaces(n) =
-    for j in 0 ..< n:
+    for _ in 1..n:
       result.add(' ')
-      pos += 1
+    pos += n
 
-  for i in 0 ..< len(s):
-    let c = s[i]
+  var pos = 0
+  let denominator = if tabSize > 0: tabSize else: 1
+  for c in s:
     if c == '\t':
-      let
-        denominator = if tabSize > 0: tabSize else: 1
-        numSpaces = tabSize - pos mod denominator
-
+      let numSpaces = tabSize - pos mod denominator
       addSpaces(numSpaces)
     else:
       result.add(c)

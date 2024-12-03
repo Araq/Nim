@@ -4,6 +4,7 @@ success
 M1 M2
 ok
 '''
+matrix: "--mm:refc;--mm:orc"
 """
 
 type
@@ -123,3 +124,40 @@ proc bug19613 =
   doAssert x.bid.root.data[0] == 42
 
 bug19613()
+
+proc foo = # bug #23280
+  let foo = @[1,2,3,4,5,6]
+  doAssert toOpenArray(foo, 0, 5).len == 6
+  doAssert toOpenArray(foo, 0, 5).len mod 6 == 0 # this should output 0
+  doAssert toOpenArray(foo, 0, 5).max mod 6 == 0
+  let L = toOpenArray(foo, 0, 5).len
+  doAssert L mod 6 == 0 
+
+foo()
+
+block: # bug #9940
+  {.emit:"""/*TYPESECTION*/
+typedef struct { int base; } S;
+""".}
+
+  type S {.importc: "S", completeStruct.} = object
+    base: cint
+  proc init(x:ptr S) =
+    x.base = 1
+
+  type
+    Foo = object
+      a: seq[float]
+      b: seq[float]
+      c: seq[float]
+      d: seq[float]
+      s: S
+
+  proc newT(): Foo =
+    var t: Foo
+    t.s.addr.init
+    doAssert t.s.base == 1
+    t
+
+  var t = newT()
+  doAssert t.s.base == 1

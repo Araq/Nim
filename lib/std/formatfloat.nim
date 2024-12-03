@@ -35,8 +35,8 @@ proc writeFloatToBufferRoundtrip*(buf: var array[65, char]; value: float32): int
   result = float32ToChars(buf, value, forceTrailingDotZero=true).int
   buf[result] = '\0'
 
-proc c_sprintf(buf, frmt: cstring): cint {.header: "<stdio.h>",
-                                    importc: "sprintf", varargs, noSideEffect.}
+proc c_snprintf(buf: cstring, n: csize_t, frmt: cstring): cint {.header: "<stdio.h>",
+                                    importc: "snprintf", varargs, noSideEffect.}
 
 proc writeToBuffer(buf: var array[65, char]; value: cstring) =
   var i = 0
@@ -49,7 +49,7 @@ proc writeFloatToBufferSprintf*(buf: var array[65, char]; value: BiggestFloat): 
   ##
   ## returns the amount of bytes written to `buf` not counting the
   ## terminating '\0' character.
-  var n = c_sprintf(cast[cstring](addr buf), "%.16g", value).int
+  var n = c_snprintf(cast[cstring](addr buf), 65, "%.16g", value).int
   var hasDot = false
   for i in 0..n-1:
     if buf[i] == ',':
@@ -79,10 +79,10 @@ proc writeFloatToBufferSprintf*(buf: var array[65, char]; value: BiggestFloat): 
       result = 3
 
 proc writeFloatToBuffer*(buf: var array[65, char]; value: BiggestFloat | float32): int {.inline.} =
-  when defined(nimPreviewFloatRoundtrip) or defined(nimPreviewSlimSystem):
-    writeFloatToBufferRoundtrip(buf, value)
-  else:
+  when defined(nimLegacySprintf):
     writeFloatToBufferSprintf(buf, value)
+  else:
+    writeFloatToBufferRoundtrip(buf, value)
 
 proc addFloatRoundtrip*(result: var string; x: float | float32) =
   when nimvm:
@@ -104,19 +104,19 @@ when defined(js):
   proc nimFloatToString(a: float): cstring =
     ## ensures the result doesn't print like an integer, i.e. return 2.0, not 2
     # print `-0.0` properly
-    asm """
+    {.emit: """
       function nimOnlyDigitsOrMinus(n) {
         return n.toString().match(/^-?\d+$/);
       }
       if (Number.isSafeInteger(`a`))
-        `result` = `a` === 0 && 1 / `a` < 0 ? "-0.0" : `a`+".0"
+        `result` = `a` === 0 && 1 / `a` < 0 ? "-0.0" : `a`+".0";
       else {
-        `result` = `a`+""
+        `result` = `a`+"";
         if(nimOnlyDigitsOrMinus(`result`)){
-          `result` = `a`+".0"
+          `result` = `a`+".0";
         }
       }
-    """
+    """.}
 
 proc addFloat*(result: var string; x: float | float32) {.inline.} =
   ## Converts float to its string representation and appends it to `result`.
@@ -127,10 +127,10 @@ proc addFloat*(result: var string; x: float | float32) {.inline.} =
     s.addFloat(45.67)
     assert s == "foo:45.67"
   template impl =
-    when defined(nimPreviewFloatRoundtrip) or defined(nimPreviewSlimSystem):
-      addFloatRoundtrip(result, x)
-    else:
+    when defined(nimLegacySprintf):
       addFloatSprintf(result, x)
+    else:
+      addFloatRoundtrip(result, x)
   when defined(js):
     when nimvm: impl()
     else:
@@ -140,4 +140,5 @@ proc addFloat*(result: var string; x: float | float32) {.inline.} =
 when defined(nimPreviewSlimSystem):
   func `$`*(x: float | float32): string =
     ## Outplace version of `addFloat`.
+    result = ""
     result.addFloat(x)

@@ -212,3 +212,16 @@ block:
   doAssert not compiles(echo p.rawProc.repr)
   doAssert not compiles(echo p.rawEnv.repr)
   doAssert not compiles(echo p.finished)
+
+proc bug23223 = # bug #23223
+  var stuff = "hello"
+  stuff.insert ""
+  doAssert stuff == "hello"
+
+bug23223()
+
+block: # bug #23894
+  let v = high(uint) div 2
+  let s = v + 1 # 9223372036854775808
+  let m = succ v
+  doAssert s == m

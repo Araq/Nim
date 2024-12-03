@@ -41,7 +41,7 @@ proc repr*(x: char): string {.noSideEffect, raises: [].} =
   ##   ```Nim
   ##   assert repr('c') == "'c'"
   ##   ```
-  result.add '\''
+  result = "'"
   # Elides string creations if not needed
   if x in {'\\', '\0'..'\31', '\127'..'\255'}:
     result.add '\\'
@@ -54,7 +54,7 @@ proc repr*(x: char): string {.noSideEffect, raises: [].} =
 proc repr*(x: string | cstring): string {.noSideEffect, raises: [].} =
   ## repr for a string argument. Returns `x`
   ## converted to a quoted and escaped string.
-  result.add '\"'
+  result = "\""
   for i in 0..<x.len:
     if x[i] in {'"', '\\', '\0'..'\31', '\127'..'\255'}:
       result.add '\\'
@@ -99,7 +99,7 @@ proc repr*(p: proc | iterator {.closure.}): string =
   ## repr of a proc as its address
   repr(cast[ptr pointer](unsafeAddr p)[])
 
-template repr*[T: distinct|range](x: T): string =
+template repr*[T: distinct|(range and not enum)](x: T): string =
   when T is range: # add a branch to handle range
     repr(rangeBase(typeof(x))(x))
   elif T is distinct:

@@ -25,7 +25,7 @@ proc leakCheck(f: AsyncFD | int | FileHandle | SocketHandle, msg: string,
   var args = @[$f.int, msg, $expectLeak]
 
   when defined(windows):
-    var refFd: Handle
+    var refFd: Handle = default(Handle)
     # NOTE: This function shouldn't be used to duplicate sockets,
     #       as this function may mess with the socket internal refcounting.
     #       but due to the lack of type segmentation in the stdlib for
@@ -51,7 +51,7 @@ proc leakCheck(f: AsyncFD | int | FileHandle | SocketHandle, msg: string,
 proc isValidHandle(f: int): bool =
   ## Check if a handle is valid. Requires OS-native handles.
   when defined(windows):
-    var flags: DWORD
+    var flags: DWORD = default(DWORD)
     result = getHandleInformation(f.Handle, addr flags) != 0
   else:
     result = fcntl(f.cint, F_GETFD) != -1
@@ -88,7 +88,7 @@ proc main() =
     defer: close client
     client.connect("127.0.0.1", port)
 
-    var input: Socket
+    var input: Socket = default(Socket)
     server.accept(input)
 
     leakCheck(input.getFd, "accept()")

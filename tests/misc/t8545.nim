@@ -1,5 +1,6 @@
 discard """
-  targets: "c cpp js"
+  # just tests that this doesn't crash the compiler
+  errormsg: "cannot instantiate: 'a:type'"
 """
 
 # bug #8545

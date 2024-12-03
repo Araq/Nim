@@ -3,15 +3,19 @@ discard """
   output: '''Can't access 6
 10
 11
+2
 Can't access 6
 10
 11
+2
 Can't access 6
 10
 11
+2
 Can't access 6
 10
 11
+2
 0
 10
 11
@@ -41,6 +45,9 @@ block:
   x[5] += 1
   var c = x[5]
   echo c
+  x.mgetOrPut(7).inc
+  x.mgetOrPut(7).inc
+  echo x[7]
 
 block:
   var x = newTable[int, int]()
@@ -53,6 +60,9 @@ block:
   x[5] += 1
   var c = x[5]
   echo c
+  x.mgetOrPut(7).inc
+  x.mgetOrPut(7).inc
+  echo x[7]
 
 block:
   var x = initOrderedTable[int, int]()
@@ -65,6 +75,9 @@ block:
   x[5] += 1
   var c = x[5]
   echo c
+  x.mgetOrPut(7).inc
+  x.mgetOrPut(7).inc
+  echo x[7]
 
 block:
   var x = newOrderedTable[int, int]()
@@ -77,6 +90,9 @@ block:
   x[5] += 1
   var c = x[5]
   echo c
+  x.mgetOrPut(7).inc
+  x.mgetOrPut(7).inc
+  echo x[7]
 
 block:
   var x = initCountTable[int]()

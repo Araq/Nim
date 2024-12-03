@@ -264,6 +264,12 @@ The available floating point presentation types are:
                          exponent notation.
 `G`                      General format. Same as `g` except it switches to `E`
                          if the number gets to large.
+`i`                      Complex General format. This is only supported for
+                         complex numbers, which it prints using the mathematical
+                         (RE+IMj) format. The real and imaginary parts are printed
+                         using the general format `g` by default, but it is
+                         possible to combine this format with one of the other
+                         formats (e.g `jf`).
 (None)                   Similar to `g`, except that it prints at least one
                          digit after the decimal point.
 =================        ====================================================
@@ -475,6 +481,31 @@ proc parseStandardFormatSpecifier*(s: string; start = 0;
     raise newException(ValueError,
       "invalid format string, cannot parse: " & s[i..^1])
 
+proc toRadix(typ: char): int =
+  case typ
+  of 'x', 'X': 16
+  of 'd', '\0': 10
+  of 'o': 8
+  of 'b': 2
+  else:
+    raise newException(ValueError,
+      "invalid type in format string for number, expected one " &
+      " of 'x', 'X', 'b', 'd', 'o' but got: " & typ)
+
+proc formatValue*[T: SomeInteger](result: var string; value: T;
+                                  specifier: static string) =
+  ## Standard format implementation for `SomeInteger`. It makes little
+  ## sense to call this directly, but it is required to exist
+  ## by the `&` macro.
+  when specifier.len == 0:
+    result.add $value
+  else:
+    const
+      spec = parseStandardFormatSpecifier(specifier)
+      radix = toRadix(spec.typ)
+
+    result.add formatInt(value, radix, spec)
+
 proc formatValue*[T: SomeInteger](result: var string; value: T;
                                   specifier: string) =
   ## Standard format implementation for `SomeInteger`. It makes little
@@ -482,43 +513,16 @@ proc formatValue*[T: SomeInteger](result: var string; value: T;
   ## by the `&` macro.
   if specifier.len == 0:
     result.add $value
-    return
-  let spec = parseStandardFormatSpecifier(specifier)
-  var radix = 10
-  case spec.typ
-  of 'x', 'X': radix = 16
-  of 'd', '\0': discard
-  of 'b': radix = 2
-  of 'o': radix = 8
   else:
-    raise newException(ValueError,
-      "invalid type in format string for number, expected one " &
-      " of 'x', 'X', 'b', 'd', 'o' but got: " & spec.typ)
-  result.add formatInt(value, radix, spec)
+    let
+      spec = parseStandardFormatSpecifier(specifier)
+      radix = toRadix(spec.typ)
 
-proc formatValue*(result: var string; value: SomeFloat; specifier: string) =
-  ## Standard format implementation for `SomeFloat`. It makes little
-  ## sense to call this directly, but it is required to exist
-  ## by the `&` macro.
-  if specifier.len == 0:
-    result.add $value
-    return
-  let spec = parseStandardFormatSpecifier(specifier)
+    result.add formatInt(value, radix, spec)
 
-  var fmode = ffDefault
-  case spec.typ
-  of 'e', 'E':
-    fmode = ffScientific
-  of 'f', 'F':
-    fmode = ffDecimal
-  of 'g', 'G':
-    fmode = ffDefault
-  of '\0': discard
-  else:
-    raise newException(ValueError,
-      "invalid type in format string for number, expected one " &
-      " of 'e', 'E', 'f', 'F', 'g', 'G' but got: " & spec.typ)
-
+proc formatFloat(
+    result: var string, value: SomeFloat, fmode: FloatFormatMode,
+    spec: StandardFormatSpecifier) =
   var f = formatBiggestFloat(value, fmode, spec.precision)
   var sign = false
   if value >= 0.0:
@@ -553,22 +557,82 @@ proc formatValue*(result: var string; value: SomeFloat; specifier: string) =
   else:
     result.add res
 
+proc toFloatFormatMode(typ: char): FloatFormatMode =
+  case typ
+  of 'e', 'E': ffScientific
+  of 'f', 'F': ffDecimal
+  of 'g', 'G': ffDefault
+  of '\0': ffDefault
+  else:
+    raise newException(ValueError,
+      "invalid type in format string for number, expected one " &
+      " of 'e', 'E', 'f', 'F', 'g', 'G' but got: " & typ)
+
+proc formatValue*(result: var string; value: SomeFloat; specifier: static string) =
+  ## Standard format implementation for `SomeFloat`. It makes little
+  ## sense to call this directly, but it is required to exist
+  ## by the `&` macro.
+  when specifier.len == 0:
+    result.add $value
+  else:
+    const
+      spec = parseStandardFormatSpecifier(specifier)
+      fmode = toFloatFormatMode(spec.typ)
+
+    formatFloat(result, value, fmode, spec)
+
+proc formatValue*(result: var string; value: SomeFloat; specifier: string) =
+  ## Standard format implementation for `SomeFloat`. It makes little
+  ## sense to call this directly, but it is required to exist
+  ## by the `&` macro.
+  if specifier.len == 0:
+    result.add $value
+  else:
+    let
+      spec = parseStandardFormatSpecifier(specifier)
+      fmode = toFloatFormatMode(spec.typ)
+
+    formatFloat(result, value, fmode, spec)
+
+proc formatValue*(result: var string; value: string; specifier: static string) =
+  ## Standard format implementation for `string`. It makes little
+  ## sense to call this directly, but it is required to exist
+  ## by the `&` macro.
+  const spec = parseStandardFormatSpecifier(specifier)
+  var value =
+    when spec.typ in {'s', '\0'}: value
+    else: static:
+      raise newException(ValueError,
+        "invalid type in format string for string, expected 's', but got " &
+        spec.typ)
+  when spec.precision != -1:
+    if spec.precision < runeLen(value):
+      const precision = cast[Natural](spec.precision)
+      setLen(value, Natural(runeOffset(value, precision)))
+
+  result.add alignString(value, spec.minimumWidth, spec.align, spec.fill)
+
 proc formatValue*(result: var string; value: string; specifier: string) =
   ## Standard format implementation for `string`. It makes little
   ## sense to call this directly, but it is required to exist
   ## by the `&` macro.
   let spec = parseStandardFormatSpecifier(specifier)
-  var value = value
-  case spec.typ
-  of 's', '\0': discard
-  else:
-    raise newException(ValueError,
-      "invalid type in format string for string, expected 's', but got " &
-      spec.typ)
+  var value =
+    if spec.typ in {'s', '\0'}: value
+    else:
+      raise newException(ValueError,
+        "invalid type in format string for string, expected 's', but got " &
+        spec.typ)
   if spec.precision != -1:
     if spec.precision < runeLen(value):
-      setLen(value, runeOffset(value, spec.precision))
+      let precision = cast[Natural](spec.precision)
+      setLen(value, Natural(runeOffset(value, precision)))
+
   result.add alignString(value, spec.minimumWidth, spec.align, spec.fill)
+
+proc formatValue[T: not SomeInteger](result: var string; value: T; specifier: static string) =
+  mixin `$`
+  formatValue(result, $value, specifier)
 
 proc formatValue[T: not SomeInteger](result: var string; value: T; specifier: string) =
   mixin `$`
@@ -667,7 +731,6 @@ proc strformatImpl(f: string; openChar, closeChar: char,
         inc i, 2
       else:
         raiseAssert "invalid format string: '$1' instead of '$1$1'" % $closeChar
-        inc i
     else:
       strlit.add f[i]
       inc i

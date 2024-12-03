@@ -84,6 +84,9 @@ let t = polar(a)
 doAssert(rect(t.r, t.phi) =~ a)
 doAssert(rect(1.0, 2.0) =~ complex(-0.4161468365471424, 0.9092974268256817))
 
+doAssert(almostEqual(a, a + complex(1e-16, 1e-16)))
+doAssert(almostEqual(a, a + complex(2e-15, 2e-15), unitsInLastPlace = 5))
+
 
 let
   i64: Complex32 = complex(0.0f, 1.0f)

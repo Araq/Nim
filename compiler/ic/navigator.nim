@@ -11,7 +11,7 @@
 ## IDE-like features. It uses the set of .rod files to accomplish
 ## its task. The set must cover a complete Nim project.
 
-import std/sets
+import std/[sets, tables]
 
 from std/os import nil
 from std/private/miscdollars import toLocation
@@ -20,7 +20,7 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 import ".." / [ast, modulegraphs, msgs, options]
-import ".." / nir / nirlineinfos
+import iclineinfos
 import packed_ast, bitabs, ic
 
 type
@@ -63,7 +63,7 @@ proc search(c: var NavContext; tree: PackedTree): ItemId =
     let i = NodePos(i)
     case tree[i].kind
     of nkSym:
-      let item = tree[i].operand
+      let item = tree[i].soperand
       if searchLocalSym(c, c.g.packed[c.thisModule].fromDisk.syms[item], tree[i].info):
         return ItemId(module: c.thisModule, item: item)
     of nkModuleRef:
@@ -72,7 +72,7 @@ proc search(c: var NavContext; tree: PackedTree): ItemId =
         let (n1, n2) = sons2(tree, i)
         assert n1.kind == nkInt32Lit
         assert n2.kind == nkInt32Lit
-        let pId = PackedItemId(module: n1.litId, item: tree[n2].operand)
+        let pId = PackedItemId(module: n1.litId, item: tree[n2].soperand)
         let itemId = translateId(pId, c.g.packed, c.thisModule, c.g.config)
         if searchForeignSym(c, itemId, tree[i].info):
           return itemId
@@ -101,21 +101,21 @@ proc list(c: var NavContext; tree: PackedTree; sym: ItemId) =
     let i = NodePos(i)
     case tree[i].kind
     of nkSym:
-      let item = tree[i].operand
+      let item = tree[i].soperand
       if sym.item == item and sym.module == c.thisModule:
         usage(c, tree[i].info, isDecl(tree, parent(i)))
     of nkModuleRef:
       let (n1, n2) = sons2(tree, i)
       assert n1.kind == nkNone
       assert n2.kind == nkNone
-      let pId = PackedItemId(module: n1.litId, item: tree[n2].operand)
+      let pId = PackedItemId(module: n1.litId, item: tree[n2].soperand)
       let itemId = translateId(pId, c.g.packed, c.thisModule, c.g.config)
       if itemId.item == sym.item and sym.module == itemId.module:
         usage(c, tree[i].info, isDecl(tree, parent(i)))
     else: discard
 
 proc searchForIncludeFile(g: ModuleGraph; fullPath: string): int =
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     for k in 1..high(g.packed[i].fromDisk.includes):
       # we start from 1 because the first "include" file is
       # the module's filename.
@@ -158,7 +158,7 @@ proc nav(g: ModuleGraph) =
     localError(g.config, unpacked, "no symbol at this position")
     return
 
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     # case statement here to enforce exhaustive checks.
     case g.packed[i].status
     of undefined:
@@ -175,7 +175,7 @@ proc navUsages*(g: ModuleGraph) = nav(g)
 proc navDefusages*(g: ModuleGraph) = nav(g)
 
 proc writeRodFiles*(g: ModuleGraph) =
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     case g.packed[i].status
     of undefined, loading, stored, loaded:
       discard "nothing to do"

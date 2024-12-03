@@ -41,6 +41,11 @@ block t8333:
   case 0
   of 'a': echo 0
   else: echo 1
+block: # issue #11422
+  var c: int = 5
+  case c
+  of 'a' .. 'c': discard
+  else: discard
 
 
 block emptyset_when:
@@ -298,3 +303,17 @@ proc main(a: uint64) =
 static:
   main(10)
 main(10)
+
+block:
+  # Just needs to compile
+  proc bar(): int {.discardable.} = discard
+
+  proc foo() {.noreturn.} = discard
+
+  case "*"
+  of "*":
+    bar()
+  else:
+    # Make sure this noreturn doesn't
+    # cause the discardable to not discard
+    foo()

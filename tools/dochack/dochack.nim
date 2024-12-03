@@ -328,8 +328,8 @@ proc copyToClipboard*() {.exportc.} =
 
     function updatePreTags() {
 
-      const allPreTags = document.querySelectorAll("pre")
-    
+      const allPreTags = document.querySelectorAll("pre:not(.line-nums)")
+
       allPreTags.forEach((e) => {
       
           const div = document.createElement("div")

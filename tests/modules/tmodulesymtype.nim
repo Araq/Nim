@@ -13,3 +13,10 @@ proc foo() =
     sequtils
 
 foo()
+
+# issue #23399
+when isMainModule:
+  sequtils #[tt.Error
+  ^ expression has no type: sequtils]#
+
+discard

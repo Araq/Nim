@@ -1,6 +1,6 @@
 discard """
   cmd: "nim check $options $file"
-  errormsg: "type mismatch: got <int> but expected 'float'"
+  errormsg: "type mismatch: got <int literal(1), proc (r: GenericParam): auto>"
 """
 
 when true: # bug #16654

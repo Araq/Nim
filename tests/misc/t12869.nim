@@ -1,5 +1,5 @@
 discard """
-  errormsg: "type mismatch: got <bool> but expected 'int'"
+  errormsg: "type mismatch: got <openArray[int], proc (x: GenericParam, y: GenericParam): auto, SortOrder>"
   line: 12
 """
 

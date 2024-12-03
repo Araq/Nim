@@ -109,3 +109,33 @@ block: # make sure `hashType` doesn't recurse infinitely
       a, b: PFoo
       c: int
   var a: PFoo
+
+block: # issue #22571
+  macro foo(x: typed) =
+    result = x
+
+  block: # or `proc main =`
+    foo:
+      type Foo = object
+    doAssert $Foo() == "()"
+
+block: # bug #7784
+  block:
+    type
+        Color = enum clrBlack, clrRed, clrGreen, clrBlue
+
+    var color = clrRed
+    doAssert(ord(color) == 1)
+    doAssert($color == "clrRed")
+
+  block:
+    type
+        Color = enum
+          clrBlack = "Black",
+          clrRed = "Red",
+          clrGreen = "Green",
+          clrBlue = "Blue"
+
+    var color = clrRed
+    doAssert(ord(color) == 1)
+    doAssert($color == "Red")

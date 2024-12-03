@@ -144,7 +144,7 @@ proc importSymbol(c: PContext, n: PNode, fromMod: PSym; importSet: var IntSet) =
     # for an enumeration we have to add all identifiers
     if multiImport:
       # for a overloadable syms add all overloaded routines
-      var it: ModuleIter
+      var it: ModuleIter = default(ModuleIter)
       var e = initModuleIter(it, c.graph, fromMod, s.name)
       while e != nil:
         if e.name.id != s.name.id: internalError(c.config, n.info, "importSymbol: 3")
@@ -230,7 +230,7 @@ proc importForwarded(c: PContext, n: PNode, exceptSet: IntSet; fromMod: PSym; im
   else:
     for i in 0..n.safeLen-1:
       importForwarded(c, n[i], exceptSet, fromMod, importSet)
-    
+
 proc importModuleAs(c: PContext; n: PNode, realModule: PSym, importHidden: bool): PSym =
   result = realModule
   template createModuleAliasImpl(ident): untyped =
@@ -246,12 +246,14 @@ proc importModuleAs(c: PContext; n: PNode, realModule: PSym, importHidden: bool)
     result = createModuleAliasImpl(realModule.name)
   if importHidden:
     result.options.incl optImportHidden
-  c.unusedImports.add((result, n.info))
+  let moduleIdent = if n.kind == nkInfix: n[^1] else: n
+  c.unusedImports.add((result, moduleIdent.info))
   c.importModuleMap[result.id] = realModule.id
   c.importModuleLookup.mgetOrPut(result.name.id, @[]).addUnique realModule.id
 
 proc transformImportAs(c: PContext; n: PNode): tuple[node: PNode, importHidden: bool] =
-  var ret: typeof(result)
+  result = (nil, false)
+  var ret = default(typeof(result))
   proc processPragma(n2: PNode): PNode =
     let (result2, kws) = splitPragmas(c, n2)
     result = result2
@@ -306,13 +308,22 @@ proc myImportModule(c: PContext, n: var PNode, importStmtResult: PNode): PSym =
     if belongsToStdlib(c.graph, result) and not startsWith(moduleName, stdPrefix) and
         not startsWith(moduleName, "system/") and not startsWith(moduleName, "packages/"):
       message(c.config, n.info, warnStdPrefix, realModule.name.s)
-    suggestSym(c.graph, n.info, result, c.graph.usageSym, false)
+
+    proc suggestMod(n: PNode; s: PSym) =
+      if n.kind == nkImportAs:
+        suggestMod(n[0], realModule)
+      elif n.kind == nkInfix:
+        suggestMod(n[2], s)
+      else:
+        suggestSym(c.graph, n.info, s, c.graph.usageSym, false)
+    suggestMod(n, result)
     importStmtResult.add newSymNode(result, n.info)
     #newStrNode(toFullPath(c.config, f), n.info)
   else:
     result = nil
 
 proc afterImport(c: PContext, m: PSym) =
+  if isCachedModule(c.graph, m): return
   # fixes bug #17510, for re-exported symbols
   let realModuleId = c.importModuleMap[m.id]
   for s in allSyms(c.graph, m):

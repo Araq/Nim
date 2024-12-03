@@ -1,5 +1,5 @@
 discard """
-  cmd: "nim c --hints:off --skipParentCfg $file"
+  cmd: "nim c --hints:off -d:testsConciseTypeMismatch $file"
   errormsg: "type mismatch"
   nimout: '''
 tconcisetypemismatch.nim(23, 47) Error: type mismatch

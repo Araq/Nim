@@ -180,7 +180,7 @@ proc collectOrAddMissingCaseFields(c: PContext, branchNode: PNode,
                           constrCtx: var ObjConstrContext, defaults: var seq[PNode]) =
   let res = collectMissingCaseFields(c, branchNode, constrCtx, defaults)
   for sym in res:
-    let asgnType = newType(tyTypeDesc, nextTypeId(c.idgen), sym.typ.owner)
+    let asgnType = newType(tyTypeDesc, c.idgen, sym.typ.owner)
     let recTyp = sym.typ.skipTypes(defaultFieldsSkipTypes)
     rawAddSon(asgnType, recTyp)
     let asgnExpr = newTree(nkCall,
@@ -188,7 +188,7 @@ proc collectOrAddMissingCaseFields(c: PContext, branchNode: PNode,
           newNodeIT(nkType, constrCtx.initExpr.info, asgnType)
         )
     asgnExpr.flags.incl nfSkipFieldChecking
-    asgnExpr.typ = recTyp
+    asgnExpr.typ() = recTyp
     defaults.add newTree(nkExprColonExpr, newSymNode(sym), asgnExpr)
 
 proc collectBranchFields(c: PContext, n: PNode, discriminatorVal: PNode,
@@ -387,10 +387,13 @@ proc semConstructFields(c: PContext, n: PNode, constrCtx: var ObjConstrContext,
     if e != nil:
       result.status = initFull
     elif field.ast != nil:
-      result.status = initUnknown
-      result.defaults.add newTree(nkExprColonExpr, n, field.ast)
+      if efIgnoreDefaults notin flags:
+        result.status = initUnknown
+        result.defaults.add newTree(nkExprColonExpr, n, field.ast)
+      else:
+        result.status = initNone
     else:
-      if efWantNoDefaults notin flags: # cannot compute defaults at the typeRightPass
+      if {efWantNoDefaults, efIgnoreDefaults} * flags == {}: # cannot compute defaults at the typeRightPass
         let defaultExpr = defaultNodeField(c, n, constrCtx.checkDefault)
         if defaultExpr != nil:
           result.status = initUnknown
@@ -405,7 +408,7 @@ proc semConstructFields(c: PContext, n: PNode, constrCtx: var ObjConstrContext,
 proc semConstructTypeAux(c: PContext,
                          constrCtx: var ObjConstrContext,
                          flags: TExprFlags): tuple[status: InitStatus, defaults: seq[PNode]] =
-  result.status = initUnknown
+  result = (initUnknown, @[])
   var t = constrCtx.typ
   while true:
     let (status, defaults) = semConstructFields(c, t.n, constrCtx, flags)
@@ -413,10 +416,10 @@ proc semConstructTypeAux(c: PContext,
     result.defaults.add defaults
     if status in {initPartial, initNone, initUnknown}:
       discard collectMissingFields(c, t.n, constrCtx, result.defaults)
-    let base = t[0]
+    let base = t.baseClass
     if base == nil or base.id == t.id or
-      base.kind in {tyRef, tyPtr} and base[0].id == t.id:
-        break
+        base.kind in {tyRef, tyPtr} and base.elementType.id == t.id:
+      break
     t = skipTypes(base, skipPtrs)
     if t.kind != tyObject:
       # XXX: This is not supposed to happen, but apparently
@@ -439,11 +442,11 @@ proc computeRequiresInit(c: PContext, t: PType): bool =
 proc defaultConstructionError(c: PContext, t: PType, info: TLineInfo) =
   var objType = t
   while objType.kind notin {tyObject, tyDistinct}:
-    objType = objType.lastSon
+    objType = objType.last
     assert objType != nil
   if objType.kind == tyObject:
     var constrCtx = initConstrContext(objType, newNodeI(nkObjConstr, info))
-    let initResult = semConstructTypeAux(c, constrCtx, {efWantNoDefaults})
+    let initResult = semConstructTypeAux(c, constrCtx, {efIgnoreDefaults})
     if constrCtx.missingFields.len > 0:
       localError(c.config, info,
         "The $1 type doesn't have a default value. The following fields must be initialized: $2." % [typeToString(t), listSymbolNames(constrCtx.missingFields)])
@@ -462,23 +465,26 @@ proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType 
   if t == nil:
     return localErrorNode(c, result, "object constructor needs an object type")
 
-  if t.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
-      expectedType != nil and expectedType.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
-    t = expectedType
+  when false:
+    # attempted type inference for generic object types,
+    # doesn't work since n[0] isn't set and seems underspecified
+    if t.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
+        expectedType != nil and expectedType.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
+      t = expectedType
 
   t = skipTypes(t, {tyGenericInst, tyAlias, tySink, tyOwned})
   if t.kind == tyRef:
-    t = skipTypes(t[0], {tyGenericInst, tyAlias, tySink, tyOwned})
+    t = skipTypes(t.elementType, {tyGenericInst, tyAlias, tySink, tyOwned})
     if optOwnedRefs in c.config.globalOptions:
-      result.typ = makeVarType(c, result.typ, tyOwned)
+      result.typ() = makeVarType(c, result.typ, tyOwned)
       # we have to watch out, there are also 'owned proc' types that can be used
       # multiple times as long as they don't have closures.
       result.typ.flags.incl tfHasOwned
   if t.kind != tyObject:
     return localErrorNode(c, result, if t.kind != tyGenericBody:
-      "object constructor needs an object type".dup(addDeclaredLoc(c.config, t))
+      "object constructor needs an object type".dup(addTypeNodeDeclaredLoc(c.config, t))
       else: "cannot instantiate: '" &
         typeToString(t, preferDesc) &
         "'; the object's generic parameters cannot be inferred and must be explicitly given"

@@ -1,71 +1,74 @@
 nimTitle	testproject	testproject.html	module testproject		0
-nim	someVariable	testproject.html#someVariable	var someVariable		13
-nim	C_A	testproject.html#C_A	const C_A		26
-nim	C_B	testproject.html#C_B	const C_B		27
-nim	C_C	testproject.html#C_C	const C_C		28
-nim	C_D	testproject.html#C_D	const C_D		29
-nim	bar	testproject.html#bar,T,T	proc bar[T](a, b: T): T		31
-nim	baz	testproject.html#baz,T,T	proc baz[T](a, b: T): T		34
-nim	buzz	testproject.html#buzz,T,T	proc buzz[T](a, b: T): T		38
-nim	FooBuzz	testproject.html#FooBuzz	type FooBuzz		43
-nim	bar	testproject.html#bar	proc bar(f: FooBuzz)		47
-nim	aVariable	testproject.html#aVariable	var aVariable		52
+nim	someVariable	testproject.html#someVariable	var someVariable		25
+nim	C_A	testproject.html#C_A	const C_A		38
+nim	C_B	testproject.html#C_B	const C_B		39
+nim	C_C	testproject.html#C_C	const C_C		40
+nim	C_D	testproject.html#C_D	const C_D		41
+nim	bar	testproject.html#bar,T,T	proc bar[T](a, b: T): T		43
+nim	baz	testproject.html#baz,T,T	proc baz[T](a, b: T): T		46
+nim	buzz	testproject.html#buzz,T,T	proc buzz[T](a, b: T): T		50
+nim	FooBuzz	testproject.html#FooBuzz	type FooBuzz		55
+nim	bar	testproject.html#bar	proc bar(f: FooBuzz)		59
+nim	aVariable	testproject.html#aVariable	var aVariable		64
 nim	A	testproject.html#A	enum A		92
 nim	B	testproject.html#B	enum B		97
-nim	someFunc	testproject.html#someFunc	proc someFunc()		56
+nim	someFunc	testproject.html#someFunc	proc someFunc()		68
 nim	fromUtils1	testproject.html#fromUtils1.i	iterator fromUtils1(): int		112
 nim	fromUtils2	testproject.html#fromUtils2.t	template fromUtils2()		119
-nim	fromUtils3	testproject.html#fromUtils3	proc fromUtils3()		57
-nim	isValid	testproject.html#isValid,T	proc isValid[T](x: T): bool		59
-nim	enumValueA2	testproject.html#enumValueA2	Foo.enumValueA2		66
-nim	Foo	testproject.html#Foo	enum Foo		66
-nim	z1	testproject.html#z1	proc z1(): Foo		69
-nim	z2	testproject.html#z2	proc z2()		73
-nim	z3	testproject.html#z3	proc z3()		78
-nim	z4	testproject.html#z4	proc z4()		81
-nim	z5	testproject.html#z5	proc z5(): int		87
-nim	z6	testproject.html#z6	proc z6(): int		91
-nim	z6t	testproject.html#z6t.t	template z6t(): int		95
-nim	z7	testproject.html#z7	proc z7(): int		99
-nim	z8	testproject.html#z8	proc z8(): int		103
-nim	z9	testproject.html#z9	proc z9()		111
-nim	z10	testproject.html#z10	proc z10()		114
-nim	z11	testproject.html#z11	proc z11()		119
-nim	z12	testproject.html#z12	proc z12(): int		124
-nim	z13	testproject.html#z13	proc z13()		129
-nim	baz	testproject.html#baz	proc baz()		134
-nim	z17	testproject.html#z17	proc z17()		144
-nim	p1	testproject.html#p1	proc p1()		156
-nim	addfBug14485	testproject.html#addfBug14485	proc addfBug14485()		177
-nim	c_printf	testproject.html#c_printf,cstring	proc c_printf(frmt: cstring): cint		193
-nim	c_nonexistent	testproject.html#c_nonexistent,cstring	proc c_nonexistent(frmt: cstring): cint		197
-nim	low	testproject.html#low,T	proc low[T: Ordinal | enum | range](x: T): T		200
-nim	low2	testproject.html#low2,T	proc low2[T: Ordinal | enum | range](x: T): T		210
-nim	tripleStrLitTest	testproject.html#tripleStrLitTest	proc tripleStrLitTest()		223
-nim	method1	testproject.html#method1.e,Moo	method method1(self: Moo)		264
-nim	method2	testproject.html#method2.e,Moo	method method2(self: Moo): int		266
-nim	method3	testproject.html#method3.e,Moo	method method3(self: Moo): int		269
-nim	iter1	testproject.html#iter1.i,int	iterator iter1(n: int): int		274
-nim	iter2	testproject.html#iter2.i,int	iterator iter2(n: int): int		278
-nim	bar	testproject.html#bar.m	macro bar(): untyped		285
-nim	z16	testproject.html#z16.m	macro z16()		288
-nim	z18	testproject.html#z18.m	macro z18(): int		297
-nim	foo	testproject.html#foo.t,SomeType,SomeType	template foo(a, b: SomeType)		302
-nim	myfn	testproject.html#myfn.t	template myfn()		307
-nim	z14	testproject.html#z14.t	template z14()		328
-nim	z15	testproject.html#z15.t	template z15()		333
-nim	asyncFun1	testproject.html#asyncFun1	proc asyncFun1(): Future[int]		358
-nim	asyncFun2	testproject.html#asyncFun2	proc asyncFun2(): owned(Future[void])		361
-nim	asyncFun3	testproject.html#asyncFun3	proc asyncFun3(): owned(Future[void])		362
-nim	testNimDocTrailingExample	testproject.html#testNimDocTrailingExample.t	template testNimDocTrailingExample()		371
-nim	Circle	testproject.html#Circle	Shapes.Circle		380
-nim	Triangle	testproject.html#Triangle	Shapes.Triangle		380
-nim	Rectangle	testproject.html#Rectangle	Shapes.Rectangle		380
-nim	Shapes	testproject.html#Shapes	enum Shapes		380
-nim	anything	testproject.html#anything	proc anything()		387
-nim	T19396	testproject.html#T19396	object T19396		392
-nim	somePragma	testproject.html#somePragma.t	template somePragma()		396
-nim	MyObject	testproject.html#MyObject	object MyObject		400
-nim	AnotherObject	testproject.html#AnotherObject	object AnotherObject		405
-nimgrp	bar	testproject.html#bar-procs-all	proc		31
-nimgrp	baz	testproject.html#baz-procs-all	proc		34
+nim	fromUtils3	testproject.html#fromUtils3	proc fromUtils3()		69
+nim	isValid	testproject.html#isValid,T	proc isValid[T](x: T): bool		71
+nim	enumValueA2	testproject.html#enumValueA2	Foo.enumValueA2		78
+nim	Foo	testproject.html#Foo	enum Foo		78
+nim	z1	testproject.html#z1	proc z1(): Foo		81
+nim	z2	testproject.html#z2	proc z2()		85
+nim	z3	testproject.html#z3	proc z3()		90
+nim	z4	testproject.html#z4	proc z4()		93
+nim	z5	testproject.html#z5	proc z5(): int		99
+nim	z6	testproject.html#z6	proc z6(): int		103
+nim	z6t	testproject.html#z6t.t	template z6t(): int		107
+nim	z7	testproject.html#z7	proc z7(): int		111
+nim	z8	testproject.html#z8	proc z8(): int		115
+nim	z9	testproject.html#z9	proc z9()		123
+nim	z10	testproject.html#z10	proc z10()		126
+nim	z11	testproject.html#z11	proc z11()		131
+nim	z12	testproject.html#z12	proc z12(): int		136
+nim	z13	testproject.html#z13	proc z13()		141
+nim	baz	testproject.html#baz	proc baz()		146
+nim	z17	testproject.html#z17	proc z17()		156
+nim	p1	testproject.html#p1	proc p1()		168
+nim	addfBug14485	testproject.html#addfBug14485	proc addfBug14485()		189
+nim	c_printf	testproject.html#c_printf,cstring	proc c_printf(frmt: cstring): cint		205
+nim	c_nonexistent	testproject.html#c_nonexistent,cstring	proc c_nonexistent(frmt: cstring): cint		209
+nim	low	testproject.html#low,T	proc low[T: Ordinal | enum | range](x: T): T		212
+nim	low2	testproject.html#low2,T	proc low2[T: Ordinal | enum | range](x: T): T		222
+nim	tripleStrLitTest	testproject.html#tripleStrLitTest	proc tripleStrLitTest()		235
+nim	method1	testproject.html#method1.e,Moo	method method1(self: Moo)		276
+nim	method2	testproject.html#method2.e,Moo	method method2(self: Moo): int		278
+nim	method3	testproject.html#method3.e,Moo	method method3(self: Moo): int		281
+nim	iter1	testproject.html#iter1.i,int	iterator iter1(n: int): int		286
+nim	iter2	testproject.html#iter2.i,int	iterator iter2(n: int): int		290
+nim	bar	testproject.html#bar.m	macro bar(): untyped		297
+nim	z16	testproject.html#z16.m	macro z16()		300
+nim	z18	testproject.html#z18.m	macro z18(): int		309
+nim	foo	testproject.html#foo.t,SomeType,SomeType	template foo(a, b: SomeType)		314
+nim	myfn	testproject.html#myfn.t	template myfn()		319
+nim	z14	testproject.html#z14.t	template z14()		340
+nim	z15	testproject.html#z15.t	template z15()		345
+nim	asyncFun1	testproject.html#asyncFun1	proc asyncFun1(): Future[int]		370
+nim	asyncFun2	testproject.html#asyncFun2	proc asyncFun2(): owned(Future[void])		373
+nim	asyncFun3	testproject.html#asyncFun3	proc asyncFun3(): owned(Future[void])		374
+nim	testNimDocTrailingExample	testproject.html#testNimDocTrailingExample.t	template testNimDocTrailingExample()		383
+nim	Circle	testproject.html#Circle	Shapes.Circle		392
+nim	Triangle	testproject.html#Triangle	Shapes.Triangle		392
+nim	Rectangle	testproject.html#Rectangle	Shapes.Rectangle		392
+nim	Shapes	testproject.html#Shapes	enum Shapes		392
+nim	anything	testproject.html#anything	proc anything()		399
+nim	T19396	testproject.html#T19396	object T19396		404
+nim	somePragma	testproject.html#somePragma.t	template somePragma()		408
+nim	MyObject	testproject.html#MyObject	object MyObject		412
+nim	AnotherObject	testproject.html#AnotherObject	object AnotherObject		417
+nimgrp	bar	testproject.html#bar-procs-all	proc		43
+nimgrp	baz	testproject.html#baz-procs-all	proc		46
+heading	Basic usage	testproject.html#basic-usage	 Basic usage		0
+heading	Encoding data	testproject.html#basic-usage-encoding-data	  Encoding data		0
+heading	Decoding data	testproject.html#basic-usage-decoding-data	  Decoding data		0

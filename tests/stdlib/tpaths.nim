@@ -6,14 +6,11 @@ import std/paths
 import std/assertions
 import pathnorm
 from std/private/ospaths2 {.all.} import joinPathImpl
-import std/sugar
+import std/[sugar, sets]
 
 
 proc normalizePath*(path: Path; dirSep = DirSep): Path =
   result = Path(pathnorm.normalizePath(path.string, dirSep))
-
-func `==`(x, y: Path): bool =
-  x.string == y.string
 
 func joinPath*(parts: varargs[Path]): Path =
   var estimatedLen = 0
@@ -232,3 +229,10 @@ block ospaths:
     doAssert joinPath(Path"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Tools\\", Path"..\\..\\VC\\vcvarsall.bat") == r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat".Path
     doAssert joinPath(Path"C:\\foo", Path"..\\a") == r"C:\a".Path
     doAssert joinPath(Path"C:\\foo\\", Path"..\\a") == r"C:\a".Path
+
+
+block: # bug #23663
+  var s: HashSet[Path]
+  s.incl("/a/b/c/..".Path)
+  doAssert "/a/b/".Path in s
+  doAssert "/a/b/c".Path notin s

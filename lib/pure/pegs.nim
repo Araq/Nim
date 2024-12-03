@@ -314,21 +314,21 @@ func capture*(a: Peg = Peg(kind: pkEmpty)): Peg {.rtl, extern: "npegsCapture".} 
 func backref*(index: range[1..MaxSubpatterns], reverse: bool = false): Peg {.
   rtl, extern: "npegs$1".} =
   ## constructs a back reference of the given `index`. `index` starts counting
-  ## from 1. `reverse` specifies wether indexing starts from the end of the
+  ## from 1. `reverse` specifies whether indexing starts from the end of the
   ## capture list.
   result = Peg(kind: pkBackRef, index: (if reverse: -index else: index - 1))
 
 func backrefIgnoreCase*(index: range[1..MaxSubpatterns], reverse: bool = false): Peg {.
   rtl, extern: "npegs$1".} =
   ## constructs a back reference of the given `index`. `index` starts counting
-  ## from 1. `reverse` specifies wether indexing starts from the end of the
+  ## from 1. `reverse` specifies whether indexing starts from the end of the
   ## capture list. Ignores case for matching.
   result = Peg(kind: pkBackRefIgnoreCase, index: (if reverse: -index else: index - 1))
 
 func backrefIgnoreStyle*(index: range[1..MaxSubpatterns], reverse: bool = false): Peg {.
   rtl, extern: "npegs$1".} =
   ## constructs a back reference of the given `index`. `index` starts counting
-  ## from 1. `reverse` specifies wether indexing starts from the end of the
+  ## from 1. `reverse` specifies whether indexing starts from the end of the
   ## capture list. Ignores style for matching.
   result = Peg(kind: pkBackRefIgnoreStyle, index: (if reverse: -index else: index - 1))
 
@@ -563,6 +563,8 @@ template matchOrParse(mopProc: untyped) =
   # are provided which just return *discard*.
 
   proc mopProc(s: string, p: Peg, start: int, c: var Captures): int {.gcsafe, raises: [].} =
+    result = 0
+
     proc matchBackRef(s: string, p: Peg, start: int, c: var Captures): int =
       # Parse handler code must run in an *of* clause of its own for each
       # *PegKind*, so we encapsulate the identical clause body for
@@ -579,7 +581,7 @@ template matchOrParse(mopProc: untyped) =
         n = Peg(kind: pkTerminalIgnoreStyle, term: s.substr(a, b))
       of pkBackRefIgnoreCase:
         n = Peg(kind: pkTerminalIgnoreCase, term: s.substr(a, b))
-      else: assert(false, "impossible case")
+      else: raiseAssert "impossible case"
       mopProc(s, n, start, c)
 
     case p.kind
@@ -695,7 +697,7 @@ template matchOrParse(mopProc: untyped) =
       enter(pkTerminalIgnoreStyle, s, p, start)
       var
         i = 0
-        a, b: Rune
+        a, b: Rune = default(Rune)
       result = start
       while i < len(p.term):
         while i < len(p.term):
@@ -1047,7 +1049,7 @@ template eventParser*(pegAst, handlers: untyped): (proc(s: string): int) =
           `enter hdPostf`(s, pegNode, start)
         else:
           discard
-      let hdPostf = ident(substr(strVal(pegKind), 2))
+      let hdPostf = ident(substr($pegKind, 2))
       getAst(mkDoEnter(hdPostf, s, pegNode, start))
 
     macro leave(pegKind, s, pegNode, start, length: untyped): untyped =
@@ -1058,7 +1060,7 @@ template eventParser*(pegAst, handlers: untyped): (proc(s: string): int) =
           `leave hdPostf`(s, pegNode, start, length)
         else:
           discard
-      let hdPostf = ident(substr(strVal(pegKind), 2))
+      let hdPostf = ident(substr($pegKind, 2))
       getAst(mkDoLeave(hdPostf, s, pegNode, start, length))
 
     matchOrParse(parseIt)
@@ -1067,7 +1069,7 @@ template eventParser*(pegAst, handlers: untyped): (proc(s: string): int) =
   proc parser(s: string): int {.gensym.} =
     # the proc to be returned
     var
-      ms: array[MaxSubpatterns, (int, int)]
+      ms: array[MaxSubpatterns, (int, int)] = default(array[MaxSubpatterns, (int, int)])
       cs = Captures(matches: ms, ml: 0, origStart: 0)
     rawParse(s, pegAst, 0, cs)
   parser
@@ -1198,7 +1200,7 @@ template `=~`*(s: string, pattern: Peg): bool =
   ##   ```
   bind MaxSubpatterns
   when not declaredInScope(matches):
-    var matches {.inject.}: array[0..MaxSubpatterns-1, string]
+    var matches {.inject.} = default(array[0..MaxSubpatterns-1, string])
   match(s, pattern, matches)
 
 # ------------------------- more string handling ------------------------------

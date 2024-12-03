@@ -446,12 +446,16 @@ proc createDir*(dir: string) {.rtl, extern: "nos$1",
     else:
       discard existsOrCreateDir(p)
 
-proc copyDir*(source, dest: string) {.rtl, extern: "nos$1",
+proc copyDir*(source, dest: string, skipSpecial = false) {.rtl, extern: "nos$1",
   tags: [ReadDirEffect, WriteIOEffect, ReadIOEffect], benign, noWeirdTarget.} =
   ## Copies a directory from `source` to `dest`.
   ##
   ## On non-Windows OSes, symlinks are copied as symlinks. On Windows, symlinks
   ## are skipped.
+  ##
+  ## If `skipSpecial` is true, then (besides all directories) only *regular*
+  ## files (**without** special "file" objects like FIFOs, device files,
+  ## etc) will be copied on Unix.
   ##
   ## If this fails, `OSError` is raised.
   ##
@@ -472,22 +476,27 @@ proc copyDir*(source, dest: string) {.rtl, extern: "nos$1",
   ## * `createDir proc`_
   ## * `moveDir proc`_
   createDir(dest)
-  for kind, path in walkDir(source):
+  for kind, path in walkDir(source, skipSpecial = skipSpecial):
     var noSource = splitPath(path).tail
     if kind == pcDir:
-      copyDir(path, dest / noSource)
+      copyDir(path, dest / noSource, skipSpecial = skipSpecial)
     else:
       copyFile(path, dest / noSource, {cfSymlinkAsIs})
 
 
 proc copyDirWithPermissions*(source, dest: string,
-                             ignorePermissionErrors = true)
+                             ignorePermissionErrors = true,
+                             skipSpecial = false)
   {.rtl, extern: "nos$1", tags: [ReadDirEffect, WriteIOEffect, ReadIOEffect],
    benign, noWeirdTarget.} =
   ## Copies a directory from `source` to `dest` preserving file permissions.
   ##
   ## On non-Windows OSes, symlinks are copied as symlinks. On Windows, symlinks
   ## are skipped.
+  ##
+  ## If `skipSpecial` is true, then (besides all directories) only *regular*
+  ## files (**without** special "file" objects like FIFOs, device files,
+  ## etc) will be copied on Unix.
   ##
   ## If this fails, `OSError` is raised. This is a wrapper proc around
   ## `copyDir`_ and `copyFileWithPermissions`_ procs
@@ -518,10 +527,10 @@ proc copyDirWithPermissions*(source, dest: string,
     except:
       if not ignorePermissionErrors:
         raise
-  for kind, path in walkDir(source):
+  for kind, path in walkDir(source, skipSpecial = skipSpecial):
     var noSource = splitPath(path).tail
     if kind == pcDir:
-      copyDirWithPermissions(path, dest / noSource, ignorePermissionErrors)
+      copyDirWithPermissions(path, dest / noSource, ignorePermissionErrors, skipSpecial = skipSpecial)
     else:
       copyFileWithPermissions(path, dest / noSource, ignorePermissionErrors, {cfSymlinkAsIs})
 

@@ -320,10 +320,25 @@ elif defined(windows):
 const
   BufSize = 4000
 
-proc close*(f: File) {.tags: [], gcsafe.} =
+template closeIgnoreError(f: File) =
   ## Closes the file.
   if not f.isNil:
     discard c_fclose(f)
+
+
+when defined(nimPreviewCheckedClose):
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    ##
+    ## Raises an IO exception in case of an error.
+    if not f.isNil:
+      let x = c_fclose(f)
+      if x < 0:
+        checkErr(f)
+else:
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    closeIgnoreError(f)
 
 proc readChar*(f: File): char {.tags: [ReadIOEffect].} =
   ## Reads a single character from the stream `f`. Should not be used in
@@ -419,7 +434,7 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
     if f.isatty:
       const numberOfCharsToRead = 2048
       var numberOfCharsRead = 0'i32
-      var buffer = newWideCString("", numberOfCharsToRead)
+      var buffer = newWideCString(numberOfCharsToRead)
       if readConsole(getOsFileHandle(f), addr(buffer[0]),
         numberOfCharsToRead, addr(numberOfCharsRead), nil) == 0:
         var error = getLastError()
@@ -648,6 +663,9 @@ const
         ""
     else:
       ""
+  RawFormatOpen: array[FileMode, cstring] = [
+    # used for open by FileHandle, which calls `fdopen`
+    cstring("rb"), "wb", "w+b", "r+b", "ab"]
   FormatOpen: array[FileMode, cstring] = [
     cstring("rb" & NoInheritFlag), "wb" & NoInheritFlag, "w+b" & NoInheritFlag,
     "r+b" & NoInheritFlag, "ab" & NoInheritFlag
@@ -705,12 +723,12 @@ proc open*(f: var File, filename: string,
       # be opened.
       var res {.noinit.}: Stat
       if c_fstat(getFileHandle(f2), res) >= 0'i32 and modeIsDir(res.st_mode):
-        close(f2)
+        closeIgnoreError(f2)
         return false
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f2), false):
-        close(f2)
+        closeIgnoreError(f2)
         return false
 
     result = true
@@ -733,7 +751,7 @@ proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f), false):
-        close(f)
+        closeIgnoreError(f)
         return false
     result = true
 
@@ -749,7 +767,7 @@ proc open*(f: var File, filehandle: FileHandle,
         filehandle) else: filehandle
     if not setInheritable(oshandle, false):
       return false
-  f = c_fdopen(filehandle, FormatOpen[mode])
+  f = c_fdopen(filehandle, RawFormatOpen[mode])
   result = f != nil
 
 proc open*(filename: string,
@@ -763,7 +781,7 @@ proc open*(filename: string,
   if not open(result, filename, mode, bufSize):
     raise newException(IOError, "cannot open: " & filename)
 
-proc setFilePos*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet) {.benign.} =
+proc setFilePos*(f: File, pos: int64, relativeTo: FileSeekPos = fspSet) {.benign, sideEffect.} =
   ## Sets the position of the file pointer that is used for read/write
   ## operations. The file's first byte has the index zero.
   if c_fseek(f, pos, cint(relativeTo)) != 0:
@@ -871,7 +889,7 @@ proc writeFile*(filename: string, content: openArray[byte]) {.since: (1, 1).} =
   var f: File = nil
   if open(f, filename, fmWrite):
     try:
-      f.writeBuffer(unsafeAddr content[0], content.len)
+      discard f.writeBuffer(unsafeAddr content[0], content.len)
     finally:
       close(f)
   else:

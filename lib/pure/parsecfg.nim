@@ -452,7 +452,7 @@ proc getKeyValPair(c: var CfgParser, kind: CfgEventKind): CfgEvent =
   if c.tok.kind == tkSymbol:
     case kind
     of cfgOption, cfgKeyValuePair:
-      result = CfgEvent(kind: kind, key: c.tok.literal, value: "")
+      result = CfgEvent(kind: kind, key: c.tok.literal.move, value: "")
     else: discard
     rawGetTok(c, c.tok)
     if c.tok.kind in {tkEquals, tkColon}:
@@ -481,7 +481,7 @@ proc next*(c: var CfgParser): CfgEvent {.rtl, extern: "npc$1".} =
   of tkBracketLe:
     rawGetTok(c, c.tok)
     if c.tok.kind == tkSymbol:
-      result = CfgEvent(kind: cfgSectionStart, section: c.tok.literal)
+      result = CfgEvent(kind: cfgSectionStart, section: c.tok.literal.move)
     else:
       result = CfgEvent(kind: cfgError,
         msg: errorStr(c, "symbol expected, but found: " & c.tok.literal))

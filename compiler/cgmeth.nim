@@ -11,14 +11,14 @@
 
 import
   options, ast, msgs, idents, renderer, types, magicsys,
-  sempass2, modulegraphs, lineinfos
-
+  sempass2, modulegraphs, lineinfos, astalgo
 
 import std/intsets
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
+import std/[tables]
 
 proc genConv(n: PNode, d: PType, downcast: bool; conf: ConfigRef): PNode =
   var dest = skipTypes(d, abstractPtrs)
@@ -55,7 +55,7 @@ proc methodCall*(n: PNode; conf: ConfigRef): PNode =
   # replace ordinary method by dispatcher method:
   let disp = getDispatcher(result[0].sym)
   if disp != nil:
-    result[0].typ = disp.typ
+    result[0].typ() = disp.typ
     result[0].sym = disp
     # change the arguments to up/downcasts to fit the dispatcher's parameters:
     for i in 1..<result.len:
@@ -69,21 +69,23 @@ type
 proc sameMethodBucket(a, b: PSym; multiMethods: bool): MethodResult =
   result = No
   if a.name.id != b.name.id: return
-  if a.typ.len != b.typ.len:
+  if a.typ.signatureLen != b.typ.signatureLen:
     return
 
-  for i in 1..<a.typ.len:
-    var aa = a.typ[i]
-    var bb = b.typ[i]
+  var i = 0
+  for x, y in paramTypePairs(a.typ, b.typ):
+    inc i
+    var aa = x
+    var bb = y
     while true:
       aa = skipTypes(aa, {tyGenericInst, tyAlias})
       bb = skipTypes(bb, {tyGenericInst, tyAlias})
       if aa.kind == bb.kind and aa.kind in {tyVar, tyPtr, tyRef, tyLent, tySink}:
-        aa = aa.lastSon
-        bb = bb.lastSon
+        aa = aa.elementType
+        bb = bb.elementType
       else:
         break
-    if sameType(a.typ[i], b.typ[i]):
+    if sameType(x, y):
       if aa.kind == tyObject and result != Invalid:
         result = Yes
     elif aa.kind == tyObject and bb.kind == tyObject and (i == 1 or multiMethods):
@@ -102,10 +104,10 @@ proc sameMethodBucket(a, b: PSym; multiMethods: bool): MethodResult =
   if result == Yes:
     # check for return type:
     # ignore flags of return types; # bug #22673
-    if not sameTypeOrNil(a.typ[0], b.typ[0], {IgnoreFlags}):
-      if b.typ[0] != nil and b.typ[0].kind == tyUntyped:
+    if not sameTypeOrNil(a.typ.returnType, b.typ.returnType, {IgnoreFlags}):
+      if b.typ.returnType != nil and b.typ.returnType.kind == tyUntyped:
         # infer 'auto' from the base to make it consistent:
-        b.typ[0] = a.typ[0]
+        b.typ.setReturnType a.typ.returnType
       else:
         return No
 
@@ -124,15 +126,15 @@ proc createDispatcher(s: PSym; g: ModuleGraph; idgen: IdGenerator): PSym =
   incl(disp.flags, sfDispatcher)
   excl(disp.flags, sfExported)
   let old = disp.typ
-  disp.typ = copyType(disp.typ, nextTypeId(idgen), disp.typ.owner)
+  disp.typ = copyType(disp.typ, idgen, disp.typ.owner)
   copyTypeProps(g, idgen.module, disp.typ, old)
 
   # we can't inline the dispatcher itself (for now):
   if disp.typ.callConv == ccInline: disp.typ.callConv = ccNimCall
   disp.ast = copyTree(s.ast)
   disp.ast[bodyPos] = newNodeI(nkEmpty, s.info)
-  disp.loc.r = ""
-  if s.typ[0] != nil:
+  disp.loc.snippet = ""
+  if s.typ.returnType != nil:
     if disp.ast.len > resultPos:
       disp.ast[resultPos].sym = copySym(s.ast[resultPos].sym, idgen)
     else:
@@ -157,6 +159,14 @@ proc fixupDispatcher(meth, disp: PSym; conf: ConfigRef) =
 
 proc methodDef*(g: ModuleGraph; idgen: IdGenerator; s: PSym) =
   var witness: PSym = nil
+  if s.typ.firstParamType.owner.getModule != s.getModule and vtables in g.config.features and not
+      g.config.isDefined("nimInternalNonVtablesTesting"):
+    localError(g.config, s.info, errGenerated, "method `" & s.name.s &
+          "` can be defined only in the same module with its type (" & s.typ.firstParamType.typeToString() & ")")
+  if sfImportc in s.flags:
+    localError(g.config, s.info, errGenerated, "method `" & s.name.s &
+          "` is not allowed to have 'importc' pragmas")
+
   for i in 0..<g.methods.len:
     let disp = g.methods[i].dispatcher
     case sameMethodBucket(disp, s, multimethods = optMultiMethods in g.config.globalOptions)
@@ -175,6 +185,11 @@ proc methodDef*(g: ModuleGraph; idgen: IdGenerator; s: PSym) =
     of Invalid:
       if witness.isNil: witness = g.methods[i].methods[0]
   # create a new dispatcher:
+  # stores the id and the position
+  if s.typ.firstParamType.skipTypes(skipPtrs).itemId notin g.bucketTable:
+    g.bucketTable[s.typ.firstParamType.skipTypes(skipPtrs).itemId] = 1
+  else:
+    g.bucketTable.inc(s.typ.firstParamType.skipTypes(skipPtrs).itemId)
   g.methods.add((methods: @[s], dispatcher: createDispatcher(s, g, idgen)))
   #echo "adding ", s.info
   if witness != nil:
@@ -183,7 +198,7 @@ proc methodDef*(g: ModuleGraph; idgen: IdGenerator; s: PSym) =
   elif sfBase notin s.flags:
     message(g.config, s.info, warnUseBase)
 
-proc relevantCol(methods: seq[PSym], col: int): bool =
+proc relevantCol*(methods: seq[PSym], col: int): bool =
   # returns true iff the position is relevant
   result = false
   var t = methods[0].typ[col].skipTypes(skipPtrs)
@@ -195,7 +210,7 @@ proc relevantCol(methods: seq[PSym], col: int): bool =
 
 proc cmpSignatures(a, b: PSym, relevantCols: IntSet): int =
   result = 0
-  for col in 1..<a.typ.len:
+  for col in FirstParamAt..<a.typ.signatureLen:
     if contains(relevantCols, col):
       var aa = skipTypes(a.typ[col], skipPtrs)
       var bb = skipTypes(b.typ[col], skipPtrs)
@@ -203,7 +218,7 @@ proc cmpSignatures(a, b: PSym, relevantCols: IntSet): int =
       if (d != high(int)) and d != 0:
         return d
 
-proc sortBucket(a: var seq[PSym], relevantCols: IntSet) =
+proc sortBucket*(a: var seq[PSym], relevantCols: IntSet) =
   # we use shellsort here; fast and simple
   var n = a.len
   var h = 1
@@ -222,16 +237,16 @@ proc sortBucket(a: var seq[PSym], relevantCols: IntSet) =
       a[j] = v
     if h == 1: break
 
-proc genDispatcher(g: ModuleGraph; methods: seq[PSym], relevantCols: IntSet; idgen: IdGenerator): PSym =
+proc genIfDispatcher*(g: ModuleGraph; methods: seq[PSym], relevantCols: IntSet; idgen: IdGenerator): PSym =
   var base = methods[0].ast[dispatcherPos].sym
   result = base
-  var paramLen = base.typ.len
+  var paramLen = base.typ.signatureLen
   var nilchecks = newNodeI(nkStmtList, base.info)
   var disp = newNodeI(nkIfStmt, base.info)
   var ands = getSysMagic(g, unknownLineInfo, "and", mAnd)
   var iss = getSysMagic(g, unknownLineInfo, "of", mOf)
   let boolType = getSysType(g, unknownLineInfo, tyBool)
-  for col in 1..<paramLen:
+  for col in FirstParamAt..<paramLen:
     if contains(relevantCols, col):
       let param = base.typ.n[col].sym
       if param.typ.skipTypes(abstractInst).kind in {tyRef, tyPtr}:
@@ -240,7 +255,7 @@ proc genDispatcher(g: ModuleGraph; methods: seq[PSym], relevantCols: IntSet; idg
   for meth in 0..high(methods):
     var curr = methods[meth]      # generate condition:
     var cond: PNode = nil
-    for col in 1..<paramLen:
+    for col in FirstParamAt..<paramLen:
       if contains(relevantCols, col):
         var isn = newNodeIT(nkCall, base.info, boolType)
         isn.add newSymNode(iss)
@@ -255,7 +270,7 @@ proc genDispatcher(g: ModuleGraph; methods: seq[PSym], relevantCols: IntSet; idg
           cond = a
         else:
           cond = isn
-    let retTyp = base.typ[0]
+    let retTyp = base.typ.returnType
     let call = newNodeIT(nkCall, base.info, retTyp)
     call.add newSymNode(curr)
     for col in 1..<paramLen:
@@ -281,14 +296,13 @@ proc genDispatcher(g: ModuleGraph; methods: seq[PSym], relevantCols: IntSet; idg
   nilchecks.flags.incl nfTransf # should not be further transformed
   result.ast[bodyPos] = nilchecks
 
-proc generateMethodDispatchers*(g: ModuleGraph, idgen: IdGenerator): PNode =
-  result = newNode(nkStmtList)
+proc generateIfMethodDispatchers*(g: ModuleGraph, idgen: IdGenerator) =
   for bucket in 0..<g.methods.len:
     var relevantCols = initIntSet()
-    for col in 1..<g.methods[bucket].methods[0].typ.len:
+    for col in FirstParamAt..<g.methods[bucket].methods[0].typ.signatureLen:
       if relevantCol(g.methods[bucket].methods, col): incl(relevantCols, col)
       if optMultiMethods notin g.config.globalOptions:
         # if multi-methods are not enabled, we are interested only in the first field
         break
     sortBucket(g.methods[bucket].methods, relevantCols)
-    result.add newSymNode(genDispatcher(g, g.methods[bucket].methods, relevantCols, idgen))
+    g.addDispatchers genIfDispatcher(g, g.methods[bucket].methods, relevantCols, idgen)

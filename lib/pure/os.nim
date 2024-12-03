@@ -142,7 +142,7 @@ proc quoteShellWindows*(s: string): string {.noSideEffect, rtl, extern: "nosp$1"
   ## Quote `s`, so it can be safely passed to Windows API.
   ##
   ## Based on Python's `subprocess.list2cmdline`.
-  ## See `this link <http://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_
+  ## See `this link <https://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_
   ## for more details.
   let needQuote = {' ', '\t'} in s or s.len == 0
   result = ""
@@ -424,13 +424,13 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
   when defined(windows):
     var bufsize = MAX_PATH.int32
     var unused: WideCString = nil
-    var res = newWideCString("", bufsize)
+    var res = newWideCString(bufsize)
     while true:
       var L = getFullPathNameW(newWideCString(filename), bufsize, res, unused)
       if L == 0'i32:
         raiseOSError(osLastError(), filename)
       elif L > bufsize:
-        res = newWideCString("", L)
+        res = newWideCString(L)
         bufsize = L
       else:
         result = res$L
@@ -453,7 +453,7 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
       c_free(cast[pointer](r))
 
 proc getCurrentCompilerExe*(): string {.compileTime.} = discard
-  ## This is `getAppFilename()`_ at compile time.
+  ## Returns the path of the currently running Nim compiler or nimble executable.
   ##
   ## Can be used to retrieve the currently executing
   ## Nim compiler from a Nim or nimscript program, or the nimble binary
@@ -692,7 +692,10 @@ proc getAppDir*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdT
 
 proc sleep*(milsecs: int) {.rtl, extern: "nos$1", tags: [TimeEffect], noWeirdTarget.} =
   ## Sleeps `milsecs` milliseconds.
+  ## A negative `milsecs` causes sleep to return immediately.
   when defined(windows):
+    if milsecs < 0:
+      return  # fixes #23732
     winlean.sleep(int32(milsecs))
   else:
     var a, b: Timespec
@@ -754,14 +757,14 @@ template rawToFormalFileInfo(rawInfo, path, formalInfo): untyped =
   ## 'rawInfo' is either a 'BY_HANDLE_FILE_INFORMATION' structure on Windows,
   ## or a 'Stat' structure on posix
   when defined(windows):
-    template merge(a, b): untyped =
-      int64(
+    template merge[T](a, b): untyped =
+       cast[T](
         (uint64(cast[uint32](a))) or
         (uint64(cast[uint32](b)) shl 32)
        )
     formalInfo.id.device = rawInfo.dwVolumeSerialNumber
-    formalInfo.id.file = merge(rawInfo.nFileIndexLow, rawInfo.nFileIndexHigh)
-    formalInfo.size = merge(rawInfo.nFileSizeLow, rawInfo.nFileSizeHigh)
+    formalInfo.id.file = merge[FileId](rawInfo.nFileIndexLow, rawInfo.nFileIndexHigh)
+    formalInfo.size = merge[BiggestInt](rawInfo.nFileSizeLow, rawInfo.nFileSizeHigh)
     formalInfo.linkCount = rawInfo.nNumberOfLinks
     formalInfo.lastAccessTime = fromWinTime(rdFileTime(rawInfo.ftLastAccessTime))
     formalInfo.lastWriteTime = fromWinTime(rdFileTime(rawInfo.ftLastWriteTime))

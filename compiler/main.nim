@@ -22,14 +22,11 @@ import
   modules,
   modulegraphs, lineinfos, pathutils, vmprofiler
 
-# ensure NIR compiles:
-import nir / nir
 
 when defined(nimPreviewSlimSystem):
   import std/[syncio, assertions]
 
-import ic / [cbackend, integrity, navigator]
-from ic / ic import rodViewer
+import ic / [cbackend, integrity, navigator, ic]
 
 import ../dist/checksums/src/checksums/sha1
 
@@ -48,9 +45,6 @@ proc writeDepsFile(g: ModuleGraph) =
     if g.getModule(k).isNil:  # don't repeat includes which are also modules
       f.writeLine(toFullPath(g.config, k))
   f.close()
-
-proc writeNinjaFile(g: ModuleGraph) =
-  discard "to implement"
 
 proc writeCMakeDepsFile(conf: ConfigRef) =
   ## write a list of C files for build systems like CMake.
@@ -156,31 +150,11 @@ proc commandCompileToC(graph: ModuleGraph) =
     extccomp.callCCompiler(conf)
     # for now we do not support writing out a .json file with the build instructions when HCR is on
     if not conf.hcrOn:
-      extccomp.writeJsonBuildInstructions(conf)
+      extccomp.writeJsonBuildInstructions(conf, graph.cachedFiles)
     if optGenScript in graph.config.globalOptions:
       writeDepsFile(graph)
     if optGenCDeps in graph.config.globalOptions:
       writeCMakeDepsFile(conf)
-
-proc commandCompileToNir(graph: ModuleGraph) =
-  let conf = graph.config
-  extccomp.initVars(conf)
-  if conf.symbolFiles == disabledSf:
-    if {optRun, optForceFullMake} * conf.globalOptions == {optRun}:
-      if not changeDetectedViaJsonBuildInstructions(conf, conf.jsonBuildInstructionsFile):
-        # nothing changed
-        graph.config.notes = graph.config.mainPackageNotes
-        return
-
-  if not extccomp.ccHasSaneOverflow(conf):
-    conf.symbols.defineSymbol("nimEmulateOverflowChecks")
-
-  if conf.symbolFiles == disabledSf:
-    setPipeLinePass(graph, NirPass)
-  else:
-    setPipeLinePass(graph, SemPass)
-  compilePipelineProject(graph)
-  writeNinjaFile(graph)
 
 proc commandJsonScript(graph: ModuleGraph) =
   extccomp.runJsonBuildInstructions(graph.config, graph.config.jsonBuildInstructionsFile)
@@ -198,16 +172,13 @@ proc commandCompileToJS(graph: ModuleGraph) =
     if optGenScript in conf.globalOptions:
       writeDepsFile(graph)
 
-proc commandInteractive(graph: ModuleGraph; useNir: bool) =
+proc commandInteractive(graph: ModuleGraph) =
   graph.config.setErrorMaxHighMaybe
   initDefines(graph.config.symbols)
-  if useNir:
-    defineSymbol(graph.config.symbols, "noSignalHandler")
-  else:
-    defineSymbol(graph.config.symbols, "nimscript")
+  defineSymbol(graph.config.symbols, "nimscript")
   # note: seems redundant with -d:nimHasLibFFI
   when hasFFI: defineSymbol(graph.config.symbols, "nimffi")
-  setPipeLinePass(graph, if useNir: NirReplPass else: InterpreterPass)
+  setPipeLinePass(graph, InterpreterPass)
   compilePipelineSystemModule(graph)
   if graph.config.commandArgs.len > 0:
     discard graph.compilePipelineModule(fileInfoIdx(graph.config, graph.config.projectFull), {})
@@ -223,9 +194,8 @@ proc commandScan(cache: IdentCache, config: ConfigRef) =
   var stream = llStreamOpen(f, fmRead)
   if stream != nil:
     var
-      L: Lexer
+      L: Lexer = default(Lexer)
       tok: Token = default(Token)
-    initToken(tok)
     openLexer(L, f, stream, cache, config)
     while true:
       rawGetTok(L, tok)
@@ -295,8 +265,6 @@ proc mainCommand*(graph: ModuleGraph) =
         # and it has added this define implictly, so we must undo that here.
         # A better solution might be to fix system.nim
         undefSymbol(conf.symbols, "useNimRtl")
-    of backendNir:
-      if conf.exc == excNone: conf.exc = excGoto
     of backendInvalid: raiseAssert "unreachable"
 
   proc compileToBackend() =
@@ -307,7 +275,6 @@ proc mainCommand*(graph: ModuleGraph) =
     of backendCpp: commandCompileToC(graph)
     of backendObjc: commandCompileToC(graph)
     of backendJs: commandCompileToJS(graph)
-    of backendNir: commandCompileToNir(graph)
     of backendInvalid: raiseAssert "unreachable"
 
   template docLikeCmd(body) =
@@ -328,14 +295,18 @@ proc mainCommand*(graph: ModuleGraph) =
     # so by default should not end up in $PWD nor in $projectPath.
     var ret = if optUseNimcache in conf.globalOptions: getNimcacheDir(conf)
               else: conf.projectPath
-    doAssert ret.string.isAbsolute # `AbsoluteDir` is not a real guarantee
+    if not ret.string.isAbsolute: # `AbsoluteDir` is not a real guarantee
+      rawMessage(conf, errCannotOpenFile, ret.string & "/")
     if conf.cmd in cmdDocLike + {cmdRst2html, cmdRst2tex, cmdMd2html, cmdMd2tex}:
       ret = ret / htmldocsDir
     conf.outDir = ret
 
   ## process all commands
   case conf.cmd
-  of cmdBackends: compileToBackend()
+  of cmdBackends:
+    compileToBackend()
+    when BenchIC:
+      echoTimes graph.packed
   of cmdTcc:
     when hasTinyCBackend:
       extccomp.setCC(conf, "tcc", unknownLineInfo)
@@ -431,6 +402,10 @@ proc mainCommand*(graph: ModuleGraph) =
       for it in conf.searchPaths: msgWriteln(conf, it.string)
   of cmdCheck:
     commandCheck(graph)
+  of cmdM:
+    graph.config.symbolFiles = v2Sf
+    setUseIc(graph.config.symbolFiles != disabledSf)
+    commandCheck(graph)
   of cmdParse:
     wantMainModule(conf)
     discard parseFile(conf.projectMainIdx, cache, conf)
@@ -438,7 +413,7 @@ proc mainCommand*(graph: ModuleGraph) =
     wantMainModule(conf)
     commandView(graph)
     #msgWriteln(conf, "Beware: Indentation tokens depend on the parser's state!")
-  of cmdInteractive: commandInteractive(graph, isDefined(conf, "nir"))
+  of cmdInteractive: commandInteractive(graph)
   of cmdNimscript:
     if conf.projectIsCmd or conf.projectIsStdin: discard
     elif not fileExists(conf.projectFull):

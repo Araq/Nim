@@ -152,7 +152,7 @@ type
   Graph = object
     nodes: seq[Node]
 
-proc `=destroy`(x: var NodeObj) =
+proc `=destroy`(x: NodeObj) =
   `=destroy`(x.neighbors)
   `=destroy`(x.label)
 
@@ -210,7 +210,7 @@ block: # bug #22197
   ## If this does not exist, it also works!
   proc newFileID(): FileID = FileID(H5Id())
 
-  proc `=destroy`(grp: var H5GroupObj) =
+  proc `=destroy`(grp: H5GroupObj) =
     ## Closes the group and resets all references to nil.
     if cast[pointer](grp.fileId) != nil:
       `=destroy`(grp.file_id)
@@ -218,3 +218,30 @@ block: # bug #22197
   var grp = H5Group()
   reset(grp.file_id)
   reset(grp)
+
+import std/tables
+
+block: # bug #22286
+  type
+    A = object
+    B = object
+      a: A
+    C = object
+      b: B
+
+  proc `=destroy`(self: A) =
+    echo "destroyed"
+
+  proc `=destroy`(self: C) =
+    `=destroy`(self.b)
+
+  var c = C()
+
+block: # https://forum.nim-lang.org/t/10642
+  type AObj = object
+    name: string
+    tableField: Table[string, string]
+
+  proc `=destroy`(x: AObj) =
+    `=destroy`(x.name)
+    `=destroy`(x.tableField)

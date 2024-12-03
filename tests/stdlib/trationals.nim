@@ -10,6 +10,7 @@ template main() =
     z = Rational[int](num: 0, den: 1)
     o = initRational(num = 1, den = 1)
     a = initRational(1, 2)
+    u = 3u // 2
     b = -1 // -2
     m1 = -1 // 1
     tt = 10 // 2
@@ -103,6 +104,14 @@ template main() =
 
   when sizeof(int) == 8:
     doAssert almostEqual(PI.toRational.toFloat, PI)
+
+  # unsigned
+  doAssert u == u
+  doAssert u + u == 3u // 1
+  doAssert 3u.toRational - u == u
+  doAssert u * 2 == 3u // 1
+
+
 
 static: main()
 main()

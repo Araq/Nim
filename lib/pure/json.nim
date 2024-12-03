@@ -634,7 +634,7 @@ proc delete*(obj: JsonNode, key: string) =
   obj.fields.del(key)
 
 proc copy*(p: JsonNode): JsonNode =
-  ## Performs a deep copy of `a`.
+  ## Performs a deep copy of `p`.
   case p.kind
   of JString:
     result = newJString(p.str)
@@ -991,9 +991,9 @@ when defined(js):
     else: assert false
 
   proc len(x: JsObject): int =
-    asm """
+    {.emit: """
       `result` = `x`.length;
-    """
+    """.}
 
   proc convertObject(x: JsObject): JsonNode =
     var isRawNumber = false
@@ -1004,14 +1004,15 @@ when defined(js):
         result.add(x[i].convertObject())
     of JObject:
       result = newJObject()
-      asm """for (var property in `x`) {
+      {.emit: """for (var property in `x`) {
         if (`x`.hasOwnProperty(property)) {
-      """
+      """.}
+
       var nimProperty: cstring
       var nimValue: JsObject
-      asm "`nimProperty` = property; `nimValue` = `x`[property];"
+      {.emit: "`nimProperty` = property; `nimValue` = `x`[property];".}
       result[$nimProperty] = nimValue.convertObject()
-      asm "}}"
+      {.emit: "}}".}
     of JInt:
       result = newJInt(x.to(int))
     of JFloat:
@@ -1252,7 +1253,7 @@ proc foldObjectBody(dst, typeNode, tmpSym, jsonNode, jsonPath, originalJsonPathL
       when nimvm:
         when isRefSkipDistinct(`tmpSym`.`fieldSym`):
           # workaround #12489
-          var tmp: `fieldType`
+          var tmp: `fieldType` = default(typeof(`fieldType`))
           initFromJson(tmp, getOrDefault(`jsonNode`,`fieldNameLit`), `jsonPath`)
           `tmpSym`.`fieldSym` = tmp
         else:
@@ -1268,7 +1269,7 @@ proc foldObjectBody(dst, typeNode, tmpSym, jsonNode, jsonPath, originalJsonPathL
     let kindType = typeNode[0][1]
     let kindOffsetLit = newLit(uint(getOffset(kindSym)))
     dst.add quote do:
-      var kindTmp: `kindType`
+      var kindTmp: `kindType` = default(typeof(`kindType`))
       jsonPath.add `kindPathLit`
       initFromJson(kindTmp, `jsonNode`[`kindNameLit`], `jsonPath`)
       jsonPath.setLen `originalJsonPathLen`

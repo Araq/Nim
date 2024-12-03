@@ -122,7 +122,6 @@ type
                               # this is needed because scanning comments
                               # needs so much look-ahead
     currLineIndent*: int
-    strongSpaces*, allowTabs*: bool
     errorHandler*: ErrorHandler
     cache*: IdentCache
     when defined(nimsuggest):
@@ -175,32 +174,6 @@ proc prettyTok*(tok: Token): string =
 proc printTok*(conf: ConfigRef; tok: Token) =
   # xxx factor with toLocation
   msgWriteln(conf, $tok.line & ":" & $tok.col & "\t" & $tok.tokType & " " & $tok)
-
-proc initToken*(L: var Token) =
-  L.tokType = tkInvalid
-  L.iNumber = 0
-  L.indent = 0
-  L.spacing = {}
-  L.literal = ""
-  L.fNumber = 0.0
-  L.base = base10
-  L.ident = nil
-  when defined(nimpretty):
-    L.commentOffsetA = 0
-    L.commentOffsetB = 0
-
-proc fillToken(L: var Token) =
-  L.tokType = tkInvalid
-  L.iNumber = 0
-  L.indent = 0
-  L.spacing = {}
-  setLen(L.literal, 0)
-  L.fNumber = 0.0
-  L.base = base10
-  L.ident = nil
-  when defined(nimpretty):
-    L.commentOffsetA = 0
-    L.commentOffsetB = 0
 
 proc openLexer*(lex: var Lexer, fileIdx: FileIndex, inputstream: PLLStream;
                  cache: IdentCache; config: ConfigRef) =
@@ -327,8 +300,7 @@ proc getNumber(L: var Lexer, result: var Token) =
     # Used to get slightly human friendlier err messages.
     const literalishChars = {'A'..'Z', 'a'..'z', '0'..'9', '_', '.', '\''}
     var msgPos = L.bufpos
-    var t: Token
-    t.literal = ""
+    var t = Token(literal: "")
     L.bufpos = startpos # Use L.bufpos as pos because of matchChars
     matchChars(L, t, literalishChars)
     # We must verify +/- specifically so that we're not past the literal
@@ -798,7 +770,7 @@ proc getString(L: var Lexer, tok: var Token, mode: StringMode) =
     if mode != normal: tok.tokType = tkRStrLit
     else: tok.tokType = tkStrLit
     while true:
-      var c = L.buf[pos]
+      let c = L.buf[pos]
       if c == '\"':
         if mode != normal and L.buf[pos+1] == '\"':
           inc(pos, 2)
@@ -824,7 +796,7 @@ proc getCharacter(L: var Lexer; tok: var Token) =
   tokenBegin(tok, L.bufpos)
   let startPos = L.bufpos
   inc(L.bufpos)               # skip '
-  var c = L.buf[L.bufpos]
+  let c = L.buf[L.bufpos]
   case c
   of '\0'..pred(' '), '\'':
     lexMessage(L, errGenerated, "invalid character literal")
@@ -942,7 +914,7 @@ proc getOperator(L: var Lexer, tok: var Token) =
   tokenBegin(tok, pos)
   var h: Hash = 0
   while true:
-    var c = L.buf[pos]
+    let c = L.buf[pos]
     if c in OpChars:
       h = h !& ord(c)
       inc(pos)
@@ -1009,23 +981,6 @@ proc getPrecedence*(tok: Token): int =
   of tkAnd: result = 4
   of tkOr, tkXor, tkPtr, tkRef: result = 3
   else: return -10
-
-proc newlineFollows*(L: Lexer): bool =
-  result = false
-  var pos = L.bufpos
-  while true:
-    case L.buf[pos]
-    of ' ', '\t':
-      inc(pos)
-    of CR, LF:
-      result = true
-      break
-    of '#':
-      inc(pos)
-      if L.buf[pos] == '#': inc(pos)
-      if L.buf[pos] != '[': return true
-    else:
-      break
 
 proc skipMultiLineComment(L: var Lexer; tok: var Token; start: int;
                           isDoc: bool) =
@@ -1118,9 +1073,7 @@ proc scanComment(L: var Lexer, tok: var Token) =
         toStrip = 0
       else:  # found first non-whitespace character
         stripInit = true
-    var lastBackslash = -1
     while L.buf[pos] notin {CR, LF, nimlexbase.EndOfFile}:
-      if L.buf[pos] == '\\': lastBackslash = pos+1
       tok.literal.add(L.buf[pos])
       inc(pos)
     tokenEndIgnore(tok, pos)
@@ -1163,7 +1116,7 @@ proc skip(L: var Lexer, tok: var Token) =
       inc(pos)
       tok.spacing.incl(tsLeading)
     of '\t':
-      if not L.allowTabs: lexMessagePos(L, errGenerated, pos, "tabs are not allowed, use spaces instead")
+      lexMessagePos(L, errGenerated, pos, "tabs are not allowed, use spaces instead")
       inc(pos)
     of CR, LF:
       tokenEndPrevious(tok, pos)
@@ -1231,7 +1184,7 @@ proc rawGetTok*(L: var Lexer, tok: var Token) =
         L.previousToken.line = tok.line.uint16
         L.previousToken.col = tok.col.int16
 
-  fillToken(tok)
+  reset(tok)
   if L.indentAhead >= 0:
     tok.indent = L.indentAhead
     L.currLineIndent = L.indentAhead
@@ -1243,7 +1196,7 @@ proc rawGetTok*(L: var Lexer, tok: var Token) =
     if tok.tokType == tkComment:
       L.indentAhead = L.currLineIndent
       return
-  var c = L.buf[L.bufpos]
+  let c = L.buf[L.bufpos]
   tok.line = L.lineNumber
   tok.col = getColNumber(L, L.bufpos)
   if c in SymStartChars - {'r', 'R'} - UnicodeOperatorStartChars:
@@ -1402,7 +1355,6 @@ proc getIndentWidth*(fileIdx: FileIndex, inputstream: PLLStream;
   result = 0
   var lex: Lexer = default(Lexer)
   var tok: Token = default(Token)
-  initToken(tok)
   openLexer(lex, fileIdx, inputstream, cache, config)
   var prevToken = tkEof
   while tok.tokType != tkEof:
@@ -1415,11 +1367,11 @@ proc getIndentWidth*(fileIdx: FileIndex, inputstream: PLLStream;
 
 proc getPrecedence*(ident: PIdent): int =
   ## assumes ident is binary operator already
-  var tok: Token
-  initToken(tok)
-  tok.ident = ident
-  tok.tokType =
-    if tok.ident.id in ord(tokKeywordLow) - ord(tkSymbol)..ord(tokKeywordHigh) - ord(tkSymbol):
-      TokType(tok.ident.id + ord(tkSymbol))
-    else: tkOpr
+  let
+    tokType =
+      if ident.id in ord(tokKeywordLow) - ord(tkSymbol)..ord(tokKeywordHigh) - ord(tkSymbol):
+        TokType(ident.id + ord(tkSymbol))
+      else: tkOpr
+    tok = Token(ident: ident, tokType: tokType)
+
   getPrecedence(tok)

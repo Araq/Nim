@@ -2,9 +2,11 @@ discard """
   cmd: "nim check --warningAsError:UnreachableCode $file"
   action: "reject"
   nimout: '''
-tunreachable.nim(24, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
-tunreachable.nim(31, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
-tunreachable.nim(40, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
+tunreachable.nim(26, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
+tunreachable.nim(33, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
+tunreachable.nim(42, 3) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
+tunreachable.nim(65, 5) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
+tunreachable.nim(77, 5) Error: unreachable code after 'return' statement or '{.noReturn.}' proc [UnreachableCode]
 '''
 """
   
@@ -40,3 +42,38 @@ proc main3() =
   echo "after"
 
 main3()
+
+
+block:
+  # Cases like strings are not checked for exhaustiveness unless they have an else
+  proc main4(x: string) =
+    case x
+    of "a":
+      return
+    # reachable
+    echo "after"
+
+  main4("a")
+
+  proc main5(x: string) =
+    case x
+    of "a":
+      return
+    else:
+      return
+    # unreachable
+    echo "after"
+
+  main5("a")
+
+block:
+  # In this case no else is needed because it's exhaustive
+  proc exhaustive(x: bool) =
+    case x
+    of true:
+      return
+    of false:
+      return
+    echo "after"
+
+  exhaustive(true)

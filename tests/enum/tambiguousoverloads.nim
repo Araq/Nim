@@ -9,7 +9,7 @@ block: # bug #21887
     EnumC = enum C
 
   doAssert typeof(EnumC(A)) is EnumC #[tt.Error
-                        ^ ambiguous identifier 'A' -- use one of the following:
+                        ^ ambiguous identifier: 'A' -- use one of the following:
   EnumA.A: EnumA
   EnumB.A: EnumB]#
 
@@ -21,6 +21,6 @@ block: # issue #22598
       red
 
   let a = red #[tt.Error
-          ^ ambiguous identifier 'red' -- use one of the following:
+          ^ ambiguous identifier: 'red' -- use one of the following:
   A.red: A
   B.red: B]#

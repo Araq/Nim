@@ -936,11 +936,11 @@ macro `<>`*(x: untyped): untyped =
   ## Constructor macro for XML. Example usage:
   ##
   ##   ```nim
-  ##   <>a(href="http://nim-lang.org", newText("Nim rules."))
+  ##   <>a(href="https://nim-lang.org", newText("Nim rules."))
   ##   ```
   ##
   ## Produces an XML tree for:
   ##
-  ##     <a href="http://nim-lang.org">Nim rules.</a>
+  ##     <a href="https://nim-lang.org">Nim rules.</a>
   ##
   result = xmlConstructor(x)

@@ -11,7 +11,7 @@ go()
 discard """
 $nimsuggest --tester $file
 >def $path/tinclude.nim:7:14
-def;;skProc;;minclude_import.create;;proc (greeting: string, subject: string): Greet{.noSideEffect, gcsafe.};;*fixtures/minclude_include.nim;;3;;5;;"";;100
+def;;skProc;;minclude_import.create;;proc (greeting: string, subject: string): Greet{.noSideEffect, gcsafe, raises: <inferred> [].};;*fixtures/minclude_include.nim;;3;;5;;"";;100
 >def $path/fixtures/minclude_include.nim:3:71
 def;;skType;;minclude_types.Greet;;Greet;;*fixtures/minclude_types.nim;;4;;2;;"";;100
 >def $path/fixtures/minclude_include.nim:3:71

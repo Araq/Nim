@@ -10,7 +10,7 @@
 ## Integrity checking for a set of .rod files.
 ## The set must cover a complete Nim project.
 
-import std/sets
+import std/[sets, tables]
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
@@ -72,15 +72,16 @@ proc checkForeignSym(c: var CheckedContext; symId: PackedItemId) =
     c.thisModule = oldThisModule
 
 proc checkNode(c: var CheckedContext; tree: PackedTree; n: NodePos) =
-  if tree[n].typeId != nilItemId:
-    checkType(c, tree[n].typeId)
+  let t = findType(tree, n)
+  if t != nilItemId:
+    checkType(c, t)
   case n.kind
   of nkEmpty, nkNilLit, nkType, nkNilRodNode:
     discard
   of nkIdent:
     assert c.g.packed[c.thisModule].fromDisk.strings.hasLitId n.litId
   of nkSym:
-    checkLocalSym(c, tree[n].operand)
+    checkLocalSym(c, tree[n].soperand)
   of directIntLit:
     discard
   of externIntLit, nkFloatLit..nkFloat128Lit:
@@ -91,7 +92,7 @@ proc checkNode(c: var CheckedContext; tree: PackedTree; n: NodePos) =
     let (n1, n2) = sons2(tree, n)
     assert n1.kind == nkNone
     assert n2.kind == nkNone
-    checkForeignSym(c, PackedItemId(module: n1.litId, item: tree[n2].operand))
+    checkForeignSym(c, PackedItemId(module: n1.litId, item: tree[n2].soperand))
   else:
     for n0 in sonsReadonly(tree, n):
       checkNode(c, tree, n0)
@@ -107,18 +108,18 @@ proc checkModule(c: var CheckedContext; m: PackedModule) =
   # We check that:
   # - Every symbol references existing types and symbols.
   # - Every tree node references existing types and symbols.
-  for i in 0..high(m.syms):
-    checkLocalSym c, int32(i)
+  for _, v in pairs(m.syms):
+    checkLocalSym c, v.id
 
   checkTree c, m.toReplay
   checkTree c, m.topLevel
 
   for e in m.exports:
-    assert e[1] >= 0 and e[1] < m.syms.len
+    #assert e[1] >= 0 and e[1] < m.syms.len
     assert e[0] == m.syms[e[1]].name
 
   for e in m.compilerProcs:
-    assert e[1] >= 0 and e[1] < m.syms.len
+    #assert e[1] >= 0 and e[1] < m.syms.len
     assert e[0] == m.syms[e[1]].name
 
   checkLocalSymIds c, m, m.converters
@@ -134,13 +135,15 @@ proc checkModule(c: var CheckedContext; m: PackedModule) =
     typeInstCache*: seq[(PackedItemId, PackedItemId)]
     procInstCache*: seq[PackedInstantiation]
     attachedOps*: seq[(TTypeAttachedOp, PackedItemId, PackedItemId)]
-    methodsPerType*: seq[(PackedItemId, int, PackedItemId)]
+    methodsPerGenericType*: seq[(PackedItemId, int, PackedItemId)]
     enumToStringProcs*: seq[(PackedItemId, PackedItemId)]
+    methodsPerType*: seq[(PackedItemId, PackedItemId)]
+    dispatchers*: seq[PackedItemId]
   ]#
 
 proc checkIntegrity*(g: ModuleGraph) =
   var c = CheckedContext(g: g)
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     # case statement here to enforce exhaustive checks.
     case g.packed[i].status
     of undefined:
@@ -150,4 +153,3 @@ proc checkIntegrity*(g: ModuleGraph) =
     of stored, storing, outdated, loaded:
       c.thisModule = int32 i
       checkModule(c, g.packed[i].fromDisk)
-

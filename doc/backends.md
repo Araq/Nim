@@ -31,7 +31,7 @@ Objective-C targets and the JavaScript target. [The C like targets](
 into a library or a final executable. [The JavaScript target](
 #backends-the-javascript-target) can generate a ``.js`` file which you
 reference from an HTML file or create a [standalone Node.js program](
-http://nodejs.org).
+https://nodejs.org).
 
 On top of generating libraries or standalone applications, Nim offers
 bidirectional interfacing with the backend targets through generic and
@@ -87,20 +87,19 @@ available. This includes:
 * OS-specific operations
 * threading, coroutines
 * some modules of the standard library
-* proper 64-bit integer arithmetic
 
 To compensate, the standard library has modules [catered to the JS backend](
-lib.html#pure-libraries-modules-for-js-backend)
+lib.html#pure-libraries-modules-for-the-javascript-backend)
 and more support will come in the future (for instance, Node.js bindings
 to get OS info).
 
 To compile a Nim module into a ``.js`` file use the `js`:option: command; the
 default is a ``.js`` file that is supposed to be referenced in an ``.html``
 file. However, you can also run the code with `nodejs`:idx:
-(http://nodejs.org):
+(https://nodejs.org):
 
   ```cmd
-  nim js -d:nodejs -r examples/hallo.nim
+  nim js -r examples/hallo.nim
   ```
 
 If you experience errors saying that `globalThis` is not defined, be
@@ -250,6 +249,8 @@ which will likely make your program crash at runtime.
 The name `NimMain` can be influenced via the `--nimMainPrefix:prefix` switch.
 Use `--nimMainPrefix:MyLib` and the function to call is named `MyLibNimMain`.
 
+When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors. It is influenced by the `--nimMainPrefix:prefix` switch, too.
+
 
 ### Nim invocation example from C
 
@@ -371,11 +372,7 @@ The manual mentions that [Nim strings are implicitly convertible to
 cstrings](manual.html#types-cstring-type) which makes interaction usually
 painless. Most C functions accepting a Nim string converted to a
 `cstring` will likely not need to keep this string around and by the time
-they return the string won't be needed anymore. However, for the rare cases
-where a Nim string has to be preserved and made available to the C backend
-as a `cstring`, you will need to manually prevent the string data
-from being freed with [GC_ref](system.html#GC_ref,string) and [GC_unref](
-system.html#GC_unref,string).
+they return the string won't be needed anymore.
 
 A similar thing happens with C code invoking Nim code which returns a
 `cstring`. Consider the following proc:

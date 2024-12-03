@@ -15,8 +15,8 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 import
-  options, ast, astalgo, msgs, idents, renderer,
-  magicsys, vmdef, modulegraphs, lineinfos, pathutils
+  options, ast, msgs, idents, renderer,
+  magicsys, vmdef, modulegraphs, lineinfos, pathutils, layeredtable
 
 import ic / ic
 
@@ -41,7 +41,7 @@ type
     breakInLoop*: bool        # whether we are in a loop without block
     next*: PProcCon           # used for stacking procedure contexts
     mappingExists*: bool
-    mapping*: TIdTable
+    mapping*: Table[ItemId, PSym]
     caseContext*: seq[tuple[n: PNode, idx: int]]
     localBindStmts*: seq[PNode]
 
@@ -73,9 +73,9 @@ type
     efNoUndeclared, efIsDotCall, efCannotBeDotCall,
       # Use this if undeclared identifiers should not raise an error during
       # overload resolution.
-    efNoDiagnostics,
     efTypeAllowed # typeAllowed will be called after
     efWantNoDefaults
+    efIgnoreDefaults # var statements without initialization
     efAllowSymChoice # symchoice node should not be resolved
 
   TExprFlags* = set[TExprFlag]
@@ -122,8 +122,6 @@ type
     converters*: seq[PSym]
     patterns*: seq[PSym]       # sequence of pattern matchers
     optionStack*: seq[POptionEntry]
-    symMapping*: TIdTable      # every gensym'ed symbol needs to be mapped
-                               # to some new symbol in a generic instantiation
     libs*: seq[PLib]           # all libs used by this module
     semConstExpr*: proc (c: PContext, n: PNode; expectedType: PType = nil): PNode {.nimcall.} # for the pragmas
     semExpr*: proc (c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType = nil): PNode {.nimcall.}
@@ -138,9 +136,13 @@ type
     semOverloadedCall*: proc (c: PContext, n, nOrig: PNode,
                               filter: TSymKinds, flags: TExprFlags, expectedType: PType = nil): PNode {.nimcall.}
     semTypeNode*: proc(c: PContext, n: PNode, prev: PType): PType {.nimcall.}
-    semInferredLambda*: proc(c: PContext, pt: TIdTable, n: PNode): PNode
-    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: TIdTable,
+    semInferredLambda*: proc(c: PContext, pt: LayeredIdTable, n: PNode): PNode
+    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: LayeredIdTable,
                                 info: TLineInfo): PSym
+    instantiateOnlyProcType*: proc (c: PContext, pt: LayeredIdTable,
+                                    prc: PSym, info: TLineInfo): PType
+      # used by sigmatch for explicit generic instantiations
+    fitDefaultNode*: proc (c: PContext, n: var PNode, expectedType: PType)
     includedFiles*: IntSet    # used to detect recursive include files
     pureEnumFields*: TStrTable   # pure enum fields that can be used unambiguously
     userPragmas*: TStrTable
@@ -170,6 +172,7 @@ type
     inUncheckedAssignSection*: int
     importModuleLookup*: Table[int, seq[int]] # (module.ident.id, [module.id])
     skipTypes*: seq[PNode] # used to skip types between passes in type section. So far only used for inheritance, sets and generic bodies.
+    inTypeofContext*: int
   TBorrowState* = enum
     bsNone, bsReturnNotMatch, bsNoDistinct, bsGeneric, bsNotSupported, bsMatch
 
@@ -182,50 +185,49 @@ proc getIntLitType*(c: PContext; literal: PNode): PType =
     result = c.intTypeCache[value.int]
     if result == nil:
       let ti = getSysType(c.graph, literal.info, tyInt)
-      result = copyType(ti, nextTypeId(c.idgen), ti.owner)
+      result = copyType(ti, c.idgen, ti.owner)
       result.n = literal
       c.intTypeCache[value.int] = result
   else:
     let ti = getSysType(c.graph, literal.info, tyInt)
-    result = copyType(ti, nextTypeId(c.idgen), ti.owner)
+    result = copyType(ti, c.idgen, ti.owner)
     result.n = literal
 
 proc setIntLitType*(c: PContext; result: PNode) =
   let i = result.intVal
   case c.config.target.intSize
-  of 8: result.typ = getIntLitType(c, result)
+  of 8: result.typ() = getIntLitType(c, result)
   of 4:
     if i >= low(int32) and i <= high(int32):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 2:
     if i >= low(int16) and i <= high(int16):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 1:
     # 8 bit CPUs are insane ...
     if i >= low(int8) and i <= high(int8):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int16) and i <= high(int16):
-      result.typ = getSysType(c.graph, result.info, tyInt16)
+      result.typ() = getSysType(c.graph, result.info, tyInt16)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   else:
     internalError(c.config, result.info, "invalid int size")
 
 proc makeInstPair*(s: PSym, inst: PInstantiation): TInstantiationPair =
-  result.genericSym = s
-  result.inst = inst
+  result = TInstantiationPair(genericSym: s, inst: inst)
 
 proc filename*(c: PContext): string =
   # the module's filename
-  return toFilename(c.config, FileIndex c.module.position)
+  result = toFilename(c.config, FileIndex c.module.position)
 
 proc scopeDepth*(c: PContext): int {.inline.} =
   result = if c.currentScope != nil: c.currentScope.depthLevel
@@ -252,14 +254,14 @@ proc popProcCon*(c: PContext) {.inline.} = c.p = c.p.next
 
 proc put*(p: PProcCon; key, val: PSym) =
   if not p.mappingExists:
-    p.mapping = initIdTable()
+    p.mapping = initTable[ItemId, PSym]()
     p.mappingExists = true
   #echo "put into table ", key.info
-  p.mapping.idTablePut(key, val)
+  p.mapping[key.itemId] = val
 
 proc get*(p: PProcCon; key: PSym): PSym =
   if not p.mappingExists: return nil
-  result = PSym(p.mapping.idTableGet(key))
+  result = p.mapping.getOrDefault(key.itemId)
 
 proc getGenSym*(c: PContext; s: PSym): PSym =
   if sfGenSym notin s.flags: return s
@@ -328,7 +330,8 @@ proc newContext*(graph: ModuleGraph; module: PSym): PContext =
   result.features = graph.config.features
   if graph.config.symbolFiles != disabledSf:
     let id = module.position
-    assert graph.packed[id].status in {undefined, outdated}
+    if graph.config.cmd != cmdM:
+      assert graph.packed[id].status in {undefined, outdated}
     graph.packed[id].status = storing
     graph.packed[id].module = module
     initEncoder graph, module
@@ -396,12 +399,11 @@ proc addToLib*(lib: PLib, sym: PSym) =
   #  LocalError(sym.info, errInvalidPragma)
   sym.annex = lib
 
-proc newTypeS*(kind: TTypeKind, c: PContext, sons: seq[PType] = @[]): PType =
-  result = newType(kind, nextTypeId(c.idgen), getCurrOwner(c), sons = sons)
+proc newTypeS*(kind: TTypeKind; c: PContext; son: sink PType = nil): PType =
+  result = newType(kind, c.idgen, getCurrOwner(c), son = son)
 
 proc makePtrType*(owner: PSym, baseType: PType; idgen: IdGenerator): PType =
-  result = newType(tyPtr, nextTypeId(idgen), owner)
-  addSonSkipIntLit(result, baseType, idgen)
+  result = newType(tyPtr, idgen, owner, skipIntLit(baseType, idgen))
 
 proc makePtrType*(c: PContext, baseType: PType): PType =
   makePtrType(getCurrOwner(c), baseType, c.idgen)
@@ -414,22 +416,13 @@ proc makeTypeWithModifier*(c: PContext,
   if modifier in {tyVar, tyLent, tyTypeDesc} and baseType.kind == modifier:
     result = baseType
   else:
-    result = newTypeS(modifier, c)
-    addSonSkipIntLit(result, baseType, c.idgen)
+    result = newTypeS(modifier, c, skipIntLit(baseType, c.idgen))
 
 proc makeVarType*(c: PContext, baseType: PType; kind = tyVar): PType =
   if baseType.kind == kind:
     result = baseType
   else:
-    result = newTypeS(kind, c)
-    addSonSkipIntLit(result, baseType, c.idgen)
-
-proc makeVarType*(owner: PSym, baseType: PType; idgen: IdGenerator; kind = tyVar): PType =
-  if baseType.kind == kind:
-    result = baseType
-  else:
-    result = newType(kind, nextTypeId(idgen), owner)
-    addSonSkipIntLit(result, baseType, idgen)
+    result = newTypeS(kind, c, skipIntLit(baseType, c.idgen))
 
 proc makeTypeSymNode*(c: PContext, typ: PType, info: TLineInfo): PNode =
   let typedesc = newTypeS(tyTypeDesc, c)
@@ -445,40 +438,40 @@ proc makeTypeFromExpr*(c: PContext, n: PNode): PType =
   assert n != nil
   result.n = n
 
-proc newTypeWithSons*(owner: PSym, kind: TTypeKind, sons: seq[PType];
-                      idgen: IdGenerator): PType =
-  result = newType(kind, nextTypeId(idgen), owner, sons = sons)
+when false:
+  proc newTypeWithSons*(owner: PSym, kind: TTypeKind, sons: seq[PType];
+                        idgen: IdGenerator): PType =
+    result = newType(kind, idgen, owner, sons = sons)
 
-proc newTypeWithSons*(c: PContext, kind: TTypeKind,
-                      sons: seq[PType]): PType =
-  result = newType(kind, nextTypeId(c.idgen), getCurrOwner(c), sons = sons)
-
-proc newTypeWithSons*(c: PContext, kind: TTypeKind,
-                      parent: PType): PType =
-  result = newType(kind, nextTypeId(c.idgen), getCurrOwner(c), parent = parent)
+  proc newTypeWithSons*(c: PContext, kind: TTypeKind,
+                        sons: seq[PType]): PType =
+    result = newType(kind, c.idgen, getCurrOwner(c), sons = sons)
 
 proc makeStaticExpr*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkStaticExpr, n.info)
   result.sons = @[n]
-  result.typ = if n.typ != nil and n.typ.kind == tyStatic: n.typ
-               else: newTypeWithSons(c, tyStatic, @[n.typ])
+  result.typ() = if n.typ != nil and n.typ.kind == tyStatic: n.typ
+               else: newTypeS(tyStatic, c, n.typ)
 
 proc makeAndType*(c: PContext, t1, t2: PType): PType =
-  result = newTypeS(tyAnd, c, sons = @[t1, t2])
+  result = newTypeS(tyAnd, c)
+  result.rawAddSon t1
+  result.rawAddSon t2
   propagateToOwner(result, t1)
   propagateToOwner(result, t2)
   result.flags.incl((t1.flags + t2.flags) * {tfHasStatic})
   result.flags.incl tfHasMeta
 
 proc makeOrType*(c: PContext, t1, t2: PType): PType =
-  
   if t1.kind != tyOr and t2.kind != tyOr:
-    result = newTypeS(tyOr, c, sons = @[t1, t2])
+    result = newTypeS(tyOr, c)
+    result.rawAddSon t1
+    result.rawAddSon t2
   else:
     result = newTypeS(tyOr, c)
     template addOr(t1) =
       if t1.kind == tyOr:
-        for x in t1: result.rawAddSon x
+        for x in t1.kids: result.rawAddSon x
       else:
         result.rawAddSon t1
     addOr(t1)
@@ -489,7 +482,7 @@ proc makeOrType*(c: PContext, t1, t2: PType): PType =
   result.flags.incl tfHasMeta
 
 proc makeNotType*(c: PContext, t1: PType): PType =
-  result = newTypeS(tyNot, c, sons = @[t1])
+  result = newTypeS(tyNot, c, son = t1)
   propagateToOwner(result, t1)
   result.flags.incl(t1.flags * {tfHasStatic})
   result.flags.incl tfHasMeta
@@ -500,7 +493,7 @@ proc nMinusOne(c: PContext; n: PNode): PNode =
 # Remember to fix the procs below this one when you make changes!
 proc makeRangeWithStaticExpr*(c: PContext, n: PNode): PType =
   let intType = getSysType(c.graph, n.info, tyInt)
-  result = newTypeS(tyRange, c, sons = @[intType])
+  result = newTypeS(tyRange, c, son = intType)
   if n.typ != nil and n.typ.n == nil:
     result.flags.incl tfUnresolved
   result.n = newTreeI(nkRange, n.info, newIntTypeNode(0, intType),
@@ -516,7 +509,7 @@ proc errorType*(c: PContext): PType =
 
 proc errorNode*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkEmpty, n.info)
-  result.typ = errorType(c)
+  result.typ() = errorType(c)
 
 # These mimic localError
 template localErrorNode*(c: PContext, n: PNode, info: TLineInfo, msg: TMsgKind, arg: string): PNode =
@@ -537,10 +530,11 @@ template localErrorNode*(c: PContext, n: PNode, arg: string): PNode =
   liMessage(c.config, n2.info, errGenerated, arg, doNothing, instLoc())
   errorNode(c, n2)
 
-proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
-  dest.kind = kind
-  dest.owner = getCurrOwner(c)
-  dest.size = - 1
+when false:
+  proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
+    dest.kind = kind
+    dest.owner = getCurrOwner(c)
+    dest.size = - 1
 
 proc makeRangeType*(c: PContext; first, last: BiggestInt;
                     info: TLineInfo; intType: PType = nil): PType =
@@ -560,9 +554,8 @@ proc makeTypeDesc*(c: PContext, typ: PType): PType =
   if typ.kind == tyTypeDesc and not isSelf(typ):
     result = typ
   else:
-    result = newTypeS(tyTypeDesc, c)
+    result = newTypeS(tyTypeDesc, c, skipIntLit(typ, c.idgen))
     incl result.flags, tfCheckedForDestructor
-    result.addSonSkipIntLit(typ, c.idgen)
 
 proc symFromType*(c: PContext; t: PType, info: TLineInfo): PSym =
   if t.sym != nil: return t.sym
@@ -572,7 +565,7 @@ proc symFromType*(c: PContext; t: PType, info: TLineInfo): PSym =
 
 proc symNodeFromType*(c: PContext, t: PType, info: TLineInfo): PNode =
   result = newSymNode(symFromType(c, t, info), info)
-  result.typ = makeTypeDesc(c, t)
+  result.typ() = makeTypeDesc(c, t)
 
 proc markIndirect*(c: PContext, s: PSym) {.inline.} =
   if s.kind in {skProc, skFunc, skConverter, skMethod, skIterator}:

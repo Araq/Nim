@@ -84,7 +84,7 @@ type
     wComputedGoto = "computedGoto", wExperimental = "experimental", wDoctype = "doctype",
     wWrite = "write", wGensym = "gensym", wInject = "inject", wDirty = "dirty",
     wInheritable = "inheritable", wThreadVar = "threadvar", wEmit = "emit",
-    wAsmNoStackFrame = "asmNoStackFrame", wImplicitStatic = "implicitStatic",
+    wAsmNoStackFrame = "asmNoStackFrame", wAsmSyntax = "asmSyntax", wImplicitStatic = "implicitStatic",
     wGlobal = "global", wCodegenDecl = "codegenDecl", wUnchecked = "unchecked",
     wGuard = "guard", wLocks = "locks", wPartial = "partial", wExplain = "explain",
     wLiftLocals = "liftlocals", wEnforceNoRaises = "enforceNoRaises", wSystemRaisesDefect = "systemRaisesDefect",

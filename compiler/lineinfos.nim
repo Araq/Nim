@@ -92,8 +92,10 @@ type
     warnStmtListLambda = "StmtListLambda",
     warnBareExcept = "BareExcept",
     warnImplicitDefaultValue = "ImplicitDefaultValue",
+    warnIgnoredSymbolInjection = "IgnoredSymbolInjection",
     warnStdPrefix = "StdPrefix"
     warnUser = "User",
+    warnGlobalVarConstructorTemporary = "GlobalVarConstructorTemporary",
     # hints
     hintSuccess = "Success", hintSuccessX = "SuccessX",
     hintCC = "CC",
@@ -187,7 +189,7 @@ const
     warnAnyEnumConv: "$1",
     warnHoleEnumConv: "$1",
     warnCstringConv: "$1",
-    warnPtrToCstringConv: "unsafe conversion to 'cstring' from '$1'; this will become a compile time error in the future",
+    warnPtrToCstringConv: "unsafe conversion to 'cstring' from '$1'; Use a `cast` operation like `cast[cstring](x)`; this will become a compile time error in the future",
     warnEffect: "$1",
     warnCastSizes: "$1", # deadcode
     warnAboveMaxSizeSet: "$1",
@@ -196,8 +198,10 @@ const
     warnStmtListLambda: "statement list expression assumed to be anonymous proc; this is deprecated, use `do (): ...` or `proc () = ...` instead",
     warnBareExcept: "$1",
     warnImplicitDefaultValue: "$1",
+    warnIgnoredSymbolInjection: "$1",
     warnStdPrefix: "$1 needs the 'std' prefix",
     warnUser: "$1",
+    warnGlobalVarConstructorTemporary: "global variable '$1' initialization requires a temporary variable",
     hintSuccess: "operation successful: $#",
     # keep in sync with `testament.isSuccess`
     hintSuccessX: "$build\n$loc lines; ${sec}s; $mem; proj: $project; out: $output",
@@ -264,6 +268,7 @@ const
   NotesVerbosity* = computeNotesVerbosity()
   errXMustBeCompileTime* = "'$1' can only be used in compile-time context"
   errArgsNeedRunOption* = "arguments can only be given if the '--run' option is selected"
+  errFloatToString* = "cannot convert '$1' to '$2'"
 
 type
   TFileInfo* = object

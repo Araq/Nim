@@ -25,7 +25,7 @@ proc dataPointer(a: PGenericSeq, elemAlign, elemSize, index: int): pointer =
 proc resize(old: int): int {.inline.} =
   if old <= 0: result = 4
   elif old < 65536: result = old * 2
-  else: result = old * 3 div 2 # for large arrays * 3/2 is better
+  else: result = old div 2 + old # for large arrays * 3/2 is better
 
 when declared(allocAtomic):
   template allocStr(size: untyped): untyped =
@@ -220,7 +220,10 @@ proc appendChar(dest: NimString, c: char) {.compilerproc, inline.} =
 proc setLengthStr(s: NimString, newLen: int): NimString {.compilerRtl.} =
   let n = max(newLen, 0)
   if s == nil:
-    result = mnewString(n)
+    if n == 0:
+      return s
+    else:
+      result = mnewString(n)
   elif n <= s.space:
     result = s
   else:
@@ -301,7 +304,10 @@ proc setLengthSeqV2(s: PGenericSeq, typ: PNimType, newLen: int): PGenericSeq {.
     compilerRtl.} =
   sysAssert typ.kind == tySequence, "setLengthSeqV2: type is not a seq"
   if s == nil:
-    result = cast[PGenericSeq](newSeq(typ, newLen))
+    if newLen == 0:
+      result = s
+    else:
+      result = cast[PGenericSeq](newSeq(typ, newLen))
   else:
     let elemSize = typ.base.size
     let elemAlign = typ.base.align

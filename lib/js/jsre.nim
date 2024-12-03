@@ -58,7 +58,7 @@ func contains*(pattern: cstring; self: RegExp): bool =
     assert jsregex in r"abc"
     assert jsregex notin r"abcd"
     assert "xabc".contains jsregex
-  asm "`result` = `self`.test(`pattern`);"
+  {.emit: "`result` = `self`.test(`pattern`);".}
 
 func startsWith*(pattern: cstring; self: RegExp): bool =
   ## Tests if string starts with given RegExp

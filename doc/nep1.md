@@ -21,7 +21,7 @@ library should follow.
 Note that there can be exceptions to these rules. Nim being as flexible as it
 is, there will be parts of this style guide that don't make sense in certain
 contexts. Furthermore, just as
-[Python's style guide](http://legacy.python.org/dev/peps/pep-0008/) changes
+[Python's style guide](https://legacy.python.org/dev/peps/pep-0008/) changes
 over time, this style guide will too.
 
 These rules will only be enforced for contributions to the Nim
@@ -256,35 +256,45 @@ Coding Conventions
 Conventions for multi-line statements and expressions
 -----------------------------------------------------
 
-- Tuples which are longer than one line should indent their parameters to
-  align with the parameters above it.
+- Tuples which are longer than one line should indent their parameters.
 
     ```nim
     type
-      LongTupleA = tuple[wordyTupleMemberOne: int, wordyTupleMemberTwo: string,
-                         wordyTupleMemberThree: float]
+      LongTupleA = tuple[
+        wordyTupleMemberOne: int, wordyTupleMemberTwo: string,
+        wordyTupleMemberThree: float]
     ```
 
 - Similarly, any procedure and procedure type declarations that are longer
-  than one line should do the same thing.
+  than one line should do the same thing. Double indent may be used to
+  distinguish them from the body that follows - this applies to all constructs
+  with a body (if, while, etc).
 
     ```nim
     type
-      EventCallback = proc (timeReceived: Time, errorCode: int, event: Event,
-                            output: var string)
+      EventCallback = proc(
+        timeReceived: Time, errorCode: int, event: Event,
+        output: var string)
 
-    proc lotsOfArguments(argOne: string, argTwo: int, argThree: float,
-                         argFour: proc(), argFive: bool): int
-                        {.heyLookALongPragma.} =
+    proc lotsOfArguments(
+        argOne: string, argTwo: int, argThree: float,
+        argFour: proc(), argFive: bool, argSix: int
+    ): GenericType[int, string] {.heyLookALongPragma.} =
+      discard
     ```
 
-- Multi-line procedure calls should continue on the same column as the opening
-  parenthesis (like multi-line procedure declarations).
+- Multi-line procedure calls should continue indented (like multi-line procedure
+  declarations).
 
     ```nim
-    startProcess(nimExecutable, currentDirectory, compilerArguments
-                 environment, processOptions)
+    startProcess(
+      nimExecutable, currentDirectory, compilerArguments
+      environment, processOptions)
     ```
+
+Previous versions of this guide advocated vertical alignment along the opening
+brace / parenthesis - both styles are permissible with a preference for the
+current style in new code.
 
 Miscellaneous
 -------------

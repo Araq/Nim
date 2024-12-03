@@ -3,8 +3,8 @@ block: # basic test
   proc doStuff[T](a: SomeInteger): T = discard
   proc doStuff[T;Y](a: SomeInteger, b: Y): Y = discard
   assert typeof(doStuff[int](100)) is int
-  assert typeof(doStuff[int](100, 1.0)) is float
-  assert typeof(doStuff[int](100, "Hello")) is string
+  assert typeof(doStuff[int, float](100, 1.0)) is float
+  assert typeof(doStuff[int, string](100, "Hello")) is string
 
   proc t[T](x: T; z: int | float): seq[T] = result.add(x & $z)
 
@@ -34,7 +34,8 @@ block: #15622
   proc test1[T](a: T, b: static[string] = "") = discard
   test1[int64](123)
   proc test2[T](a: T, b: static[string] = "") = discard
-  test2[int64, static[string]](123)
+  doAssert not (compiles do:
+    test2[int64, static[string]](123))
 
 block: #4688
   proc convertTo[T](v: int or float): T = (T)(v)

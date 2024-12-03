@@ -1,0 +1,1 @@
+proc on*() = discard

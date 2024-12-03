@@ -159,17 +159,76 @@ INNER JOIN b
 ON a.id == b.id
 """) == "select id from a inner join b on a.id == b.id;"
 
-doAssert $parseSql("""
+# For OUTER joins, LEFT | RIGHT | FULL specifier is not optional
+doAssertRaises(SqlParseError): discard parseSql("""
 SELECT id FROM a
 OUTER JOIN b
-ON a.id == b.id
-""") == "select id from a outer join b on a.id == b.id;"
+ON a.id = b.id
+""")
 
-doAssert $parseSql("""
+# For NATURAL JOIN and CROSS JOIN, ON and USING clauses are forbidden
+doAssertRaises(SqlParseError): discard parseSql("""
 SELECT id FROM a
 CROSS JOIN b
-ON a.id == b.id
-""") == "select id from a cross join b on a.id == b.id;"
+ON a.id = b.id
+""")
+
+# JOIN should parse as part of FROM, not after WHERE
+doAssertRaises(SqlParseError): discard parseSql("""
+SELECT id FROM a
+WHERE a.id IS NOT NULL
+INNER JOIN b
+ON a.id = b.id
+""")
+
+# JOIN should parse as part of FROM, other fromItems may follow
+doAssert $parseSql("""
+SELECT id
+FROM
+    a JOIN b ON a.id = b.id,
+    c
+""") == "select id from a join b on a.id = b.id, c;"
+
+# LEFT JOIN should parse
+doAssert $parseSql("""
+SELECT id FROM a
+LEFT JOIN b
+ON a.id = b.id
+""") == "select id from a left join b on a.id = b.id;"
+
+# NATURAL JOIN should parse
+doAssert $parseSql("""
+SELECT id FROM a
+NATURAL JOIN b
+""") == "select id from a natural join b;"
+
+# USING should parse
+doAssert $parseSql("""
+SELECT id FROM a
+JOIN b
+USING (id)
+""") == "select id from a join b using (id );"
+
+# Multiple JOINs should parse
+doAssert $parseSql("""
+SELECT id FROM a
+JOIN b
+ON a.id = b.id
+LEFT JOIN c
+USING (id)
+""") == "select id from a join b on a.id = b.id left join c using (id );"
+
+# Parenthesized JOIN expressions should parse
+doAssert $parseSql("""
+SELECT id
+FROM a JOIN (b JOIN c USING (id)) ON a.id = b.id
+""") == "select id from a join(b join c using (id )) on a.id = b.id;"
+
+# Left-side parenthesized JOIN expressions should parse
+doAssert $parseSql("""
+SELECT id
+FROM (b JOIN c USING (id)) JOIN a ON a.id = b.id
+""") == "select id from b join c using (id ) join a on a.id = b.id;"
 
 doAssert $parseSql("""
 CREATE TYPE happiness AS ENUM ('happy', 'very happy', 'ecstatic');

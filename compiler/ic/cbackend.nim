@@ -50,10 +50,9 @@ proc generateCodeForModule(g: ModuleGraph; m: var LoadedModule; alive: var Alive
     let n = unpackTree(g, m.module.position, m.fromDisk.topLevel, p)
     cgen.genTopLevelStmt(bmod, n)
 
-  let disps = finalCodegenActions(g, bmod, newNodeI(nkStmtList, m.module.info))
-  if disps != nil:
-    for disp in disps:
-      genProcAux(bmod, disp.sym)
+  finalCodegenActions(g, bmod, newNodeI(nkStmtList, m.module.info))
+  for disp in getDispatchers(g):
+    genProcAux(bmod, disp)
   m.fromDisk.backendFlags = cgen.whichInitProcs(bmod)
 
 proc replayTypeInfo(g: ModuleGraph; m: var LoadedModule; origin: FileIndex) =
@@ -147,12 +146,12 @@ proc generateCode*(g: ModuleGraph) =
   var alive = computeAliveSyms(g.packed, g.config)
 
   when false:
-    for i in 0..high(g.packed):
+    for i in 0..<len(g.packed):
       echo i, " is of status ", g.packed[i].status, " ", toFullPath(g.config, FileIndex(i))
 
   # First pass: Setup all the backend modules for all the modules that have
   # changed:
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     # case statement here to enforce exhaustive checks.
     case g.packed[i].status
     of undefined:
@@ -174,7 +173,7 @@ proc generateCode*(g: ModuleGraph) =
   let mainModuleIdx = g.config.projectMainIdx2.int
   # We need to generate the main module last, because only then
   # all init procs have been registered:
-  for i in 0..high(g.packed):
+  for i in 0..<len(g.packed):
     if i != mainModuleIdx:
       genPackedModule(g, i, alive)
   if mainModuleIdx >= 0:

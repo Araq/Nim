@@ -22,7 +22,7 @@ proc contains(s: CellSeq, c: PCell): bool {.inline.} =
   return false
 
 proc resize(s: var CellSeq) =
-  s.cap = s.cap * 3 div 2
+  s.cap = s.cap div 2 + s.cap
   let d = cast[PCellArray](alloc(s.cap * sizeof(PCell)))
   copyMem(d, s.d, s.len * sizeof(PCell))
   dealloc(s.d)

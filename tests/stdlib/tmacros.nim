@@ -25,6 +25,7 @@ block: # bug #17454
 block: # unpackVarargs
   block:
     proc bar1(a: varargs[int]): string =
+      result = ""
       for ai in a: result.add " " & $ai
     proc bar2(a: varargs[int]) =
       let s1 = bar1(a)
@@ -334,3 +335,16 @@ block:
       `hello`(12, type(x))
 
   main()
+
+block: # bug #22947
+  macro bar[N: static int](a: var array[N, int]) =
+    result = quote do:
+      for i in 0 ..< `N`:
+        `a`[i] = i
+
+  func foo[N: static int](a: var array[N, int]) =
+    bar(a)
+
+
+  var a: array[4, int]
+  foo(a)

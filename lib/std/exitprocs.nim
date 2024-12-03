@@ -29,13 +29,13 @@ initLock(gFunsLock)
 when defined(js):
   proc addAtExit(quitProc: proc() {.noconv.}) =
     when defined(nodejs):
-      asm """
+      {.emit: """
         process.on('exit', `quitProc`);
-      """
+      """.}
     elif defined(js):
-      asm """
+      {.emit: """
         window.onbeforeunload = `quitProc`;
-      """
+      """.}
 else:
   proc addAtExit(quitProc: proc() {.noconv.}) {.
     importc: "atexit", header: "<stdlib.h>".}
@@ -72,16 +72,16 @@ proc addExitProc*(cl: proc() {.noconv.}) =
 when not defined(nimscript) and (not defined(js) or defined(nodejs)):
   proc getProgramResult*(): int =
     when defined(js) and defined(nodejs):
-      asm """
+      {.emit: """
 `result` = process.exitCode;
-"""
+""".}
     else:
       result = programResult
 
   proc setProgramResult*(a: int) =
     when defined(js) and defined(nodejs):
-      asm """
+      {.emit: """
 process.exitCode = `a`;
-"""
+""".}
     else:
       programResult = a

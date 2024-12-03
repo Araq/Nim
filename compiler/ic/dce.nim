@@ -109,13 +109,13 @@ proc aliveCode(c: var AliveContext; g: PackedModuleGraph; tree: PackedTree; n: N
     discard "ignore non-sym atoms"
   of nkSym:
     # This symbol is alive and everything its body references.
-    followLater(c, g, c.thisModule, n.operand)
+    followLater(c, g, c.thisModule, tree[n].soperand)
   of nkModuleRef:
     let (n1, n2) = sons2(tree, n)
     assert n1.kind == nkNone
     assert n2.kind == nkNone
     let m = n1.litId
-    let item = n2.operand
+    let item = tree[n2].soperand
     let otherModule = toFileIndexCached(c.decoder, g, c.thisModule, m).int
     followLater(c, g, otherModule, item)
   of nkMacroDef, nkTemplateDef, nkTypeSection, nkTypeOfExpr,
@@ -131,7 +131,7 @@ proc aliveCode(c: var AliveContext; g: PackedModuleGraph; tree: PackedTree; n: N
     rangeCheckAnalysis(c, g, tree, n)
   of nkProcDef, nkConverterDef, nkMethodDef, nkFuncDef, nkIteratorDef:
     if n.firstSon.kind == nkSym and isNotGeneric(n):
-      let item = n.firstSon.operand
+      let item = tree[n.firstSon].soperand
       if isExportedToC(c, g, item):
         # This symbol is alive and everything its body references.
         followLater(c, g, c.thisModule, item)
@@ -153,7 +153,7 @@ proc computeAliveSyms*(g: PackedModuleGraph; conf: ConfigRef): AliveSyms =
   var c = AliveContext(stack: @[], decoder: PackedDecoder(config: conf),
                        thisModule: -1, alive: newSeq[IntSet](g.len),
                        options: conf.options)
-  for i in countdown(high(g), 0):
+  for i in countdown(len(g)-1, 0):
     if g[i].status != undefined:
       c.thisModule = i
       for p in allNodes(g[i].fromDisk.topLevel):

@@ -26,7 +26,7 @@
 ## Each builds on top of the layers below it. The selectors module is an
 ## abstraction for the various system `select()` mechanisms such as epoll or
 ## kqueue. If you wish you can use it directly, and some people have done so
-## `successfully <http://goran.krampe.se/2014/10/25/nim-socketserver/>`_.
+## `successfully <https://goran.krampe.se/2014/10/25/nim-socketserver/>`_.
 ## But you must be aware that on Windows it only supports
 ## `select()`.
 ##
@@ -682,12 +682,12 @@ when defined(posix) and not useNimNetLite:
         elif ret == EINTR:
           return false
         else:
-          retFuture.fail(newException(OSError, osErrorMsg(OSErrorCode(ret))))
+          retFuture.fail(newOSError(OSErrorCode(ret)))
           return true
 
       var socketAddr = makeUnixAddr(path)
       let ret = socket.fd.connect(cast[ptr SockAddr](addr socketAddr),
-                        (sizeof(socketAddr.sun_family) + path.len).SockLen)
+                        (offsetOf(socketAddr, sun_path) + path.len + 1).SockLen)
       if ret == 0:
         # Request to connect completed immediately.
         retFuture.complete()
@@ -696,7 +696,7 @@ when defined(posix) and not useNimNetLite:
         if lastError.int32 == EINTR or lastError.int32 == EINPROGRESS:
           addWrite(AsyncFD(socket.fd), cb)
         else:
-          retFuture.fail(newException(OSError, osErrorMsg(lastError)))
+          retFuture.fail(newOSError(lastError))
 
   proc bindUnix*(socket: AsyncSocket, path: string) {.
     tags: [ReadIOEffect].} =
@@ -705,7 +705,7 @@ when defined(posix) and not useNimNetLite:
     when not defined(nimdoc):
       var socketAddr = makeUnixAddr(path)
       if socket.fd.bindAddr(cast[ptr SockAddr](addr socketAddr),
-          (sizeof(socketAddr.sun_family) + path.len).SockLen) != 0'i32:
+          (offsetOf(socketAddr, sun_path) + path.len + 1).SockLen) != 0'i32:
         raiseOSError(osLastError())
 
 elif defined(nimdoc):

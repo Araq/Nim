@@ -91,3 +91,16 @@ block:
       return
 
   discard hasImportStmt()
+
+block:
+  block:
+    proc foo(x: var int) =
+      discard
+
+    proc main =
+      var s: int
+      foo(s)#[tt.Warning
+          ^ use explicit initialization of 's' for clarity [Uninit]]#
+
+    main()
+

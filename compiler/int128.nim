@@ -34,6 +34,7 @@ proc `$`*(a: Int128): string
 
 proc toInt128*[T: SomeInteger | bool](arg: T): Int128 =
   {.noSideEffect.}:
+    result = Zero
     when T is bool: result.sdata(0) = int32(arg)
     elif T is SomeUnsignedInt:
       when sizeof(arg) <= 4:
@@ -208,30 +209,35 @@ proc `==`*(a, b: Int128): bool =
   return true
 
 proc bitnot*(a: Int128): Int128 =
+  result = Zero
   result.udata[0] = not a.udata[0]
   result.udata[1] = not a.udata[1]
   result.udata[2] = not a.udata[2]
   result.udata[3] = not a.udata[3]
 
 proc bitand*(a, b: Int128): Int128 =
+  result = Zero
   result.udata[0] = a.udata[0] and b.udata[0]
   result.udata[1] = a.udata[1] and b.udata[1]
   result.udata[2] = a.udata[2] and b.udata[2]
   result.udata[3] = a.udata[3] and b.udata[3]
 
 proc bitor*(a, b: Int128): Int128 =
+  result = Zero
   result.udata[0] = a.udata[0] or b.udata[0]
   result.udata[1] = a.udata[1] or b.udata[1]
   result.udata[2] = a.udata[2] or b.udata[2]
   result.udata[3] = a.udata[3] or b.udata[3]
 
 proc bitxor*(a, b: Int128): Int128 =
+  result = Zero
   result.udata[0] = a.udata[0] xor b.udata[0]
   result.udata[1] = a.udata[1] xor b.udata[1]
   result.udata[2] = a.udata[2] xor b.udata[2]
   result.udata[3] = a.udata[3] xor b.udata[3]
 
 proc `shr`*(a: Int128, b: int): Int128 =
+  result = Zero
   let b = b and 127
   if b < 32:
     result.sdata(3) = a.sdata(3) shr b
@@ -258,6 +264,7 @@ proc `shr`*(a: Int128, b: int): Int128 =
     result.sdata(0) = a.sdata(3) shr (b and 31)
 
 proc `shl`*(a: Int128, b: int): Int128 =
+  result = Zero
   let b = b and 127
   if b < 32:
     result.udata[0] = a.udata[0] shl b
@@ -281,6 +288,7 @@ proc `shl`*(a: Int128, b: int): Int128 =
     result.udata[3] = a.udata[0] shl (b and 31)
 
 proc `+`*(a, b: Int128): Int128 =
+  result = Zero
   let tmp0 = uint64(a.udata[0]) + uint64(b.udata[0])
   result.udata[0] = cast[uint32](tmp0)
   let tmp1 = uint64(a.udata[1]) + uint64(b.udata[1]) + (tmp0 shr 32)
@@ -313,6 +321,7 @@ proc abs(a: int32): int =
   if a < 0: -a else: a
 
 proc `*`(a: Int128, b: uint32): Int128 =
+  result = Zero
   let tmp0 = uint64(a.udata[0]) * uint64(b)
   let tmp1 = uint64(a.udata[1]) * uint64(b)
   let tmp2 = uint64(a.udata[2]) * uint64(b)
@@ -335,6 +344,7 @@ proc `*=`(a: var Int128, b: int32) =
   a = a * b
 
 proc makeInt128(high, low: uint64): Int128 =
+  result = Zero
   result.udata[0] = cast[uint32](low)
   result.udata[1] = cast[uint32](low shr 32)
   result.udata[2] = cast[uint32](high)
@@ -373,6 +383,8 @@ proc fastLog2*(a: Int128): int =
 
 proc divMod*(dividend, divisor: Int128): tuple[quotient, remainder: Int128] =
   assert(divisor != Zero)
+  result = (Zero, Zero)
+
   let isNegativeA = isNegative(dividend)
   let isNegativeB = isNegative(divisor)
 
@@ -539,24 +551,28 @@ proc toInt128*(arg: float64): Int128 =
     return res
 
 proc maskUInt64*(arg: Int128): Int128 {.noinit, inline.} =
+  result = Zero
   result.udata[0] = arg.udata[0]
   result.udata[1] = arg.udata[1]
   result.udata[2] = 0
   result.udata[3] = 0
 
 proc maskUInt32*(arg: Int128): Int128 {.noinit, inline.} =
+  result = Zero
   result.udata[0] = arg.udata[0]
   result.udata[1] = 0
   result.udata[2] = 0
   result.udata[3] = 0
 
 proc maskUInt16*(arg: Int128): Int128 {.noinit, inline.} =
+  result = Zero
   result.udata[0] = arg.udata[0] and 0xffff
   result.udata[1] = 0
   result.udata[2] = 0
   result.udata[3] = 0
 
 proc maskUInt8*(arg: Int128): Int128 {.noinit, inline.} =
+  result = Zero
   result.udata[0] = arg.udata[0] and 0xff
   result.udata[1] = 0
   result.udata[2] = 0

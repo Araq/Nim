@@ -89,3 +89,13 @@ block:
 
   catchError:
     echo bar()
+
+block:
+  proc foo(x: ptr int) =
+    discard
+
+  proc main =
+    var s: int
+    foo(addr s)
+
+  main()

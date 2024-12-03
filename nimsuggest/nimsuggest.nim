@@ -8,10 +8,15 @@
 #
 
 import compiler/renderer
+import compiler/types
+import compiler/trees
+import compiler/wordrecg
+import compiler/sempass2
 import strformat
 import algorithm
 import tables
 import times
+import procmonitor
 
 template tryImport(module) = import module
 
@@ -33,7 +38,7 @@ import compiler / [options, commands, modules,
   passes, passaux, msgs,
   sigmatch, ast,
   idents, modulegraphs, prefixmatches, lineinfos, cmdlinehelper,
-  pathutils, condsyms, syntaxes]
+  pathutils, condsyms, syntaxes, suggestsymdb]
 
 when defined(nimPreviewSlimSystem):
   import std/typedthreads
@@ -43,6 +48,7 @@ when defined(windows):
 else:
   import posix
 
+const HighestSuggestProtocolVersion = 4
 const DummyEof = "!EOF!"
 const Usage = """
 Nimsuggest - Tool to give every editor IDE like capabilities for Nim
@@ -55,17 +61,25 @@ Options:
   --address:HOST          binds to that address, by default ""
   --stdin                 read commands from stdin and write results to
                           stdout instead of using sockets
+  --clientProcessId:PID   shutdown nimsuggest in case this process dies
   --epc                   use emacs epc mode
   --debug                 enable debug output
   --log                   enable verbose logging to nimsuggest.log file
   --v1                    use version 1 of the protocol; for backwards compatibility
   --v2                    use version 2(default) of the protocol
   --v3                    use version 3 of the protocol
+  --v4                    use version 4 of the protocol
+  --info:X                information
+    --info:nimVer           return the Nim compiler version that nimsuggest uses internally
+    --info:protocolVer      return the newest protocol version that is supported
+    --info:capabilities     return the capabilities supported by nimsuggest
   --refresh               perform automatic refreshes to keep the analysis precise
   --maxresults:N          limit the number of suggestions to N
   --tester                implies --stdin and outputs a line
                           '""" & DummyEof & """' for the tester
   --find                  attempts to find the project file of the current project
+  --exceptionInlayHints:on|off
+                          globally turn exception inlay hints on|off
 
 The server then listens to the connection and takes line-based commands.
 
@@ -84,7 +98,7 @@ type
 
 var
   gPort = 6000.Port
-  gAddress = ""
+  gAddress = "127.0.0.1"
   gMode: Mode
   gEmitEof: bool # whether we write '!EOF!' dummy lines
   gLogging = defined(logging)
@@ -117,6 +131,12 @@ const
          "type 'quit' to quit\n" &
          "type 'debug' to toggle debug mode on/off\n" &
          "type 'terse' to toggle terse mode on/off"
+  #List of currently supported capabilities. So lang servers/ides can iterate over and check for what's enabled
+  Capabilities = [
+    "con", #current NimSuggest supports the `con` commmand
+    "exceptionInlayHints",
+    "unknownFile", #current NimSuggest can handle unknown files
+  ]
 
 proc parseQuoted(cmd: string; outp: var string; start: int): int =
   var i = start
@@ -211,11 +231,19 @@ proc clearInstCache(graph: ModuleGraph, projectFileIdx: FileIndex) =
   for id in procIdsToDelete:
     graph.procInstCache.del id
 
+  for tbl in mitems(graph.attachedOps):
+    var attachedOpsToDelete = newSeq[ItemId]()
+    for id in tbl.keys:
+      if id.module == projectFileIdx.int and sfOverridden in resolveAttachedOp(graph, tbl[id]).flags:
+        attachedOpsToDelete.add id
+    for id in attachedOpsToDelete:
+      tbl.del id
+
 proc executeNoHooks(cmd: IdeCmd, file, dirtyfile: AbsoluteFile, line, col: int, tag: string,
              graph: ModuleGraph) =
   let conf = graph.config
 
-  if conf.suggestVersion == 3:
+  if conf.suggestVersion >= 3:
     let command = fmt "cmd = {cmd} {file}:{line}:{col}"
     benchmark command:
       executeNoHooksV3(cmd, file, dirtyfile, line, col, tag, graph)
@@ -506,7 +534,11 @@ proc execCmd(cmd: string; graph: ModuleGraph; cachedMsgs: CachedMsgs) =
   of "chkfile": conf.ideCmd = ideChkFile
   of "recompile": conf.ideCmd = ideRecompile
   of "type": conf.ideCmd = ideType
-  of "inlayhints": conf.ideCmd = ideInlayHints
+  of "inlayhints":
+    if conf.suggestVersion >= 4:
+      conf.ideCmd = ideInlayHints
+    else:
+      err()
   else: err()
   var dirtyfile = ""
   var orig = ""
@@ -571,7 +603,7 @@ proc mainThread(graph: ModuleGraph) =
     else:
       os.sleep 250
       idle += 1
-    if idle == 20 and gRefresh and conf.suggestVersion != 3:
+    if idle == 20 and gRefresh and conf.suggestVersion < 3:
       # we use some nimsuggest activity to enable a lazy recompile:
       conf.ideCmd = ideChk
       conf.writelnHook = proc (s: string) = discard
@@ -602,7 +634,7 @@ proc mainCommand(graph: ModuleGraph) =
   # do not print errors, but log them
   conf.writelnHook = proc (msg: string) = discard
 
-  if graph.config.suggestVersion == 3:
+  if graph.config.suggestVersion >= 3:
     graph.config.structuredErrorHook = proc (conf: ConfigRef; info: TLineInfo; msg: string; sev: Severity) =
       let suggest = Suggest(section: ideChk, filePath: toFullPath(conf, info),
         line: toLinenumber(info), column: toColumn(info), doc: msg, forth: $sev)
@@ -615,6 +647,9 @@ proc mainCommand(graph: ModuleGraph) =
 
   open(requests)
   open(results)
+
+  if graph.config.clientProcessId != 0:
+    hookProcMonitor(graph.config.clientProcessId)
 
   case gMode
   of mstdin: createThread(inputThread, replStdin, (gPort, gAddress))
@@ -666,6 +701,25 @@ proc processCmdLine*(pass: TCmdLinePass, cmd: string; conf: ConfigRef) =
       of "v1": conf.suggestVersion = 1
       of "v2": conf.suggestVersion = 0
       of "v3": conf.suggestVersion = 3
+      of "v4": conf.suggestVersion = 4
+      of "info":
+        case p.val.normalize
+        of "protocolver":
+          stdout.writeLine(HighestSuggestProtocolVersion)
+          quit 0
+        of "nimver":
+          stdout.writeLine(system.NimVersion)
+          quit 0
+        of "capabilities":
+          stdout.writeLine(Capabilities.toSeq.mapIt($it).join(" "))
+          quit 0
+        else:
+          processSwitch(pass, p, conf)
+      of "exceptioninlayhints":
+        case p.val.normalize
+        of "", "on": incl(conf.globalOptions, optIdeExceptionInlayHints)
+        of "off": excl(conf.globalOptions, optIdeExceptionInlayHints)
+        else: processSwitch(pass, p, conf)
       of "tester":
         gMode = mstdin
         gEmitEof = true
@@ -680,6 +734,8 @@ proc processCmdLine*(pass: TCmdLinePass, cmd: string; conf: ConfigRef) =
         conf.suggestMaxResults = parseInt(p.val)
       of "find":
         findProject = true
+      of "clientprocessid":
+        conf.clientProcessId = parseInt(p.val)
       else: processSwitch(pass, p, conf)
     of cmdArgument:
       let a = unixToNativePath(p.key)
@@ -711,20 +767,16 @@ proc handleCmdLine(cache: IdentCache; conf: ConfigRef) =
 
   if gMode != mstdin:
     conf.writelnHook = proc (msg: string) = discard
-  # Find Nim's prefix dir.
-  let binaryPath = findExe("nim")
-  if binaryPath == "":
-    raise newException(IOError,
-        "Cannot find Nim standard library: Nim compiler not in PATH")
-  conf.prefixDir = AbsoluteDir binaryPath.splitPath().head.parentDir()
-  if not dirExists(conf.prefixDir / RelativeDir"lib"):
-    conf.prefixDir = AbsoluteDir""
-
+  conf.prefixDir = conf.getPrefixDir()
   #msgs.writelnHook = proc (line: string) = log(line)
   myLog("START " & conf.projectFull.string)
 
   var graph = newModuleGraph(cache, conf)
   if self.loadConfigsAndProcessCmdLine(cache, conf, graph):
+
+    if conf.selectedGC == gcUnselected and
+          conf.backend != backendJs:
+      initOrcDefines(conf)
     mainCommand(graph)
 
 # v3 start
@@ -767,25 +819,57 @@ func deduplicateSymInfoPair[SymInfoPair](xs: seq[SymInfoPair]): seq[SymInfoPair]
       result.add(itm)
   result.reverse()
 
+func deduplicateSymInfoPair(xs: SuggestFileSymbolDatabase): SuggestFileSymbolDatabase =
+  # xs contains duplicate items and we want to filter them by range because the
+  # sym may not match. This can happen when xs contains the same definition but
+  # with different signature because suggestSym might be called multiple times
+  # for the same symbol (e. g. including/excluding the pragma)
+  result = SuggestFileSymbolDatabase(
+    lineInfo: newSeqOfCap[TinyLineInfo](xs.lineInfo.len),
+    sym: newSeqOfCap[PSym](xs.sym.len),
+    isDecl: newPackedBoolArray(),
+    caughtExceptions: newSeqOfCap[seq[PType]](xs.caughtExceptions.len),
+    caughtExceptionsSet: newPackedBoolArray(),
+    fileIndex: xs.fileIndex,
+    trackCaughtExceptions: xs.trackCaughtExceptions,
+    isSorted: false
+  )
+  var i = xs.lineInfo.high
+  while i >= 0:
+    let itm = xs.lineInfo[i]
+    var found = false
+    for res in result.lineInfo:
+      if res.exactEquals(itm):
+        found = true
+        break
+    if not found:
+      result.add(xs.getSymInfoPair(i))
+    dec i
+  result.reverse()
+
 proc findSymData(graph: ModuleGraph, trackPos: TLineInfo):
     ref SymInfoPair =
-  for s in graph.fileSymbols(trackPos.fileIndex).deduplicateSymInfoPair:
-    if isTracked(s.info, trackPos, s.sym.name.s.len):
+  let db = graph.fileSymbols(trackPos.fileIndex).deduplicateSymInfoPair
+  doAssert(db.fileIndex == trackPos.fileIndex)
+  for i in db.lineInfo.low..db.lineInfo.high:
+    if isTracked(db.lineInfo[i], TinyLineInfo(line: trackPos.line, col: trackPos.col), db.sym[i].name.s.len):
+      var res = db.getSymInfoPair(i)
       new(result)
-      result[] = s
+      result[] = res
       break
 
-func isInRange*(current, startPos, endPos: TLineInfo, tokenLen: int): bool =
-  result = current.fileIndex == startPos.fileIndex and
+func isInRange*(current, startPos, endPos: TinyLineInfo, tokenLen: int): bool =
+  result =
     (current.line > startPos.line or (current.line == startPos.line and current.col>=startPos.col)) and
     (current.line < endPos.line or (current.line == endPos.line and current.col <= endPos.col))
 
 proc findSymDataInRange(graph: ModuleGraph, startPos, endPos: TLineInfo):
     seq[SymInfoPair] =
   result = newSeq[SymInfoPair]()
-  for s in graph.fileSymbols(startPos.fileIndex).deduplicateSymInfoPair:
-    if isInRange(s.info, startPos, endPos, s.sym.name.s.len):
-      result.add(s)
+  let db = graph.fileSymbols(startPos.fileIndex).deduplicateSymInfoPair
+  for i in db.lineInfo.low..db.lineInfo.high:
+    if isInRange(db.lineInfo[i], TinyLineInfo(line: startPos.line, col: startPos.col), TinyLineInfo(line: endPos.line, col: endPos.col), db.sym[i].name.s.len):
+      result.add(db.getSymInfoPair(i))
 
 proc findSymData(graph: ModuleGraph, file: AbsoluteFile; line, col: int):
     ref SymInfoPair =
@@ -804,7 +888,7 @@ proc findSymDataInRange(graph: ModuleGraph, file: AbsoluteFile; startLine, start
 
 proc markDirtyIfNeeded(graph: ModuleGraph, file: string, originalFileIdx: FileIndex) =
   let sha = $sha1.secureHashFile(file)
-  if graph.config.m.fileInfos[originalFileIdx.int32].hash != sha or graph.config.ideCmd == ideSug:
+  if graph.config.m.fileInfos[originalFileIdx.int32].hash != sha or graph.config.ideCmd in {ideSug, ideCon}:
     myLog fmt "{file} changed compared to last compilation"
     graph.markDirty originalFileIdx
     graph.markClientsDirty originalFileIdx
@@ -824,7 +908,7 @@ proc suggestResult(graph: ModuleGraph, sym: PSym, info: TLineInfo,
                              endLine = endLine, endCol = endCol)
   suggestResult(graph.config, suggest)
 
-proc suggestInlayHintResult(graph: ModuleGraph, sym: PSym, info: TLineInfo,
+proc suggestInlayHintResultType(graph: ModuleGraph, sym: PSym, info: TLineInfo,
                    defaultSection = ideNone, endLine: uint16 = 0, endCol = 0) =
   let section = if defaultSection != ideNone:
                   defaultSection
@@ -835,10 +919,59 @@ proc suggestInlayHintResult(graph: ModuleGraph, sym: PSym, info: TLineInfo,
   var suggestDef = symToSuggest(graph, sym, isLocal=false, section,
                                 info, 100, PrefixMatch.None, false, 0, true,
                                 endLine = endLine, endCol = endCol)
-  suggestDef.inlayHintInfo = suggestToSuggestInlayHint(suggestDef)
+  suggestDef.inlayHintInfo = suggestToSuggestInlayTypeHint(suggestDef)
   suggestDef.section = ideInlayHints
   if sym.kind == skForVar:
     suggestDef.inlayHintInfo.allowInsert = false
+  suggestResult(graph.config, suggestDef)
+
+proc suggestInlayHintResultException(graph: ModuleGraph, sym: PSym, info: TLineInfo,
+                   defaultSection = ideNone, caughtExceptions: seq[PType], caughtExceptionsSet: bool, endLine: uint16 = 0, endCol = 0) =
+  if not caughtExceptionsSet:
+    return
+
+  if sym.kind == skParam and sfEffectsDelayed in sym.flags:
+    return
+
+  var raisesList: seq[PType] = @[getEbase(graph, info)]
+
+  let t = sym.typ
+  if not isNil(t) and not isNil(t.n) and t.n.len > 0 and t.n[0].len > exceptionEffects:
+    let effects = t.n[0]
+    if effects.kind == nkEffectList and effects.len == effectListLen:
+      let effs = effects[exceptionEffects]
+      if not isNil(effs):
+        raisesList = @[]
+        for eff in items(effs):
+          if not isNil(eff):
+            raisesList.add(eff.typ)
+
+  var propagatedExceptionList: seq[PType] = @[]
+  for re in raisesList:
+    var exceptionIsPropagated = true
+    for ce in caughtExceptions:
+      if isNil(ce) or safeInheritanceDiff(re, ce) <= 0:
+        exceptionIsPropagated = false
+        break
+    if exceptionIsPropagated:
+      propagatedExceptionList.add(re)
+
+  if propagatedExceptionList.len == 0:
+    return
+
+  let section = if defaultSection != ideNone:
+                  defaultSection
+                elif sym.info.exactEquals(info):
+                  ideDef
+                else:
+                  ideUse
+  var suggestDef = symToSuggest(graph, sym, isLocal=false, section,
+                                info, 100, PrefixMatch.None, false, 0, true,
+                                endLine = endLine, endCol = endCol)
+  suggestDef.inlayHintInfo = suggestToSuggestInlayExceptionHintLeft(suggestDef, propagatedExceptionList)
+  suggestDef.section = ideInlayHints
+  suggestResult(graph.config, suggestDef)
+  suggestDef.inlayHintInfo = suggestToSuggestInlayExceptionHintRight(suggestDef, propagatedExceptionList)
   suggestResult(graph.config, suggestDef)
 
 const
@@ -858,15 +991,18 @@ proc findDef(n: PNode, line: uint16, col: int16): PNode =
       let res = findDef(n[i], line, col)
       if res != nil: return res
 
-proc findByTLineInfo(trackPos: TLineInfo, infoPairs: seq[SymInfoPair]):
+proc findByTLineInfo(trackPos: TLineInfo, infoPairs: SuggestFileSymbolDatabase):
     ref SymInfoPair =
-  for s in infoPairs:
-    if s.info.exactEquals trackPos:
-      new(result)
-      result[] = s
-      break
+  result = nil
+  if infoPairs.fileIndex == trackPos.fileIndex:
+    for i in infoPairs.lineInfo.low..infoPairs.lineInfo.high:
+      let s = infoPairs.getSymInfoPair(i)
+      if s.info.exactEquals trackPos:
+        new(result)
+        result[] = s
+        break
 
-proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: seq[SymInfoPair]): bool =
+proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
   proc checkSymbol(sym: PSym, info: TLineInfo): bool =
     result = (sym.owner.kind in {skModule, skType} or sym.kind in {skProc, skMethod, skIterator, skTemplate, skType})
 
@@ -880,7 +1016,7 @@ proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: se
        graph.suggestResult(sym, sym.info, ideOutline, endInfo.line, endInfo.col)
        return true
 
-proc handleIdentOrSym(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: seq[SymInfoPair]): bool =
+proc handleIdentOrSym(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
   for child in n:
     if child.kind in {nkIdent, nkSym}:
       if graph.outlineNode(child, endInfo, infoPairs):
@@ -889,7 +1025,7 @@ proc handleIdentOrSym(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPair
       if graph.handleIdentOrSym(child, endInfo, infoPairs):
         return true
 
-proc iterateOutlineNodes(graph: ModuleGraph, n: PNode, infoPairs: seq[SymInfoPair]) =
+proc iterateOutlineNodes(graph: ModuleGraph, n: PNode, infoPairs: SuggestFileSymbolDatabase) =
   var matched = true
   if n.kind == nkIdent:
     let symData = findByTLineInfo(n.info, infoPairs)
@@ -934,10 +1070,6 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
   var fileIndex: FileIndex
 
   if not (cmd in {ideRecompile, ideGlobalSymbols}):
-    if not fileInfoKnown(conf, file):
-      myLog fmt "{file} is unknown, returning no results"
-      return
-
     fileIndex = fileInfoIdx(conf, file)
     msgs.setDirtyFile(
       conf,
@@ -957,16 +1089,15 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     graph.unmarkAllDirty()
 
   # these commands require partially compiled project
-  elif cmd in {ideSug, ideOutline, ideHighlight, ideDef, ideChkFile, ideType, ideDeclaration, ideExpand} and
-       (graph.needsCompilation(fileIndex) or cmd == ideSug):
+  elif cmd in {ideSug, ideCon, ideOutline, ideHighlight, ideDef, ideChkFile, ideType, ideDeclaration, ideExpand} and
+       (graph.needsCompilation(fileIndex) or cmd in {ideSug, ideCon}):
     # for ideSug use v2 implementation
-    if cmd == ideSug:
+    if cmd in {ideSug, ideCon}:
       conf.m.trackPos = newLineInfo(fileIndex, line, col)
       conf.m.trackPosAttached = false
     else:
       conf.m.trackPos = default(TLineInfo)
-
-    graph.recompilePartially(fileIndex)
+      graph.recompilePartially(fileIndex)
 
   case cmd
   of ideDef:
@@ -994,7 +1125,11 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
   of ideHighlight:
     let sym = graph.findSymData(file, line, col)
     if not sym.isNil:
-      let usages = graph.fileSymbols(fileIndex).filterIt(it.sym == sym.sym)
+      let fs = graph.fileSymbols(fileIndex)
+      var usages: seq[SymInfoPair] = @[]
+      for i in fs.lineInfo.low..fs.lineInfo.high:
+        if fs.sym[i] == sym.sym:
+          usages.add(fs.getSymInfoPair(i))
       myLog fmt "Found {usages.len} usages in {file.string}"
       for s in usages:
         graph.suggestResult(s.sym, s.info)
@@ -1002,10 +1137,13 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     graph.recompileFullProject()
   of ideChanged:
     graph.markDirtyIfNeeded(file.string, fileIndex)
-  of ideSug:
-    # ideSug performs partial build of the file, thus mark it dirty for the
+  of ideSug, ideCon:
+    # ideSug/ideCon performs partial build of the file, thus mark it dirty for the
     # future calls.
     graph.markDirtyIfNeeded(file.string, fileIndex)
+    graph.recompilePartially(fileIndex) 
+    let m = graph.getModule fileIndex
+    incl m.flags, sfDirty 
   of ideOutline:
     let n = parseFile(fileIndex, graph.cache, graph.config)
     graph.iterateOutlineNodes(n, graph.fileSymbols(fileIndex).deduplicateSymInfoPair)
@@ -1060,9 +1198,10 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
       # find first mention of the symbol in the file containing the definition.
       # It is either the definition or the declaration.
       var first: SymInfoPair
-      for symbol in graph.fileSymbols(s.sym.info.fileIndex).deduplicateSymInfoPair:
-        if s.sym.symbolEqual(symbol.sym):
-          first = symbol
+      let db = graph.fileSymbols(s.sym.info.fileIndex).deduplicateSymInfoPair
+      for i in db.lineInfo.low..db.lineInfo.high:
+        if s.sym.symbolEqual(db.sym[i]):
+          first = db.getSymInfoPair(i)
           break
 
       if s.info.exactEquals(first.info):
@@ -1113,10 +1252,31 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     i += parseInt(tag, endLine, i)
     i += skipWhile(tag, seps, i)
     i += parseInt(tag, endCol, i)
+    i += skipWhile(tag, seps, i)
+    var typeHints = true
+    var exceptionHints = false
+    while i <= tag.high:
+      var token: string
+      i += parseUntil(tag, token, seps, i)
+      i += skipWhile(tag, seps, i)
+      case token:
+      of "+typeHints":
+        typeHints = true
+      of "-typeHints":
+        typeHints = false
+      of "+exceptionHints":
+        exceptionHints = true
+      of "-exceptionHints":
+        exceptionHints = false
+      else:
+        myLog fmt "Discarding unknown inlay hint parameter {token}"
+
     let s = graph.findSymDataInRange(file, line, col, endLine, endCol)
     for q in s:
-      if q.sym.kind in {skLet, skVar, skForVar, skConst} and q.isDecl and not q.sym.hasUserSpecifiedType:
-        graph.suggestInlayHintResult(q.sym, q.info, ideInlayHints)
+      if typeHints and q.sym.kind in {skLet, skVar, skForVar, skConst} and q.isDecl and not q.sym.hasUserSpecifiedType:
+        graph.suggestInlayHintResultType(q.sym, q.info, ideInlayHints)
+      if exceptionHints and q.sym.kind in {skProc, skFunc, skMethod, skVar, skLet, skParam} and not q.isDecl:
+        graph.suggestInlayHintResultException(q.sym, q.info, ideInlayHints, caughtExceptions = q.caughtExceptions, caughtExceptionsSet = q.caughtExceptionsSet)
   else:
     myLog fmt "Discarding {cmd}"
 
@@ -1185,13 +1345,7 @@ else:
       conf.writelnHook = proc (msg: string) = discard
     # Find Nim's prefix dir.
     if nimPath == "":
-      let binaryPath = findExe("nim")
-      if binaryPath == "":
-        raise newException(IOError,
-            "Cannot find Nim standard library: Nim compiler not in PATH")
-      conf.prefixDir = AbsoluteDir binaryPath.splitPath().head.parentDir()
-      if not dirExists(conf.prefixDir / RelativeDir"lib"):
-        conf.prefixDir = AbsoluteDir""
+      conf.prefixDir = conf.getPrefixDir()
     else:
       conf.prefixDir = AbsoluteDir nimPath
 

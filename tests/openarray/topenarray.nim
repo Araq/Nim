@@ -48,6 +48,41 @@ proc main =
       doAssert testing(mySeq) == mySeq
       doAssert testing(mySeq[2..^2]) == mySeq[2..^2]
 
+  block: # bug #23321
+    block:
+      proc foo(x: openArray[int]) =
+        doAssert x[0] == 0
+
+      var d = new array[1, int]
+      foo d[].toOpenArray(0, 0)
+
+    block:
+      proc foo(x: openArray[int]) =
+        doAssert x[0] == 0
+
+      proc task(x: var array[1, int]): var array[1, int] =
+        result = x
+      var d: array[1, int]
+      foo task(d).toOpenArray(0, 0)
+
+    block:
+      proc foo(x: openArray[int]) =
+        doAssert x[0] == 0
+
+      proc task(x: var array[1, int]): lent array[1, int] =
+        result = x
+      var d: array[1, int]
+      foo task(d).toOpenArray(0, 0)
+
+    block:
+      proc foo(x: openArray[int]) =
+        doAssert x[0] == 0
+
+      proc task(x: var array[1, int]): ptr array[1, int] =
+        result = addr x
+      var d: array[1, int]
+      foo task(d)[].toOpenArray(0, 0)
+
 
 main()
 static: main()

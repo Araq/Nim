@@ -54,7 +54,7 @@ proc `==`(a, b: StackTrace): bool =
 # However a chain length of over 3000 is suspicious...
 var
   profileData: ProfileData
-  emptySlots = profileData.len * 3 div 2
+  emptySlots = profileData.len div 2 + profileData.len
   maxChainLen = 0
   totalCalls = 0
 

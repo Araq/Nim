@@ -44,3 +44,14 @@ macro bar2() =
     doAssert y &% y == 2 # binary operator => no need to escape
     doAssert y == 3
 bar2()
+
+block:
+  macro foo(a: openArray[string] = []): string =
+    echo a # Segfault doesn't happen if this is removed
+    newLit ""
+
+  proc bar(a: static[openArray[string]] = []) =
+    const tmp = foo(a)
+
+  # bug #22909
+  doAssert not compiles(bar())

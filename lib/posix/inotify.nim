@@ -14,12 +14,13 @@ when defined(nimPreviewSlimSystem):
 # Structure describing an inotify event.
 type
   InotifyEvent* {.pure, final, importc: "struct inotify_event",
-                  header: "<sys/inotify.h>".} = object ## An Inotify event.
+                  header: "<sys/inotify.h>",
+                  completeStruct.} = object            ## An Inotify event.
     wd* {.importc: "wd".}: FileHandle                  ## Watch descriptor.
     mask* {.importc: "mask".}: uint32                  ## Watch mask.
     cookie* {.importc: "cookie".}: uint32              ## Cookie to synchronize two events.
     len* {.importc: "len".}: uint32                    ## Length (including NULs) of name.
-    name* {.importc: "name".}: char                    ## Name.
+    name* {.importc: "name".}: UncheckedArray[char]    ## Name.
 
 # Supported events suitable for MASK parameter of INOTIFY_ADD_WATCH.
 const
@@ -66,7 +67,8 @@ proc inotify_init*(): FileHandle {.cdecl, importc: "inotify_init",
 
 proc inotify_init1*(flags: cint): FileHandle {.cdecl, importc: "inotify_init1",
     header: "<sys/inotify.h>".}
-  ## Create and initialize inotify instance.
+  ## Like `inotify_init<#inotify_init>`_ ,
+  ## but has a flags argument that provides access to some extra functionality.
 
 proc inotify_add_watch*(fd: cint; name: cstring; mask: uint32): cint {.cdecl,
     importc: "inotify_add_watch", header: "<sys/inotify.h>".}
@@ -78,11 +80,18 @@ proc inotify_rm_watch*(fd: cint; wd: cint): cint {.cdecl,
 
 iterator inotify_events*(evs: pointer, n: int): ptr InotifyEvent =
   ## Abstract the packed buffer interface to yield event object pointers.
-  ##   ```Nim
-  ##   var evs = newSeq[byte](8192)        # Already did inotify_init+add_watch
-  ##   while (let n = read(fd, evs[0].addr, 8192); n) > 0:     # read forever
-  ##     for e in inotify_events(evs[0].addr, n): echo e[].len # echo name lens
-  ##   ```
+  runnableExamples("-r:off"):
+    when defined(linux):
+       import std/posix  # needed for FileHandle read procedure
+       const MaxWatches = 8192
+
+       let inotifyFd = inotify_init()  # create new inotify instance and get it's FileHandle
+       let wd = inotifyFd.inotify_add_watch("/tmp", IN_CREATE or IN_DELETE)  # Add new watch
+
+       var events: array[MaxWatches, byte]  # event buffer
+       while (let n = read(inotifyFd, addr events, MaxWatches); n) > 0:  # blocks until any events have been read
+         for e in inotify_events(addr events, n):
+           echo (e[].wd, e[].mask, cast[cstring](addr e[].name))    # echo watch id, mask, and name value of each event
   var ev: ptr InotifyEvent = cast[ptr InotifyEvent](evs)
   var n = n
   while n > 0:
@@ -93,8 +102,10 @@ iterator inotify_events*(evs: pointer, n: int): ptr InotifyEvent =
 
 runnableExamples:
   when defined(linux):
-    let inoty: FileHandle = inotify_init()           ## Create 1 Inotify.
-    doAssert inoty >= 0                              ## Check for errors (FileHandle is alias to cint).
-    let watchdoge: cint = inotify_add_watch(inoty, ".", IN_ALL_EVENTS) ## Add directory to watchdog.
-    doAssert watchdoge >= 0                          ## Check for errors.
-    doAssert inotify_rm_watch(inoty, watchdoge) >= 0 ## Remove directory from the watchdog
+    let inotifyFd = inotify_init()  # create and get new inotify FileHandle
+    doAssert inotifyFd >= 0         # check for errors
+
+    let wd = inotifyFd.inotify_add_watch("/tmp", IN_CREATE or IN_DELETE)  # Add new watch
+    doAssert wd >= 0                 # check for errors
+
+    discard inotifyFd.inotify_rm_watch(wd) # remove watch

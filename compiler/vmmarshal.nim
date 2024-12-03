@@ -82,11 +82,11 @@ proc storeAny(s: var string; t: PType; a: PNode; stored: var IntSet;
       s.add("]")
   of tyTuple:
     s.add("{")
-    for i in 0..<t.len:
+    for i, ti in t.ikids:
       if i > 0: s.add(", ")
       s.add("\"Field" & $i)
       s.add("\": ")
-      storeAny(s, t[i], a[i].skipColon, stored, conf)
+      storeAny(s, ti, a[i].skipColon, stored, conf)
     s.add("}")
   of tyObject:
     s.add("{")
@@ -98,17 +98,17 @@ proc storeAny(s: var string; t: PType; a: PNode; stored: var IntSet;
       if i > 0: s.add(", ")
       if a[i].kind == nkRange:
         var x = copyNode(a[i][0])
-        storeAny(s, t.lastSon, x, stored, conf)
+        storeAny(s, t.elementType, x, stored, conf)
         inc x.intVal
         while x.intVal <= a[i][1].intVal:
           s.add(", ")
-          storeAny(s, t.lastSon, x, stored, conf)
+          storeAny(s, t.elementType, x, stored, conf)
           inc x.intVal
       else:
-        storeAny(s, t.lastSon, a[i], stored, conf)
+        storeAny(s, t.elementType, a[i], stored, conf)
     s.add("]")
   of tyRange, tyGenericInst, tyAlias, tySink:
-    storeAny(s, t.lastSon, a, stored, conf)
+    storeAny(s, t.skipModifier, a, stored, conf)
   of tyEnum:
     # we need a slow linear search because of enums with holes:
     for e in items(t.n):
@@ -127,7 +127,7 @@ proc storeAny(s: var string; t: PType; a: PNode; stored: var IntSet;
       s.add("[")
       s.add($x.ptrToInt)
       s.add(", ")
-      storeAny(s, t.lastSon, a, stored, conf)
+      storeAny(s, t.elementType, a, stored, conf)
       s.add("]")
   of tyString, tyCstring:
     if a.kind == nkNilLit: s.add("null")
@@ -208,11 +208,12 @@ proc loadAny(p: var JsonParser, t: PType,
     next(p)
     result = newNode(nkTupleConstr)
     var i = 0
+    let tupleLen = t.kidsLen
     while p.kind != jsonObjectEnd and p.kind != jsonEof:
       if p.kind != jsonString:
         raiseParseErr(p, "string expected for a field name")
       next(p)
-      if i >= t.len:
+      if i >= tupleLen:
         raiseParseErr(p, "too many fields to tuple type " & typeToString(t))
       result.add loadAny(p, t[i], tab, cache, conf, idgen)
       inc i
@@ -245,7 +246,7 @@ proc loadAny(p: var JsonParser, t: PType,
     next(p)
     result = newNode(nkCurly)
     while p.kind != jsonArrayEnd and p.kind != jsonEof:
-      result.add loadAny(p, t.lastSon, tab, cache, conf, idgen)
+      result.add loadAny(p, t.elementType, tab, cache, conf, idgen)
     if p.kind == jsonArrayEnd: next(p)
     else: raiseParseErr(p, "']' end of array expected")
   of tyPtr, tyRef:
@@ -264,7 +265,7 @@ proc loadAny(p: var JsonParser, t: PType,
       if p.kind == jsonInt:
         let idx = p.getInt
         next(p)
-        result = loadAny(p, t.lastSon, tab, cache, conf, idgen)
+        result = loadAny(p, t.elementType, tab, cache, conf, idgen)
         tab[idx] = result
       else: raiseParseErr(p, "index for ref type expected")
       if p.kind == jsonArrayEnd: next(p)
@@ -300,14 +301,14 @@ proc loadAny(p: var JsonParser, t: PType,
       result = nil
     raiseParseErr(p, "float expected")
   of tyRange, tyGenericInst, tyAlias, tySink:
-    result = loadAny(p, t.lastSon, tab, cache, conf, idgen)
+    result = loadAny(p, t.skipModifier, tab, cache, conf, idgen)
   else:
     result = nil
     internalError conf, "cannot marshal at compile-time " & t.typeToString
 
 proc loadAny*(s: string; t: PType; cache: IdentCache; conf: ConfigRef; idgen: IdGenerator): PNode =
   var tab = initTable[BiggestInt, PNode]()
-  var p: JsonParser
+  var p: JsonParser = default(JsonParser)
   open(p, newStringStream(s), "unknown file")
   next(p)
   result = loadAny(p, t, tab, cache, conf, idgen)

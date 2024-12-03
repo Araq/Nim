@@ -665,9 +665,7 @@ macro check*(conditions: untyped): untyped =
       checkpoint(name & " was " & $value)
 
   proc inspectArgs(exp: NimNode): tuple[assigns, check, printOuts: NimNode] =
-    result.check = copyNimTree(exp)
-    result.assigns = newNimNode(nnkStmtList)
-    result.printOuts = newNimNode(nnkStmtList)
+    result = (newNimNode(nnkStmtList), copyNimTree(exp), newNimNode(nnkStmtList))
 
     var counter = 0
 
@@ -773,7 +771,8 @@ macro expect*(exceptions: varargs[typed], body: untyped): untyped =
     except errorTypes:
       discard
     except:
-      checkpoint(lineInfoLit & ": Expect Failed, unexpected exception was thrown.")
+      let err = getCurrentException()
+      checkpoint(lineInfoLit & ": Expect Failed, " & $err.name & " was thrown.")
       fail()
     {.pop.}
 

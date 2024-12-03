@@ -1,5 +1,5 @@
 discard """
-  errormsg: "type mismatch: got <string> but expected 'int'"
+  errormsg: "type mismatch: got <int literal(1), proc (a: GenericParam): auto>"
   line: 11
 """ 
 

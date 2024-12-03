@@ -71,7 +71,7 @@ jobs:
         run: nim c -r -d:release ci/action.nim
 
       - name: 'Comment'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');

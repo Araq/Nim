@@ -148,7 +148,7 @@ elif defined(genode):
   #
 
   template raiseErr(prc: string) =
-    raise newException(OSError, prc & " not implemented, compile with POSIX suport")
+    raise newException(OSError, prc & " not implemented, compile with POSIX support")
 
   proc dlclose(lib: LibHandle) =
     raiseErr(OSError, "dlclose")

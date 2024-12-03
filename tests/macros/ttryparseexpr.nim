@@ -18,3 +18,7 @@ const
   c = test("\"") # bug #2504
 
 echo a, " ", b
+
+static:
+  # Issue #9918
+  discard parseStmt("echo(1+1);")

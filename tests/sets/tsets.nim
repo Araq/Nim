@@ -1,3 +1,7 @@
+discard """
+  targets: "c cpp"
+"""
+
 # Test builtin sets
 
 # xxx these tests are not very good, this should be revisited.
@@ -93,3 +97,37 @@ block:
 
   doAssert k99 notin s1
   doAssert k99 notin s2
+
+block: # bug #23422
+  block:
+    var a: set[uint8] = {1'u8}
+
+    proc printLen(x: set[uint8]): int =
+      doAssert x.len == card(x)
+      result = card(x)
+
+    proc printLenVar(x: var set[uint8]): int =
+      doAssert x.len == card(x)
+      result = card(x)
+
+    doAssert a.len == 1
+    doAssert printLen(a) == 1
+    doAssert printLenVar(a) == card(a)
+
+  block:
+    type Fruit = enum
+      Apple, Banana, Melon
+
+    var a: set[Fruit] = {Apple}
+
+    proc printLen(x: set[Fruit]): int =
+      doAssert x.len == card(x)
+      result = card(x)
+
+    proc printLenVar(x: var set[Fruit]): int =
+      doAssert x.len == card(x)
+      result = card(x)
+
+    doAssert a.len == 1
+    doAssert printLen(a) == 1
+    doAssert printLenVar(a) == card(a)

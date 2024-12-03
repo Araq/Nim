@@ -22,7 +22,6 @@ proc checkGrammarFileImpl(cache: IdentCache, config: ConfigRef) =
     var
       L: Lexer
       tok: Token
-    initToken(tok)
     openLexer(L, f, stream, cache, config)
     # load the first token:
     rawGetTok(L, tok)

@@ -12,6 +12,23 @@ type # for capture test, ref #20679
   FooCapture = ref object
     x: int
 
+proc mainProc() =
+  block: # bug #16967
+    var s = newSeq[proc (): int](5)
+    {.push exportc.}
+    proc bar() =
+      for i in 0 ..< s.len:
+        let foo = i + 1
+        capture foo:
+          s[i] = proc(): int = foo
+    {.pop.}
+
+    bar()
+
+    for i, p in s.pairs:
+      let foo = i + 1
+      doAssert p() == foo
+
 template main() =
   block: # `=>`
     block:
@@ -85,22 +102,6 @@ template main() =
           capture i, j:
             closure2 = () => (i, j)
     doAssert closure2() == (5, 3)
-
-    block: # bug #16967
-      var s = newSeq[proc (): int](5)
-      {.push exportc.}
-      proc bar() =
-        for i in 0 ..< s.len:
-          let foo = i + 1
-          capture foo:
-            s[i] = proc(): int = foo
-      {.pop.}
-
-      bar()
-
-      for i, p in s.pairs:
-        let foo = i + 1
-        doAssert p() == foo
 
     block: # issue #20679
       # this should compile. Previously was broken as `var int` is an `nnkHiddenDeref`
@@ -290,14 +291,17 @@ template main() =
 
   block: # bug #20704
     proc test() =
-      var xs, ys: seq[int]
+      var xs, ys: seq[int] = @[]
       for i in 0..5:
         xs.add(i)
 
-      xs.apply(d => ys.add(d))
+      xs.apply(proc (d: auto) = ys.add(d))
+      # ^ can be turned into d => ys.add(d) when we can infer void return type, #16906
       doAssert ys == @[0, 1, 2, 3, 4, 5]
 
     test()
+
+  mainProc()
 
 when not defined(js): # TODO fixme JS VM
   static:

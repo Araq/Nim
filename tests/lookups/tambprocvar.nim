@@ -2,7 +2,7 @@ discard """
   action: reject
   cmd: "nim check $file"
   nimout: '''
-tambprocvar.nim(15, 11) Error: ambiguous identifier 'foo' -- use one of the following:
+tambprocvar.nim(15, 11) Error: ambiguous identifier: 'foo' -- use one of the following:
   tambprocvar.foo: proc (x: int){.noSideEffect, gcsafe.}
   tambprocvar.foo: proc (x: float){.noSideEffect, gcsafe.}
 '''
@@ -16,4 +16,4 @@ block:
 
 block:
   let x = `+` #[tt.Error
-           ^ ambiguous identifier '+' -- use one of the following:]#
+          ^ ambiguous identifier: '+' -- use one of the following:]#

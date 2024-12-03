@@ -1,5 +1,5 @@
 discard """
-  errormsg: "ambiguous identifier 'mDec' -- use one of the following:"
+  errormsg: "ambiguous identifier: 'mDec' -- use one of the following:"
   file: "tambsym3.nim"
   line: 11
 """

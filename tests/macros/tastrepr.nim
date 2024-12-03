@@ -11,6 +11,8 @@ for i, (x, y) in pairs(data):
 var
   a = 1
   b = 2
+type
+  A* = object
 
 var data = @[(1, "one"), (2, "two")]
 for (i, d) in pairs(data):
@@ -20,6 +22,11 @@ for i, d in pairs(data):
 for i, (x, y) in pairs(data):
   discard
 var (a, b) = (1, 2)
+type
+  A* = object
+
+var t04 = 1.0'f128
+t04 = 2.0'f128
 '''
 """
 
@@ -44,3 +51,8 @@ echoTypedAndUntypedRepr:
   for i, (x,y) in pairs(data):
     discard
   var (a,b) = (1,2)
+  type A* = object # issue #22933
+
+echoUntypedRepr:
+  var t04 = 1'f128
+  t04 = 2'f128

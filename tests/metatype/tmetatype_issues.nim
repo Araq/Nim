@@ -157,3 +157,12 @@ block t3338:
   var t2 = Bar[int32]()
   t2.add()
   doAssert t2.x == 5
+
+block: # issue #24203
+  proc b(G: typedesc) =
+    type U = G
+  template s(h: untyped) = h
+  s(b(typeof (0, 0)))
+  b(seq[int])
+  b((int, int))
+  b(typeof (0, 0))

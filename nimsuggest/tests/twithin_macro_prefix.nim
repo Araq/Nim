@@ -44,5 +44,5 @@ discard """
 $nimsuggest --tester $file
 >sug $1
 sug;;skField;;age;;int;;$file;;6;;6;;"";;100;;Prefix
-sug;;skMethod;;twithin_macro_prefix.age_human_yrs;;proc (self: Animal): int;;$file;;8;;9;;"";;100;;Prefix
+sug;;skMethod;;twithin_macro_prefix.age_human_yrs;;proc (self: Animal): int{.raises: <inferred> [].};;$file;;8;;9;;"";;100;;Prefix
 """

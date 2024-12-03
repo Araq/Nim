@@ -1,5 +1,5 @@
 discard """
-  matrix: "--jsbigint64:off; --jsbigint64:on"
+  matrix: "--jsbigint64:off -d:nimStringHash2; --jsbigint64:on"
 """
 
 import std/private/jsutils
@@ -10,8 +10,7 @@ proc main()=
   doAssert fn(array[2, uint8].default) == "Uint8Array"
   doAssert fn(array[2, byte].default) == "Uint8Array"
   doAssert fn(array[2, char].default) == "Uint8Array"
-  whenJsNoBigInt64: discard
-  do:
+  when not jsNoBigInt64:
     doAssert fn(array[2, uint64].default) == "BigUint64Array"
   doAssert fn([1'u8]) == "Uint8Array"
   doAssert fn([1'u16]) == "Uint16Array"

@@ -1,5 +1,6 @@
 discard """
   output: "success"
+  retries: 2
 """
 
 import os, times

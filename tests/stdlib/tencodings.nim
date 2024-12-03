@@ -101,3 +101,7 @@ block:
   doAssert orig == "\195\182\195\164\195\188\195\159"
   doAssert ibm850 == "\148\132\129\225"
   doAssert convert(ibm850, current, "ibm850") == orig
+
+block: # fixes about #23481
+  doAssertRaises EncodingError:
+    discard open(destEncoding="this is a invalid enc")

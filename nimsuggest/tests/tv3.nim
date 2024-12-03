@@ -19,7 +19,7 @@ def	skField	tv3.Foo.bar	string	$file	5	4	""	100
 >sug $1
 sug	skField	bar	string	$file	5	4	""	100	Prefix
 >globalSymbols test
-def	skProc	tv3.test	proc (f: Foo){.gcsafe.}	$file	7	5	""	100
+def	skProc	tv3.test	proc (f: Foo){.gcsafe, raises: <inferred> [].}	$file	7	5	""	100
 >globalSymbols Foo
 def	skType	tv3.Foo	Foo	$file	4	2	""	100
 >def $2

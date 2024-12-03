@@ -16,3 +16,16 @@ block: # issue #15760
 
   doAssert x[SpecialBanana]() == "SpecialBanana"
   doAssert y(SpecialBanana) == "SpecialBanana"
+
+import macros
+
+block: # issue #23112
+  type Container = object
+    foo: string
+
+  proc canBeImplicit(t: typedesc) {.compileTime.} =
+    let tDesc = getType(t)
+    doAssert tDesc.kind == nnkObjectTy
+
+  static:
+    canBeImplicit(Container)

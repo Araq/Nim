@@ -182,6 +182,7 @@ proc parseHex*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): i
     var num64: int64
     doAssert parseHex("4E69ED4E69ED", num64) == 12
     doAssert num64 == 86216859871725
+  result = 0
   var i = 0
   var output = T(0)
   var foundDigit = false
@@ -460,6 +461,8 @@ proc parseBiggestInt*(s: openArray[char], number: var BiggestInt): int {.
     var res: BiggestInt
     doAssert parseBiggestInt("9223372036854775807", res) == 19
     doAssert res == 9223372036854775807
+    doAssert parseBiggestInt("-2024_05_09", res) == 11
+    doAssert res == -20240509
   var res = BiggestInt(0)
   # use 'res' for exception safety (don't write to 'number' in case of an
   # overflow exception):
@@ -474,10 +477,8 @@ proc parseInt*(s: openArray[char], number: var int): int {.
   ## `ValueError` is raised if the parsed integer is out of the valid range.
   runnableExamples:
     var res: int
-    doAssert parseInt("2019", res, 0) == 4
-    doAssert res == 2019
-    doAssert parseInt("2019", res, 2) == 2
-    doAssert res == 19
+    doAssert parseInt("-2024_05_02", res) == 11
+    doAssert res == -20240502
   var res = BiggestInt(0)
   result = parseBiggestInt(s, res)
   when sizeof(int) <= 4:
@@ -992,6 +993,10 @@ proc parseBiggestInt*(s: string, number: var BiggestInt, start = 0): int {.noSid
     var res: BiggestInt
     doAssert parseBiggestInt("9223372036854775807", res, 0) == 19
     doAssert res == 9223372036854775807
+    doAssert parseBiggestInt("-2024_05_09", res) == 11
+    doAssert res == -20240509
+    doAssert parseBiggestInt("-2024_05_02", res, 7) == 4
+    doAssert res == 502
   parseBiggestInt(s.toOpenArray(start, s.high), number)
 
 proc parseInt*(s: string, number: var int, start = 0): int {.noSideEffect, raises: [ValueError].} =
@@ -1000,10 +1005,10 @@ proc parseInt*(s: string, number: var int, start = 0): int {.noSideEffect, raise
   ## `ValueError` is raised if the parsed integer is out of the valid range.
   runnableExamples:
     var res: int
-    doAssert parseInt("2019", res, 0) == 4
-    doAssert res == 2019
-    doAssert parseInt("2019", res, 2) == 2
-    doAssert res == 19
+    doAssert parseInt("-2024_05_02", res) == 11
+    doAssert res == -20240502
+    doAssert parseInt("-2024_05_02", res, 7) == 4
+    doAssert res == 502
   parseInt(s.toOpenArray(start, s.high), number)
 
 

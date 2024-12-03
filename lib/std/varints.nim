@@ -82,29 +82,29 @@ proc writeVu64*(z: var openArray[byte], x: uint64): int =
       z[3] = cast[uint8](y)
       return 4
     z[0] = 251
-    varintWrite32(toOpenArray(z, 1, z.high-1), y)
+    varintWrite32(toOpenArray(z, 1, 4), y)
     return 5
   if w <= 255:
     z[0] = 252
     z[1] = cast[uint8](w)
-    varintWrite32(toOpenArray(z, 2, z.high-2), y)
+    varintWrite32(toOpenArray(z, 2, 5), y)
     return 6
   if w <= 65535:
     z[0] = 253
     z[1] = cast[uint8](w shr 8)
     z[2] = cast[uint8](w)
-    varintWrite32(toOpenArray(z, 3, z.high-3), y)
+    varintWrite32(toOpenArray(z, 3, 6), y)
     return 7
   if w <= 16777215:
     z[0] = 254
     z[1] = cast[uint8](w shr 16)
     z[2] = cast[uint8](w shr 8)
     z[3] = cast[uint8](w)
-    varintWrite32(toOpenArray(z, 4, z.high-4), y)
+    varintWrite32(toOpenArray(z, 4, 7), y)
     return 8
   z[0] = 255
-  varintWrite32(toOpenArray(z, 1, z.high-1), w)
-  varintWrite32(toOpenArray(z, 5, z.high-5), y)
+  varintWrite32(toOpenArray(z, 1, 4), w)
+  varintWrite32(toOpenArray(z, 5, 8), y)
   return 9
 
 proc sar(a, b: int64): int64 =

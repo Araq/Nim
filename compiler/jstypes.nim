@@ -69,7 +69,7 @@ proc genObjectFields(p: PProc, typ: PType, n: PNode): Rope =
   else: internalError(p.config, n.info, "genObjectFields")
 
 proc objHasTypeField(t: PType): bool {.inline.} =
-  tfInheritable in t.flags or t[0] != nil
+  tfInheritable in t.flags or t.baseClass != nil
 
 proc genObjectInfo(p: PProc, typ: PType, name: Rope) =
   let kind = if objHasTypeField(typ): tyObject else: tyTuple
@@ -79,9 +79,9 @@ proc genObjectInfo(p: PProc, typ: PType, name: Rope) =
   p.g.typeInfo.addf("var NNI$1 = $2;$n",
        [rope(typ.id), genObjectFields(p, typ, typ.n)])
   p.g.typeInfo.addf("$1.node = NNI$2;$n", [name, rope(typ.id)])
-  if (typ.kind == tyObject) and (typ[0] != nil):
+  if (typ.kind == tyObject) and (typ.baseClass != nil):
     p.g.typeInfo.addf("$1.base = $2;$n",
-         [name, genTypeInfo(p, typ[0].skipTypes(skipPtrs))])
+         [name, genTypeInfo(p, typ.baseClass.skipTypes(skipPtrs))])
 
 proc genTupleFields(p: PProc, typ: PType): Rope =
   var s: Rope = ""
@@ -117,9 +117,9 @@ proc genEnumInfo(p: PProc, typ: PType, name: Rope) =
   prepend(p.g.typeInfo, s)
   p.g.typeInfo.add(n)
   p.g.typeInfo.addf("$1.node = NNI$2;$n", [name, rope(typ.id)])
-  if typ[0] != nil:
+  if typ.baseClass != nil:
     p.g.typeInfo.addf("$1.base = $2;$n",
-         [name, genTypeInfo(p, typ[0])])
+         [name, genTypeInfo(p, typ.baseClass)])
 
 proc genTypeInfo(p: PProc, typ: PType): Rope =
   let t = typ.skipTypes({tyGenericInst, tyDistinct, tyAlias, tySink, tyOwned})
@@ -127,7 +127,7 @@ proc genTypeInfo(p: PProc, typ: PType): Rope =
   if containsOrIncl(p.g.typeInfoGenerated, t.id): return
   case t.kind
   of tyDistinct:
-    result = genTypeInfo(p, t[0])
+    result = genTypeInfo(p, t.skipModifier)
   of tyPointer, tyProc, tyBool, tyChar, tyCstring, tyString, tyInt..tyUInt64:
     var s =
       "var $1 = {size: 0,kind: $2,base: null,node: null,finalizer: null};$n" %
@@ -139,18 +139,18 @@ proc genTypeInfo(p: PProc, typ: PType): Rope =
               [result, rope(ord(t.kind))]
     prepend(p.g.typeInfo, s)
     p.g.typeInfo.addf("$1.base = $2;$n",
-         [result, genTypeInfo(p, t.lastSon)])
+         [result, genTypeInfo(p, t.elementType)])
   of tyArray:
     var s =
       "var $1 = {size: 0, kind: $2, base: null, node: null, finalizer: null};$n" %
               [result, rope(ord(t.kind))]
     prepend(p.g.typeInfo, s)
     p.g.typeInfo.addf("$1.base = $2;$n",
-         [result, genTypeInfo(p, t[1])])
+         [result, genTypeInfo(p, t.elementType)])
   of tyEnum: genEnumInfo(p, t, result)
   of tyObject: genObjectInfo(p, t, result)
   of tyTuple: genTupleInfo(p, t, result)
   of tyStatic:
-    if t.n != nil: result = genTypeInfo(p, lastSon t)
+    if t.n != nil: result = genTypeInfo(p, skipModifier t)
     else: internalError(p.config, "genTypeInfo(" & $t.kind & ')')
   else: internalError(p.config, "genTypeInfo(" & $t.kind & ')')

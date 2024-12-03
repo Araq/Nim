@@ -1,5 +1,5 @@
 discard """
-  matrix: "--mm:arc; --mm:refc"
+  matrix: "--mm:arc --multimethods:on -d:nimInternalNonVtablesTesting; --mm:refc --multimethods:on -d:nimInternalNonVtablesTesting"
   output: '''wow2
 X 1
 X 3'''

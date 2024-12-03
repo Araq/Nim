@@ -7,7 +7,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std/[os, tables, strutils, times, heapqueue, options, deques, cstrutils]
+import std/[os, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
 
 import system/stacktraces
 
@@ -193,7 +193,7 @@ proc add(callbacks: var CallbackList, function: CallbackFunc) =
         last = last.next
       last.next = newCallback
 
-proc completeImpl[T, U](future: Future[T], val: U, isVoid: static bool) =
+proc completeImpl[T, U](future: Future[T], val: sink U, isVoid: static bool) =
   #assert(not future.finished, "Future already finished, cannot finish twice.")
   checkFinished(future)
   assert(future.error == nil)
@@ -203,7 +203,7 @@ proc completeImpl[T, U](future: Future[T], val: U, isVoid: static bool) =
   future.callbacks.call()
   when isFutureLoggingEnabled: logFutureFinish(future)
 
-proc complete*[T](future: Future[T], val: T) =
+proc complete*[T](future: Future[T], val: sink T) =
   ## Completes `future` with value `val`.
   completeImpl(future, val, false)
 
@@ -219,7 +219,7 @@ proc complete*[T](future: FutureVar[T]) =
   fut.callbacks.call()
   when isFutureLoggingEnabled: logFutureFinish(Future[T](future))
 
-proc complete*[T](future: FutureVar[T], val: T) =
+proc complete*[T](future: FutureVar[T], val: sink T) =
   ## Completes a `FutureVar` with value `val`.
   ##
   ## Any previously stored value will be overwritten.
@@ -370,11 +370,7 @@ proc injectStacktrace[T](future: Future[T]) =
     #   newMsg.add "\n" & $entry
     future.error.msg = newMsg
 
-proc read*[T](future: Future[T] | FutureVar[T]): T =
-  ## Retrieves the value of `future`. Future must be finished otherwise
-  ## this function will fail with a `ValueError` exception.
-  ##
-  ## If the result of the future is an error then that error will be raised.
+template readImpl(future, T) =
   when future is Future[T]:
     let fut {.cursor.} = future
   else:
@@ -384,10 +380,20 @@ proc read*[T](future: Future[T] | FutureVar[T]): T =
       injectStacktrace(fut)
       raise fut.error
     when T isnot void:
-      result = fut.value
+      result = distinctBase(future).value
   else:
     # TODO: Make a custom exception type for this?
     raise newException(ValueError, "Future still in progress.")
+
+proc read*[T](future: Future[T] | FutureVar[T]): lent T =
+  ## Retrieves the value of `future`. Future must be finished otherwise
+  ## this function will fail with a `ValueError` exception.
+  ##
+  ## If the result of the future is an error then that error will be raised.
+  readImpl(future, T)
+
+proc read*(future: Future[void] | FutureVar[void]) =
+  readImpl(future, void)
 
 proc readError*[T](future: Future[T]): ref Exception =
   ## Retrieves the exception stored in `future`.

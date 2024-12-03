@@ -53,8 +53,8 @@ Nim programming language. Those C sources are available within the
 
 Next, to build from source you will need:
 
-  * A C compiler such as ``gcc`` 5.x/later or an alternative such as ``clang``,
-    ``Visual C++`` or ``Intel C++``. It is recommended to use ``gcc`` 5.x or
+  * A C compiler such as ``gcc`` 6.x/later or an alternative such as ``clang``,
+    ``Visual C++`` or ``Intel C++``. It is recommended to use ``gcc`` 6.x or
     later.
   * Either ``git`` or ``wget`` to download the needed source repositories.
   * The ``build-essential`` package when using ``gcc`` on Ubuntu (and likely
@@ -121,7 +121,6 @@ This project exists thanks to all the people who contribute.
 ## Contributing
 
 [![Backers on Open Collective](https://opencollective.com/nim/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/nim/sponsors/badge.svg)](#sponsors)
-[![Setup a bounty via Bountysource][badge-nim-bountysource]][nim-bountysource]
 [![Donate Bitcoins][badge-nim-bitcoin]][nim-bitcoin]
 [![Open Source Helpers](https://www.codetriage.com/nim-lang/nim/badges/users.svg)](https://www.codetriage.com/nim-lang/nim)
 
@@ -165,7 +164,6 @@ You can also help with the development of Nim by making donations. Donations can
 made using:
 
 * [Open Collective](https://opencollective.com/nim)
-* [Bountysource][nim-bountysource]
 * [Bitcoin][nim-bitcoin]
 
 If you have any questions feel free to submit a question on the
@@ -204,7 +202,7 @@ Nim. You are explicitly permitted to develop commercial applications using Nim.
 
 Please read the [copying.txt](copying.txt) file for more details.
 
-Copyright © 2006-2023 Andreas Rumpf, all rights reserved.
+Copyright © 2006-2024 Andreas Rumpf, all rights reserved.
 
 [nim-site]: https://nim-lang.org
 [nim-forum]: https://forum.nim-lang.org
@@ -219,7 +217,6 @@ Copyright © 2006-2023 Andreas Rumpf, all rights reserved.
 [nim-matrix]: https://matrix.to/#/#nim-lang:matrix.org
 [nim-matrix-space]: https://matrix.to/#/#nim:envs.net
 [nim-telegram]: https://t.me/nim_lang
-[nim-bountysource]: https://www.bountysource.com/teams/nim
 [nim-bitcoin]: https://blockchain.info/address/1BXfuKM2uvoD6mbx4g5xM3eQhLzkCK77tJ
 [nimble-repo]: https://github.com/nim-lang/nimble
 [nimsuggest-repo]: https://github.com/nim-lang/nimsuggest
@@ -231,7 +228,6 @@ Copyright © 2006-2023 Andreas Rumpf, all rights reserved.
 [badge-nim-forum-gethelp]: https://img.shields.io/badge/Forum-get%20help-4eb899.svg?style=flat-square
 [badge-nim-twitter]: https://img.shields.io/twitter/follow/nim_lang.svg?style=social
 [badge-nim-stackoverflow]: https://img.shields.io/badge/stackoverflow-nim_tag-yellow.svg?style=flat-square
-[badge-nim-bountysource]: https://img.shields.io/bountysource/team/nim/activity.svg?style=flat-square
 [badge-nim-bitcoin]: https://img.shields.io/badge/bitcoin-1BXfuKM2uvoD6mbx4g5xM3eQhLzkCK77tJ-D69134.svg?style=flat-square
 [pull-request-instructions]: https://help.github.com/articles/using-pull-requests/
 [nim-wiki]: https://github.com/nim-lang/Nim/wiki

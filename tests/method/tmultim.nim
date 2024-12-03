@@ -1,4 +1,5 @@
 discard """
+  matrix: "--multimethods:on"
   output: '''
 collide: unit, thing
 collide: unit, thing

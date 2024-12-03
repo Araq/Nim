@@ -72,7 +72,7 @@
 - `shallowCopy` and `shallow` are removed for ARC/ORC. Use `move` when possible or combine assignment and
 `sink` for optimization purposes.
 
-- The experimental `nimPreviewDotLikeOps` switch is going to be removed or deprecated because it didn't fullfill its promises.
+- The experimental `nimPreviewDotLikeOps` switch is going to be removed or deprecated because it didn't fulfill its promises.
 
 - The `{.this.}` pragma, deprecated since 0.19, has been removed.
 - `nil` literals can no longer be directly assigned to variables or fields of `distinct` pointer types. They must be converted instead.

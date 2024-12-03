@@ -31,7 +31,7 @@ proc initRLock*(lock: var RLock) {.inline.} =
   else:
     initSysLock(lock)
 
-proc deinitRLock*(lock: var RLock) {.inline.} =
+proc deinitRLock*(lock: RLock) {.inline.} =
   ## Frees the resources associated with the lock.
   deinitSys(lock)
 

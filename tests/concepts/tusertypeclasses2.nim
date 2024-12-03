@@ -1,3 +1,7 @@
+discard """
+  targets: "c js"
+"""
+
 block:
   type
     hasFieldX = concept z
@@ -42,3 +46,18 @@ block:
   foo2(x)
   foo3(x)
   foo4(x)
+
+block: # bug #9550
+  block:
+    type Foo = concept c
+      for v in c: (v is char)
+
+    func foo(c: Foo) = (for v in c: discard)
+    foo @['a', 'b' ,'c']
+
+  block:
+    type Foo = concept c
+      for v in c: (v is char)
+
+    func foo(c: Foo) = (for v in c: discard)
+    foo ['a', 'b' ,'c']

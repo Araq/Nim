@@ -1,5 +1,6 @@
 discard """
   output: '''
+Destructor for TestTestObj
 =destroy called
 123xyzabc
 destroyed: false
@@ -31,13 +32,38 @@ true
 copying
 123
 42
+@["", "d", ""]
 ok
 destroying variable: 20
 destroying variable: 10
 closed
 '''
-  cmd: "nim c --gc:arc --deepcopy:on -d:nimAllocPagesViaMalloc $file"
+  cmd: "nim c --mm:arc --deepcopy:on -d:nimAllocPagesViaMalloc $file"
 """
+
+block: # bug #23627
+  type
+    TestObj = object of RootObj
+
+    Test2 = object of RootObj
+      foo: TestObj
+
+    TestTestObj = object of RootObj
+      shit: TestObj
+
+  proc `=destroy`(x: TestTestObj) =
+    echo "Destructor for TestTestObj"
+    let test = Test2(foo: TestObj())
+
+  proc testCaseT() =
+    let tt1 {.used.} = TestTestObj(shit: TestObj())
+
+
+  proc main() =
+    testCaseT()
+
+  main()
+
 
 # bug #9401
 
@@ -46,13 +72,12 @@ type
     len: int
     data: ptr UncheckedArray[float]
 
-proc `=destroy`*(m: var MyObj) =
+proc `=destroy`*(m: MyObj) =
 
   echo "=destroy called"
 
   if m.data != nil:
     deallocShared(m.data)
-    m.data = nil
 
 type
   MyObjDistinct = distinct MyObj
@@ -104,7 +129,7 @@ bbb("123")
 type Variable = ref object
   value: int
 
-proc `=destroy`(self: var typeof(Variable()[])) =
+proc `=destroy`(self: typeof(Variable()[])) =
   echo "destroying variable: ",self.value
 
 proc newVariable(value: int): Variable =
@@ -158,7 +183,7 @@ type
   B = ref object of A
     x: int
 
-proc `=destroy`(x: var AObj) =
+proc `=destroy`(x: AObj) =
   close(x.io)
   echo "closed"
 
@@ -688,3 +713,151 @@ block: # bug #22259
     f(wrapper)
 
   main()
+
+block:
+  block: # bug #22923
+    block:
+      let
+        a: int = 100
+        b: int32 = 200'i32
+
+      let
+        x = arrayWith(a, 8) # compiles
+        y = arrayWith(b, 8) # internal error
+        z = arrayWith(14, 8) # integer literal also results in a crash
+
+      doAssert x == [100, 100, 100, 100, 100, 100, 100, 100]
+      doAssert $y == "[200, 200, 200, 200, 200, 200, 200, 200]"
+      doAssert z == [14, 14, 14, 14, 14, 14, 14, 14]
+
+    block:
+      let a: string = "nim"
+      doAssert arrayWith(a, 3) == ["nim", "nim", "nim"]
+
+      let b: char = 'c'
+      doAssert arrayWith(b, 3) == ['c', 'c', 'c']
+
+      let c: uint = 300'u
+      doAssert $arrayWith(c, 3) == "[300, 300, 300]"
+
+block: # bug #23505
+  type
+    K = object
+    C = object
+      value: ptr K
+
+  proc init(T: type C): C =
+    let tmp = new K
+    C(value: addr tmp[])
+
+  discard init(C)
+
+block: # bug #23524
+  type MyType = object
+    a: int
+
+  proc `=destroy`(typ: MyType) = discard
+
+  var t1 = MyType(a: 100)
+  var t2 = t1 # Should be a copy?
+
+  proc main() =
+    t2 = t1
+    doAssert t1.a == 100
+    doAssert t2.a == 100
+
+  main()
+
+block: # bug #23907
+  type
+    Thingy = object
+      value: int
+
+    ExecProc[C] = proc(value: sink C): int {.nimcall.}
+
+  proc `=copy`(a: var Thingy, b: Thingy) {.error.}
+
+  var thingyDestroyCount = 0
+
+  proc `=destroy`(thingy: Thingy) =
+    assert(thingyDestroyCount <= 0)
+    thingyDestroyCount += 1
+
+  proc store(value: sink Thingy): int =
+    result = value.value
+
+  let callback: ExecProc[Thingy] = store
+
+  doAssert callback(Thingy(value: 123)) == 123
+
+import std/strutils
+
+block: # bug #23974
+  func g(e: seq[string]): lent seq[string] = result = e
+  proc k(f: string): seq[string] = f.split("/")
+  proc n() =
+    const r = "/d/"
+    let t =
+      if true:
+        k(r).g()
+      else:
+        k("/" & r).g()
+    echo t
+
+  n()
+
+block: # bug #23973
+  func g(e: seq[string]): lent seq[string] = result = e
+  proc k(f: string): seq[string] = f.split("/")
+  proc n() =
+    const r = "/test/empty"  # or "/test/empty/1"
+    let a = k(r).g()
+    let t =
+      if true:
+        k(r).g()
+      else:
+        k("/" & r).g()   # or raiseAssert ""
+    doAssert t == a
+
+  n()
+
+block: # bug #24141
+  func reverse(s: var openArray[char]) =
+    s[0] = 'f'
+
+  func rev(s: var string) =
+    s.reverse
+
+  proc main =
+    var abc = "abc"
+    abc.rev
+    doAssert abc == "fbc"
+
+  main()
+
+block:
+  type
+    FooObj = object
+      data: int
+    Foo = ref FooObj
+
+
+  proc delete(self: FooObj) =
+    discard
+
+  var s = Foo()
+  new(s, delete)
+
+block:
+  type
+    FooObj = object
+      data: int
+      i1, i2, i3, i4: float
+    Foo = ref FooObj
+
+
+  proc delete(self: FooObj) =
+    discard
+
+  var s = Foo()
+  new(s, delete)

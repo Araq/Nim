@@ -14,9 +14,9 @@ proc #[!]#someProc*() =
 discard """
 $nimsuggest --tester $file
 >use $1
-def;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe.};;$file;;9;;5;;"";;100
-use;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe.};;$file;;12;;0;;"";;100
+def;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe, raises: <inferred> [].};;$file;;9;;5;;"";;100
+use;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe, raises: <inferred> [].};;$file;;12;;0;;"";;100
 >use $2
-def;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe.};;$file;;9;;5;;"";;100
-use;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe.};;$file;;12;;0;;"";;100
+def;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe, raises: <inferred> [].};;$file;;9;;5;;"";;100
+use;;skProc;;tuse.someProc;;proc (){.noSideEffect, gcsafe, raises: <inferred> [].};;$file;;12;;0;;"";;100
 """

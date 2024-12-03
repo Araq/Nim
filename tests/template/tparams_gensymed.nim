@@ -16,6 +16,7 @@ wth
 (total: 6)
 S1
 5
+abc
 '''
 """
 # bug #1915
@@ -394,3 +395,11 @@ proc chunkedReadLoop2 =
   test2
 
 test1(); test2()
+
+block: # bug #22846
+  template foo2(x: proc (y: string)) =
+    let f = x
+    f("abc")
+
+  foo2(proc (y: string) = echo y)
+

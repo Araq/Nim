@@ -24,3 +24,16 @@ s = TAny(kind: nkInt, intVal: 78)
 # s = nr # works
 nr = s # fails!
 echo "came here"
+
+block: # bug #12464
+  type
+    Foo = object
+      case isFunc: bool
+      of false: nil
+      of true:
+        fun: proc(): int
+
+  const i = Foo(isFunc: false)
+
+  let j = i
+  doAssert not j.isFunc

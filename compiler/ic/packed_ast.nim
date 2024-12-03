@@ -16,7 +16,7 @@ import std/[hashes, tables, strtabs]
 import bitabs, rodfiles
 import ".." / [ast, options]
 
-import ".." / nir / nirlineinfos
+import iclineinfos
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
@@ -33,7 +33,7 @@ type
     item*: int32         # same as the in-memory representation
 
 const
-  nilItemId* = PackedItemId(module: LitId(0), item: -1.int32)
+  nilItemId* = PackedItemId(module: LitId(0), item: 0.int32)
 
 const
   emptyNodeId* = NodeId(-1)
@@ -47,6 +47,7 @@ type
     path*: NodeId
 
   PackedSym* = object
+    id*: int32
     kind*: TSymKind
     name*: LitId
     typ*: PackedItemId
@@ -71,6 +72,7 @@ type
     instantiatedFrom*: PackedItemId
 
   PackedType* = object
+    id*: int32
     kind*: TTypeKind
     callConv*: TCallingConvention
     #nodekind*: TNodeKind
@@ -87,24 +89,34 @@ type
     typeInst*: PackedItemId
     nonUniqueId*: int32
 
-  PackedNode* = object     # 28 bytes
-    kind*: TNodeKind
-    flags*: TNodeFlags
-    operand*: int32  # for kind in {nkSym, nkSymDef}: SymId
-                     # for kind in {nkStrLit, nkIdent, nkNumberLit}: LitId
-                     # for kind in nkNone: direct value
-                     # for non-atom kinds: the number of nodes (for easy skipping)
-    typeId*: PackedItemId
+  PackedNode* = object     # 8 bytes
+    x: uint32
     info*: PackedLineInfo
 
   PackedTree* = object ## usually represents a full Nim module
     nodes: seq[PackedNode]
-    #withFlags: seq[(int, TNodeFlags)]
-    #withTypes: seq[(int, PackedItemId)]
+    withFlags: seq[(int32, TNodeFlags)]
+    withTypes: seq[(int32, PackedItemId)]
 
   PackedInstantiation* = object
     key*, sym*: PackedItemId
     concreteTypes*: seq[PackedItemId]
+
+const
+  NodeKindBits = 8'u32
+  NodeKindMask = (1'u32 shl NodeKindBits) - 1'u32
+
+template kind*(n: PackedNode): TNodeKind = TNodeKind(n.x and NodeKindMask)
+template uoperand*(n: PackedNode): uint32 = (n.x shr NodeKindBits)
+template soperand*(n: PackedNode): int32 = int32(uoperand(n))
+
+template toX(k: TNodeKind; operand: uint32): uint32 =
+  uint32(k) or (operand shl NodeKindBits)
+
+template toX(k: TNodeKind; operand: LitId): uint32 =
+  uint32(k) or (operand.uint32 shl NodeKindBits)
+
+template typeId*(n: PackedNode): PackedItemId = n.typ
 
 proc `==`*(a, b: SymId): bool {.borrow.}
 proc hash*(a: SymId): Hash {.borrow.}
@@ -114,20 +126,17 @@ proc `==`*(a, b: NodePos): bool {.borrow.}
 proc `==`*(a, b: NodeId): bool {.borrow.}
 
 proc newTreeFrom*(old: PackedTree): PackedTree =
-  result.nodes = @[]
+  result = PackedTree(nodes: @[])
   when false: result.sh = old.sh
 
 proc addIdent*(tree: var PackedTree; s: LitId; info: PackedLineInfo) =
-  tree.nodes.add PackedNode(kind: nkIdent, operand: int32(s), info: info)
+  tree.nodes.add PackedNode(x: toX(nkIdent, uint32(s)), info: info)
 
 proc addSym*(tree: var PackedTree; s: int32; info: PackedLineInfo) =
-  tree.nodes.add PackedNode(kind: nkSym, operand: s, info: info)
-
-proc addModuleId*(tree: var PackedTree; s: ModuleId; info: PackedLineInfo) =
-  tree.nodes.add PackedNode(kind: nkNone, operand: int32(s), info: info)
+  tree.nodes.add PackedNode(x: toX(nkSym, cast[uint32](s)), info: info)
 
 proc addSymDef*(tree: var PackedTree; s: SymId; info: PackedLineInfo) =
-  tree.nodes.add PackedNode(kind: nkSym, operand: int32(s), info: info)
+  tree.nodes.add PackedNode(x: toX(nkSym, cast[uint32](s)), info: info)
 
 proc isAtom*(tree: PackedTree; pos: int): bool {.inline.} = tree.nodes[pos].kind <= nkNilLit
 
@@ -137,8 +146,11 @@ type
 proc addNode*(t: var PackedTree; kind: TNodeKind; operand: int32;
               typeId: PackedItemId = nilItemId; info: PackedLineInfo;
               flags: TNodeFlags = {}) =
-  t.nodes.add PackedNode(kind: kind, flags: flags, operand: operand,
-                         typeId: typeId, info: info)
+  t.nodes.add PackedNode(x: toX(kind, cast[uint32](operand)), info: info)
+  if flags != {}:
+    t.withFlags.add (t.nodes.len.int32 - 1, flags)
+  if typeId != nilItemId:
+    t.withTypes.add (t.nodes.len.int32 - 1, typeId)
 
 proc prepare*(tree: var PackedTree; kind: TNodeKind; flags: TNodeFlags; typeId: PackedItemId; info: PackedLineInfo): PatchPos =
   result = PatchPos tree.nodes.len
@@ -150,26 +162,30 @@ proc prepare*(dest: var PackedTree; source: PackedTree; sourcePos: NodePos): Pat
 
 proc patch*(tree: var PackedTree; pos: PatchPos) =
   let pos = pos.int
-  assert tree.nodes[pos].kind > nkNilLit
+  let k = tree.nodes[pos].kind
+  assert k > nkNilLit
   let distance = int32(tree.nodes.len - pos)
-  tree.nodes[pos].operand = distance
+  assert distance > 0
+  tree.nodes[pos].x = toX(k, cast[uint32](distance))
 
 proc len*(tree: PackedTree): int {.inline.} = tree.nodes.len
 
 proc `[]`*(tree: PackedTree; i: NodePos): lent PackedNode {.inline.} =
   tree.nodes[i.int]
 
+template rawSpan(n: PackedNode): int = int(uoperand(n))
+
 proc nextChild(tree: PackedTree; pos: var int) {.inline.} =
   if tree.nodes[pos].kind > nkNilLit:
-    assert tree.nodes[pos].operand > 0
-    inc pos, tree.nodes[pos].operand
+    assert tree.nodes[pos].uoperand > 0
+    inc pos, tree.nodes[pos].rawSpan
   else:
     inc pos
 
 iterator sonsReadonly*(tree: PackedTree; n: NodePos): NodePos =
   var pos = n.int
   assert tree.nodes[pos].kind > nkNilLit
-  let last = pos + tree.nodes[pos].operand
+  let last = pos + tree.nodes[pos].rawSpan
   inc pos
   while pos < last:
     yield NodePos pos
@@ -190,7 +206,7 @@ iterator isons*(dest: var PackedTree; tree: PackedTree;
 iterator sonsFrom1*(tree: PackedTree; n: NodePos): NodePos =
   var pos = n.int
   assert tree.nodes[pos].kind > nkNilLit
-  let last = pos + tree.nodes[pos].operand
+  let last = pos + tree.nodes[pos].rawSpan
   inc pos
   if pos < last:
     nextChild tree, pos
@@ -204,7 +220,7 @@ iterator sonsWithoutLast2*(tree: PackedTree; n: NodePos): NodePos =
     inc count
   var pos = n.int
   assert tree.nodes[pos].kind > nkNilLit
-  let last = pos + tree.nodes[pos].operand
+  let last = pos + tree.nodes[pos].rawSpan
   inc pos
   while pos < last and count > 2:
     yield NodePos pos
@@ -214,7 +230,7 @@ iterator sonsWithoutLast2*(tree: PackedTree; n: NodePos): NodePos =
 proc parentImpl(tree: PackedTree; n: NodePos): NodePos =
   # finding the parent of a node is rather easy:
   var pos = n.int - 1
-  while pos >= 0 and (isAtom(tree, pos) or (pos + tree.nodes[pos].operand - 1 < n.int)):
+  while pos >= 0 and (isAtom(tree, pos) or (pos + tree.nodes[pos].rawSpan - 1 < n.int)):
     dec pos
   #assert pos >= 0, "node has no parent"
   result = NodePos(pos)
@@ -240,20 +256,32 @@ proc firstSon*(tree: PackedTree; n: NodePos): NodePos {.inline.} =
 proc kind*(tree: PackedTree; n: NodePos): TNodeKind {.inline.} =
   tree.nodes[n.int].kind
 proc litId*(tree: PackedTree; n: NodePos): LitId {.inline.} =
-  LitId tree.nodes[n.int].operand
+  LitId tree.nodes[n.int].uoperand
 proc info*(tree: PackedTree; n: NodePos): PackedLineInfo {.inline.} =
   tree.nodes[n.int].info
 
-template typ*(n: NodePos): PackedItemId =
-  tree.nodes[n.int].typeId
-template flags*(n: NodePos): TNodeFlags =
-  tree.nodes[n.int].flags
+proc findType*(tree: PackedTree; n: NodePos): PackedItemId =
+  for x in tree.withTypes:
+    if x[0] == int32(n): return x[1]
+    if x[0] > int32(n): return nilItemId
+  return nilItemId
 
-template operand*(n: NodePos): int32 =
-  tree.nodes[n.int].operand
+proc findFlags*(tree: PackedTree; n: NodePos): TNodeFlags =
+  for x in tree.withFlags:
+    if x[0] == int32(n): return x[1]
+    if x[0] > int32(n): return {}
+  return {}
+
+template typ*(n: NodePos): PackedItemId =
+  tree.findType(n)
+template flags*(n: NodePos): TNodeFlags =
+  tree.findFlags(n)
+
+template uoperand*(n: NodePos): uint32 =
+  tree.nodes[n.int].uoperand
 
 proc span*(tree: PackedTree; pos: int): int {.inline.} =
-  if isAtom(tree, pos): 1 else: tree.nodes[pos].operand
+  if isAtom(tree, pos): 1 else: tree.nodes[pos].rawSpan
 
 proc sons2*(tree: PackedTree; n: NodePos): (NodePos, NodePos) =
   assert(not isAtom(tree, n.int))
@@ -283,37 +311,11 @@ when false:
 
 template kind*(n: NodePos): TNodeKind = tree.nodes[n.int].kind
 template info*(n: NodePos): PackedLineInfo = tree.nodes[n.int].info
-template litId*(n: NodePos): LitId = LitId tree.nodes[n.int].operand
+template litId*(n: NodePos): LitId = LitId tree.nodes[n.int].uoperand
 
-template symId*(n: NodePos): SymId = SymId tree.nodes[n.int].operand
+template symId*(n: NodePos): SymId = SymId tree.nodes[n.int].soperand
 
 proc firstSon*(n: NodePos): NodePos {.inline.} = NodePos(n.int+1)
-
-when false:
-  # xxx `nkStrLit` or `nkStrLit..nkTripleStrLit:` below?
-  proc strLit*(tree: PackedTree; n: NodePos): lent string =
-    assert n.kind == nkStrLit
-    result = tree.sh.strings[LitId tree.nodes[n.int].operand]
-
-  proc strVal*(tree: PackedTree; n: NodePos): string =
-    assert n.kind == nkStrLit
-    result = tree.sh.strings[LitId tree.nodes[n.int].operand]
-    #result = cookedStrLit(raw)
-
-  proc filenameVal*(tree: PackedTree; n: NodePos): string =
-    case n.kind
-    of nkStrLit:
-      result = strVal(tree, n)
-    of nkIdent:
-      result = tree.sh.strings[n.litId]
-    of nkSym:
-      result = tree.sh.strings[tree.sh.syms[int n.symId].name]
-    else:
-      result = ""
-
-  proc identAsStr*(tree: PackedTree; n: NodePos): lent string =
-    assert n.kind == nkIdent
-    result = tree.sh.strings[LitId tree.nodes[n.int].operand]
 
 const
   externIntLit* = {nkCharLit,
@@ -332,17 +334,6 @@ const
   externUIntLit* = {nkUIntLit, nkUInt8Lit, nkUInt16Lit, nkUInt32Lit, nkUInt64Lit}
   directIntLit* = nkNone
 
-when false:
-  proc identIdImpl(tree: PackedTree; n: NodePos): LitId =
-    if n.kind == nkIdent:
-      result = n.litId
-    elif n.kind == nkSym:
-      result = tree.sh.syms[int n.symId].name
-    else:
-      result = LitId(0)
-
-  template identId*(n: NodePos): LitId = identIdImpl(tree, n)
-
 template copyInto*(dest, n, body) =
   let patchPos = prepare(dest, tree, n)
   body
@@ -353,27 +344,7 @@ template copyIntoKind*(dest, kind, info, body) =
   body
   patch dest, patchPos
 
-when false:
-  proc hasPragma*(tree: PackedTree; n: NodePos; pragma: string): bool =
-    let litId = tree.sh.strings.getKeyId(pragma)
-    if litId == LitId(0):
-      return false
-    assert n.kind == nkPragma
-    for ch0 in sonsReadonly(tree, n):
-      if ch0.kind == nkExprColonExpr:
-        if ch0.firstSon.identId == litId:
-          return true
-      elif ch0.identId == litId:
-        return true
-
 proc getNodeId*(tree: PackedTree): NodeId {.inline.} = NodeId tree.nodes.len
-
-when false:
-  proc produceError*(dest: var PackedTree; tree: PackedTree; n: NodePos; msg: string) =
-    let patchPos = prepare(dest, nkError, n.info)
-    dest.add nkStrLit, msg, n.info
-    copyTree(dest, tree, n)
-    patch dest, patchPos
 
 iterator allNodes*(tree: PackedTree): NodePos =
   var p = 0
@@ -387,6 +358,10 @@ proc toPackedItemId*(item: int32): PackedItemId {.inline.} =
 
 proc load*(f: var RodFile; t: var PackedTree) =
   loadSeq f, t.nodes
+  loadSeq f, t.withFlags
+  loadSeq f, t.withTypes
 
 proc store*(f: var RodFile; t: PackedTree) =
   storeSeq f, t.nodes
+  storeSeq f, t.withFlags
+  storeSeq f, t.withTypes

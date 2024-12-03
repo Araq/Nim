@@ -1,4 +1,5 @@
 discard """
+  targets: "c js"
   output: "@[\"42\"]"
 """
 

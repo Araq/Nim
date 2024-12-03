@@ -24,7 +24,7 @@ on the different supported platforms. It is not a definition of the Nim
 programming language (which is covered in the [manual](manual.html)).
 
 Nim is free software; it is licensed under the
-[MIT License](http://www.opensource.org/licenses/mit-license.php).
+[MIT License](https://www.opensource.org/licenses/mit-license.php).
 
 
 Compiler Usage
@@ -481,6 +481,28 @@ They are:
 5. nl_types. No headers for this.
 6. As mmap is not supported, the nimAllocPagesViaMalloc option has to be used.
 
+GPU Compilation
+===============
+
+Compiling for GPU computation can be achieved with `--cc:nvcc` for CUDA with nvcc, or with `--cc:hipcc` for AMD GPUs with HIP. Both compilers require building for C++ with `nim cpp`.
+
+Here's a very simple CUDA kernel example using emit, which can be compiled with `nim cpp --cc:nvcc --define:"useMalloc" hello_kernel.nim` assuming you have the CUDA toolkit installed.
+
+```nim
+{.emit: """
+__global__ void add(int a, int b) {
+  int c;
+  c = a + b;
+}
+""".}
+
+proc main() =
+  {.emit: """
+  add<<<1,1>>>(2,7);
+  """.}
+
+main()
+```
 
 DLL generation
 ==============
@@ -502,9 +524,6 @@ To link against ``nimrtl.dll`` use the command:
   ```cmd
   nim c -d:useNimRtl myprog.nim
   ```
-
-**Note**: Currently the creation of ``nimrtl.dll`` with thread support has
-never been tested and is unlikely to work!
 
 
 Additional compilation switches
@@ -552,6 +571,13 @@ Define                   Effect
 `globalSymbols`          Load all `{.dynlib.}` libraries with the `RTLD_GLOBAL`:c:
                          flag on Posix systems to resolve symbols in subsequently
                          loaded libraries.
+`lto`                    Enable link-time optimization in the backend compiler and
+                         linker.
+`lto_incremental`        Enable link-time optimization and additionally enable
+                         incremental linking for compilers that support it.
+                         Currently only clang and vcc.
+`strip`                  Strip debug symbols added by the backend compiler from
+                         the executable.
 ======================   =========================================================
 
 
@@ -677,11 +703,11 @@ additional flags to both the Nim compiler and the C compiler and/or linker
 to optimize the build for size. For example, the following flags can be used
 when targeting a gcc compiler:
 
-`--opt:size --passC:-flto --passL:-flto`:option:
+`--opt:size -d:lto -d:strip`:option:
 
 The `--opt:size`:option: flag instructs Nim to optimize code generation for small
-size (with the help of the C compiler), the `-flto`:option: flags enable link-time
-optimization in the compiler and linker.
+size (with the help of the C compiler), the `-d:lto`:option: flags enable link-time
+optimization in the compiler and linker, the `-d:strip`:option: strips debug symbols.
 
 Check the [Cross-compilation] section for instructions on how to compile the
 program for your target.

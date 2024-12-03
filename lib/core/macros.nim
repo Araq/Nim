@@ -93,6 +93,8 @@ type
     nnkFuncDef,
     nnkTupleConstr,
     nnkError,  ## erroneous AST node
+    nnkModuleRef, nnkReplayAction, nnkNilRodNode ## internal IC nodes
+    nnkOpenSym
 
   NimNodeKinds* = set[NimNodeKind]
   NimTypeKind* = enum  # some types are no longer used, see ast.nim
@@ -277,7 +279,7 @@ when (NimMajor, NimMinor, NimPatch) >= (1, 3, 5) or defined(nimSymImplTransform)
     ## note that code transformations are implementation dependent and subject to change.
     ## See an example in `tests/macros/tmacros_various.nim`.
 
-proc owner*(sym: NimNode): NimNode {.magic: "SymOwner", noSideEffect.}
+proc owner*(sym: NimNode): NimNode {.magic: "SymOwner", noSideEffect, deprecated.}
   ## Accepts a node of kind `nnkSym` and returns its owner's symbol.
   ## The meaning of 'owner' depends on `sym`'s `NimSymKind` and declaration
   ## context. For top level declarations this is an `nskModule` symbol,
@@ -347,8 +349,7 @@ proc getTypeImpl*(n: NimNode): NimNode {.magic: "NGetType", noSideEffect.} =
       newLit(x.getTypeImpl.repr)
     let t = """
 object
-  arr: array[0 .. 3, float32]
-"""
+  arr: array[0 .. 3, float32]"""
     doAssert(dumpTypeImpl(a) == t)
     doAssert(dumpTypeImpl(b) == t)
     doAssert(dumpTypeImpl(c) == t)
@@ -427,7 +428,12 @@ proc copyNimTree*(n: NimNode): NimNode {.magic: "NCopyNimTree", noSideEffect.} =
       let x = 12
       echo x
 
-proc error*(msg: string, n: NimNode = nil) {.magic: "NError", benign.}
+when defined(nimHasNoReturnError):
+  {.pragma: errorNoReturn, noreturn.}
+else:
+  {.pragma: errorNoReturn.}
+
+proc error*(msg: string, n: NimNode = nil) {.magic: "NError", benign, errorNoReturn.}
   ## Writes an error message at compile time. The optional `n: NimNode`
   ## parameter is used as the source for file and line number information in
   ## the compilation error message.
@@ -1403,7 +1409,7 @@ proc `$`*(node: NimNode): string =
     result = node.basename.strVal & "*"
   of nnkStrLit..nnkTripleStrLit, nnkCommentStmt, nnkSym, nnkIdent:
     result = node.strVal
-  of nnkOpenSymChoice, nnkClosedSymChoice:
+  of nnkOpenSymChoice, nnkClosedSymChoice, nnkOpenSym:
     result = $node[0]
   of nnkAccQuoted:
     result = ""

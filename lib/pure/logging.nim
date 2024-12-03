@@ -839,12 +839,23 @@ proc addHandler*(handler: Logger) =
   ##   each of those threads.
   ##
   ## See also:
+  ## * `removeHandler proc`_
   ## * `getHandlers proc<#getHandlers>`_
   runnableExamples:
     var logger = newConsoleLogger()
     addHandler(logger)
     doAssert logger in getHandlers()
   handlers.add(handler)
+
+proc removeHandler*(handler: Logger) =
+  ## Removes a logger from the list of registered handlers.
+  ##
+  ## Note that for n times a logger is registered, n calls to this proc
+  ## are required to remove that logger.
+  for i, hnd in handlers:
+    if hnd == handler:
+      handlers.delete(i)
+      return
 
 proc getHandlers*(): seq[Logger] =
   ## Returns a list of all the registered handlers.

@@ -1,5 +1,5 @@
 discard """
-  matrix: "--mm:refc; --mm:orc; --backend:js --jsbigint64:on; --backend:js --jsbigint64:off"
+  matrix: "--mm:refc; --mm:orc; --backend:js --jsbigint64:on; --backend:js --jsbigint64:off -d:nimStringHash2"
 """
 
 import times, strutils, unittest
@@ -12,11 +12,13 @@ proc staticTz(hours, minutes, seconds: int = 0): Timezone {.noSideEffect.} =
   let offset = hours * 3600 + minutes * 60 + seconds
 
   proc zonedTimeFromAdjTime(adjTime: Time): ZonedTime =
+    result = default(ZonedTime)
     result.isDst = false
     result.utcOffset = offset
     result.time = adjTime + initDuration(seconds = offset)
 
   proc zonedTimeFromTime(time: Time): ZonedTime =
+    result = default(ZonedTime)
     result.isDst = false
     result.utcOffset = offset
     result.time = time
@@ -71,7 +73,7 @@ template runTimezoneTests() =
       "2006-01-12T22:04:05Z", 11)
   # RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
   parseTest("2006-01-12T15:04:05.999999999Z-07:00",
-      "yyyy-MM-dd'T'HH:mm:ss'.999999999Z'zzz", "2006-01-12T22:04:05Z", 11)
+      "yyyy-MM-dd'T'HH:mm:ss.'999999999Z'zzz", "2006-01-12T22:04:05Z", 11)
   for tzFormat in ["z", "zz", "zzz"]:
     # formatting timezone as 'Z' for UTC
     parseTest("2001-01-12T22:04:05Z", "yyyy-MM-dd'T'HH:mm:ss" & tzFormat,
@@ -770,3 +772,15 @@ block: # ttimes
     proc test(): DateTime {.gcsafe.} =
       result = "1970".parse("yyyy")
     doAssert test().year == 1970
+
+  block: # test FormatLiterals
+    # since #23861
+    block:
+      let dt = dateTime(2024, mJul, 21, 17, 01, 02, 123_321_123, utc())
+      check dt.format("ss.fff") == "02.123"
+      check dt.format("fff.ffffff") == "123.123321"
+    block:
+      let dt = parse("2024.07.21", "yyyy.MM.dd")
+      check dt.year == 2024
+      check dt.month == mJul
+      check dt.monthday == 21

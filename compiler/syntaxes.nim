@@ -60,7 +60,7 @@ proc parsePipe(filename: AbsoluteFile, inputStream: PLLStream; cache: IdentCache
       else:
         inc(i, 2)
         while i < line.len and line[i] in Whitespace: inc(i)
-        var p: Parser
+        var p: Parser = default(Parser)
         openParser(p, filename, llStreamOpen(substr(line, i)), cache, config)
         result = parseAll(p)
         closeParser(p)

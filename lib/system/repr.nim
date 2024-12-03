@@ -17,7 +17,7 @@ proc reprFloat(x: float): string {.compilerproc.} = return $x
 
 proc reprPointer(x: pointer): string {.compilerproc.} =
   result = newString(60)
-  let n = c_sprintf(cast[cstring](addr result[0]), "%p", x)
+  let n = c_snprintf(cast[cstring](addr result[0]), csize_t(60), "%p", x)
   setLen(result, n)
 
 proc reprStrAux(result: var string, s: cstring; len: int) =

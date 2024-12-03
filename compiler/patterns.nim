@@ -276,10 +276,7 @@ proc addToArgList(result, n: PNode) =
 
 proc applyRule*(c: PContext, s: PSym, n: PNode): PNode =
   ## returns a tree to semcheck if the rule triggered; nil otherwise
-  var ctx: TPatternContext
-  ctx.owner = s
-  ctx.c = c
-  ctx.formals = s.typ.len-1
+  var ctx = TPatternContext(owner: s, c: c, formals: s.typ.paramsLen)
   var m = matchStmtList(ctx, s.ast[patternPos], n)
   if isNil(m): return nil
   # each parameter should have been bound; we simply setup a call and

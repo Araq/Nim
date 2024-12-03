@@ -24,7 +24,7 @@ bootSwitch(usedMarkAndSweep, defined(gcmarkandsweep), "--gc:markAndSweep")
 bootSwitch(usedGoGC, defined(gogc), "--gc:go")
 bootSwitch(usedNoGC, defined(nogc), "--gc:none")
 
-import std/[setutils, os, strutils, parseutils, parseopt, sequtils, strtabs]
+import std/[setutils, os, strutils, parseutils, parseopt, sequtils, strtabs, enumutils]
 import
   msgs, options, nversion, condsyms, extccomp, platform,
   wordrecg, nimblecmd, lineinfos, pathutils
@@ -248,6 +248,7 @@ const
   errNoneSpeedOrSizeExpectedButXFound = "'none', 'speed' or 'size' expected, but '$1' found"
   errGuiConsoleOrLibExpectedButXFound = "'gui', 'console', 'lib' or 'staticlib' expected, but '$1' found"
   errInvalidExceptionSystem = "'goto', 'setjmp', 'cpp' or 'quirky' expected, but '$1' found"
+  errInvalidFeatureButXFound = Feature.toSeq.map(proc(val:Feature): string = "'$1'" % $val).join(", ") & " expected, but '$1' found"
 
 template warningOptionNoop(switch: string) =
   warningDeprecated(conf, info, "'$#' is deprecated, now a noop" % switch)
@@ -303,6 +304,12 @@ proc testCompileOptionArg*(conf: ConfigRef; switch, arg: string, info: TLineInfo
     else:
       result = false
       localError(conf, info, errInvalidExceptionSystem % arg)
+  of "experimental":
+    try:
+      result = conf.features.contains parseEnum[Feature](arg)
+    except ValueError:
+      result = false
+      localError(conf, info, errInvalidFeatureButXFound % arg)
   else:
     result = false
     invalidCmdLineOption(conf, passCmd1, switch, info)
@@ -462,11 +469,11 @@ proc handleCmdInput*(conf: ConfigRef) =
 proc parseCommand*(command: string): Command =
   case command.normalize
   of "c", "cc", "compile", "compiletoc": cmdCompileToC
-  of "nir": cmdCompileToNir
   of "cpp", "compiletocpp": cmdCompileToCpp
   of "objc", "compiletooc": cmdCompileToOC
   of "js", "compiletojs": cmdCompileToJS
   of "r": cmdCrun
+  of "m": cmdM
   of "run": cmdTcc
   of "check": cmdCheck
   of "e": cmdNimscript
@@ -499,7 +506,6 @@ proc setCmd*(conf: ConfigRef, cmd: Command) =
   of cmdCompileToCpp: conf.backend = backendCpp
   of cmdCompileToOC: conf.backend = backendObjc
   of cmdCompileToJS: conf.backend = backendJs
-  of cmdCompileToNir: conf.backend = backendNir
   else: discard
 
 proc setCommandEarly*(conf: ConfigRef, command: string) =

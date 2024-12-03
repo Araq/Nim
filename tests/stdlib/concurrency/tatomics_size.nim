@@ -1,5 +1,6 @@
 discard """
-  matrix: "--mm:refc; --mm:orc"
+  # test C with -d:nimUseCppAtomics as well to check nothing breaks
+  matrix: "--mm:refc; --mm:orc; --mm:refc -d:nimUseCppAtomics; --mm:orc -d:nimUseCppAtomics"
   targets: "c cpp"
 """
 import std/atomics

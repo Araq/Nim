@@ -124,7 +124,7 @@ static:
   let fn4s = "proc fn4(x: int): int =\n  if x mod 2 == 0:\n    return x + 2\n  else:\n    return 0\n"
   let fn5s = "proc fn5(a, b: float): float =\n  result = -a * a / (b * b)\n"
   let fn6s = "proc fn6() =\n  var a = @[1.0, 2.0]\n  let z = a{0, 1}\n  a{2} = 5.0\n"
-  let fnAddr = "proc fn_unsafeaddr(x: int): int =\n  result = cast[int](unsafeAddr(x))\n"
+  let fnAddr = "proc fn_unsafeaddr(x: int): int =\n  result = cast[int](addr(x))\n"
 
   doAssert fn1.repr_to_string == fn1s
   doAssert fn2.repr_to_string == fn2s

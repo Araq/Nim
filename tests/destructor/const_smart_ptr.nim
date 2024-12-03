@@ -2,13 +2,12 @@ type
   ConstPtr*[T] = object
     val: ptr T
 
-proc `=destroy`*[T](p: var ConstPtr[T]) =
+proc `=destroy`*[T](p: ConstPtr[T]) =
   if p.val != nil:
     `=destroy`(p.val[])
     dealloc(p.val)
-    p.val = nil
 
-proc `=`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.error.}
+proc `=copy`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.error.}
 
 proc `=sink`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.inline.} =
   if dest.val != nil and dest.val != src.val:
@@ -31,12 +30,11 @@ type
     len: int
     data: ptr UncheckedArray[float]
 
-proc `=destroy`*(m: var MySeqNonCopyable) {.inline.} =
+proc `=destroy`*(m: MySeqNonCopyable) {.inline.} =
   if m.data != nil:
     deallocShared(m.data)
-    m.data = nil
 
-proc `=`*(m: var MySeqNonCopyable, m2: MySeqNonCopyable) {.error.}
+proc `=copy`*(m: var MySeqNonCopyable, m2: MySeqNonCopyable) {.error.}
 
 proc `=sink`*(m: var MySeqNonCopyable, m2: MySeqNonCopyable) {.inline.} =
   if m.data != m2.data:

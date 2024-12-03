@@ -1,4 +1,5 @@
-import ast, idents, lineinfos, astalgo
+import ast except elementType
+import idents, lineinfos, astalgo
 import vmdef
 import std/times
 

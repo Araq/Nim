@@ -116,7 +116,7 @@ proc isDeepConstExpr*(n: PNode; preventInheritance = false): bool =
       let t = n.typ.skipTypes({tyGenericInst, tyDistinct, tyAlias, tySink, tyOwned})
       if t.kind in {tyRef, tyPtr} or tfUnion in t.flags: return false
       if t.kind == tyObject:
-        if preventInheritance and t[0] != nil:
+        if preventInheritance and t.baseClass != nil:
           result = false
         elif isCaseObj(t.n):
           result = false
@@ -147,6 +147,13 @@ proc whichPragma*(n: PNode): TSpecialWord =
   of nkCast: return wCast
   of nkClosedSymChoice, nkOpenSymChoice:
     return whichPragma(key[0])
+  of nkBracketExpr:
+    if n.kind notin nkPragmaCallKinds: return wInvalid
+    result = whichPragma(key[0])
+    if result notin {wHint, wHintAsError, wWarning, wWarningAsError}:
+      # note bracket pragmas, see processNote
+      result = wInvalid
+    return
   else: return wInvalid
   if result in nonPragmaWordsLow..nonPragmaWordsHigh:
     result = wInvalid
@@ -226,8 +233,7 @@ proc stupidStmtListExpr*(n: PNode): bool =
 proc dontInlineConstant*(orig, cnst: PNode): bool {.inline.} =
   # symbols that expand to a complex constant (array, etc.) should not be
   # inlined, unless it's the empty array:
-  result = orig.kind != cnst.kind and
-           cnst.kind in {nkCurly, nkPar, nkTupleConstr, nkBracket, nkObjConstr} and
+  result = cnst.kind in {nkCurly, nkPar, nkTupleConstr, nkBracket, nkObjConstr} and
            cnst.len > ord(cnst.kind == nkObjConstr)
 
 proc isRunnableExamples*(n: PNode): bool =

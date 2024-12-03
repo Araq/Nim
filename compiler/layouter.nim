@@ -9,7 +9,7 @@
 
 ## Layouter for nimpretty.
 
-import idents, lexer, lineinfos, llstream, options, msgs, strutils, pathutils
+import idents, lexer, ast, lineinfos, llstream, options, msgs, strutils, pathutils
 
 const
   MinLineLen = 15
@@ -243,23 +243,28 @@ proc renderTokens*(em: var Emitter): string =
 
   return content
 
-proc writeOut*(em: Emitter, content: string)  =
+type
+  FinalCheck = proc (content: string; origAst: PNode): bool {.nimcall.}
+
+proc writeOut*(em: Emitter; content: string; origAst: PNode; check: FinalCheck) =
   ## Write to disk
   let outFile = em.config.absOutFile
   if fileExists(outFile) and readFile(outFile.string) == content:
     discard "do nothing, see #9499"
     return
-  var f = llStreamOpen(outFile, fmWrite)
-  if f == nil:
-    rawMessage(em.config, errGenerated, "cannot open file: " & outFile.string)
-    return
-  f.llStreamWrite content
-  llStreamClose(f)
 
-proc closeEmitter*(em: var Emitter) =
+  if check(content, origAst):
+    var f = llStreamOpen(outFile, fmWrite)
+    if f == nil:
+      rawMessage(em.config, errGenerated, "cannot open file: " & outFile.string)
+      return
+    f.llStreamWrite content
+    llStreamClose(f)
+
+proc closeEmitter*(em: var Emitter; origAst: PNode; check: FinalCheck) =
   ## Renders emitter tokens and write to a file
   let content = renderTokens(em)
-  em.writeOut(content)
+  em.writeOut(content, origAst, check)
 
 proc wr(em: var Emitter; x: string; lt: LayoutToken) =
   em.tokens.add x

@@ -174,6 +174,9 @@ template symbolRank*[T: enum](a: T): int =
   when T is Ordinal: ord(a) - T.low.ord.static
   else: symbolRankImpl(a)
 
+proc rangeBase(T: typedesc): typedesc {.magic: "TypeTrait".}
+  # skip one level of range; return the base type of a range type
+
 func symbolName*[T: enum](a: T): string =
   ## Returns the symbol name of an enum.
   ##
@@ -192,5 +195,8 @@ func symbolName*[T: enum](a: T): string =
       c1 = 4
       c2 = 20
     assert c1.symbolName == "c1"
-  const names = enumNames(T)
+  when T is range:
+    const names = enumNames(rangeBase T)
+  else:
+    const names = enumNames(T)
   names[a.symbolRank]

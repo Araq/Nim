@@ -103,6 +103,17 @@ proc replayBackendProcs*(g: ModuleGraph; module: int) =
     let symId = FullId(module: tmp.module, packed: it[1])
     g.enumToStringProcs[key] = LazySym(id: symId, sym: nil)
 
+  for it in mitems(g.packed[module].fromDisk.methodsPerType):
+    let key = translateId(it[0], g.packed, module, g.config)
+    let tmp = translateId(it[1], g.packed, module, g.config)
+    let symId = FullId(module: tmp.module, packed: it[1])
+    g.methodsPerType.mgetOrPut(key, @[]).add LazySym(id: symId, sym: nil)
+
+  for it in mitems(g.packed[module].fromDisk.dispatchers):
+    let tmp = translateId(it, g.packed, module, g.config)
+    let symId = FullId(module: tmp.module, packed: it)
+    g.dispatchers.add LazySym(id: symId, sym: nil)
+
 proc replayGenericCacheInformation*(g: ModuleGraph; module: int) =
   ## We remember the generic instantiations a module performed
   ## in order to to avoid the code bloat that generic code tends
@@ -127,12 +138,12 @@ proc replayGenericCacheInformation*(g: ModuleGraph; module: int) =
       module: module, sym: FullId(module: sym.module, packed: it.sym),
       concreteTypes: concreteTypes, inst: nil)
 
-  for it in mitems(g.packed[module].fromDisk.methodsPerType):
+  for it in mitems(g.packed[module].fromDisk.methodsPerGenericType):
     let key = translateId(it[0], g.packed, module, g.config)
     let col = it[1]
     let tmp = translateId(it[2], g.packed, module, g.config)
     let symId = FullId(module: tmp.module, packed: it[2])
-    g.methodsPerType.mgetOrPut(key, @[]).add (col, LazySym(id: symId, sym: nil))
+    g.methodsPerGenericType.mgetOrPut(key, @[]).add (col, LazySym(id: symId, sym: nil))
 
   replayBackendProcs(g, module)
 

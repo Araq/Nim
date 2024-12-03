@@ -18,6 +18,8 @@ template main() =
   doAssert encode("") == ""
   doAssert decode("") == ""
 
+  doAssert decode(" ") == ""
+
   const testInputExpandsTo76 = "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
   const testInputExpands = "++++++++++++++++++++++++++++++"
   const longText = """Man is distinguished, not only by his reason, but by this
@@ -53,5 +55,9 @@ template main() =
     doAssert encode("", safe = true) == ""
     doAssert encode("the quick brown dog jumps over the lazy fox", safe = true) == "dGhlIHF1aWNrIGJyb3duIGRvZyBqdW1wcyBvdmVyIHRoZSBsYXp5IGZveA=="
 
+func mainNoSideEffects() = main()
+
 static: main()
 main()
+static: mainNoSideEffects()
+mainNoSideEffects()

@@ -248,7 +248,7 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
       typ.size = conf.target.ptrSize
     typ.align = int16(conf.target.ptrSize)
   of tyCstring, tySequence, tyPtr, tyRef, tyVar, tyLent:
-    let base = typ.lastSon
+    let base = typ.last
     if base == typ:
       # this is not the correct location to detect ``type A = ptr A``
       typ.size = szIllegalRecursion
@@ -262,9 +262,9 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
       typ.size = conf.target.ptrSize
 
   of tyArray:
-    computeSizeAlign(conf, typ[1])
-    let elemSize = typ[1].size
-    let len = lengthOrd(conf, typ[0])
+    computeSizeAlign(conf, typ.elementType)
+    let elemSize = typ.elementType.size
+    let len = lengthOrd(conf, typ.indexType)
     if elemSize < 0:
       typ.size = elemSize
       typ.align = int16(elemSize)
@@ -273,10 +273,10 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
       typ.align = szUnknownSize
     else:
       typ.size = toInt64Checked(len * int32(elemSize), szTooBigSize)
-      typ.align = typ[1].align
+      typ.align = typ.elementType.align
 
   of tyUncheckedArray:
-    let base = typ.lastSon
+    let base = typ.last
     computeSizeAlign(conf, base)
     typ.size = 0
     typ.align = base.align
@@ -300,11 +300,11 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
         typ.size = 8
         typ.align = int16(conf.floatInt64Align)
   of tySet:
-    if typ[0].kind == tyGenericParam:
+    if typ.elementType.kind == tyGenericParam:
       typ.size = szUncomputedSize
       typ.align = szUncomputedSize
     else:
-      let length = toInt64(lengthOrd(conf, typ[0]))
+      let length = toInt64(lengthOrd(conf, typ.elementType))
       if length <= 8:
         typ.size = 1
         typ.align = 1
@@ -324,16 +324,15 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
         typ.size = align(length, 8) div 8 + 1
         typ.align = 1
   of tyRange:
-    computeSizeAlign(conf, typ[0])
-    typ.size = typ[0].size
-    typ.align = typ[0].align
-    typ.paddingAtEnd = typ[0].paddingAtEnd
+    computeSizeAlign(conf, typ.elementType)
+    typ.size = typ.elementType.size
+    typ.align = typ.elementType.align
+    typ.paddingAtEnd = typ.elementType.paddingAtEnd
 
   of tyTuple:
     try:
       var accum = OffsetAccum(maxAlign: 1)
-      for i in 0..<typ.len:
-        let child = typ[i]
+      for i, child in typ.ikids:
         computeSizeAlign(conf, child)
         accum.align(child.align)
         if typ.n != nil: # is named tuple (has field symbols)?
@@ -351,11 +350,11 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
   of tyObject:
     try:
       var accum =
-        if typ[0] != nil:
+        if typ.baseClass != nil:
           # compute header size
-          var st = typ[0]
+          var st = typ.baseClass
           while st.kind in skipPtrs:
-            st = st[^1]
+            st = st.skipModifier
           computeSizeAlign(conf, st)
           if conf.backend == backendCpp:
             OffsetAccum(
@@ -386,6 +385,13 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
         accum.maxAlign = 1
         computeObjectOffsetsFoldFunction(conf, typ.n, true, accum)
       else:
+        if typ.baseClass == nil and lacksMTypeField(typ) and typ.n.len == 1 and
+            typ.n[0].kind == nkSym and
+            typ.n[0].sym.typ.skipTypes(abstractInst).kind == tyUncheckedArray:
+          # a dummy field is generated for an object with a single field
+          # with an UncheckedArray type
+          assert accum.offset == 0
+          accum.offset = 1
         computeObjectOffsetsFoldFunction(conf, typ.n, false, accum)
       let paddingAtEnd = int16(accum.finish())
       if typ.sym != nil and
@@ -403,24 +409,24 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
       typ.align = szIllegalRecursion
       typ.paddingAtEnd = szIllegalRecursion
   of tyInferred:
-    if typ.len > 1:
-      computeSizeAlign(conf, typ.lastSon)
-      typ.size = typ.lastSon.size
-      typ.align = typ.lastSon.align
-      typ.paddingAtEnd = typ.lastSon.paddingAtEnd
+    if typ.hasElementType:
+      computeSizeAlign(conf, typ.last)
+      typ.size = typ.last.size
+      typ.align = typ.last.align
+      typ.paddingAtEnd = typ.last.paddingAtEnd
 
   of tyGenericInst, tyDistinct, tyGenericBody, tyAlias, tySink, tyOwned:
-    computeSizeAlign(conf, typ.lastSon)
-    typ.size = typ.lastSon.size
-    typ.align = typ.lastSon.align
-    typ.paddingAtEnd = typ.lastSon.paddingAtEnd
+    computeSizeAlign(conf, typ.skipModifier)
+    typ.size = typ.skipModifier.size
+    typ.align = typ.skipModifier.align
+    typ.paddingAtEnd = typ.last.paddingAtEnd
 
   of tyTypeClasses:
     if typ.isResolvedUserTypeClass:
-      computeSizeAlign(conf, typ.lastSon)
-      typ.size = typ.lastSon.size
-      typ.align = typ.lastSon.align
-      typ.paddingAtEnd = typ.lastSon.paddingAtEnd
+      computeSizeAlign(conf, typ.last)
+      typ.size = typ.last.size
+      typ.align = typ.last.align
+      typ.paddingAtEnd = typ.last.paddingAtEnd
     else:
       typ.size = szUnknownSize
       typ.align = szUnknownSize
@@ -439,10 +445,10 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
 
   of tyStatic:
     if typ.n != nil:
-      computeSizeAlign(conf, typ.lastSon)
-      typ.size = typ.lastSon.size
-      typ.align = typ.lastSon.align
-      typ.paddingAtEnd = typ.lastSon.paddingAtEnd
+      computeSizeAlign(conf, typ.last)
+      typ.size = typ.last.size
+      typ.align = typ.last.align
+      typ.paddingAtEnd = typ.last.paddingAtEnd
     else:
       typ.size = szUnknownSize
       typ.align = szUnknownSize
@@ -471,7 +477,7 @@ template foldSizeOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if size >= 0:
     let res = newIntNode(nkIntLit, size)
     res.info = node.info
-    res.typ = node.typ
+    res.typ() = node.typ
     res
   else:
     fallback
@@ -485,7 +491,7 @@ template foldAlignOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if align >= 0:
     let res = newIntNode(nkIntLit, align)
     res.info = node.info
-    res.typ = node.typ
+    res.typ() = node.typ
     res
   else:
     fallback
@@ -513,7 +519,7 @@ template foldOffsetOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if offset >= 0:
     let tmp = newIntNode(nkIntLit, offset)
     tmp.info = node.info
-    tmp.typ = node.typ
+    tmp.typ() = node.typ
     tmp
   else:
     fallback

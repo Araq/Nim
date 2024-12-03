@@ -1,19 +1,20 @@
 #
 #
 #         Maintenance program for Nim
-#        (c) Copyright 2017 Andreas Rumpf
+#        (c) Copyright 2024 Andreas Rumpf
 #
 #    See the file "copying.txt", included in this
 #    distribution, for details about the copyright.
 #
-#    See doc/koch.txt for documentation.
+#    See doc/koch.md for documentation.
 #
 
 const
   # examples of possible values for repos: Head, ea82b54
-  NimbleStableCommit = "603e329442059947d63e4c1b2ef5294f1f544485" # master
-  AtlasStableCommit = "7b780811a168f3f32bff4822369dda46a7f87f9a"
-  ChecksumsStableCommit = "025bcca3915a1b9f19878cea12ad68f9884648fc"
+  NimbleStableCommit = "46e2ae13eeb95619a371a74d16efc5aff30ea371" # 0.16.2
+  AtlasStableCommit = "5faec3e9a33afe99a7d22377dd1b45a5391f5504"
+  ChecksumsStableCommit = "bd9bf4eaea124bf8d01e08f92ac1b14c6879d8d3"
+  SatStableCommit = "faf1617f44d7632ee9601ebc13887644925dcc01"
 
   # examples of possible values for fusion: #head, #ea82b54, 1.2.3
   FusionStableHash = "#372ee4313827ef9f2ea388840f7d6b46c2b1b014"
@@ -51,7 +52,7 @@ const
 +-----------------------------------------------------------------+
 |         Maintenance program for Nim                             |
 |             Version $1|
-|             (c) 2017 Andreas Rumpf                              |
+|             (c) 2024 Andreas Rumpf                              |
 +-----------------------------------------------------------------+
 Build time: $2, $3
 
@@ -76,6 +77,7 @@ Possible Commands:
                            doesn't require network connectivity
   nimble                   builds the Nimble tool
   atlas                    builds the Atlas tool
+  checksums                installs the checksums dependency
   fusion                   installs fusion via Nimble
 
 Boot options:
@@ -159,17 +161,21 @@ proc bundleNimbleExe(latest: bool, args: string) =
                   commit = commit, allowBundled = true)
   cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/checksums.git",
                 commit = ChecksumsStableCommit, allowBundled = true) # or copy it from dist?
+  cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/sat.git",
+                commit = SatStableCommit, allowBundled = true)
   # installer.ini expects it under $nim/bin
   nimCompile("dist/nimble/src/nimble.nim",
-             options = "-d:release --mm:refc --noNimblePath " & args)
+             options = "-d:release -d:nimNimbleBootstrap --noNimblePath " & args)
 
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/atlas.git",
                   commit = commit, allowBundled = true)
+  cloneDependency(distDir / "atlas" / distDir, "https://github.com/nim-lang/sat.git",
+                commit = SatStableCommit, allowBundled = true)
   # installer.ini expects it under $nim/bin
   nimCompile("dist/atlas/src/atlas.nim",
-             options = "-d:release --noNimblePath " & args)
+             options = "-d:release --noNimblePath -d:nimAtlasBootstrap " & args)
 
 proc bundleNimsuggest(args: string) =
   nimCompileFold("Compile nimsuggest", "nimsuggest/nimsuggest.nim",
@@ -339,8 +345,7 @@ proc boot(args: string, skipIntegrityCheck: bool) =
   let smartNimcache = (if "release" in args or "danger" in args: "nimcache/r_" else: "nimcache/d_") &
                       hostOS & "_" & hostCPU
 
-  if not dirExists("dist/checksums"):
-    bundleChecksums(false)
+  bundleChecksums(false)
 
   let usingLibFFI = "nimHasLibFFI" in args
   if usingLibFFI and not dirExists("dist/libffi"):
@@ -503,8 +508,7 @@ proc temp(args: string) =
       result[1].add " " & quoteShell(args[i])
       inc i
 
-  if not dirExists("dist/checksums"):
-    bundleChecksums(false)
+  bundleChecksums(false)
 
   let d = getAppDir()
   let output = d / "compiler" / "nim".exe

@@ -73,26 +73,45 @@ type
 
 when NimStackTraceMsgs:
   var frameMsgBuf* {.threadvar.}: string
-var
-  framePtr {.threadvar.}: PFrame
-  excHandler {.threadvar.}: PSafePoint
-    # list of exception handlers
-    # a global variable for the root of all try blocks
-  currException {.threadvar.}: ref Exception
-  gcFramePtr {.threadvar.}: GcFrame
 
-type
-  FrameState = tuple[gcFramePtr: GcFrame, framePtr: PFrame,
-                     excHandler: PSafePoint, currException: ref Exception]
+when not defined(nimV2):
+  var
+    framePtr {.threadvar.}: PFrame
+
+var
+  currException {.threadvar.}: ref Exception
+
+when not gotoBasedExceptions:
+  var
+    excHandler {.threadvar.}: PSafePoint
+      # list of exception handlers
+      # a global variable for the root of all try blocks
+    gcFramePtr {.threadvar.}: GcFrame
+
+when gotoBasedExceptions:
+  type
+    FrameState = tuple[framePtr: PFrame,
+                      currException: ref Exception]
+else:
+  type
+    FrameState = tuple[gcFramePtr: GcFrame, framePtr: PFrame,
+                      excHandler: PSafePoint, currException: ref Exception]
 
 proc getFrameState*(): FrameState {.compilerRtl, inl.} =
-  return (gcFramePtr, framePtr, excHandler, currException)
+  when gotoBasedExceptions:
+    return (framePtr, currException)
+  else:
+    return (gcFramePtr, framePtr, excHandler, currException)
 
 proc setFrameState*(state: FrameState) {.compilerRtl, inl.} =
-  gcFramePtr = state.gcFramePtr
-  framePtr = state.framePtr
-  excHandler = state.excHandler
-  currException = state.currException
+  when gotoBasedExceptions:
+    framePtr = state.framePtr
+    currException = state.currException
+  else:
+    gcFramePtr = state.gcFramePtr
+    framePtr = state.framePtr
+    excHandler = state.excHandler
+    currException = state.currException
 
 proc getFrame*(): PFrame {.compilerRtl, inl.} = framePtr
 
@@ -114,20 +133,21 @@ when false:
 proc setFrame*(s: PFrame) {.compilerRtl, inl.} =
   framePtr = s
 
-proc getGcFrame*(): GcFrame {.compilerRtl, inl.} = gcFramePtr
-proc popGcFrame*() {.compilerRtl, inl.} = gcFramePtr = gcFramePtr.prev
-proc setGcFrame*(s: GcFrame) {.compilerRtl, inl.} = gcFramePtr = s
-proc pushGcFrame*(s: GcFrame) {.compilerRtl, inl.} =
-  s.prev = gcFramePtr
-  zeroMem(cast[pointer](cast[int](s)+%sizeof(GcFrameHeader)), s.len*sizeof(pointer))
-  gcFramePtr = s
+when not gotoBasedExceptions:
+  proc getGcFrame*(): GcFrame {.compilerRtl, inl.} = gcFramePtr
+  proc popGcFrame*() {.compilerRtl, inl.} = gcFramePtr = gcFramePtr.prev
+  proc setGcFrame*(s: GcFrame) {.compilerRtl, inl.} = gcFramePtr = s
+  proc pushGcFrame*(s: GcFrame) {.compilerRtl, inl.} =
+    s.prev = gcFramePtr
+    zeroMem(cast[pointer](cast[int](s)+%sizeof(GcFrameHeader)), s.len*sizeof(pointer))
+    gcFramePtr = s
 
-proc pushSafePoint(s: PSafePoint) {.compilerRtl, inl.} =
-  s.prev = excHandler
-  excHandler = s
+  proc pushSafePoint(s: PSafePoint) {.compilerRtl, inl.} =
+    s.prev = excHandler
+    excHandler = s
 
-proc popSafePoint {.compilerRtl, inl.} =
-  excHandler = excHandler.prev
+  proc popSafePoint {.compilerRtl, inl.} =
+    excHandler = excHandler.prev
 
 proc pushCurrentException(e: sink(ref Exception)) {.compilerRtl, inl.} =
   e.up = currException
@@ -407,15 +427,16 @@ proc reportUnhandledError(e: ref Exception) {.nodestroy, gcsafe.} =
   when hostOS != "any":
     reportUnhandledErrorAux(e)
 
-proc nimLeaveFinally() {.compilerRtl.} =
-  when defined(cpp) and not defined(noCppExceptions) and not gotoBasedExceptions:
-    {.emit: "throw;".}
-  else:
-    if excHandler != nil:
-      c_longjmp(excHandler.context, 1)
+when not gotoBasedExceptions:
+  proc nimLeaveFinally() {.compilerRtl.} =
+    when defined(cpp) and not defined(noCppExceptions) and not gotoBasedExceptions:
+      {.emit: "throw;".}
     else:
-      reportUnhandledError(currException)
-      rawQuit(1)
+      if excHandler != nil:
+        c_longjmp(excHandler.context, 1)
+      else:
+        reportUnhandledError(currException)
+        rawQuit(1)
 
 when gotoBasedExceptions:
   var nimInErrorMode {.threadvar.}: bool

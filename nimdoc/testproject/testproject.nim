@@ -1,3 +1,15 @@
+## Basic usage
+## ===========
+##
+## Encoding data
+## -------------
+##
+## Apart from strings you can also encode lists of integers or characters:
+
+## Decoding data
+## -------------
+##
+
 
 import subdir / subdir_b / utils
 

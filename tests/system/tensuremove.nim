@@ -1,5 +1,5 @@
 discard """
-  target: "c js"
+  targets: "c js"
   matrix: "--cursorinference:on; --cursorinference:off"
 """
 

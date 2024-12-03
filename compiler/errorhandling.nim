@@ -41,7 +41,8 @@ proc newError*(wrongNode: PNode; k: ErrorKind; args: varargs[PNode]): PNode =
   let innerError = errorSubNode(wrongNode)
   if innerError != nil:
     return innerError
-  result = newNodeIT(nkError, wrongNode.info, newType(tyError, ItemId(module: -1, item: -1), nil))
+  var idgen = idGeneratorForPackage(-1'i32)
+  result = newNodeIT(nkError, wrongNode.info, newType(tyError, idgen, nil))
   result.add wrongNode
   result.add newIntNode(nkIntLit, ord(k))
   for a in args: result.add a
@@ -51,7 +52,8 @@ proc newError*(wrongNode: PNode; msg: string): PNode =
   let innerError = errorSubNode(wrongNode)
   if innerError != nil:
     return innerError
-  result = newNodeIT(nkError, wrongNode.info, newType(tyError, ItemId(module: -1, item: -1), nil))
+  var idgen = idGeneratorForPackage(-1'i32)
+  result = newNodeIT(nkError, wrongNode.info, newType(tyError, idgen, nil))
   result.add wrongNode
   result.add newIntNode(nkIntLit, ord(CustomError))
   result.add newStrNode(msg, wrongNode.info)

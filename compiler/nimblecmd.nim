@@ -79,6 +79,8 @@ proc getPathVersionChecksum*(p: string): tuple[name, version, checksum: string] 
   ## ``/home/user/.nimble/pkgs/package-0.1-febadeaea2345e777f0f6f8433f7f0a52edd5d1b`` into
   ## ``("/home/user/.nimble/pkgs/package", "0.1", "febadeaea2345e777f0f6f8433f7f0a52edd5d1b")``
 
+  result = ("", "", "")
+
   const checksumSeparator = '-'
   const versionSeparator = '-'
   const specialVersionSepartator = "-#"

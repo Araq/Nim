@@ -12,7 +12,7 @@
 ## The types, vars and procs are bindings for the C standard library
 ## [<fenv.h>](https://en.cppreference.com/w/c/numeric/fenv) header.
 
-when defined(posix) and not defined(genode):
+when defined(posix) and not defined(genode) and not defined(macosx):
   {.passl: "-lm".}
 
 var

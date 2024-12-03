@@ -61,14 +61,12 @@ proc makeCString*(s: string): Rope =
   result.add('\"')
 
 proc newFileInfo(fullPath: AbsoluteFile, projPath: RelativeFile): TFileInfo =
-  result.fullPath = fullPath
-  #shallow(result.fullPath)
-  result.projPath = projPath
-  #shallow(result.projPath)
-  result.shortName = fullPath.extractFilename
+  result = TFileInfo(fullPath: fullPath, projPath: projPath,
+                    shortName: fullPath.extractFilename,
+                    quotedFullName: fullPath.string.makeCString,
+                    lines: @[]
+  )
   result.quotedName = result.shortName.makeCString
-  result.quotedFullName = fullPath.string.makeCString
-  result.lines = @[]
   when defined(nimpretty):
     if not result.fullPath.isEmpty:
       try:
@@ -125,18 +123,18 @@ proc fileInfoIdx*(conf: ConfigRef; filename: AbsoluteFile; isKnownFile: var bool
     conf.m.filenameToIndexTbl[canon2] = result
 
 proc fileInfoIdx*(conf: ConfigRef; filename: AbsoluteFile): FileIndex =
-  var dummy: bool
+  var dummy: bool = false
   result = fileInfoIdx(conf, filename, dummy)
 
 proc fileInfoIdx*(conf: ConfigRef; filename: RelativeFile; isKnownFile: var bool): FileIndex =
   fileInfoIdx(conf, AbsoluteFile expandFilename(filename.string), isKnownFile)
 
 proc fileInfoIdx*(conf: ConfigRef; filename: RelativeFile): FileIndex =
-  var dummy: bool
+  var dummy: bool = false
   fileInfoIdx(conf, AbsoluteFile expandFilename(filename.string), dummy)
 
 proc newLineInfo*(fileInfoIdx: FileIndex, line, col: int): TLineInfo =
-  result.fileIndex = fileInfoIdx
+  result = TLineInfo(fileIndex: fileInfoIdx)
   if line < int high(uint16):
     result.line = uint16(line)
   else:
@@ -431,7 +429,8 @@ To create a stacktrace, rerun compilation with './koch temp $1 <file>', see $2 f
 proc handleError(conf: ConfigRef; msg: TMsgKind, eh: TErrorHandling, s: string, ignoreMsg: bool) =
   if msg in fatalMsgs:
     if conf.cmd == cmdIdeTools: log(s)
-    quit(conf, msg)
+    if conf.cmd != cmdIdeTools or msg != errFatal:
+      quit(conf, msg)
   if msg >= errMin and msg <= errMax or
       (msg in warnMin..hintMax and msg in conf.warningAsErrors and not ignoreMsg):
     inc(conf.errorCounter)
@@ -439,7 +438,11 @@ proc handleError(conf: ConfigRef; msg: TMsgKind, eh: TErrorHandling, s: string, 
     if conf.errorCounter >= conf.errorMax:
       # only really quit when we're not in the new 'nim check --def' mode:
       if conf.ideCmd == ideNone:
-        quit(conf, msg)
+        when defined(nimsuggest):
+          #we need to inform the user that something went wrong when initializing NimSuggest
+          raiseRecoverableError(s)
+        else:
+          quit(conf, msg)
     elif eh == doAbort and conf.cmd != cmdIdeTools:
       quit(conf, msg)
     elif eh == doRaise:
@@ -557,9 +560,10 @@ proc liMessage*(conf: ConfigRef; info: TLineInfo, msg: TMsgKind, arg: string,
     ignoreMsg = not conf.hasHint(msg)
     if not ignoreMsg and msg in conf.warningAsErrors:
       title = ErrorTitle
+      color = ErrorColor
     else:
       title = HintTitle
-    color = HintColor
+      color = HintColor
     inc(conf.hintCounter)
 
   let s = if isRaw: arg else: getMessageStr(msg, arg)
@@ -625,7 +629,7 @@ proc warningDeprecated*(conf: ConfigRef, info: TLineInfo = gCmdLineInfo, msg = "
   message(conf, info, warnDeprecated, msg)
 
 proc internalErrorImpl(conf: ConfigRef; info: TLineInfo, errMsg: string, info2: InstantiationInfo) =
-  if conf.cmd == cmdIdeTools and conf.structuredErrorHook.isNil: return
+  if conf.cmd in {cmdIdeTools, cmdCheck} and conf.structuredErrorHook.isNil: return
   writeContext(conf, info)
   liMessage(conf, info, errInternal, errMsg, doAbort, info2)
 
@@ -647,13 +651,16 @@ template lintReport*(conf: ConfigRef; info: TLineInfo, beau, got: string, extraM
   let msg = if optStyleError in conf.globalOptions: errGenerated else: hintName
   liMessage(conf, info, msg, m, doNothing, instLoc())
 
-proc quotedFilename*(conf: ConfigRef; i: TLineInfo): Rope =
-  if i.fileIndex.int32 < 0:
+proc quotedFilename*(conf: ConfigRef; fi: FileIndex): Rope =
+  if fi.int32 < 0:
     result = makeCString "???"
   elif optExcessiveStackTrace in conf.globalOptions:
-    result = conf.m.fileInfos[i.fileIndex.int32].quotedFullName
+    result = conf.m.fileInfos[fi.int32].quotedFullName
   else:
-    result = conf.m.fileInfos[i.fileIndex.int32].quotedName
+    result = conf.m.fileInfos[fi.int32].quotedName
+
+proc quotedFilename*(conf: ConfigRef; i: TLineInfo): Rope =
+  quotedFilename(conf, i.fileIndex)
 
 template listMsg(title, r) =
   msgWriteln(conf, title, {msgNoUnitSep})
@@ -661,31 +668,6 @@ template listMsg(title, r) =
 
 proc listWarnings*(conf: ConfigRef) = listMsg("Warnings:", warnMin..warnMax)
 proc listHints*(conf: ConfigRef) = listMsg("Hints:", hintMin..hintMax)
-
-proc uniqueModuleName*(conf: ConfigRef; fid: FileIndex): string =
-  ## The unique module name is guaranteed to only contain {'A'..'Z', 'a'..'z', '0'..'9', '_'}
-  ## so that it is useful as a C identifier snippet.
-  let path = AbsoluteFile toFullPath(conf, fid)
-  let rel =
-    if path.string.startsWith(conf.libpath.string):
-      relativeTo(path, conf.libpath).string
-    else:
-      relativeTo(path, conf.projectPath).string
-  let trunc = if rel.endsWith(".nim"): rel.len - len(".nim") else: rel.len
-  result = newStringOfCap(trunc)
-  for i in 0..<trunc:
-    let c = rel[i]
-    case c
-    of 'a'..'z':
-      result.add c
-    of {os.DirSep, os.AltSep}:
-      result.add 'Z' # because it looks a bit like '/'
-    of '.':
-      result.add 'O' # a circle
-    else:
-      # We mangle upper letters and digits too so that there cannot
-      # be clashes with our special meanings of 'Z' and 'O'
-      result.addInt ord(c)
 
 proc genSuccessX*(conf: ConfigRef) =
   let mem =

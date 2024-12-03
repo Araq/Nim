@@ -42,6 +42,16 @@ template main() =
       discard (x, increment, a)
     mytemp()
 
+  block: # bug #12334
+    block:
+      const b: cstring = "foo"
+      var c = b
+      doAssert c == "foo"
+    block:
+      const a = "foo"
+      const b: cstring = a
+      var c = b
+      doAssert c == "foo"
 
 
 static: main()

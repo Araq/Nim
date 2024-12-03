@@ -19,7 +19,7 @@ when defined(windows):
           retFuture.complete()
           return true
       else:
-          retFuture.fail(newException(OSError, osErrorMsg(OSErrorCode(ret))))
+          retFuture.fail(newOSError(OSErrorCode(ret)))
           return true
 
     var aiList = getAddrInfo(address, port, domain)
@@ -45,7 +45,7 @@ when defined(windows):
 
     freeAddrInfo(aiList)
     if not success:
-      retFuture.fail(newException(OSError, osErrorMsg(lastError)))
+      retFuture.fail(newOSError(lastError))
     return retFuture
 
   proc winRecv*(socket: AsyncFD, size: int,
@@ -63,7 +63,7 @@ when defined(windows):
         if flags.isDisconnectionError(lastError):
           retFuture.complete("")
         else:
-          retFuture.fail(newException(OSError, osErrorMsg(lastError)))
+          retFuture.fail(newOSError(lastError))
       elif res == 0:
         # Disconnected
         retFuture.complete("")
@@ -88,7 +88,7 @@ when defined(windows):
         if flags.isDisconnectionError(lastError):
           retFuture.complete(0)
         else:
-          retFuture.fail(newException(OSError, osErrorMsg(lastError)))
+          retFuture.fail(newOSError(lastError))
       else:
         retFuture.complete(res)
     # TODO: The following causes a massive slowdown.
@@ -112,7 +112,7 @@ when defined(windows):
         if flags.isDisconnectionError(lastError):
           retFuture.complete()
         else:
-          retFuture.fail(newException(OSError, osErrorMsg(lastError)))
+          retFuture.fail(newOSError(lastError))
       else:
         written.inc(res)
         if res != netSize:
@@ -136,7 +136,7 @@ when defined(windows):
         var client = nativesockets.accept(sock.SocketHandle,
                                           cast[ptr SockAddr](addr(sockAddress)), addr(addrLen))
         if client == osInvalidSocket:
-          retFuture.fail(newException(OSError, osErrorMsg(osLastError())))
+          retFuture.fail(newOSError(osLastError()))
         else:
           retFuture.complete((getAddrString(cast[ptr SockAddr](addr sockAddress)), client.AsyncFD))
 

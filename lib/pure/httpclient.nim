@@ -62,6 +62,7 @@
 ## validated to the server.
 ##
 ##   ```Nim
+##   import std/[httpclient]
 ##   var client = newHttpClient()
 ##   var data = newMultipartData()
 ##   data["output"] = "soap12"
@@ -79,6 +80,7 @@
 ## it, you can pass your own via the `mimeDb` parameter to avoid this.
 ##
 ##   ```Nim
+##   import std/[httpclient, mimetypes]
 ##   let mimes = newMimetypes()
 ##   var client = newHttpClient()
 ##   var data = newMultipartData()
@@ -160,7 +162,7 @@
 ## Example of setting SSL verification parameters in a new client:
 ##
 ##   ```Nim
-##   import httpclient
+##   import std/[net, httpclient]
 ##   var client = newHttpClient(sslContext=newContext(verifyMode=CVerifyPeer))
 ##   ```
 ##
@@ -1210,7 +1212,7 @@ proc request*(client: HttpClient | AsyncHttpClient, url: Uri | string,
       redirectBody = body
     else:
       # Unreachable
-      doAssert(false)
+      raiseAssert "unreachable"
 
     # Check if the redirection is to the same domain or a sub-domain (foo.com
     # -> sub.foo.com)
@@ -1233,7 +1235,7 @@ proc responseContent(resp: Response | AsyncResponse): Future[string] {.multisync
   ## A `HttpRequestError` will be raised if the server responds with a
   ## client error (status code 4xx) or a server error (status code 5xx).
   if resp.code.is4xx or resp.code.is5xx:
-    raise newException(HttpRequestError, resp.status)
+    raise newException(HttpRequestError, resp.status.move)
   else:
     return await resp.bodyStream.readAll()
 

@@ -468,7 +468,7 @@ proc replaceSyms(n: NimNode): NimNode =
     for i in 0..<n.len:
       result[i] = replaceSyms(n[i])
 
-macro bindMethod*(procedure: typed): auto =
+macro bindMethod*(procedure: typed): auto {.deprecated: "Don't use it with closures".} =
   ## Takes the name of a procedure and wraps it into a lambda missing the first
   ## argument, which passes the JavaScript builtin `this` as the first
   ## argument to the procedure. Returns the resulting lambda.

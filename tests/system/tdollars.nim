@@ -1,5 +1,5 @@
 discard """
-  matrix: "--mm:refc; --mm:orc; --backend:cpp; --backend:js --jsbigint64:off; --backend:js --jsbigint64:on"
+  matrix: "--mm:refc; --mm:orc; --backend:cpp; --backend:js --jsbigint64:off -d:nimStringHash2; --backend:js --jsbigint64:on"
 """
 
 #[
@@ -66,8 +66,7 @@ block: # `$`(SomeInteger)
   testType int
   testType bool
 
-  whenJsNoBigInt64: discard
-  do:
+  when hasWorkingInt64:
     testType uint64
     testType int64
     testType BiggestInt
@@ -109,10 +108,10 @@ block:
     # if `uint8(a1)` changes meaning to `cast[uint8](a1)` in future, update this test;
     # until then, this is the correct semantics.
     let a3 = $a2
-    doAssert a2 < 3
-    doAssert a3 == "-1"
+    doAssert a2 == 255'u8
+    doAssert a3 == "255"
     proc intToStr(a: uint8): cstring {.importjs: "(# + \"\")".}
-    doAssert $intToStr(a2) == "-1"
+    doAssert $intToStr(a2) == "255"
   else:
     block:
       let x = -1'i8
@@ -177,8 +176,7 @@ proc main()=
       res.addInt int64(i)
     doAssert res == "-9-8-7-6-5-4-3-2-10"
 
-    whenJsNoBigInt64: discard
-    do:
+    when hasWorkingInt64:
       test2 high(int64), "9223372036854775807"
       test2 low(int64), "-9223372036854775808"
     test2 high(int32), "2147483647"

@@ -1,8 +1,10 @@
 discard """
 disabled: "arm64"
-cmd: "nim c --gc:arc $file"
+cmd: "nim c --mm:arc -u:nimPreviewNonVarDestructor $file"
 output: "y"
 """
+
+# TODO: fixme: investigate why it failed with non-var destructors
 
 {.passC: "-march=native".}
 

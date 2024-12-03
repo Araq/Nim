@@ -464,7 +464,7 @@ proc `==`*(a, b: Rune): bool =
 
 include "includes/unicode_ranges"
 
-proc binarySearch(c: RuneImpl, tab: openArray[int], len, stride: int): int =
+proc binarySearch(c: RuneImpl, tab: openArray[int32], len, stride: int): int =
   var n = len
   var t = 0
   while n > 1:
@@ -836,9 +836,9 @@ proc toRunes*(s: openArray[char]): seq[Rune] =
 proc cmpRunesIgnoreCase*(a, b: openArray[char]): int {.rtl, extern: "nuc$1".} =
   ## Compares two UTF-8 strings and ignores the case. Returns:
   ##
-  ## | 0 if a == b
-  ## | < 0 if a < b
-  ## | > 0 if a > b
+  ## | `0` if a == b
+  ## | `< 0` if a < b
+  ## | `> 0` if a > b
   var i = 0
   var j = 0
   var ar, br: Rune
@@ -846,7 +846,12 @@ proc cmpRunesIgnoreCase*(a, b: openArray[char]): int {.rtl, extern: "nuc$1".} =
     # slow path:
     fastRuneAt(a, i, ar)
     fastRuneAt(b, j, br)
-    result = RuneImpl(toLower(ar)) - RuneImpl(toLower(br))
+    when sizeof(int) < 4:
+      const lo = low(int).int32
+      const hi = high(int).int32
+      result = clamp(RuneImpl(toLower(ar)) - RuneImpl(toLower(br)), lo, hi).int
+    else:
+      result = RuneImpl(toLower(ar)) - RuneImpl(toLower(br))
     if result != 0: return
   result = a.len - b.len
 
@@ -1370,9 +1375,9 @@ proc toRunes*(s: string): seq[Rune] {.inline.} =
 proc cmpRunesIgnoreCase*(a, b: string): int {.inline.} =
   ## Compares two UTF-8 strings and ignores the case. Returns:
   ##
-  ## | 0 if a == b
-  ## | < 0 if a < b
-  ## | > 0 if a > b
+  ## | `0` if a == b
+  ## | `< 0` if a < b
+  ## | `> 0` if a > b
   cmpRunesIgnoreCase(a.toOa(), b.toOa())
 
 proc reversed*(s: string): string {.inline.} =

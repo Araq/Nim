@@ -33,7 +33,7 @@ proc equalGenericParams(procA, procB: PNode): bool =
 proc searchForProcAux(c: PContext, scope: PScope, fn: PSym): PSym =
   const flags = {ExactGenericParams, ExactTypeDescValues,
                  ExactConstraints, IgnoreCC}
-  var it: TIdentIter
+  var it: TIdentIter = default(TIdentIter)
   result = initIdentIter(it, scope.symbols, fn.name)
   while result != nil:
     if result.kind == fn.kind: #and sameType(result.typ, fn.typ, flags):
@@ -54,7 +54,7 @@ proc searchForProcAux(c: PContext, scope: PScope, fn: PSym): PSym =
 
 proc searchForProc*(c: PContext, scope: PScope, fn: PSym): tuple[proto: PSym, comesFromShadowScope: bool] =
   var scope = scope
-  result.proto = searchForProcAux(c, scope, fn)
+  result = (searchForProcAux(c, scope, fn), false)
   while result.proto == nil and scope.isShadowScope:
     scope = scope.parent
     result.proto = searchForProcAux(c, scope, fn)
@@ -76,7 +76,7 @@ when false:
   proc searchForBorrowProc*(c: PContext, startScope: PScope, fn: PSym): PSym =
     # Searches for the fn in the symbol table. If the parameter lists are suitable
     # for borrowing the sym in the symbol table is returned, else nil.
-    var it: TIdentIter
+    var it: TIdentIter = default(TIdentIter)
     for scope in walkScopes(startScope):
       result = initIdentIter(it, scope.symbols, fn.Name)
       while result != nil:

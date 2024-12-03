@@ -160,3 +160,25 @@ block:
   let res = doStuff()
   doAssert res.kind == Error
   doAssert res.errVal == "Error"
+
+# ufcs
+block:
+  proc getValue[T](_: string): T =
+    doAssert T is int
+    44
+  
+  proc `'test`[T](_: string): T =
+    55
+
+  let a: int = getValue("")
+  let b: int = "".getValue()
+  let c: int = "".getValue
+  let d: int = getValue ""
+  let e: int = getValue""
+  let f: int = 12345'test
+  doAssert a == 44
+  doAssert b == 44
+  doAssert c == 44
+  doAssert d == 44
+  doAssert e == 44
+  doAssert f == 55

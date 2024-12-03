@@ -187,6 +187,9 @@ proc c_sprintf*(buf, frmt: cstring): cint {.
   importc: "sprintf", header: "<stdio.h>", varargs, noSideEffect.}
   # we use it only in a way that cannot lead to security issues
 
+proc c_snprintf*(buf: cstring, n: csize_t, frmt: cstring): cint {.
+  importc: "snprintf", header: "<stdio.h>", varargs, noSideEffect.}
+
 when defined(zephyr) and not defined(zephyrUseLibcMalloc):
   proc c_malloc*(size: csize_t): pointer {.
     importc: "k_malloc", header: "<kernel.h>".}

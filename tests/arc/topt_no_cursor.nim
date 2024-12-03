@@ -97,7 +97,7 @@ try:
         finally:
           `=destroy`(splitted)
 finally:
-  `=destroy`(lan_ip)
+  `=destroy_1`(lan_ip)
 -- end of expandArc ------------------------
 --expandArc: mergeShadowScope
 

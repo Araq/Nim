@@ -45,7 +45,7 @@ $nimsuggest --tester --maxresults:5 $file
 >sug $1
 sug;;skField;;age;;int;;$file;;6;;6;;"";;100;;None
 sug;;skField;;name;;string;;$file;;5;;6;;"";;100;;None
-sug;;skMethod;;twithin_macro.age_human_yrs;;proc (self: Animal): int;;$file;;8;;9;;"";;100;;None
-sug;;skMethod;;twithin_macro.vocalize;;proc (self: Animal): string;;$file;;7;;9;;"";;100;;None
+sug;;skMethod;;twithin_macro.age_human_yrs;;proc (self: Animal): int{.raises: <inferred> [].};;$file;;8;;9;;"";;100;;None
+sug;;skMethod;;twithin_macro.vocalize;;proc (self: Animal): string{.raises: <inferred> [].};;$file;;7;;9;;"";;100;;None
 sug;;skMethod;;twithin_macro.vocalize;;proc (self: Rabbit): string;;$file;;23;;9;;"";;100;;None
 """

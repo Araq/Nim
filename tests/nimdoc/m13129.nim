@@ -4,6 +4,7 @@ when defined(cpp):
   {.push header: "<vector>".}
   type
     Vector[T] {.importcpp: "std::vector".} = object
+  {.pop.}
 elif defined(js):
   proc endsWith*(s, suffix: cstring): bool {.noSideEffect,importjs: "#.endsWith(#)".}
 elif defined(c):

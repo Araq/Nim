@@ -52,7 +52,7 @@ proc symChoice(c: PContext, n: PNode, s: PSym, r: TSymChoiceRule;
                isField = false): PNode =
   var
     a: PSym
-    o: TOverloadIter
+    o: TOverloadIter = default(TOverloadIter)
   var i = 0
   a = initOverloadIter(o, c, n)
   while a != nil:
@@ -218,63 +218,98 @@ proc addLocalDecl(c: var TemplCtx, n: var PNode, k: TSymKind) =
         if k == skParam and c.inTemplateHeader > 0:
           local.flags.incl sfTemplateParam
 
-proc semTemplSymbol(c: PContext, n: PNode, s: PSym; isField: bool): PNode =
+proc semTemplSymbol(c: var TemplCtx, n: PNode, s: PSym; isField, isAmbiguous: bool): PNode =
   incl(s.flags, sfUsed)
   # bug #12885; ideally sem'checking is performed again afterwards marking
   # the symbol as used properly, but the nfSem mechanism currently prevents
   # that from happening, so we mark the module as used here already:
-  markOwnerModuleAsUsed(c, s)
+  markOwnerModuleAsUsed(c.c, s)
   # we do not call onUse here, as the identifier is not really
   # resolved here. We will fixup the used identifiers later.
   case s.kind
   of skUnknown:
     # Introduced in this pass! Leave it as an identifier.
     result = n
-  of OverloadableSyms-{skTemplate,skMacro}:
-    result = symChoice(c, n, s, scOpen, isField)
-  of skTemplate, skMacro:
-    result = symChoice(c, n, s, scOpen, isField)
-    if result.kind == nkSym:
-      # template/macro symbols might need to be semchecked again
-      # prepareOperand etc don't do this without setting the type to nil
-      result.typ = nil
+  of OverloadableSyms:
+    result = symChoice(c.c, n, s, scOpen, isField)
+    if not isField and result.kind in {nkSym, nkOpenSymChoice}:
+      if openSym in c.c.features:
+        if result.kind == nkSym:
+          result = newOpenSym(result)
+        else:
+          result.typ() = nil
+      else:
+        result.flags.incl nfDisabledOpenSym
+        result.typ() = nil
   of skGenericParam:
     if isField and sfGenSym in s.flags: result = n
-    else: result = newSymNodeTypeDesc(s, c.idgen, n.info)
+    else:
+      result = newSymNodeTypeDesc(s, c.c.idgen, n.info)
+      if not isField and s.owner != c.owner:
+        if openSym in c.c.features:
+          result = newOpenSym(result)
+        else:
+          result.flags.incl nfDisabledOpenSym
+          result.typ() = nil
   of skParam:
     result = n
   of skType:
     if isField and sfGenSym in s.flags: result = n
-    else: result = newSymNodeTypeDesc(s, c.idgen, n.info)
+    else:
+      if isAmbiguous:
+        # ambiguous types should be symchoices since lookup behaves
+        # differently for them in regular expressions
+        result = symChoice(c.c, n, s, scOpen, isField)
+      else: result = newSymNodeTypeDesc(s, c.c.idgen, n.info)
+      if not isField and not (s.owner == c.owner and
+          s.typ != nil and s.typ.kind == tyGenericParam) and
+          result.kind in {nkSym, nkOpenSymChoice}:
+        if openSym in c.c.features:
+          if result.kind == nkSym:
+            result = newOpenSym(result)
+          else:
+            result.typ() = nil
+        else:
+          result.flags.incl nfDisabledOpenSym
+          result.typ() = nil
   else:
     if isField and sfGenSym in s.flags: result = n
-    else: result = newSymNode(s, n.info)
+    else:
+      result = newSymNode(s, n.info)
+      if not isField:
+        if openSym in c.c.features:
+          result = newOpenSym(result)
+        else:
+          result.flags.incl nfDisabledOpenSym
+          result.typ() = nil
     # Issue #12832
     when defined(nimsuggest):
-      suggestSym(c.graph, n.info, s, c.graph.usageSym, false)
+      suggestSym(c.c.graph, n.info, s, c.c.graph.usageSym, false)
     # field access (dot expr) will be handled by builtinFieldAccess
     if not isField:
-      styleCheckUse(c, n.info, s)
+      styleCheckUse(c.c, n.info, s)
 
-proc semRoutineInTemplName(c: var TemplCtx, n: PNode): PNode =
+proc semRoutineInTemplName(c: var TemplCtx, n: PNode, explicitInject: bool): PNode =
   result = n
   if n.kind == nkIdent:
     let s = qualifiedLookUp(c.c, n, {})
     if s != nil:
-      if s.owner == c.owner and (s.kind == skParam or sfGenSym in s.flags):
+      if s.owner == c.owner and (s.kind == skParam or
+          (sfGenSym in s.flags and not explicitInject)):
         incl(s.flags, sfUsed)
         result = newSymNode(s, n.info)
         onUse(n.info, s)
   else:
     for i in 0..<n.safeLen:
-      result[i] = semRoutineInTemplName(c, n[i])
+      result[i] = semRoutineInTemplName(c, n[i], explicitInject)
 
 proc semRoutineInTemplBody(c: var TemplCtx, n: PNode, k: TSymKind): PNode =
   result = n
   checkSonsLen(n, bodyPos + 1, c.c.config)
   if n.kind notin nkLambdaKinds:
     # routines default to 'inject':
-    if symBinding(n[pragmasPos]) == spGenSym:
+    let binding = symBinding(n[pragmasPos])
+    if binding == spGenSym:
       let (ident, hasParam) = getIdentReplaceParams(c, n[namePos])
       if not hasParam:
         var s = newGenSym(k, ident, c)
@@ -286,7 +321,7 @@ proc semRoutineInTemplBody(c: var TemplCtx, n: PNode, k: TSymKind): PNode =
       else:
         n[namePos] = ident
     else:
-      n[namePos] = semRoutineInTemplName(c, n[namePos])
+      n[namePos] = semRoutineInTemplName(c, n[namePos], binding == spInject)
   # open scope for parameters
   openScope(c)
   for i in patternPos..paramsPos-1:
@@ -343,6 +378,7 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
   case n.kind
   of nkIdent:
     if n.ident.id in c.toInject: return n
+    c.c.isAmbiguous = false
     let s = qualifiedLookUp(c.c, n, {})
     if s != nil:
       if s.owner == c.owner and s.kind == skParam and sfTemplateParam in s.flags:
@@ -360,9 +396,9 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
         result = newSymNode(s, n.info)
         onUse(n.info, s)
       else:
-        if s.kind in {skType, skVar, skLet, skConst}:
+        if s.kind in {skVar, skLet, skConst}:
           discard qualifiedLookUp(c.c, n, {checkAmbiguity, checkModule})
-        result = semTemplSymbol(c.c, n, s, c.noGenSym > 0)
+        result = semTemplSymbol(c, n, s, c.noGenSym > 0, c.c.isAmbiguous)
   of nkBind:
     result = semTemplBody(c, n[0])
   of nkBindStmt:
@@ -499,22 +535,36 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
   of nkConverterDef:
     result = semRoutineInTemplBody(c, n, skConverter)
   of nkPragmaExpr:
-    result[0] = semTemplBody(c, n[0])
+    result = semTemplBodySons(c, n)
   of nkPostfix:
     result[1] = semTemplBody(c, n[1])
   of nkPragma:
-    for x in n:
-      if x.kind == nkExprColonExpr:
-        x[1] = semTemplBody(c, x[1])
+    for i in 0 ..< n.len:
+      let x = n[i]
+      let prag = whichPragma(x)
+      if prag == wInvalid:
+        # only sem if not a language-level pragma 
+        result[i] = semTemplBody(c, x)
+      elif x.kind in nkPragmaCallKinds:
+        # is pragma, but value still needs to be checked
+        for j in 1 ..< x.len:
+          x[j] = semTemplBody(c, x[j])
   of nkBracketExpr:
-    result = newNodeI(nkCall, n.info)
-    result.add newIdentNode(getIdent(c.c.cache, "[]"), n.info)
-    for i in 0..<n.len: result.add(n[i])
+    if n.typ == nil:
+      # if a[b] is nested inside a typed expression, don't convert it
+      # back to `[]`(a, b), prepareOperand will not typecheck it again
+      # and so `[]` will not be resolved
+      # checking if a[b] is typed should be enough to cover this case
+      result = newNodeI(nkCall, n.info)
+      result.add newIdentNode(getIdent(c.c.cache, "[]"), n.info)
+      for i in 0..<n.len: result.add(n[i])
     result = semTemplBodySons(c, result)
   of nkCurlyExpr:
-    result = newNodeI(nkCall, n.info)
-    result.add newIdentNode(getIdent(c.c.cache, "{}"), n.info)
-    for i in 0..<n.len: result.add(n[i])
+    if n.typ == nil:
+      # see nkBracketExpr case for explanation
+      result = newNodeI(nkCall, n.info)
+      result.add newIdentNode(getIdent(c.c.cache, "{}"), n.info)
+      for i in 0..<n.len: result.add(n[i])
     result = semTemplBodySons(c, result)
   of nkAsgn, nkFastAsgn, nkSinkAsgn:
     checkSonsLen(n, 2, c.c.config)
@@ -524,17 +574,21 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
     let k = a.kind
     case k
     of nkBracketExpr:
-      result = newNodeI(nkCall, n.info)
-      result.add newIdentNode(getIdent(c.c.cache, "[]="), n.info)
-      for i in 0..<a.len: result.add(a[i])
-      result.add(b)
+      if a.typ == nil:
+        # see nkBracketExpr case above for explanation
+        result = newNodeI(nkCall, n.info)
+        result.add newIdentNode(getIdent(c.c.cache, "[]="), n.info)
+        for i in 0..<a.len: result.add(a[i])
+        result.add(b)
       let a0 = semTemplBody(c, a[0])
       result = semTemplBodySons(c, result)
     of nkCurlyExpr:
-      result = newNodeI(nkCall, n.info)
-      result.add newIdentNode(getIdent(c.c.cache, "{}="), n.info)
-      for i in 0..<a.len: result.add(a[i])
-      result.add(b)
+      if a.typ == nil:
+        # see nkBracketExpr case above for explanation
+        result = newNodeI(nkCall, n.info)
+        result.add newIdentNode(getIdent(c.c.cache, "{}="), n.info)
+        for i in 0..<a.len: result.add(a[i])
+        result.add(b)
       result = semTemplBodySons(c, result)
     else:
       result = semTemplBodySons(c, n)
@@ -545,6 +599,7 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
   of nkDotExpr, nkAccQuoted:
     # dotExpr is ambiguous: note that we explicitly allow 'x.TemplateParam',
     # so we use the generic code for nkDotExpr too
+    c.c.isAmbiguous = false
     let s = qualifiedLookUp(c.c, n, {})
     if s != nil:
       # mirror the nkIdent case
@@ -559,9 +614,9 @@ proc semTemplBody(c: var TemplCtx, n: PNode): PNode =
       elif contains(c.toMixin, s.name.id):
         return symChoice(c.c, n, s, scForceOpen, c.noGenSym > 0)
       else:
-        if s.kind in {skType, skVar, skLet, skConst}:
+        if s.kind in {skVar, skLet, skConst}:
           discard qualifiedLookUp(c.c, n, {checkAmbiguity, checkModule})
-        return semTemplSymbol(c.c, n, s, c.noGenSym > 0)
+        return semTemplSymbol(c, n, s, c.noGenSym > 0, c.c.isAmbiguous)
     if n.kind == nkDotExpr:
       result = n
       result[0] = semTemplBody(c, n[0])
@@ -645,6 +700,7 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
   pushOwner(c, s)
   openScope(c)
   n[namePos] = newSymNode(s)
+  s.ast = n # for implicitPragmas to use
   pragmaCallable(c, s, n, templatePragmas)
   implicitPragmas(c, s, n.info, templatePragmas)
 
@@ -657,7 +713,7 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
     # a template's parameters are not gensym'ed even if that was originally the
     # case as we determine whether it's a template parameter in the template
     # body by the absence of the sfGenSym flag:
-    let retType = s.typ[0]
+    let retType = s.typ.returnType
     if retType != nil and retType.kind != tyUntyped:
       allUntyped = false
     for i in 1..<s.typ.n.len:
@@ -673,7 +729,7 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
     # XXX why do we need tyTyped as a return type again?
     s.typ.n = newNodeI(nkFormalParams, n.info)
     rawAddSon(s.typ, newTypeS(tyTyped, c))
-    s.typ.n.add newNodeIT(nkType, n.info, s.typ[0])
+    s.typ.n.add newNodeIT(nkType, n.info, s.typ.returnType)
   if n[genericParamsPos].safeLen == 0:
     # restore original generic type params as no explicit or implicit were found
     n[genericParamsPos] = n[miscPos][1]
@@ -688,12 +744,24 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
   if n[patternPos].kind != nkEmpty:
     n[patternPos] = semPattern(c, n[patternPos], s)
 
-  var ctx: TemplCtx
-  ctx.toBind = initIntSet()
-  ctx.toMixin = initIntSet()
-  ctx.toInject = initIntSet()
-  ctx.c = c
-  ctx.owner = s
+  var ctx = TemplCtx(
+    toBind: initIntSet(),
+    toMixin: initIntSet(),
+    toInject: initIntSet(),
+    c: c,
+    owner: s
+  )
+  # handle default params:
+  for i in 1..<s.typ.n.len:
+    let param = s.typ.n[i].sym
+    if param.ast != nil:
+      # param default values need to be treated like template body:
+      if sfDirty in s.flags:
+        param.ast = semTemplBodyDirty(ctx, param.ast)
+      else:
+        param.ast = semTemplBody(ctx, param.ast)
+      if param.ast.referencesAnotherParam(s):
+        param.ast.flags.incl nfDefaultRefsParam
   if sfDirty in s.flags:
     n[bodyPos] = semTemplBodyDirty(ctx, n[bodyPos])
   else:
@@ -702,11 +770,6 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
   semIdeForTemplateOrGeneric(c, n[bodyPos], ctx.cursorInBody)
   closeScope(c)
   popOwner(c)
-
-  # set the symbol AST after pragmas, at least. This stops pragma that have
-  # been pushed (implicit) to be explicitly added to the template definition
-  # and misapplied to the body. see #18113
-  s.ast = n
 
   if sfCustomPragma in s.flags:
     if n[bodyPos].kind != nkEmpty:
@@ -844,12 +907,13 @@ proc semPatternBody(c: var TemplCtx, n: PNode): PNode =
 
 proc semPattern(c: PContext, n: PNode; s: PSym): PNode =
   openScope(c)
-  var ctx: TemplCtx
-  ctx.toBind = initIntSet()
-  ctx.toMixin = initIntSet()
-  ctx.toInject = initIntSet()
-  ctx.c = c
-  ctx.owner = getCurrOwner(c)
+  var ctx = TemplCtx(
+    toBind: initIntSet(),
+    toMixin: initIntSet(),
+    toInject: initIntSet(),
+    c: c,
+    owner: getCurrOwner(c)
+  )
   result = flattenStmts(semPatternBody(ctx, n))
   if result.kind in {nkStmtList, nkStmtListExpr}:
     if result.len == 1:

@@ -116,3 +116,16 @@ type Foo {.exportc.} = object
 proc makeFoo(): Foo {.used, constructor, nodecl.} = discard
 
 echo $Foo()
+
+type Boo = object
+proc `=copy`(dest: var Boo; src: Boo) = discard
+
+proc makeBoo(): Boo {.constructor.} = Boo()
+proc makeBoo2(): Boo  = Boo()
+
+block:
+  proc main =
+    var b = makeBoo()
+    var b2 = makeBoo2()
+
+  main()

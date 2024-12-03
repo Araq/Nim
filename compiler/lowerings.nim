@@ -19,7 +19,7 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 proc newDeref*(n: PNode): PNode {.inline.} =
-  result = newNodeIT(nkHiddenDeref, n.info, n.typ[0])
+  result = newNodeIT(nkHiddenDeref, n.info, n.typ.elementType)
   result.add n
 
 proc newTupleAccess*(g: ModuleGraph; tup: PNode, i: int): PNode =
@@ -144,7 +144,7 @@ proc lowerSwap*(g: ModuleGraph; n: PNode; idgen: IdGenerator; owner: PSym): PNod
   result.add newFastAsgnStmt(n[2], tempAsNode)
 
 proc createObj*(g: ModuleGraph; idgen: IdGenerator; owner: PSym, info: TLineInfo; final=true): PType =
-  result = newType(tyObject, nextTypeId(idgen), owner)
+  result = newType(tyObject, idgen, owner)
   if final:
     rawAddSon(result, nil)
     incl result.flags, tfFinal
@@ -174,12 +174,12 @@ proc rawIndirectAccess*(a: PNode; field: PSym; info: TLineInfo): PNode =
   # returns a[].field as a node
   assert field.kind == skField
   var deref = newNodeI(nkHiddenDeref, info)
-  deref.typ = a.typ.skipTypes(abstractInst)[0]
+  deref.typ() = a.typ.skipTypes(abstractInst)[0]
   deref.add a
   result = newNodeI(nkDotExpr, info)
   result.add deref
   result.add newSymNode(field)
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc rawDirectAccess*(obj, field: PSym): PNode =
   # returns a.field as a node
@@ -187,7 +187,7 @@ proc rawDirectAccess*(obj, field: PSym): PNode =
   result = newNodeI(nkDotExpr, field.info)
   result.add newSymNode(obj)
   result.add newSymNode(field)
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc lookupInRecord(n: PNode, id: ItemId): PSym =
   result = nil
@@ -250,19 +250,19 @@ proc newDotExpr*(obj, b: PSym): PNode =
   assert field != nil, b.name.s
   result.add newSymNode(obj)
   result.add newSymNode(field)
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc indirectAccess*(a: PNode, b: ItemId, info: TLineInfo): PNode =
   # returns a[].b as a node
   var deref = newNodeI(nkHiddenDeref, info)
-  deref.typ = a.typ.skipTypes(abstractInst)[0]
+  deref.typ() = a.typ.skipTypes(abstractInst).elementType
   var t = deref.typ.skipTypes(abstractInst)
   var field: PSym
   while true:
     assert t.kind == tyObject
     field = lookupInRecord(t.n, b)
     if field != nil: break
-    t = t[0]
+    t = t.baseClass
     if t == nil: break
     t = t.skipTypes(skipPtrs)
   #if field == nil:
@@ -273,12 +273,12 @@ proc indirectAccess*(a: PNode, b: ItemId, info: TLineInfo): PNode =
   result = newNodeI(nkDotExpr, info)
   result.add deref
   result.add newSymNode(field)
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc indirectAccess*(a: PNode, b: string, info: TLineInfo; cache: IdentCache): PNode =
   # returns a[].b as a node
   var deref = newNodeI(nkHiddenDeref, info)
-  deref.typ = a.typ.skipTypes(abstractInst)[0]
+  deref.typ() = a.typ.skipTypes(abstractInst).elementType
   var t = deref.typ.skipTypes(abstractInst)
   var field: PSym
   let bb = getIdent(cache, b)
@@ -286,7 +286,7 @@ proc indirectAccess*(a: PNode, b: string, info: TLineInfo; cache: IdentCache): P
     assert t.kind == tyObject
     field = getSymFromList(t.n, bb)
     if field != nil: break
-    t = t[0]
+    t = t.baseClass
     if t == nil: break
     t = t.skipTypes(skipPtrs)
   #if field == nil:
@@ -297,7 +297,7 @@ proc indirectAccess*(a: PNode, b: string, info: TLineInfo; cache: IdentCache): P
   result = newNodeI(nkDotExpr, info)
   result.add deref
   result.add newSymNode(field)
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc getFieldFromObj*(t: PType; v: PSym): PSym =
   assert v.kind != skField
@@ -306,7 +306,7 @@ proc getFieldFromObj*(t: PType; v: PSym): PSym =
     assert t.kind == tyObject
     result = lookupInRecord(t.n, v.itemId)
     if result != nil: break
-    t = t[0]
+    t = t.baseClass
     if t == nil: break
     t = t.skipTypes(skipPtrs)
 
@@ -320,12 +320,12 @@ proc indirectAccess*(a, b: PSym, info: TLineInfo): PNode =
 proc genAddrOf*(n: PNode; idgen: IdGenerator; typeKind = tyPtr): PNode =
   result = newNodeI(nkAddr, n.info, 1)
   result[0] = n
-  result.typ = newType(typeKind, nextTypeId(idgen), n.typ.owner)
+  result.typ() = newType(typeKind, idgen, n.typ.owner)
   result.typ.rawAddSon(n.typ)
 
 proc genDeref*(n: PNode; k = nkHiddenDeref): PNode =
   result = newNodeIT(k, n.info,
-                     n.typ.skipTypes(abstractInst)[0])
+                     n.typ.skipTypes(abstractInst).elementType)
   result.add n
 
 proc callCodegenProc*(g: ModuleGraph; name: string;
@@ -344,18 +344,18 @@ proc callCodegenProc*(g: ModuleGraph; name: string;
     if optionalArgs != nil:
       for i in 1..<optionalArgs.len-2:
         result.add optionalArgs[i]
-    result.typ = sym.typ[0]
+    result.typ() = sym.typ.returnType
 
 proc newIntLit*(g: ModuleGraph; info: TLineInfo; value: BiggestInt): PNode =
   result = nkIntLit.newIntNode(value)
-  result.typ = getSysType(g, info, tyInt)
+  result.typ() = getSysType(g, info, tyInt)
 
 proc genHigh*(g: ModuleGraph; n: PNode): PNode =
   if skipTypes(n.typ, abstractVar).kind == tyArray:
     result = newIntLit(g, n.info, toInt64(lastOrd(g.config, skipTypes(n.typ, abstractVar))))
   else:
     result = newNodeI(nkCall, n.info, 2)
-    result.typ = getSysType(g, n.info, tyInt)
+    result.typ() = getSysType(g, n.info, tyInt)
     result[0] = newSymNode(getSysMagic(g, n.info, "high", mHigh))
     result[1] = n
 
@@ -364,7 +364,7 @@ proc genLen*(g: ModuleGraph; n: PNode): PNode =
     result = newIntLit(g, n.info, toInt64(lastOrd(g.config, skipTypes(n.typ, abstractVar)) + 1))
   else:
     result = newNodeI(nkCall, n.info, 2)
-    result.typ = getSysType(g, n.info, tyInt)
+    result.typ() = getSysType(g, n.info, tyInt)
     result[0] = newSymNode(getSysMagic(g, n.info, "len", mLengthSeq))
     result[1] = n
 

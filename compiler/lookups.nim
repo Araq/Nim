@@ -50,7 +50,7 @@ proc considerQuotedIdent*(c: PContext; n: PNode, origin: PNode = nil): PIdent =
         case x.kind
         of nkIdent: id.add(x.ident.s)
         of nkSym: id.add(x.sym.name.s)
-        of nkSymChoices:
+        of nkSymChoices, nkOpenSym:
           if x[0].kind == nkSym:
             id.add(x[0].sym.name.s)
           else:
@@ -63,6 +63,8 @@ proc considerQuotedIdent*(c: PContext; n: PNode, origin: PNode = nil): PIdent =
       result = n[0].sym.name
     else:
       handleError(n, origin)
+  of nkOpenSym:
+    result = considerQuotedIdent(c, n[0], origin)
   else:
     handleError(n, origin)
 
@@ -137,7 +139,7 @@ proc nextIdentIter(ti: var ModuleIter; marked: var IntSet; im: ImportedModule;
         return result
 
 iterator symbols(im: ImportedModule; marked: var IntSet; name: PIdent; g: ModuleGraph): PSym =
-  var ti: ModuleIter
+  var ti: ModuleIter = default(ModuleIter)
   var candidate = initIdentIter(ti, marked, im, name, g)
   while candidate != nil:
     yield candidate
@@ -150,7 +152,7 @@ iterator importedItems*(c: PContext; name: PIdent): PSym =
       yield s
 
 proc allPureEnumFields(c: PContext; name: PIdent): seq[PSym] =
-  var ti: TIdentIter
+  var ti: TIdentIter = default(TIdentIter)
   result = @[]
   var res = initIdentIter(ti, c.pureEnumFields, name)
   while res != nil:
@@ -219,28 +221,33 @@ proc debugScopes*(c: PContext; limit=0, max = int.high) {.deprecated.} =
     if i == limit: return
     inc i
 
-proc searchInScopesAllCandidatesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+proc searchImportsAll*(c: PContext, s: PIdent, filter: TSymKinds, holding: var seq[PSym]) =
+  var marked = initIntSet()
+  for im in c.imports.mitems:
+    for s in symbols(im, marked, s, c.graph):
+      if s.kind in filter:
+        holding.add s
+
+proc searchScopes*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
   result = @[]
   for scope in allScopes(c.currentScope):
-    var ti: TIdentIter
+    var ti: TIdentIter = default(TIdentIter)
     var candidate = initIdentIter(ti, scope.symbols, s)
     while candidate != nil:
       if candidate.kind in filter:
         result.add candidate
       candidate = nextIdentIter(ti, scope.symbols)
 
+proc searchScopesAll*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+  result = searchScopes(c,s,filter)
   if result.len == 0:
-    var marked = initIntSet()
-    for im in c.imports.mitems:
-      for s in symbols(im, marked, s, c.graph):
-        if s.kind in filter:
-          result.add s
+    searchImportsAll(c, s, filter, result)
 
-proc searchInScopesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
+proc selectFromScopesElseAll*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSym] =
   result = @[]
   block outer:
     for scope in allScopes(c.currentScope):
-      var ti: TIdentIter
+      var ti: TIdentIter = default(TIdentIter)
       var candidate = initIdentIter(ti, scope.symbols, s)
       while candidate != nil:
         if candidate.kind in filter:
@@ -250,17 +257,25 @@ proc searchInScopesFilterBy*(c: PContext, s: PIdent, filter: TSymKinds): seq[PSy
         candidate = nextIdentIter(ti, scope.symbols)
 
   if result.len == 0:
-    var marked = initIntSet()
-    for im in c.imports.mitems:
-      for s in symbols(im, marked, s, c.graph):
-        if s.kind in filter:
-          result.add s
+    searchImportsAll(c, s, filter, result)
+
+proc cmpScopes*(ctx: PContext, s: PSym): int =
+  # Do not return a negative number
+  if s.originatingModule == ctx.module:
+    result = 2
+    var owner = s
+    while true:
+      owner = owner.skipGenericOwner
+      if owner.kind == skModule: break
+      inc result
+  else:
+    result = 1
 
 proc isAmbiguous*(c: PContext, s: PIdent, filter: TSymKinds, sym: var PSym): bool =
   result = false
   block outer:
     for scope in allScopes(c.currentScope):
-      var ti: TIdentIter
+      var ti: TIdentIter = default(TIdentIter)
       var candidate = initIdentIter(ti, scope.symbols, s)
       var scopeHasCandidate = false
       while candidate != nil:
@@ -291,8 +306,16 @@ proc isAmbiguous*(c: PContext, s: PIdent, filter: TSymKinds, sym: var PSym): boo
     # imports had a candidate but wasn't ambiguous
     return false
 
-proc errorSym*(c: PContext, n: PNode): PSym =
+proc errorSym*(c: PContext, ident: PIdent, info: TLineInfo): PSym =
   ## creates an error symbol to avoid cascading errors (for IDE support)
+  result = newSym(skError, ident, c.idgen, getCurrOwner(c), info, {})
+  result.typ = errorType(c)
+  incl(result.flags, sfDiscardable)
+  # pretend it's from the top level scope to prevent cascading errors:
+  if c.config.cmd != cmdInteractive and c.compilesContextId == 0:
+    c.moduleScope.addSym(result)
+
+proc errorSym*(c: PContext, n: PNode): PSym =
   var m = n
   # ensure that 'considerQuotedIdent' can't fail:
   if m.kind == nkDotExpr: m = m[1]
@@ -300,12 +323,7 @@ proc errorSym*(c: PContext, n: PNode): PSym =
       considerQuotedIdent(c, m)
     else:
       getIdent(c.cache, "err:" & renderTree(m))
-  result = newSym(skError, ident, c.idgen, getCurrOwner(c), n.info, {})
-  result.typ = errorType(c)
-  incl(result.flags, sfDiscardable)
-  # pretend it's from the top level scope to prevent cascading errors:
-  if c.config.cmd != cmdInteractive and c.compilesContextId == 0:
-    c.moduleScope.addSym(result)
+  result = errorSym(c, ident, n.info)
 
 type
   TOverloadIterMode* = enum
@@ -332,7 +350,7 @@ proc getSymRepr*(conf: ConfigRef; s: PSym, getDeclarationPath = true): string =
 
 proc ensureNoMissingOrUnusedSymbols(c: PContext; scope: PScope) =
   # check if all symbols have been used and defined:
-  var it: TTabIter
+  var it: TTabIter = default(TTabIter)
   var s = initTabIter(it, scope.symbols)
   var missingImpls = 0
   var unusedSyms: seq[tuple[sym: PSym, key: string]] = @[]
@@ -487,7 +505,7 @@ proc mustFixSpelling(c: PContext): bool {.inline.} =
   result = c.config.spellSuggestMax != 0 and c.compilesContextId == 0
     # don't slowdown inside compiles()
 
-proc fixSpelling(c: PContext, n: PNode, ident: PIdent, result: var string) =
+proc fixSpelling(c: PContext, ident: PIdent, result: var string) =
   ## when we cannot find the identifier, suggest nearby spellings
   var list = initHeapQueue[SpellCandidate]()
   let name0 = ident.s.nimIdentNormalize
@@ -543,33 +561,47 @@ proc errorUseQualifier(c: PContext; info: TLineInfo; s: PSym; amb: var bool): PS
     amb = false
 
 proc errorUseQualifier*(c: PContext; info: TLineInfo; s: PSym) =
-  var amb: bool
+  var amb: bool = false
   discard errorUseQualifier(c, info, s, amb)
 
-proc errorUseQualifier(c: PContext; info: TLineInfo; candidates: seq[PSym]; prefix = "use one of") =
-  var err = "ambiguous identifier: '" & candidates[0].name.s & "'"
+proc ambiguousIdentifierMsg*(candidates: seq[PSym], prefix = "use one of", indent = 0): string =
+  result = ""
+  for i in 0 ..< indent:
+    result.add(' ')
+  result.add "ambiguous identifier: '" & candidates[0].name.s & "'"
   var i = 0
   for candidate in candidates:
-    if i == 0: err.add " -- $1 the following:\n" % prefix
-    else: err.add "\n"
-    err.add "  " & candidate.owner.name.s & "." & candidate.name.s
-    err.add ": " & typeToString(candidate.typ)
+    if i == 0: result.add " -- $1 the following:\n" % prefix
+    else: result.add "\n"
+    for i in 0 ..< indent:
+      result.add(' ')
+    result.add "  " & candidate.owner.name.s & "." & candidate.name.s
+    result.add ": " & typeToString(candidate.typ)
     inc i
-  localError(c.config, info, errGenerated, err)
 
-proc errorUseQualifier*(c: PContext; info:TLineInfo; choices: PNode) =
+proc errorUseQualifier*(c: PContext; info: TLineInfo; candidates: seq[PSym]) =
+  localError(c.config, info, errGenerated, ambiguousIdentifierMsg(candidates))
+
+proc ambiguousIdentifierMsg*(choices: PNode, indent = 0): string =
   var candidates = newSeq[PSym](choices.len)
   let prefix = if choices[0].typ.kind != tyProc: "use one of" else: "you need a helper proc to disambiguate"
   for i, n in choices:
     candidates[i] = n.sym
-  errorUseQualifier(c, info, candidates, prefix)
+  result = ambiguousIdentifierMsg(candidates, prefix, indent)
+
+proc errorUseQualifier*(c: PContext; info:TLineInfo; choices: PNode) =
+  localError(c.config, info, errGenerated, ambiguousIdentifierMsg(choices))
 
 proc errorUndeclaredIdentifier*(c: PContext; info: TLineInfo; name: string, extra = "") =
   var err: string
   if name == "_":
     err = "the special identifier '_' is ignored in declarations and cannot be used"
   else:
-    err = "undeclared identifier: '" & name & "'" & extra
+    err = "undeclared identifier: '" & name & "'"
+    if "`gensym" in name:
+      err.add "; if declared in a template, this identifier may be inconsistently marked inject or gensym"
+    if extra.len != 0:
+      err.add extra
     if c.recursiveDep.len > 0:
       err.add "\nThis might be caused by a recursive module dependency:\n"
       err.add c.recursiveDep
@@ -577,11 +609,11 @@ proc errorUndeclaredIdentifier*(c: PContext; info: TLineInfo; name: string, extr
       c.recursiveDep = ""
   localError(c.config, info, errGenerated, err)
 
-proc errorUndeclaredIdentifierHint*(c: PContext; n: PNode, ident: PIdent): PSym =
+proc errorUndeclaredIdentifierHint*(c: PContext; ident: PIdent; info: TLineInfo): PSym =
   var extra = ""
-  if c.mustFixSpelling: fixSpelling(c, n, ident, extra)
-  errorUndeclaredIdentifier(c, n.info, ident.s, extra)
-  result = errorSym(c, n)
+  if c.mustFixSpelling: fixSpelling(c, ident, extra)
+  errorUndeclaredIdentifier(c, info, ident.s, extra)
+  result = errorSym(c, ident, info)
 
 proc lookUp*(c: PContext, n: PNode): PSym =
   # Looks up a symbol. Generates an error in case of nil.
@@ -589,13 +621,13 @@ proc lookUp*(c: PContext, n: PNode): PSym =
   case n.kind
   of nkIdent:
     result = searchInScopes(c, n.ident, amb)
-    if result == nil: result = errorUndeclaredIdentifierHint(c, n, n.ident)
+    if result == nil: result = errorUndeclaredIdentifierHint(c, n.ident, n.info)
   of nkSym:
     result = n.sym
   of nkAccQuoted:
     var ident = considerQuotedIdent(c, n)
     result = searchInScopes(c, ident, amb)
-    if result == nil: result = errorUndeclaredIdentifierHint(c, n, ident)
+    if result == nil: result = errorUndeclaredIdentifierHint(c, ident, n.info)
   else:
     internalError(c.config, n.info, "lookUp")
     return nil
@@ -609,16 +641,30 @@ type
   TLookupFlag* = enum
     checkAmbiguity, checkUndeclared, checkModule, checkPureEnumFields
 
+const allExceptModule = {low(TSymKind)..high(TSymKind)} - {skModule, skPackage}
+
+proc lookUpCandidates*(c: PContext, ident: PIdent, filter: set[TSymKind],
+                       includePureEnum = false): seq[PSym] =
+  result = selectFromScopesElseAll(c, ident, filter)
+  if skEnumField in filter and (result.len == 0 or includePureEnum):
+    result.add allPureEnumFields(c, ident)
+
 proc qualifiedLookUp*(c: PContext, n: PNode, flags: set[TLookupFlag]): PSym =
-  const allExceptModule = {low(TSymKind)..high(TSymKind)} - {skModule, skPackage}
   case n.kind
   of nkIdent, nkAccQuoted:
     var amb = false
     var ident = considerQuotedIdent(c, n)
     if checkModule in flags:
       result = searchInScopes(c, ident, amb)
+      if result == nil:
+        let candidates = allPureEnumFields(c, ident)
+        if candidates.len > 0:
+          result = candidates[0]
+          amb = candidates.len > 1
+          if amb and checkAmbiguity in flags:
+            errorUseQualifier(c, n.info, candidates)
     else:
-      let candidates = searchInScopesFilterBy(c, ident, allExceptModule)
+      let candidates = lookUpCandidates(c, ident, allExceptModule)
       if candidates.len > 0:
         result = candidates[0]
         amb = candidates.len > 1
@@ -626,46 +672,47 @@ proc qualifiedLookUp*(c: PContext, n: PNode, flags: set[TLookupFlag]): PSym =
           errorUseQualifier(c, n.info, candidates)
       else:
         result = nil
-    if result == nil:
-      let candidates = allPureEnumFields(c, ident)
-      if candidates.len > 0:
-        result = candidates[0]
-        amb = candidates.len > 1
-        if amb and checkAmbiguity in flags:
-          errorUseQualifier(c, n.info, candidates)
-
     if result == nil and checkUndeclared in flags:
-      result = errorUndeclaredIdentifierHint(c, n, ident)
+      result = errorUndeclaredIdentifierHint(c, ident, n.info)
     elif checkAmbiguity in flags and result != nil and amb:
       result = errorUseQualifier(c, n.info, result, amb)
     c.isAmbiguous = amb
   of nkSym:
     result = n.sym
+  of nkOpenSym:
+    result = qualifiedLookUp(c, n[0], flags)
   of nkDotExpr:
     result = nil
     var m = qualifiedLookUp(c, n[0], (flags * {checkUndeclared}) + {checkModule})
     if m != nil and m.kind == skModule:
       var ident: PIdent = nil
-      if n[1].kind == nkIdent:
-        ident = n[1].ident
-      elif n[1].kind == nkAccQuoted:
+      if n[1].kind == nkAccQuoted:
         ident = considerQuotedIdent(c, n[1])
+      else:
+        # this includes sym and symchoice nodes, but since we are looking in
+        # a module, it shouldn't matter what was captured
+        ident = n[1].getPIdent
       if ident != nil:
         if m == c.module:
-          result = strTableGet(c.topLevelScope.symbols, ident)
+          var ti: TIdentIter = default(TIdentIter)
+          result = initIdentIter(ti, c.topLevelScope.symbols, ident)
+          if result != nil and nextIdentIter(ti, c.topLevelScope.symbols) != nil:
+            # another symbol exists with same name
+            c.isAmbiguous = true
         else:
+          var amb: bool = false
           if c.importModuleLookup.getOrDefault(m.name.id).len > 1:
-            var amb: bool
             result = errorUseQualifier(c, n.info, m, amb)
           else:
-            result = someSym(c.graph, m, ident)
+            result = someSymAmb(c.graph, m, ident, amb)
+            if amb: c.isAmbiguous = true
         if result == nil and checkUndeclared in flags:
-          result = errorUndeclaredIdentifierHint(c, n[1], ident)
+          result = errorUndeclaredIdentifierHint(c, ident, n[1].info)
       elif n[1].kind == nkSym:
         result = n[1].sym
         if result.owner != nil and result.owner != m and checkUndeclared in flags:
           # dotExpr in templates can end up here
-          result = errorUndeclaredIdentifierHint(c, n[1], considerQuotedIdent(c, n[1]))
+          result = errorUndeclaredIdentifierHint(c, result.name, n[1].info)
       elif checkUndeclared in flags and
            n[1].kind notin {nkOpenSymChoice, nkClosedSymChoice}:
         localError(c.config, n[1].info, "identifier expected, but got: " &
@@ -677,6 +724,10 @@ proc qualifiedLookUp*(c: PContext, n: PNode, flags: set[TLookupFlag]): PSym =
     if result != nil and result.kind == skStub: loadStub(result)
 
 proc initOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
+  if n.kind == nkOpenSym:
+    # maybe the logic in semexprs should be mirrored here instead
+    # for now it only seems this is called for `pickSym` in `getTypeIdent` 
+    return initOverloadIter(o, c, n[0])
   o.importIdx = -1
   o.marked = initIntSet()
   case n.kind

@@ -8,6 +8,8 @@ hello foo
 hello boo
 hello boo
 FunctorSupport!
+static
+static
 destructing
 destructing
 '''
@@ -34,7 +36,7 @@ echo doo == Doo(test: 1)
 #virtual
 proc newCpp*[T](): ptr T {.importcpp:"new '*0()".}
 type 
-  Foo = object of RootObj
+  Foo {.exportc.} = object of RootObj
   FooPtr = ptr Foo
   Boo = object of Foo
   BooPtr = ptr Boo
@@ -62,3 +64,12 @@ proc invoke(f: NimFunctor, n:int) {.member:"operator ()('2 #2)" .} =
 {.experimental: "callOperator".}
 proc `()`(f: NimFunctor, n:int) {.importcpp:"#(@)" .} 
 NimFunctor()(1)
+
+#static
+proc staticProc(self: FooPtr) {.member: "static $1()".} = 
+  echo "static"
+
+proc importedStaticProc() {.importcpp:"Foo::staticProc()".}
+
+foo.staticProc()
+importedStaticProc()

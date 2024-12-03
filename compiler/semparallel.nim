@@ -77,12 +77,12 @@ type
     graph: ModuleGraph
 
 proc initAnalysisCtx(g: ModuleGraph): AnalysisCtx =
-  result.locals = @[]
-  result.slices = @[]
-  result.args = @[]
+  result = AnalysisCtx(locals: @[],
+    slices: @[],
+    args: @[],
+    graph: g)
   result.guards.s = @[]
   result.guards.g = g
-  result.graph = g
 
 proc lookupSlot(c: AnalysisCtx; s: PSym): int =
   for i in 0..<c.locals.len:
@@ -405,11 +405,11 @@ proc transformSlices(g: ModuleGraph; idgen: IdGenerator; n: PNode): PNode =
     let op = n[0].sym
     if op.name.s == "[]" and op.fromSystem:
       result = copyNode(n)
-      var typ = newType(tyOpenArray, nextTypeId(g.idgen), result.typ.owner)
-      typ.add result.typ[0]
-      result.typ = typ
+      var typ = newType(tyOpenArray, idgen, result.typ.owner)
+      typ.add result.typ.elementType
+      result.typ() = typ
       let opSlice = newSymNode(createMagic(g, idgen, "slice", mSlice))
-      opSlice.typ = getSysType(g, n.info, tyInt)
+      opSlice.typ() = getSysType(g, n.info, tyInt)
       result.add opSlice
       result.add n[1]
       let slice = n[2].skipStmtList
@@ -441,7 +441,7 @@ proc transformSpawn(g: ModuleGraph; idgen: IdGenerator; owner: PSym; n, barrier:
         if result.isNil:
           result = newNodeI(nkStmtList, n.info)
           result.add n
-        let t = b[1][0].typ[0]
+        let t = b[1][0].typ.returnType
         if spawnResult(t, true) == srByVar:
           result.add wrapProcForSpawn(g, idgen, owner, m, b.typ, barrier, it[0])
           it[^1] = newNodeI(nkEmpty, it.info)
@@ -450,7 +450,7 @@ proc transformSpawn(g: ModuleGraph; idgen: IdGenerator; owner: PSym; n, barrier:
     if result.isNil: result = n
   of nkAsgn, nkFastAsgn, nkSinkAsgn:
     let b = n[1]
-    if getMagic(b) == mSpawn and (let t = b[1][0].typ[0];
+    if getMagic(b) == mSpawn and (let t = b[1][0].typ.returnType;
         spawnResult(t, true) == srByVar):
       let m = transformSlices(g, idgen, b)
       return wrapProcForSpawn(g, idgen, owner, m, b.typ, barrier, n[0])

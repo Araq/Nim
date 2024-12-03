@@ -131,9 +131,10 @@
   ===========  =================================================================================  ==============================================
 
   Other strings can be inserted by putting them in `''`. For example
-  `hh'->'mm` will give `01->56`.  The following characters can be
-  inserted without quoting them: `:` `-` `(` `)` `/` `[` `]`
-  `,`. A literal `'` can be specified with `''`.
+  `hh'->'mm` will give `01->56`.  In addition to spaces,
+  the following characters can be inserted without quoting them:
+  `:` `-` `,` `.` `(` `)` `/` `[` `]`.
+  A literal `'` can be specified with `''`.
 
   However you don't need to necessarily separate format patterns, as an
   unambiguous format string like `yyyyMMddhhmmss` is also valid (although
@@ -214,27 +215,29 @@ when defined(nimPreviewSlimSystem):
 
 when defined(js):
   import std/jscore
+  import std/private/jsutils
 
-  # This is really bad, but overflow checks are broken badly for
-  # ints on the JS backend. See #6752.
-  {.push overflowChecks: off.}
-  proc `*`(a, b: int64): int64 =
-    system.`*`(a, b)
-  proc `*`(a, b: int): int =
-    system.`*`(a, b)
-  proc `+`(a, b: int64): int64 =
-    system.`+`(a, b)
-  proc `+`(a, b: int): int =
-    system.`+`(a, b)
-  proc `-`(a, b: int64): int64 =
-    system.`-`(a, b)
-  proc `-`(a, b: int): int =
-    system.`-`(a, b)
-  proc inc(a: var int, b: int) =
-    system.inc(a, b)
-  proc inc(a: var int64, b: int) =
-    system.inc(a, b)
-  {.pop.}
+  when jsNoBigInt64:
+    # This is really bad, but overflow checks are broken badly for
+    # ints on the JS backend. See #6752.
+    {.push overflowChecks: off.}
+    proc `*`(a, b: int64): int64 =
+      system.`*`(a, b)
+    proc `*`(a, b: int): int =
+      system.`*`(a, b)
+    proc `+`(a, b: int64): int64 =
+      system.`+`(a, b)
+    proc `+`(a, b: int): int =
+      system.`+`(a, b)
+    proc `-`(a, b: int64): int64 =
+      system.`-`(a, b)
+    proc `-`(a, b: int): int =
+      system.`-`(a, b)
+    proc inc(a: var int, b: int) =
+      system.inc(a, b)
+    proc inc(a: var int64, b: int) =
+      system.inc(a, b)
+    {.pop.}
 
 elif defined(posix):
   import std/posix
@@ -483,7 +486,7 @@ proc toEpochDay(monthday: MonthdayRange, month: Month, year: int): int64 =
   ## Get the epoch day from a year/month/day date.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   assertValidDate monthday, month, year
   var (y, m, d) = (year, ord(month), monthday.int)
   if m <= 2:
@@ -500,7 +503,7 @@ proc fromEpochDay(epochday: int64):
   ## Get the year/month/day date from a epoch day.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   var z = epochday
   z.inc 719468
   let era = (if z >= 0: z else: z - 146096) div 146097
@@ -1498,11 +1501,11 @@ proc `-=`*(a: var DateTime, b: Duration) =
   a = a - b
 
 proc getDateStr*(dt = now()): string {.rtl, extern: "nt$1", tags: [TimeEffect].} =
-  ## Gets the current local date as a string of the format `YYYY-MM-DD`.
+  ## Gets the current local date as a string of the format `YYYY-MM-dd`.
   runnableExamples:
     echo getDateStr(now() - 1.months)
   assertDateTimeInitialized dt
-  result = newStringOfCap(10)  # len("YYYY-MM-DD") == 10
+  result = newStringOfCap(10)  # len("YYYY-MM-dd") == 10
   result.addInt dt.year
   result.add '-'
   result.add intToStr(dt.monthZero, 2)
@@ -1631,7 +1634,7 @@ const
         "Sunday"],
   )
 
-  FormatLiterals = {' ', '-', '/', ':', '(', ')', '[', ']', ','}
+  FormatLiterals = {' ', '-', '/', ':', '(', ')', '[', ']', ',', '.'}
 
 proc `$`*(f: TimeFormat): string =
   ## Returns the format string that was used to construct `f`.

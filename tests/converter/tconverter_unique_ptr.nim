@@ -22,12 +22,11 @@ proc `$`(x: MyLen): string {.borrow.}
 proc `==`(x1, x2: MyLen): bool {.borrow.}
 
 
-proc `=destroy`*(m: var MySeq) {.inline.} =
+proc `=destroy`*(m: MySeq) {.inline.} =
   if m.data != nil:
     deallocShared(m.data)
-    m.data = nil
 
-proc `=`*(m: var MySeq, m2: MySeq) =
+proc `=copy`*(m: var MySeq, m2: MySeq) =
   if m.data == m2.data: return
   if m.data != nil:
     `=destroy`(m)
@@ -77,13 +76,12 @@ converter literalToLen*(x: int{lit}): MyLen =
 # Unique pointer implementation
 #-------------------------------------------------------------
 
-proc `=destroy`*[T](p: var UniquePtr[T]) =
+proc `=destroy`*[T](p: UniquePtr[T]) =
   if p.val != nil:
     `=destroy`(p.val[])
     dealloc(p.val)
-    p.val = nil
 
-proc `=`*[T](dest: var UniquePtr[T], src: UniquePtr[T]) {.error.}
+proc `=copy`*[T](dest: var UniquePtr[T], src: UniquePtr[T]) {.error.}
 
 proc `=sink`*[T](dest: var UniquePtr[T], src: UniquePtr[T]) {.inline.} =
   if dest.val != nil and dest.val != src.val:
@@ -118,13 +116,12 @@ type
     ## as it returns only `lent T`
     val: ptr T
 
-proc `=destroy`*[T](p: var ConstPtr[T]) =
+proc `=destroy`*[T](p: ConstPtr[T]) =
   if p.val != nil:
     `=destroy`(p.val[])
     dealloc(p.val)
-    p.val = nil
 
-proc `=`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.error.}
+proc `=copy`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.error.}
 
 proc `=sink`*[T](dest: var ConstPtr[T], src: ConstPtr[T]) {.inline.} =
   if dest.val != nil and dest.val != src.val:

@@ -99,4 +99,9 @@ block asyncPragmaInType:
   proc foo() {.async.} = discard
   var x: Handler = foo
 
+block: # 13341
+  proc f {.async.} =
+    proc g: int =
+      result = 123
+
 discard main()

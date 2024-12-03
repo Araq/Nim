@@ -119,6 +119,12 @@ proc load*[T](f: var RodFile; t: var BiTable[T]) =
   loadSeq(f, t.vals)
   loadSeq(f, t.keys)
 
+proc sizeOnDisc*(t: BiTable[string]): int =
+  result = 4
+  for x in t.vals:
+    result += x.len + 4
+  result += t.keys.len * sizeof(LitId)
+
 when isMainModule:
 
   var t: BiTable[string]

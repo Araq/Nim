@@ -1,6 +1,6 @@
 discard """
   output: "123"
-  targets: "c"
+  targets: "c cpp"
 """
 # Try to break the transformation pass:
 iterator iterAndZero(a: var openArray[int]): int =

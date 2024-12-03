@@ -18,7 +18,7 @@ proc editDistance*(a, b: string): int {.noSideEffect.} =
   ## This uses the `Levenshtein`:idx: distance algorithm with only a linear
   ## memory overhead.
   runnableExamples: static: doAssert editdistance("Kitten", "Bitten") == 1
-  if len(a) > len(b):
+  if runeLen(a) > runeLen(b):
     # make `b` the longer string
     return editDistance(b, a)
   # strip common prefix

@@ -4,6 +4,7 @@ discard """
 finalized
 finalized
 '''
+  retries: 2
 """
 
 proc finish(o: RootRef) =

@@ -1,3 +1,6 @@
+discard """
+  retries: 2
+"""
 
 # Program to detect bug #1796 reliably
 

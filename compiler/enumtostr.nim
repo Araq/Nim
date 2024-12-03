@@ -14,7 +14,7 @@ proc genEnumToStrProc*(t: PType; info: TLineInfo; g: ModuleGraph; idgen: IdGener
   let res = newSym(skResult, getIdent(g.cache, "result"), idgen, result, info)
   res.typ = getSysType(g, info, tyString)
 
-  result.typ = newType(tyProc, nextTypeId idgen, t.owner)
+  result.typ = newType(tyProc, idgen, t.owner)
   result.typ.n = newNodeI(nkFormalParams, info)
   rawAddSon(result.typ, res.typ)
   result.typ.n.add newNodeI(nkEffectList, info)
@@ -63,8 +63,8 @@ proc searchObjCaseImpl(obj: PNode; field: PSym): PNode =
 
 proc searchObjCase(t: PType; field: PSym): PNode =
   result = searchObjCaseImpl(t.n, field)
-  if result == nil and t.len > 0:
-    result = searchObjCase(t[0].skipTypes({tyAlias, tyGenericInst, tyRef, tyPtr}), field)
+  if result == nil and t.baseClass != nil:
+    result = searchObjCase(t.baseClass.skipTypes({tyAlias, tyGenericInst, tyRef, tyPtr}), field)
   doAssert result != nil
 
 proc genCaseObjDiscMapping*(t: PType; field: PSym; info: TLineInfo; g: ModuleGraph; idgen: IdGenerator): PSym =
@@ -76,7 +76,7 @@ proc genCaseObjDiscMapping*(t: PType; field: PSym; info: TLineInfo; g: ModuleGra
   let res = newSym(skResult, getIdent(g.cache, "result"), idgen, result, info)
   res.typ = getSysType(g, info, tyUInt8)
 
-  result.typ = newType(tyProc, nextTypeId idgen, t.owner)
+  result.typ = newType(tyProc, idgen, t.owner)
   result.typ.n = newNodeI(nkFormalParams, info)
   rawAddSon(result.typ, res.typ)
   result.typ.n.add newNodeI(nkEffectList, info)

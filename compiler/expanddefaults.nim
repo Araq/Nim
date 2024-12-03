@@ -55,8 +55,8 @@ proc expandDefaultN(n: PNode; info: TLineInfo; res: PNode) =
     discard
 
 proc expandDefaultObj(t: PType; info: TLineInfo; res: PNode) =
-  if t[0] != nil:
-    expandDefaultObj(t[0], info, res)
+  if t.baseClass != nil:
+    expandDefaultObj(t.baseClass, info, res)
   expandDefaultN(t.n, info, res)
 
 proc expandDefault(t: PType; info: TLineInfo): PNode =
@@ -82,13 +82,13 @@ proc expandDefault(t: PType; info: TLineInfo): PNode =
     result = newZero(t, info, nkIntLit)
   of tyRange:
     # Could use low(T) here to finally fix old language quirks
-    result = expandDefault(t[0], info)
+    result = expandDefault(skipModifier t, info)
   of tyVoid: result = newZero(t, info, nkEmpty)
   of tySink, tyGenericInst, tyDistinct, tyAlias, tyOwned:
-    result = expandDefault(t.lastSon, info)
+    result = expandDefault(t.skipModifier, info)
   of tyOrdinal, tyGenericBody, tyGenericParam, tyInferred, tyStatic:
-    if t.len > 0:
-      result = expandDefault(t.lastSon, info)
+    if t.hasElementType:
+      result = expandDefault(t.skipModifier, info)
     else:
       result = newZero(t, info, nkEmpty)
   of tyFromExpr:
@@ -100,16 +100,16 @@ proc expandDefault(t: PType; info: TLineInfo): PNode =
     result = newZero(t, info, nkBracket)
     let n = toInt64(lengthOrd(nil, t))
     for i in 0..<n:
-      result.add expandDefault(t[1], info)
+      result.add expandDefault(t.elementType, info)
   of tyPtr, tyRef, tyProc, tyPointer, tyCstring:
     result = newZero(t, info, nkNilLit)
   of tyVar, tyLent:
-    let e = t.lastSon
+    let e = t.elementType
     if e.skipTypes(abstractInst).kind in {tyOpenArray, tyVarargs}:
       # skip the modifier, `var openArray` is a (ptr, len) pair too:
       result = expandDefault(e, info)
     else:
-      result = newZero(t.lastSon, info, nkNilLit)
+      result = newZero(e, info, nkNilLit)
   of tySet:
     result = newZero(t, info, nkCurly)
   of tyObject:
@@ -118,14 +118,14 @@ proc expandDefault(t: PType; info: TLineInfo): PNode =
     expandDefaultObj(t, info, result)
   of tyTuple:
     result = newZero(t, info, nkTupleConstr)
-    for it in t:
+    for it in t.kids:
       result.add expandDefault(it, info)
   of tyVarargs, tyOpenArray, tySequence, tyUncheckedArray:
     result = newZero(t, info, nkBracket)
   of tyString:
     result = newZero(t, info, nkStrLit)
   of tyNone, tyEmpty, tyUntyped, tyTyped, tyTypeDesc,
-     tyNil, tyGenericInvocation, tyProxy, tyBuiltInTypeClass,
+     tyNil, tyGenericInvocation, tyError, tyBuiltInTypeClass,
      tyUserTypeClass, tyUserTypeClassInst, tyCompositeTypeClass,
      tyAnd, tyOr, tyNot, tyAnything, tyConcept, tyIterable, tyForward:
     result = newZero(t, info, nkEmpty) # bug indicator

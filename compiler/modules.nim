@@ -14,6 +14,9 @@ import
   idents, lexer, syntaxes, modulegraphs,
   lineinfos, pathutils
 
+import ../dist/checksums/src/checksums/sha1
+import std/strtabs
+
 proc resetSystemArtifacts*(g: ModuleGraph) =
   magicsys.resetSysTypes(g)
 
@@ -22,7 +25,7 @@ template getModuleIdent(graph: ModuleGraph, filename: AbsoluteFile): PIdent =
 
 proc partialInitModule*(result: PSym; graph: ModuleGraph; fileIdx: FileIndex; filename: AbsoluteFile) =
   let packSym = getPackage(graph, fileIdx)
-  result.owner = packSym
+  setOwner(result, packSym)
   result.position = int fileIdx
 
 proc newModule*(graph: ModuleGraph; fileIdx: FileIndex): PSym =
@@ -42,6 +45,8 @@ proc includeModule*(graph: ModuleGraph; s: PSym, fileIdx: FileIndex): PNode =
   result = syntaxes.parseFile(fileIdx, graph.cache, graph.config)
   graph.addDep(s, fileIdx)
   graph.addIncludeDep(s.position.FileIndex, fileIdx)
+  let path = toFullPath(graph.config, fileIdx)
+  graph.cachedFiles[path] = $secureHashFile(path)
 
 proc wantMainModule*(conf: ConfigRef) =
   if conf.projectFull.isEmpty:

@@ -1,6 +1,6 @@
 discard """
-  errormsg: "\'vectFunc\' doesn't have a concrete type, due to unspecified generic parameters."
-  line: 28
+  errormsg: "cannot instantiate: 'T'"
+  line: 19
 """
 
 type
