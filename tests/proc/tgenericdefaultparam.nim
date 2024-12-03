@@ -118,3 +118,13 @@ block: # issue #24484, array version
     doAssert t == [T(0), 5]
   bar[uint8]()
 
+block: # issue #24484, tuple version
+  type E = enum A
+  proc foo[T](t = (T.A,)) =
+    discard
+  foo[E]()
+
+  proc bar[T](t: (T, int) = (T(0), 5)) =
+    doAssert t == (T(0), 5)
+  bar[uint8]()
+
