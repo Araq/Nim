@@ -211,6 +211,7 @@ when defined(gcOrc):
     #include cyclecollector
 
 proc nimDecRefIsLast(p: pointer): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
 

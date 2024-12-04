@@ -36,7 +36,7 @@ iterator walkDirRecFilter*(dir: string, follow: proc(entry: PathEntry): bool = n
   ]#
   var stack = @["."]
   var checkDir = checkDir
-  var entry: PathEntry
+  var entry: PathEntry = PathEntry()
   while stack.len > 0:
     let d = stack.pop()
     for k, p in walkDir(dir / d, relative = true, checkDir = checkDir):

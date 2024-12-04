@@ -509,6 +509,7 @@ proc rememberCycle(isDestroyAction: bool; s: Cell; desc: PNimTypeV2) {.noinline.
       registerCycle(s, desc)
 
 proc nimDecRefIsLastCyclicDyn(p: pointer): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:
@@ -520,6 +521,7 @@ proc nimDecRefIsLastCyclicDyn(p: pointer): bool {.compilerRtl, inl.} =
     rememberCycle(result, cell, cast[ptr PNimTypeV2](p)[])
 
 proc nimDecRefIsLastDyn(p: pointer): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:
@@ -533,6 +535,7 @@ proc nimDecRefIsLastDyn(p: pointer): bool {.compilerRtl, inl.} =
         unregisterCycle(cell)
 
 proc nimDecRefIsLastCyclicStatic(p: pointer; desc: PNimTypeV2): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:
