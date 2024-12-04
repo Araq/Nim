@@ -895,17 +895,19 @@ proc p(n: PNode; c: var Con; s: var Scope; mode: ProcessMode; tmpFlags = {sfSing
           isDangerous = true
 
       result = shallowCopy(n)
-      for i in 1..<n.len:
-        if i < L and isCompileTimeOnly(parameters[i]):
-          result[i] = n[i]
-        elif i < L and (isSinkTypeForParam(parameters[i]) or inSpawn > 0):
-          result[i] = p(n[i], c, s, sinkArg)
-        elif n[0].kind == nkSym and n[0].sym.magic == mEnsureMove:
-          inc c.inEnsureMove
-          result[i] = p(n[i], c, s, sinkArg)
-          dec c.inEnsureMove
-        else:
-          result[i] = p(n[i], c, s, normal)
+
+      if n[0].kind == nkSym and n[0].sym.magic == mEnsureMove:
+        inc c.inEnsureMove
+        result[1] = p(n[1], c, s, sinkArg)
+        dec c.inEnsureMove
+      else:
+        for i in 1..<n.len:
+          if i < L and isCompileTimeOnly(parameters[i]):
+            result[i] = n[i]
+          elif i < L and (isSinkTypeForParam(parameters[i]) or inSpawn > 0):
+            result[i] = p(n[i], c, s, sinkArg)
+          else:
+            result[i] = p(n[i], c, s, normal)
 
       when false:
         if isDangerous:
