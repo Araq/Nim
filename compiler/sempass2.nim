@@ -1644,6 +1644,9 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
      s.kind in {skProc, skFunc, skConverter, skMethod}:
     var res = s.ast[resultPos].sym # get result symbol
     t.scopes[res.id] = t.currentBlock
+    if sfNoInit in s.flags:
+      # marks result "noinit"
+      incl res.flags, sfNoInit
 
   track(t, body)
 
@@ -1662,7 +1665,8 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
        strictDefs in c.features) and
-     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone:
+     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone and
+     sfNoInit notin s.flags:
     var res = s.ast[resultPos].sym # get result symbol
     if res.id notin t.init and breaksBlock(body) != bsNoReturn:
       if tfRequiresInit in s.typ.returnType.flags:
