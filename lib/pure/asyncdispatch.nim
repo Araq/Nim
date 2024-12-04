@@ -1696,12 +1696,12 @@ proc drain*(timeout = 500) =
   ## Waits for completion of **all** events and processes them. Raises `ValueError`
   ## if there are no pending operations. In contrast to `poll` this
   ## processes as many events as are available until the timeout has elapsed.
-  var curTimeout = timeout
-  let start = now()
+  var elapsed = 0
+  let start = getMonoTime()
   while hasPendingOperations():
-    discard runOnce(curTimeout)
-    curTimeout -= (now() - start).inMilliseconds.int
-    if curTimeout < 0:
+    discard runOnce(timeout - elapsed)
+    elapsed = (getMonoTime() - start).inMilliseconds
+    if elapsed >= timeout:
       break
 
 proc poll*(timeout = 500) =
