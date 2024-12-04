@@ -43,7 +43,7 @@ proc constructSingle(bits: BitsType): Single =
   result = Single(bits: bits)
 
 proc constructSingle(value: ValueType): Single =
-  result = Single(bits:cast[typeof(result.bits)](value))
+  result = Single(bits: cast[typeof(result.bits)](value))
 
 proc physicalSignificand(this: Single): BitsType {.noSideEffect.} =
   return this.bits and significandMask
