@@ -970,7 +970,7 @@ proc newConnection(client: HttpClient | AsyncHttpClient,
       else: nativesockets.Port(connectionUrl.port.parseInt)
 
     when client is HttpClient:
-      client.socket = await net.dial(connectionUrl.hostname, port)
+      client.socket = net.dial(connectionUrl.hostname, port)
     elif client is AsyncHttpClient:
       client.socket = await asyncnet.dial(connectionUrl.hostname, port)
     else: {.fatal: "Unsupported client type".}
