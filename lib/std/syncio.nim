@@ -399,6 +399,8 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
   ## character(s) are not part of the returned string. Returns `false`
   ## if the end of the file has been reached, `true` otherwise. If
   ## `false` is returned `line` contains no new data.
+  result = false
+
   proc c_memchr(s: pointer, c: cint, n: csize_t): pointer {.
     importc: "memchr", header: "<string.h>".}
 
@@ -737,6 +739,8 @@ proc open*(f: var File, filename: string,
       discard c_setvbuf(f, nil, IOFBF, cast[csize_t](bufSize))
     elif bufSize == 0:
       discard c_setvbuf(f, nil, IONBF, 0)
+  else:
+    result = false
 
 proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
   tags: [], benign.} =
@@ -754,6 +758,8 @@ proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
         closeIgnoreError(f)
         return false
     result = true
+  else:
+    result = false
 
 proc open*(f: var File, filehandle: FileHandle,
            mode: FileMode = fmRead): bool {.tags: [], raises: [], benign.} =
@@ -778,6 +784,7 @@ proc open*(filename: string,
   ## could not be opened.
   ##
   ## The file handle associated with the resulting `File` is not inheritable.
+  result = default(File)
   if not open(result, filename, mode, bufSize):
     raise newException(IOError, "cannot open: " & filename)
 

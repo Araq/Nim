@@ -575,6 +575,7 @@ proc isAccessible(a: MemRegion, p: pointer): bool {.inline.} =
   result = contains(a.chunkStarts, pageIndex(p))
 
 proc contains[T](list, x: T): bool =
+  result = false
   var it = list
   while it != nil:
     if it == x: return true
@@ -1164,6 +1165,7 @@ proc dealloc(allocator: var MemRegion, p: pointer) =
     rawDealloc(allocator, p)
 
 proc realloc(allocator: var MemRegion, p: pointer, newsize: Natural): pointer =
+  result = nil
   if newsize > 0:
     result = alloc(allocator, newsize)
     if p != nil:
