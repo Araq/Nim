@@ -864,7 +864,7 @@ proc parseResponse(client: HttpClient | AsyncHttpClient,
   while true:
     linei = 0
     when client is HttpClient:
-      line = await client.socket.recvLine(client.timeout)
+      line = client.socket.recvLine(client.timeout)
     else:
       line = await client.socket.recvLine()
     if line == "":
