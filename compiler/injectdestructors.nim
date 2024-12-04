@@ -888,12 +888,9 @@ proc p(n: PNode; c: var Con; s: var Scope; mode: ProcessMode; tmpFlags = {sfSing
     of nkCallKinds:
       if n[0].kind == nkSym and n[0].sym.magic == mEnsureMove:
         inc c.inEnsureMove
-        if isAnalysableFieldAccess(n[1], c.owner) and isLastRead(n[1], c, s) and
-            hasDestructor(n[1].typ):
-          result = p(n[1], c, s, normal)
-        else:
-          result = p(n[1], c, s, sinkArg)
+        result = p(n[1], c, s, sinkArg)
         dec c.inEnsureMove
+        result = ensureDestruction(result, n, c, s)
         return
 
       let inSpawn = c.inSpawn
