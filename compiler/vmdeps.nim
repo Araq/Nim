@@ -135,8 +135,8 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
     if inst:
       if allowRecursion:
         result = mapTypeToAstR(t.skipModifier, info)
-        # keep original type info for getType calls on the output node:
-        result.typ() = t
+        # result.typ can be tyGenericBody, give it a proper type:
+        result.typ() = t.skipModifier
       else:
         result = newNodeX(nkBracketExpr)
         #result.add mapTypeToAst(t.last, info)
@@ -145,8 +145,8 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
           result.add mapTypeToAst(a, info)
     else:
       result = mapTypeToAstX(cache, t.skipModifier, info, idgen, inst, allowRecursion)
-      # keep original type info for getType calls on the output node:
-      result.typ() = t
+      # result.typ can be tyGenericBody, give it a proper type:
+      result.typ() = t.skipModifier
   of tyGenericBody:
     if inst:
       result = mapTypeToAstR(t.typeBodyImpl, info)
