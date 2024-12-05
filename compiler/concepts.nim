@@ -128,14 +128,11 @@ proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool =
     result = matchType(c, f.skipModifier, a, m)
   of tyTypeDesc:
     if isSelf(f):
-      if a.acceptsAllTypes:
-        if m.magic in {mArrPut, mArrGet}:
-          result = false
-          if m.potentialImplementation.reduceToBase.kind in arrPutGetMagicApplies:
-            m.inferred.add((a, last m.potentialImplementation))
-            result = true
-        else:
-          result = false # not sure if this is ever valid
+      if m.magic in {mArrPut, mArrGet}:
+        result = false
+        if m.potentialImplementation.reduceToBase.kind in arrPutGetMagicApplies:
+          m.inferred.add((a, last m.potentialImplementation))
+          result = true
       else:
         result = matchType(c, a, m.potentialImplementation, m)
     else:
@@ -380,6 +377,8 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   ## `C[S, T]` parent type that we look for. We need this because we need to store bindings
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
+  if arg.containsUnresolvedType:
+    return false
   var m = MatchCon(inferred: @[], potentialImplementation: arg, concpt: concpt)
   result = conceptMatchNode(c, concpt.n.lastSon, m)
   if result:
