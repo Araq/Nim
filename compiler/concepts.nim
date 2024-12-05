@@ -89,29 +89,55 @@ proc existingBinding(m: MatchCon; key: PType): PType =
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
 
-proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool
+proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool
+
+proc acceptsAllTypes(t: PType): bool=
+  result = false
+  if t.kind == tyAnything:
+    result = true
+  elif t.kind == tyGenericParam:
+    if tfImplicitTypeParam in t.flags:
+      result = true
+    if not(t.hasElementType) or t.elementType.kind == tyNone:
+      result = true
 
 proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
   result = true
   for i in start..<f.kidsLen - ord(f.kind == tyGenericInst):
     if not matchType(c, f[i], a[i], m): return false
 
-proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
+proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
   const
     ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyGenericInst, tyAlias, tyInferred}
+  
+  var a = ao
+  
+  case a.kind
+  of tyGenericParam:
+    let binding = m.existingBinding(a)
+    if binding != nil:
+      a = binding
+  else:
+    discard
+  
   case f.kind
   of tyAlias:
     result = matchType(c, f.skipModifier, a, m)
   of tyTypeDesc:
     if isSelf(f):
-      #let oldLen = m.inferred.len
-      result = matchType(c, a, m.potentialImplementation, m)
-      #echo "self is? ", result, " ", a.kind, " ", a, " ", m.potentialImplementation, " ", m.potentialImplementation.kind
-      #m.inferred.setLen oldLen
-      #echo "A for ", result, " to ", typeToString(a), " to ", typeToString(m.potentialImplementation)
+      if a.acceptsAllTypes:
+        if m.magic in {mArrPut, mArrGet}:
+          result = false
+          if m.potentialImplementation.reduceToBase.kind in arrPutGetMagicApplies:
+            m.inferred.add((a, last m.potentialImplementation))
+            result = true
+        else:
+          result = false # not sure if this is ever valid
+      else:
+        result = matchType(c, a, m.potentialImplementation, m)
     else:
       if a.kind == tyTypeDesc and f.hasElementType == a.hasElementType:
         if f.hasElementType:
@@ -120,7 +146,6 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
           result = true # both lack it
       else:
         result = false
-
   of tyGenericInvocation:
     result = false
     if a.kind == tyGenericInst and a.genericHead.kind == tyGenericBody:
@@ -142,7 +167,7 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
             when logBindings: echo "A adding ", f, " ", ak
             m.inferred.add((f, ak))
         elif m.magic == mArrGet and ak.kind in {tyArray, tyOpenArray, tySequence, tyVarargs, tyCstring, tyString}:
-          when logBindings: echo "B adding ", f, " ", lastSon ak
+          when logBindings: echo "B adding ", f, " ", last ak
           m.inferred.add((f, last ak))
           result = true
         else:
