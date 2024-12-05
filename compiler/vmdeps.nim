@@ -157,10 +157,12 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       result = newNodeX(nkDistinctTy)
       result.add mapTypeToAst(t.skipModifier, info)
     else:
-      if allowRecursion or t.sym == nil or tfFromGeneric in t.flags:
+      if allowRecursion or t.sym == nil:
         result = mapTypeToBracket("distinct", mDistinct, t, info)
       else:
         result = atomicType(t.sym)
+        # keep original type, t.sym can have type tyGenericBody:
+        result.typ() = t
   of tyGenericParam, tyForward:
     result = atomicType(t.sym)
   of tyObject:
@@ -181,7 +183,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       else:
         result.add newNodeI(nkEmpty, info)
     else:
-      if allowRecursion or t.sym == nil or tfFromGeneric in t.flags:
+      if allowRecursion or t.sym == nil:
         result = newNodeIT(nkObjectTy, if t.n.isNil: info else: t.n.info, t)
         result.add newNodeI(nkEmpty, info)
         if t.baseClass == nil:
@@ -191,6 +193,8 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
         result.add copyTree(t.n)
       else:
         result = atomicType(t.sym)
+        # keep original type, t.sym can have type tyGenericBody:
+        result.typ() = t
   of tyEnum:
     result = newNodeIT(nkEnumTy, if t.n.isNil: info else: t.n.info, t)
     result.add newNodeI(nkEmpty, info)  # pragma node, currently always empty for enum
