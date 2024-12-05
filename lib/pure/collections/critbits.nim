@@ -535,5 +535,5 @@ proc toCritBitTree*(items: sink openArray[string]): CritBitTree[void] {.since: (
   ## Creates a new `CritBitTree` that contains the given `items`.
   runnableExamples:
     doAssert ["a", "b", "c"].toCritBitTree is CritBitTree[void]
-
+  result = default(CritBitTree[void])
   for item in items: result.incl item

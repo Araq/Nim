@@ -61,10 +61,11 @@ proc finalize(n: NimNode, lhs: NimNode, level: int): NimNode =
     result = quote: (var `lhs` = `n`)
 
 proc process(n: NimNode, lhs: NimNode, label: NimNode, level: int): NimNode =
+  result = nil
   var n = n.copyNimTree
   var it = n
   let addr2 = bindSym"addr"
-  var old: tuple[n: NimNode, index: int]
+  var old: tuple[n: NimNode, index: int] = (nil, 0)
   while true:
     if it.len == 0:
       result = finalize(n, lhs, level)

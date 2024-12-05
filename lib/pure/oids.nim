@@ -44,6 +44,7 @@ proc hexbyte*(hex: char): int {.inline.} =
 
 proc parseOid*(str: cstring): Oid =
   ## Parses an OID.
+  result = Oid()
   var bytes = cast[cstring](cast[pointer](cast[int](addr(result.time)) + 4))
   var i = 0
   while i < 12:
@@ -53,7 +54,7 @@ proc parseOid*(str: cstring): Oid =
 proc `$`*(oid: Oid): string =
   ## Converts an OID to a string.
   const hex = "0123456789abcdef"
-
+  result = ""
   result.setLen 24
 
   var o = oid
@@ -89,11 +90,12 @@ proc genOid*(): Oid =
     doAssert ($genOid()).len == 24
   runnableExamples("-r:off"):
     echo $genOid() # for example, "5fc7f546ddbbc84800006aaf"
+  result = Oid()
   genOid(result, incr, fuzz)
 
 proc generatedTime*(oid: Oid): Time =
   ## Returns the generated timestamp of the OID.
-  var tmp: int64
+  var tmp: int64 = int64(0)
   var dummy = oid.time
   bigEndian64(addr(tmp), addr(dummy))
   result = fromUnix(tmp)

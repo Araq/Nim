@@ -155,6 +155,8 @@ proc selectWorker(w: ptr Worker; fn: WorkerProc; data: pointer): bool =
     signal(w.taskArrived)
     blockUntil(w.taskStarted)
     result = true
+  else:
+    result = false
 
 proc cleanFlowVars(w: ptr Worker) =
   let q = addr(w.q)
@@ -277,7 +279,7 @@ proc blockUntilAny*(flowVars: openArray[FlowVarBase]): int =
   ## to be able to wait on, -1 is returned.
   ##
   ## **Note:** This results in non-deterministic behaviour and should be avoided.
-  var ai: AwaitInfo
+  var ai: AwaitInfo = AwaitInfo()
   ai.cv.initSemaphore()
   var conflicts = 0
   result = -1

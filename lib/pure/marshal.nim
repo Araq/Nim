@@ -273,7 +273,7 @@ proc loadAny(p: var JsonParser, a: Any, t: var Table[BiggestInt, pointer]) =
   of akRange: loadAny(p, a.skipRange, t)
 
 proc loadAny(s: Stream, a: Any, t: var Table[BiggestInt, pointer]) =
-  var p: JsonParser
+  var p: JsonParser = default(JsonParser)
   open(p, s, "unknown file")
   next(p)
   loadAny(p, a, t)

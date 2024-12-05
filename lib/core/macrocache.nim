@@ -207,7 +207,7 @@ proc hasKey*(t: CacheTable; key: string): bool =
       mcTable["foo"] = newEmptyNode()
       # Will now be true since we inserted a value
       assert mcTable.hasKey("foo")
-  discard "Implemented in vmops"
+  quit "Implemented in vmops"
 
 proc contains*(t: CacheTable; key: string): bool {.inline.} =
   ## Alias of [hasKey][hasKey(CacheTable, string)] for use with the `in` operator.

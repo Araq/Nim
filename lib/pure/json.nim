@@ -501,6 +501,7 @@ proc hash*(n: JsonNode): Hash {.noSideEffect.} =
     result = Hash(0)
 
 proc hash*(n: OrderedTable[string, JsonNode]): Hash =
+  result = default(Hash)
   for key, val in n:
     result = result xor (hash(key) !& hash(val))
   result = !$result
@@ -512,7 +513,7 @@ proc len*(n: JsonNode): int =
   case n.kind
   of JArray: result = n.elems.len
   of JObject: result = n.fields.len
-  else: discard
+  else: result = 0
 
 proc `[]`*(node: JsonNode, name: string): JsonNode {.inline.} =
   ## Gets a field from a `JObject`, which must not be nil.
@@ -610,6 +611,8 @@ proc getOrDefault*(node: JsonNode, key: string): JsonNode =
   ## value at `key` does not exist, returns nil
   if not isNil(node) and node.kind == JObject:
     result = node.fields.getOrDefault(key)
+  else:
+    result = nil
 
 proc `{}`*(node: JsonNode, key: string): JsonNode =
   ## Gets a field from a `node`. If `node` is nil or not an object or
@@ -937,7 +940,7 @@ iterator parseJsonFragments*(s: Stream, filename: string = ""; rawIntegers = fal
   ## field but kept as raw numbers via `JString`.
   ## If `rawFloats` is true, floating point literals will not be converted to a `JFloat`
   ## field but kept as raw numbers via `JString`.
-  var p: JsonParser
+  var p: JsonParser = default(JsonParser)
   p.open(s, filename)
   try:
     discard getTok(p) # read first token
@@ -955,7 +958,7 @@ proc parseJson*(s: Stream, filename: string = ""; rawIntegers = false, rawFloats
   ## field but kept as raw numbers via `JString`.
   ## If `rawFloats` is true, floating point literals will not be converted to a `JFloat`
   ## field but kept as raw numbers via `JString`.
-  var p: JsonParser
+  var p: JsonParser = default(JsonParser)
   p.open(s, filename)
   try:
     discard getTok(p) # read first token

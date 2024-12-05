@@ -189,7 +189,7 @@ proc encodeMime*(s: string, lineLen = 75.Positive, newLine = "\r\n",
   if e.len <= lineLen or newLine.len == 0:
     return e
   result = newString(e.len + newLine.len * ((e.len div lineLen) - int(e.len mod lineLen == 0)))
-  var i, j, k, b: int
+  var i, j, k, b: int = 0
   let nd = e.len - lineLen
   while j < nd:
     cpy(i + lineLen, e, j)
@@ -199,6 +199,7 @@ proc encodeMime*(s: string, lineLen = 75.Positive, newLine = "\r\n",
 
 proc initDecodeTable*(): array[256, char] =
   # computes a decode table at compile time
+  result = default(array[256, char])
   for i in 0 ..< 256:
     let ch = char(i)
     var code = invalidChar
@@ -221,6 +222,7 @@ proc decode*(s: string): string =
   runnableExamples:
     assert decode("SGVsbG8gV29ybGQ=") == "Hello World"
     assert decode("  SGVsbG8gV29ybGQ=") == "Hello World"
+  result = ""
   if s.len == 0: return
 
   proc decodeSize(size: int): int =
