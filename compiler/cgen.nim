@@ -409,23 +409,28 @@ template mapTypeChooser(n: PNode): TSymKind =
 template mapTypeChooser(a: TLoc): TSymKind = mapTypeChooser(a.lode)
 
 proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Builder) =
-  if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result.add wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags:
     result.add a.snippet
+  elif mapType(conf, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result.add arrayAddr(a.snippet)
+  else:
+    result.add wrapPar(cAddr(a.snippet))
 
 proc addrLoc(conf: ConfigRef; a: TLoc): Rope =
-  if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result = wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags:
     result = a.snippet
+  elif mapType(conf, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result = arrayAddr(a.snippet)
+  else:
+    result = wrapPar(cAddr(a.snippet))
 
 proc byRefLoc(p: BProc; a: TLoc): Rope =
-  if lfIndirect notin a.flags and mapType(p.config, a.t, mapTypeChooser(a) == skParam) != ctArray and not
-      p.module.compileToCpp:
-    result = wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags or p.module.compileToCpp:
     result = a.snippet
+  elif mapType(p.config, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result = arrayAddr(a.snippet)
+  else:
+    result = wrapPar(cAddr(a.snippet))
 
 proc rdCharLoc(a: TLoc): Rope =
   # read a location that may need a char-cast:

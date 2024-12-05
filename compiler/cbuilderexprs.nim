@@ -465,3 +465,9 @@ template cUnlikely(val: Snippet): Snippet =
     val # not implemented
   else:
     "NIM_UNLIKELY(" & val & ")"
+
+template arrayAddr(val: Snippet): Snippet =
+  when buildNifc:
+    cAddr(subscript(val, cIntValue(0)))
+  else:
+    val

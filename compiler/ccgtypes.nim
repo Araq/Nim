@@ -1818,7 +1818,7 @@ proc genTypeInfoV2OldImpl(m: BModule; t, origType: PType, name: Rope; info: TLin
       else:
         let arrTyp = ""
       genDisplay(m.s[cfsVars], m, t, objDepth, arrTyp)
-    typeEntry.addFieldAssignment(name, "display", objDisplayStore)
+    typeEntry.addFieldAssignment(name, "display", arrayAddr(objDisplayStore))
 
   let dispatchMethods = toSeq(getMethodsPerType(m.g.graph, t))
   if dispatchMethods.len > 0:
@@ -1883,7 +1883,7 @@ proc genTypeInfoV2Impl(m: BModule; t, origType: PType, name: Rope; info: TLineIn
               len = objDepth + 1):
             genDisplay(m.s[cfsVars], m, t, objDepth)
           typeEntry.addField(typeInit, name = "display"):
-            typeEntry.add(objDisplayStore)
+            typeEntry.add(arrayAddr(objDisplayStore))
         if isDefined(m.config, "nimTypeNames"):
           var typeName: Rope
           if t.kind in {tyObject, tyDistinct}:

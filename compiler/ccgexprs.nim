@@ -463,8 +463,8 @@ proc genAssignment(p: BProc, dest, src: TLoc, flags: TAssignmentFlags) =
       let rd = rdLoc(dest)
       let rs = rdLoc(src)
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
-        cCast(CPointer, rd),
-        cCast(CConstPointer, rs),
+        cCast(CPointer, arrayAddr(rd)),
+        cCast(CConstPointer, arrayAddr(rs)),
         cIntValue(getSize(p.config, dest.t)))
     else:
       simpleAsgn(p.s(cpsStmts), dest, src)
@@ -530,8 +530,8 @@ proc genDeepCopy(p: BProc; dest, src: TLoc) =
       let rd = rdLoc(dest)
       let rs = rdLoc(src)
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimCopyMem"),
-        cCast(CPointer, rd),
-        cCast(CConstPointer, rs),
+        cCast(CPointer, arrayAddr(rd)),
+        cCast(CConstPointer, arrayAddr(rs)),
         cIntValue(getSize(p.config, dest.t)))
     else:
       simpleAsgn(p.s(cpsStmts), dest, src)
@@ -1006,7 +1006,8 @@ proc genAddr(p: BProc, e: PNode, d: var TLoc) =
     var a: TLoc = initLocExpr(p, e[0])
     putIntoDest(p, d, e, cAddr(a.snippet), a.storage)
     #Message(e.info, warnUser, "HERE NEW &")
-  elif mapType(p.config, e[0].typ, mapTypeChooser(e[0]) == skParam) == ctArray or isCppRef(p, e.typ):
+  elif (mapType(p.config, e[0].typ, mapTypeChooser(e[0]) == skParam) == ctArray and
+      not buildNifc) or isCppRef(p, e.typ):
     expr(p, e[0], d)
     # bug #19497
     d.lode = e
@@ -1462,7 +1463,7 @@ proc genEcho(p: BProc, n: PNode) =
       var a: TLoc = initLocExpr(p, n)
       let ra = a.rdLoc
       p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "echoBinSafe"),
-        ra,
+        arrayAddr(ra),
         cIntValue(n.len))
     when false:
       p.module.includeHeader("<stdio.h>")

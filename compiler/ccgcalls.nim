@@ -407,6 +407,8 @@ proc genArg(p: BProc, n: PNode, param: PSym; call: PNode; result: var Builder; n
         {lfHeader, lfNoDecl} * callee.sym.loc.flags != {} and
         needsIndirect:
       addAddrLoc(p.config, a, result)
+    elif not needsIndirect and buildNifc:
+      addAddrLoc(p.config, a, result)
     else:
       addRdLoc(a, result)
   else:
