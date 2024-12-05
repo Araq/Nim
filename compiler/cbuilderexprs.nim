@@ -215,7 +215,7 @@ proc cCall(callee: Snippet, args: varargs[Snippet]): Snippet =
   if args.len != 0:
     result.add(args[0])
     for i in 1 ..< args.len:
-      result.add(", ")
+      result.add(cArgumentSeparator)
       result.add(args[i])
   result.add(")")
 
