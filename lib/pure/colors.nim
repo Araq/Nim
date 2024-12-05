@@ -91,8 +91,10 @@ proc extractRGB*(a: Color): tuple[r, g, b: range[0..255]] =
     echo typeof(extractRGB(a))
     echo extractRGB(b)
     echo typeof(extractRGB(b))
-
-  result = (a.int shr 16 and 0xff, a.int shr 8 and 0xff, a.int and 0xff)
+  result = default(tuple[r, g, b: range[0..255]])
+  result.r = a.int shr 16 and 0xff
+  result.g = a.int shr 8 and 0xff
+  result.b = a.int and 0xff
 
 proc intensity*(a: Color, f: float): Color =
   ## Returns `a` with intensity `f`. `f` should be a float from 0.0 (completely
