@@ -385,6 +385,7 @@ type
     warnCounter*: int
     errorMax*: int
     maxLoopIterationsVM*: int ## VM: max iterations of all loops
+    maxCallDepthVM*: int ## VM: max call depth
     isVmTrace*: bool
     configVars*: StringTableRef
     symbols*: StringTableRef ## We need to use a StringTableRef here as defined
@@ -600,6 +601,7 @@ proc newConfigRef*(): ConfigRef =
     arguments: "",
     suggestMaxResults: 10_000,
     maxLoopIterationsVM: 10_000_000,
+    maxCallDepthVM: 2_000,
     vmProfileData: newProfileData(),
     spellSuggestMax: spellSuggestSecretSauce,
     currentConfigDir: ""
