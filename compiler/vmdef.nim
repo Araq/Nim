@@ -257,7 +257,7 @@ type
     mode*: TEvalMode
     features*: TSandboxFlags
     traceActive*: bool
-    loopIterations*: int
+    loopIterations*, callDepth*: int
     comesFromHeuristic*: TLineInfo # Heuristic for better macro stack traces
     callbacks*: seq[VmCallback]
     callbackIndex*: Table[string, int]
@@ -293,7 +293,7 @@ type
 proc newCtx*(module: PSym; cache: IdentCache; g: ModuleGraph; idgen: IdGenerator): PCtx =
   PCtx(code: @[], debug: @[],
     globals: newNode(nkStmtListExpr), constants: newNode(nkStmtList), types: @[],
-    prc: PProc(blocks: @[]), module: module, loopIterations: g.config.maxLoopIterationsVM,
+    prc: PProc(blocks: @[]), module: module, loopIterations: g.config.maxLoopIterationsVM, callDepth: 0,
     comesFromHeuristic: unknownLineInfo, callbacks: @[], callbackIndex: initTable[string, int](), errorFlag: "",
     cache: cache, config: g.config, graph: g, idgen: idgen)
 

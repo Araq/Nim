@@ -590,6 +590,7 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       let newPc = c.cleanUpOnReturn(tos)
       # Perform any cleanup action before returning
       if newPc < 0:
+        dec c.callDepth
         pc = tos.comesFrom
         let retVal = regs[0]
         tos = tos.next
@@ -1445,6 +1446,12 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
           newFrame.slots[i] = regs[rb+i]
         if isClosure:
           newFrame.slots[rc] = TFullReg(kind: rkNode, node: regs[rb].node[1])
+        if c.callDepth > 2000:
+          msgWriteln(c.config, "stack trace: (most recent call last)", {msgNoUnitSep})
+          stackTraceAux(c, tos, pc)
+          globalError(c.config, c.debug[pc], "maximum call depth exceeded (2000)")
+        else:
+          inc c.callDepth
         tos = newFrame
         updateRegsAlias
         # -1 for the following 'inc pc'
