@@ -802,15 +802,7 @@ proc p(n: PNode; c: var Con; s: var Scope; mode: ProcessMode; tmpFlags = {sfSing
       result = passCopyToSink(n, c, s)
     elif n.kind in {nkBracket, nkObjConstr, nkTupleConstr, nkClosure, nkNilLit} +
          nkCallKinds + nkLiterals:
-      if n.kind in nkCallKinds and n[0].kind == nkSym:
-        if n[0].sym.magic == mEnsureMove:
-          inc c.inEnsureMove
-          result = p(n[1], c, s, sinkArg)
-          dec c.inEnsureMove
-        else:
-          result = p(n, c, s, consumed)
-      else:
-        result = p(n, c, s, consumed)
+      result = p(n, c, s, consumed)
     elif ((n.kind == nkSym and isSinkParam(n.sym)) or isAnalysableFieldAccess(n, c.owner)) and
         isLastRead(n, c, s) and not (n.kind == nkSym and isCursor(n)):
       # Sinked params can be consumed only once. We need to reset the memory
@@ -886,12 +878,6 @@ proc p(n: PNode; c: var Con; s: var Scope; mode: ProcessMode; tmpFlags = {sfSing
       if mode == normal and (isRefConstr or hasCustomDestructor(c, t)):
         result = ensureDestruction(result, n, c, s)
     of nkCallKinds:
-      if n[0].kind == nkSym and n[0].sym.magic == mEnsureMove:
-        inc c.inEnsureMove
-        result = p(n[1], c, s, sinkArg)
-        dec c.inEnsureMove
-        return
-
       let inSpawn = c.inSpawn
       if n[0].kind == nkSym and n[0].sym.magic == mSpawn:
         c.inSpawn.inc
@@ -909,13 +895,19 @@ proc p(n: PNode; c: var Con; s: var Scope; mode: ProcessMode; tmpFlags = {sfSing
           isDangerous = true
 
       result = shallowCopy(n)
-      for i in 1..<n.len:
-        if i < L and isCompileTimeOnly(parameters[i]):
-          result[i] = n[i]
-        elif i < L and (isSinkTypeForParam(parameters[i]) or inSpawn > 0):
-          result[i] = p(n[i], c, s, sinkArg)
-        else:
-          result[i] = p(n[i], c, s, normal)
+
+      if n[0].kind == nkSym and n[0].sym.magic == mEnsureMove:
+        inc c.inEnsureMove
+        result[1] = p(n[1], c, s, sinkArg)
+        dec c.inEnsureMove
+      else:
+        for i in 1..<n.len:
+          if i < L and isCompileTimeOnly(parameters[i]):
+            result[i] = n[i]
+          elif i < L and (isSinkTypeForParam(parameters[i]) or inSpawn > 0):
+            result[i] = p(n[i], c, s, sinkArg)
+          else:
+            result[i] = p(n[i], c, s, normal)
 
       when false:
         if isDangerous:
