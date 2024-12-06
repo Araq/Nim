@@ -98,7 +98,7 @@ proc acceptsAllTypes(t: PType): bool=
   elif t.kind == tyGenericParam:
     if tfImplicitTypeParam in t.flags:
       result = true
-    if not(t.hasElementType) or t.elementType.kind == tyNone:
+    if not t.hasElementType or t.elementType.kind == tyNone:
       result = true
 
 proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
