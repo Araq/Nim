@@ -1,6 +1,5 @@
 discard """
-  outputsub: "type mismatch"
-  exitcode: "1"
+action: "reject"
 """
 type
   C1 = concept

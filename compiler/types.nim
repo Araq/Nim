@@ -102,6 +102,9 @@ const
   # typedescX is used if we're sure tyTypeDesc should be included (or skipped)
   typedescPtrs* = abstractPtrs + {tyTypeDesc}
   typedescInst* = abstractInst + {tyTypeDesc, tyOwned, tyUserTypeClass}
+  
+  # incorrect definition of `[]` and `[]=` for these types in
+  arrPutGetMagicApplies* = {tyArray, tyOpenArray, tyString, tySequence, tyCstring, tyTuple}
 
 proc invalidGenericInst*(f: PType): bool =
   result = f.kind == tyGenericInst and skipModifier(f) == nil
@@ -2077,3 +2080,11 @@ proc reduceToBase*(f: PType): PType =
     result = f.elementType
   else:
     result = f
+
+proc isConcept*(t: PType): bool=
+  if t.kind == tyConcept:
+    true
+  elif t.kind in {tyGenericInst, tyCompositeTypeClass, tyGenericInvocation}:
+    t.reduceToBase.kind == tyConcept
+  else:
+    false

@@ -363,6 +363,8 @@ proc sumGeneric(t: PType): int =
         result += sumGeneric(a)
       break
     else:
+      if t.isConcept:
+        result += t.reduceToBase.conceptBody.len
       break
 
 proc complexDisambiguation(a, b: PType): int =

@@ -5,6 +5,13 @@ B[system.int]
 A[system.string]
 A[array[0..0, int]]
 A[seq[int]]
+100
+a
+b
+c
+a
+b
+c
 '''
 """
 import conceptsv2_helper
@@ -128,6 +135,100 @@ block: # more complex recursion
 
   var a = BufferImpl[5]()
   launch(a, WritableImpl())
+
+block: # co-dependent concepts
+  type
+    Writable = concept
+      proc w(b: var Buffer; s: Self): int
+    Buffer = concept
+      proc w(s: var Self; data: Writable): int
+    SizedWritable = concept
+      proc size(x: Self): int
+      proc w(b: var Buffer, x: Self): int
+    BufferImpl = object
+    
+  proc w(x: var BufferImpl, d: int): int = return 100
+  proc size(d: int): int = sizeof(int)
+
+  proc p(b: var Buffer, data: SizedWritable): int =
+    b.w(data)
+
+  var b = BufferImpl()
+  echo p(b, 5)
+
+block:  # instantiate even when generic params are the same
+  type
+    ArrayLike[T] = concept
+      proc len(x: Self): int
+      proc `[]`(b: Self, i: int): T
+  proc p[T](x: ArrayLike[T])=
+    for k in x:
+      echo k
+  # For this test to work the second call's instantiation has to be incompatible with the first on the back end
+  p(['a','b','c'])
+  p("abc")
+
+block: # reject improper generic variables in candidates
+  type
+    ArrayLike[T] = concept
+      proc len(x: Self): int
+      proc g(b: Self, i: int): T
+    FreakString = concept
+      proc len(x: Self): int
+      proc characterSize(s: Self): int 
+    A = object
+
+  proc g[T, H](s: T, i: H): H = default(T)
+  proc len(s: A): int = discard
+  proc characterSize(s: A): int = discard
+  
+  proc p(symbol: ArrayLike[char]): int = assert false
+  proc p(symbol: FreakString): int=discard
+  
+  discard p(A())
+
+block: # typerel disambiguation by concept subset
+  type
+    ArrayLike[T] = concept
+      proc len(x: Self): int
+      proc characterSize(s: Self): int
+    FreakString = concept
+      proc len(x: Self): int
+      proc characterSize(s: Self): int
+      proc tieBreaker(s: Self, j: int): float
+    A = object
+
+  proc len(s: A): int = discard
+  proc characterSize(s: A): int = discard
+  proc tieBreaker(s: A, h: int):float = 0.0
+  
+  proc p(symbol: ArrayLike[char]): int = assert false
+  proc p(symbol: FreakString): int=discard
+  
+  discard p(A())
+
+block:  # tie break via sumGeneric
+  type
+    C1 = concept
+      proc p1(x: Self, b: int)
+      proc p2(x: Self, b: float)
+      proc p3(x: Self, b: string)
+    C2 = concept
+      proc b1(x: Self, b: int)
+      proc b2(x: Self, b: float)
+    A = object
+  
+  proc p1(x: A, b: int)=discard
+  proc p2(x: A, b: float)=discard
+  proc p3(x: A, b: string)=discard
+  
+  proc b1(x: A, b: int)=discard
+  proc b2(x: A, b: float)=discard
+  
+  proc p(symbol: C1): int = discard
+  proc p(symbol: C2): int = assert false
+  
+  discard p(A())
 
 block: # not type
   type
@@ -278,11 +379,11 @@ block: # exact nested concept binding
   proc spring(data: Serializable)=discard
   spring(ArrayImpl())
 
-block: # co-dependent implicit
+block: # implicit via dependency
   #[
     prove ArrayImpl is Serializable (spring)
       fail to find a binding for Serializable.w
-      Serializable and Buffer are co-dependent, assume Buffer.w exists
+      Serializable is dependent on Buffer, assume Buffer.w exists
         prove ArrayImpl is Sizeable (Buffer.w)
           prove ArrayImpl is ArrayImpl (len)
   ]#
