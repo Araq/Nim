@@ -161,8 +161,9 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
         result = mapTypeToBracket("distinct", mDistinct, t, info)
       else:
         result = atomicType(t.sym)
-        # keep original type, t.sym can have type tyGenericBody:
-        result.typ() = t
+        if tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody:
+          # keep original type, t.sym can have type tyGenericBody:
+          result.typ() = t
   of tyGenericParam, tyForward:
     result = atomicType(t.sym)
   of tyObject:
@@ -193,8 +194,9 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
         result.add copyTree(t.n)
       else:
         result = atomicType(t.sym)
-        # keep original type, t.sym can have type tyGenericBody:
-        result.typ() = t
+        if tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody:
+          # keep original type, t.sym can have type tyGenericBody:
+          result.typ() = t
   of tyEnum:
     result = newNodeIT(nkEnumTy, if t.n.isNil: info else: t.n.info, t)
     result.add newNodeI(nkEmpty, info)  # pragma node, currently always empty for enum
