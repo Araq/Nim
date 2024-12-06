@@ -100,6 +100,7 @@ proc `=sink`*(m: var MyObj, m2: MyObj) =
     m.data = m2.data
 
 proc newMyObj(len: int): MyObj =
+  result = MyObj()
   result.len = len
   result.data = cast[ptr UncheckedArray[float]](allocShared(sizeof(float) * len))
 
@@ -117,6 +118,8 @@ proc takeSink(x: sink string): bool = true
 proc b(x: sink string): string =
   if takeSink(x):
     return x & "abc"
+  else:
+    result = ""
 
 proc bbb(inp: string) =
   let y = inp & "xyz"
@@ -267,11 +270,11 @@ type
     x: string
 
 proc bug14495 =
-  var owners: seq[Gah]
+  var owners: seq[Gah] = @[]
   for i in 0..10:
     owners.add Gah(x: $i)
 
-  var x: seq[Gah]
+  var x: seq[Gah] = @[]
   for i in 0..10:
     x.add owners[i]
 
@@ -602,7 +605,7 @@ block: # bug #19857
     doAssert v.kind == VFloat
     case v.kind
     of VFloat: result = v.fnum
-    else: discard
+    else: result = 0.0
 
 
   proc foo() =
@@ -611,6 +614,7 @@ block: # bug #19857
                             # works:
                             #result = Value(kind: VFloat, fnum: fuck["field_that_does_not_exist"].float)
                             # broken:
+      result = Value()
       discard "actuall runs!"
       let t = fuck["field_that_does_not_exist"]
       echo "never runs, but we crash after! ", t
@@ -638,7 +642,7 @@ method process*(self: App): Option[Event] {.base.} =
 # bug #21617
 type Test2 = ref object of RootObj
 
-method bug(t: Test2): seq[float] {.base.} = discard
+method bug(t: Test2): seq[float] {.base.} = result = @[]
 
 block: # bug #22664
   type
@@ -674,6 +678,7 @@ block: # bug #19250
     Bar[T](err: err)
 
   proc foo(): Foo[char] = 
+    result = Foo[char]()
     result.run = proc(): Bar[char] =
       # works
       # result = Bar[char](err: proc(): string = "x")
@@ -681,6 +686,7 @@ block: # bug #19250
       result = bar[char](proc(): string = "x")
 
   proc bug[T](fs: Foo[T]): Foo[T] =
+    result = Foo[T]()
     result.run = proc(): Bar[T] =
       let res = fs.run()
       
@@ -688,10 +694,11 @@ block: # bug #19250
       # var errors = @[res.err] 
       
       # not work
-      var errors: seq[proc(): string]
+      var errors: seq[proc(): string] = @[]
       errors.add res.err
       
       return bar[T] do () -> string:
+        result = ""
         for err in errors:
           result.add res.err()
 

@@ -2702,6 +2702,7 @@ when hasAlloc and notJSnotNims:
 
   proc deepCopy*[T](y: T): T =
     ## Convenience wrapper around `deepCopy` overload.
+    result = default(T)
     deepCopy(result, y)
 
   include "system/deepcopy"

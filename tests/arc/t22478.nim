@@ -41,6 +41,7 @@ proc pushScoped*[T](metric: string, blk: WithTimeCallback[T]): T {.gcsafe.} =
 # demo code
 
 discard pushScoped[int]("test.message") do (data: var JsonNode) -> int:
+  result = 0
   data["test"] = %*{
     "nested": "v1"
   }

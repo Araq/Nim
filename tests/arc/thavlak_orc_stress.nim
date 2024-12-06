@@ -34,6 +34,7 @@ type
     startNode: ref BasicBlock
 
 proc newCfg(): Cfg =
+  result = Cfg()
   result.basicBlockMap = initTable[int, ref BasicBlock]()
   result.edgeList = newSeq[BasicBlockEdge]()
 
@@ -120,6 +121,7 @@ proc addLoop(self: var Lsg, l: ref SimpleLoop) =
   self.loops.add l
 
 proc newLsg(): Lsg =
+  result = Lsg()
   result.loops = newSeq[ref SimpleLoop]()
   result.root = result.createNewLoop()
   result.root.setNestingLevel(0)
@@ -182,6 +184,7 @@ type
     lsg: Lsg
 
 proc newHavlakLoopFinder(cfg: sink Cfg, lsg: sink Lsg): HavlakLoopFinder =
+  result = HavlakLoopFinder()
   result.cfg = cfg
   result.lsg = lsg
 
@@ -366,6 +369,7 @@ type
     lsg: Lsg
 
 proc newLoopTesterApp(): LoopTesterApp =
+  result = LoopTesterApp()
   result.cfg = newCfg()
   result.lsg = newLsg()
 
