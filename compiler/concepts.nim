@@ -233,7 +233,6 @@ proc matchImplicitDef(c: PContext; fn, an: PNode; aConpt: PNode, m: var MatchCon
     if aType.reduceToBase.isSelf:
       # Self in `an` is always legal here
       continue
-    echo aType
     
     if fType.reduceToBase.isSelf:
       if fType.kind in {tyVar, tySink, tyLent, tyOwned} and aType.kind == fType.kind:
