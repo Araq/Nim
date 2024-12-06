@@ -39,6 +39,7 @@ func startsWith*(s, prefix: cstring): bool {.rtl, extern: "csuStartsWith".} =
     when defined(js):
       result = jsStartsWith(s, prefix)
     else:
+      result = false
       var i = 0
       while true:
         if prefix[i] == '\0': return true
@@ -60,6 +61,7 @@ func endsWith*(s, suffix: cstring): bool {.rtl, extern: "csuEndsWith".} =
     when defined(js):
       result = jsEndsWith(s, suffix)
     else:
+      result = false
       let slen = s.len
       var i = 0
       var j = slen - len(suffix)

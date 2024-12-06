@@ -212,6 +212,7 @@ iterator pairs*(headers: HttpHeaders): tuple[key, value: string] =
 func contains*(values: HttpHeaderValues, value: string): bool =
   ## Determines if `value` is one of the values inside `values`. Comparison
   ## is performed without case sensitivity.
+  result = false
   for val in seq[string](values):
     if val.toLowerAscii == value.toLowerAscii: return true
 
@@ -230,6 +231,7 @@ func getOrDefault*(headers: HttpHeaders, key: string,
 func len*(headers: HttpHeaders): int {.inline.} = headers.table.len
 
 func parseList(line: string, list: var seq[string], start: int): int =
+  result = 0
   var i = 0
   var current = ""
   while start+i < line.len and line[start + i] notin {'\c', '\l'}:
@@ -244,7 +246,7 @@ func parseHeader*(line: string): tuple[key: string, value: seq[string]] =
   ##
   ## Used by `asynchttpserver` and `httpclient` internally and should not
   ## be used by you.
-  result.value = @[]
+  result = ("", @[])
   var i = 0
   i = line.parseUntil(result.key, ':')
   inc(i) # skip :

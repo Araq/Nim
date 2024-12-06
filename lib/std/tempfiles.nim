@@ -156,6 +156,7 @@ proc createTempFile*(prefix, suffix: string, dir = ""): tuple[cfile: File, path:
     assert readFile(path) == "foo"
     removeFile(path)
   # xxx why does above work without `cfile.flushFile` ?
+  result = default(tuple[cfile: File, path: string])
   let dir = getTempDirImpl(dir)
   for i in 0 ..< maxRetry:
     result.path = genTempPath(prefix, suffix, dir)

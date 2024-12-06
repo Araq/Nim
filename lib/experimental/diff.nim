@@ -82,7 +82,7 @@ proc diffCodes(aText: string; h: var Table[string, int]): DiffData =
   ## `trimSpace` ignore leading and trailing space characters
   ## Returns a array of integers.
   var lastUsedCode = h.len
-  result.data = newSeq[int]()
+  result = DiffData(data: newSeq[int]())
   for s in aText.splitLines:
     if h.contains s:
       result.data.add h[s]
@@ -123,7 +123,7 @@ proc sms(dataA: var DiffData; lowerA, upperA: int; dataB: DiffData; lowerB, uppe
   ## `downVector` a vector for the (0,0) to (x,y) search. Passed as a parameter for speed reasons.
   ## `upVector` a vector for the (u,v) to (N,M) search. Passed as a parameter for speed reasons.
   ## Returns a MiddleSnakeData record containing x,y and u,v.
-
+  result = Smsrd()
   let max = dataA.len + dataB.len + 1
 
   let downK = lowerA - lowerB # the k-line to start the forward search
@@ -250,6 +250,7 @@ proc lcs(dataA: var DiffData; lowerA, upperA: int; dataB: var DiffData; lowerB, 
 proc createDiffs(dataA, dataB: DiffData): seq[Item] =
   ## Scan the tables of which lines are inserted and deleted,
   ## producing an edit script in forward order.
+  result = @[]
   var startA = 0
   var startB = 0
   var lineA = 0

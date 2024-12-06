@@ -107,10 +107,10 @@ proc writeVu64*(z: var openArray[byte], x: uint64): int =
   varintWrite32(toOpenArray(z, 5, 8), y)
   return 9
 
-proc sar(a, b: int64): int64 =
+proc sar(a, b: int64): int64 {.noinit.} =
   {.emit: [result, " = ", a, " >> ", b, ";"].}
 
-proc sal(a, b: int64): int64 =
+proc sal(a, b: int64): int64 {.noinit.} =
   {.emit: [result, " = ", a, " << ", b, ";"].}
 
 proc encodeZigzag*(x: int64): uint64 {.inline.} =

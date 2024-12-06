@@ -152,7 +152,7 @@ proc parseString(my: var SexpParser): TTokKind =
         inc(pos, 2)
       of 'u':
         inc(pos, 2)
-        var r: int
+        var r: int = 0
         if handleHexChar(my.buf[pos], r): inc(pos)
         if handleHexChar(my.buf[pos], r): inc(pos)
         if handleHexChar(my.buf[pos], r): inc(pos)
@@ -452,7 +452,7 @@ proc len*(n: SexpNode): int =
   ## Else it returns 0.
   case n.kind
   of SList: result = n.elems.len
-  else: discard
+  else: result = 0
 
 proc `[]`*(node: SexpNode, index: int): SexpNode =
   ## Gets the node at `index` in a List. Result is undefined if `index`
@@ -629,7 +629,7 @@ proc open*(my: var SexpParser, input: Stream) =
 
 proc parseSexp*(s: Stream): SexpNode =
   ## Parses from a buffer `s` into a `SexpNode`.
-  var p: SexpParser
+  var p: SexpParser = SexpParser()
   p.open(s)
   discard getTok(p) # read first token
   result = p.parseSexp()
