@@ -165,6 +165,7 @@ Advanced options:
   --verbosity:0|1|2|3       set Nim's verbosity level (1 is default)
   --errorMax:N              stop compilation after N errors; 0 means unlimited
   --maxLoopIterationsVM:N   set max iterations for all VM loops
+  --maxCallDepthVM:N        set max call depth in the VM
   --experimental:$1
                             enable experimental language feature
   --legacy:$2
