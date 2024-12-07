@@ -1700,7 +1700,7 @@ proc drain*(timeout = 500) =
   let start = getMonoTime()
   while hasPendingOperations():
     discard runOnce(timeout - elapsed)
-    elapsed = (getMonoTime() - start).inMilliseconds
+    elapsed = int (getMonoTime() - start).inMilliseconds
     if elapsed >= timeout:
       break
 
