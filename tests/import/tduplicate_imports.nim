@@ -4,7 +4,7 @@ discard """
   nimout: '''
 tduplicate_imports.nim(11, 23) Hint: duplicate import of 'strutils'; previous import here: tduplicate_imports.nim(11, 13) [DuplicateModuleImport]
 tduplicate_imports.nim(14, 20) Hint: duplicate import of 'foobar'; previous import here: tduplicate_imports.nim(13, 20) [DuplicateModuleImport]
-tduplicate_imports.nim(15, 20) Hint: duplicate import of 'strutils'; previous import here: tduplicate_imports.nim(11, 23) [DuplicateModuleImport]
+tduplicate_imports.nim(15, 6) Hint: duplicate import of 'strutils'; previous import here: tduplicate_imports.nim(11, 23) [DuplicateModuleImport]
 '''
 """
 
