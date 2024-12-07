@@ -247,7 +247,8 @@ proc importModuleAs(c: PContext; n: PNode, realModule: PSym, importHidden: bool)
   if importHidden:
     result.options.incl optImportHidden
   let moduleIdent = if n.kind == nkInfix: n[^1] else: n
-  c.unusedImports.add((result, moduleIdent.info))
+  result.info = moduleIdent.info
+  c.unusedImports.add((result, result.info))
   c.importModuleMap[result.id] = realModule.id
   c.importModuleLookup.mgetOrPut(result.name.id, @[]).addUnique realModule.id
 
@@ -335,7 +336,7 @@ proc impMod(c: PContext; it: PNode; importStmtResult: PNode) =
   let m = myImportModule(c, it, importStmtResult)
   if m != nil:
     # ``addDecl`` needs to be done before ``importAllSymbols``!
-    addDecl(c, m, it.info) # add symbol to symbol table of module
+    addDecl(c, m) # add symbol to symbol table of module
     importAllSymbols(c, m)
     #importForwarded(c, m.ast, emptySet, m)
     afterImport(c, m)
