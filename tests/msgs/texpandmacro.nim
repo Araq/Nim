@@ -3,6 +3,9 @@ discard """
   nimout: '''texpandmacro.nim(17, 1) Hint: expanded macro:
 echo ["injected echo"]
 var x = 4 [ExpandMacro]
+type
+  Hello = object
+    private: string
 '''
   output: '''injected echo'''
 """
@@ -16,3 +19,6 @@ macro foo(x: untyped): untyped =
 
 foo:
   var x = 4
+  type
+    Hello = object
+      private: string
