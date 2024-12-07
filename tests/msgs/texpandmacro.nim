@@ -1,11 +1,11 @@
 discard """
   cmd: "nim c --expandMacro:foo $file"
-  nimout: '''texpandmacro.nim(17, 1) Hint: expanded macro:
+  nimout: '''texpandmacro.nim(20, 1) Hint: expanded macro:
 echo ["injected echo"]
-var x = 4 [ExpandMacro]
+var x = 4
 type
   Hello = object
-    private: string
+    private: string [ExpandMacro]
 '''
   output: '''injected echo'''
 """
