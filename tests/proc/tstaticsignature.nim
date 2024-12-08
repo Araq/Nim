@@ -287,4 +287,4 @@ block: # issue #9190
   func foo[T, U]: type(T.low + U.low) = 
     T.low + U.low
   
-  doAssert foo[int, int]() == int.low
+  doAssert foo[uint8, uint8]() == uint8.low
