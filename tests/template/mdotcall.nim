@@ -80,3 +80,10 @@ macro bindmeQuote*(): untyped =
     var ss = newStringStream("anothertext")
     ss.writeData(tst[0].addr, 2)
     discard ss.readData(tst[0].addr, 2) # <= comment this out to make compilation successful
+
+# issue #14894
+
+proc myProc(s: string) = discard
+
+template myTemplate* =
+  "".myProc
