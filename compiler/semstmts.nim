@@ -1698,12 +1698,14 @@ proc typeSectionRightSidePass(c: PContext, n: PNode) =
         obj.ast[0] = a[0].shallowCopy
         if a[0][0].kind == nkPostfix:
           obj.ast[0][0] = a[0][0].shallowCopy
+          obj.ast[0][0][0] = a[0][0][0] # ident "*"
           obj.ast[0][0][1] = symNode
         else:
           obj.ast[0][0] = symNode
         obj.ast[0][1] = a[0][1]
       of nkPostfix:
         obj.ast[0] = a[0].shallowCopy
+        obj.ast[0][0] = a[0][0] # ident "*"
         obj.ast[0][1] = symNode
       else: assert(false)
       obj.ast[1] = a[1]
