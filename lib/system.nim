@@ -2143,7 +2143,7 @@ when not defined(js) and declared(alloc0) and declared(dealloc):
     let x = cast[ptr UncheckedArray[string]](a)
     for i in 0 .. a.high:
       result[i] = cast[cstring](alloc0(x[i].len+1))
-      copyMem(result[i], addr(x[i][0]), x[i].len)
+      copyMem(result[i], x[i].cstring, x[i].len)
 
   proc deallocCStringArray*(a: cstringArray) =
     ## Frees a NULL terminated cstringArray.
