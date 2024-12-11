@@ -855,9 +855,9 @@ proc semWithPContext*(c: PContext, n: PNode): PNode =
 
 proc reportUnusedModules(c: PContext) =
   if c.config.cmd == cmdM: return
-  for s in c.unusedImports:
+  for (s, info) in c.unusedImports:
     if sfUsed notin s.flags:
-      message(c.config, s.info, warnUnusedImportX, s.name.s)
+      message(c.config, info, warnUnusedImportX, s.name.s)
 
 proc closePContext*(graph: ModuleGraph; c: PContext, n: PNode): PNode =
   if c.config.cmd == cmdIdeTools and not c.suggestionsMade:

@@ -164,7 +164,7 @@ type
     isAmbiguous*: bool # little hack
     features*: set[Feature]
     inTypeContext*, inConceptDecl*: int
-    unusedImports*: seq[PSym]
+    unusedImports*: seq[(PSym, TLineInfo)]
     exportIndirections*: HashSet[(int, int)] # (module.id, symbol.id)
     importModuleMap*: Table[int, int] # (module.id, module.id)
     lastTLineInfo*: TLineInfo
