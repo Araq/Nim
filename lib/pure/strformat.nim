@@ -711,7 +711,7 @@ proc strformatImpl(f: string; openChar, closeChar: char,
         try:
           x = parseExpr(subexpr)
         except ValueError as e:
-          error("could not parse `$#` in `$#`.\n$#" % [subexpr, f, e.msg])
+          error("could not parse `$#` in `$#`.\n$#" % [subexpr, f, e.msg], lineInfoNode)
         x.copyLineInfo(lineInfoNode)
         let formatSym = bindSym("formatValue", brOpen)
         var options = ""
