@@ -141,7 +141,7 @@ proc fixupCall(p: BProc, le, ri: PNode, d: var TLoc,
           d.snippet = extract(result)
           excl d.flags, lfSingleUse
         else:
-          if d.k == locNone and p.splitDecls == 0:
+          if d.k == locNone and p.splitDecls == 0 and p.config.exc != excGoto:
             d = getTempCpp(p, typ.returnType, extract(result))
           else:
             if d.k == locNone: d = getTemp(p, typ.returnType)

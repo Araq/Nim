@@ -1,5 +1,5 @@
 discard """
-  matrix: "--mm:refc; --mm:orc"
+  matrix: "--mm:refc; --mm:orc; --exceptions:goto"
   targets: "c cpp js"
   output: '''
 PEG AST traversal output
