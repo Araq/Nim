@@ -626,7 +626,7 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
       writeStackTrace()
 
 proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
-  if p.module.compileToCpp and p.config.exc == excGoto:
+  if p.config.exc == excGoto:
     result = getTemp(p, t, false)
     p.s(cpsStmts).addAssignment(result.snippet, value)
   else:
