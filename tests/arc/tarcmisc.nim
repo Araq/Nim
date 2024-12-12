@@ -861,3 +861,17 @@ block:
 
   var s = Foo()
   new(s, delete)
+
+proc test_18070() = # bug #18070
+  try:
+    try:
+      raise newException(CatchableError, "something")
+    except:
+      raise newException(CatchableError, "something else")
+  except:
+    doAssert getCurrentExceptionMsg() == "something else"
+
+  let msg = getCurrentExceptionMsg()
+  doAssert msg == "", "expected empty string but got: " & $msg
+
+test_18070()
