@@ -48,6 +48,7 @@ type
     ##
     ## The coercion `type(x)` can be used to obtain the type of the given
     ## expression `x`.
+  TypeEach[T] = object
 
 type
   TypeOfMode* = enum ## Possible modes of `typeof`.
@@ -75,6 +76,8 @@ proc typeof*(x: untyped; mode = typeOfIter): typedesc {.
       # this would give: Error: attempting to call routine: 'myFoo2'
       # since `typeOfProc` expects a typed expression and `myFoo2()` can
       # only be used in a `for` context.
+
+template each*(a: untyped): untyped = TypeEach[a]
 
 proc `or`*(a, b: typedesc): typedesc {.magic: "TypeTrait", noSideEffect.}
   ## Constructs an `or` meta class.
