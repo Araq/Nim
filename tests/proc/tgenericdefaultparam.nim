@@ -96,3 +96,39 @@ block: # issue #24121
   proc baz[T: FooBar](x: T, y = foo(x)): string = y
   doAssert baz(Foo(123)) == "b"
   doAssert baz(Bar(123)) == "c"
+
+block: # using `or` type
+  template val(x: int): string = "int"
+  template val(x: string): string = "string"
+  proc foo(x: int | string, y = val(x)): string =
+    y
+
+  doAssert foo(123) == "int"
+  doAssert foo("abc") == "string"
+
+block: # using concept type
+  type Foo = concept x
+    x is int | string
+  template val(x: int): string = "int"
+  template val(x: string): string = "string"
+  proc foo(x: Foo, y = val(x)): string =
+    y
+
+  doAssert foo(123) == "int"
+  doAssert foo("abc") == "string"
+
+block: # using `or` type with direct `is`
+  proc foo(x: int | string, y = when x is int: "int" else: "string"): string =
+    y
+
+  doAssert foo(123) == "int"
+  doAssert foo("abc") == "string"
+
+block: # using concept type with direct `is`
+  type Foo = concept x
+    x is int | string
+  proc foo(x: Foo, y = when x is int: "int" else: "string"): string =
+    y
+
+  doAssert foo(123) == "int"
+  doAssert foo("abc") == "string"

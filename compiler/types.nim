@@ -1520,7 +1520,8 @@ proc containsGenericType*(t: PType): bool =
   result = iterOverType(t, containsGenericTypeIter, nil)
 
 proc containsUnresolvedTypeIter(t: PType, closure: RootRef): bool =
-  if tfUnresolved in t.flags: return true
+  if {tfUnresolved, tfGenericTypeParam, tfImplicitTypeParam} * t.flags != {}:
+    return true
   case t.kind
   of tyStatic:
     return t.n == nil
