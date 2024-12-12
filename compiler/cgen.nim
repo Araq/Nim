@@ -626,13 +626,17 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
       writeStackTrace()
 
 proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
-  inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
-                storage: OnStack, flags: {})
-  p.s(cpsStmts).addVar(kind = Local,
-    name = result.snippet,
-    typ = "auto",
-    initializer = value)
+  if p.module.compileToCpp and p.config.exc == excGoto:
+    result = getTemp(p, t, false)
+    p.s(cpsStmts).addAssignment(result.snippet, value)
+  else:
+    inc(p.labels)
+    result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
+                  storage: OnStack, flags: {})
+    p.s(cpsStmts).addVar(kind = Local,
+      name = result.snippet,
+      typ = "auto",
+      initializer = value)
 
 proc getIntTemp(p: BProc): TLoc =
   inc(p.labels)
