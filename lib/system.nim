@@ -2690,7 +2690,7 @@ proc locals*(): RootObj {.magic: "Plugin", noSideEffect.} =
 
 when hasAlloc and notJSnotNims:
   # XXX how to implement 'deepCopy' is an open problem.
-  proc deepCopy*[T](x: var T, y: T) {.noSideEffect, magic: "DeepCopy".} =
+  proc deepCopy*[T](x: out T, y: T) {.noSideEffect, magic: "DeepCopy".} =
     ## Performs a deep copy of `y` and copies it into `x`.
     ##
     ## This is also used by the code generator
@@ -2702,7 +2702,6 @@ when hasAlloc and notJSnotNims:
 
   proc deepCopy*[T](y: T): T =
     ## Convenience wrapper around `deepCopy` overload.
-    result = default(T)
     deepCopy(result, y)
 
   include "system/deepcopy"
