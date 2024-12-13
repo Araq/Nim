@@ -31,10 +31,10 @@ type
     value: int
 
 proc mainB =
-  var x: PBinaryTree
+  var x: PBinaryTree = nil
   deepCopy(x, PBinaryTree(ri: PBinaryTree(le: PBinaryTree(value: 13))))
 
-  var y: string
+  var y: string = ""
   deepCopy y, "abc"
   echo x.ri.le.value, " ", y
 
@@ -55,7 +55,7 @@ proc `=deepCopy`[T](b: ref Bar[T]): ref Bar[T] =
     echo "called deepCopy for something else"
 
 proc main =
-  var dummy, c: ref Bar[int]
+  var dummy, c: ref Bar[int] = nil
   new(dummy)
   dummy.x = 44
 

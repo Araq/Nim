@@ -3,7 +3,7 @@ import std/[nativesockets, asyncdispatch, os]
 proc bindAvailablePort*(handle: SocketHandle, port = Port(0)): Port =
   ## See also `asynchttpserver.getPort`.
   block:
-    var name: Sockaddr_in
+    var name: Sockaddr_in = default(Sockaddr_in)
     name.sin_family = typeof(name.sin_family)(toInt(AF_INET))
     name.sin_port = htons(uint16(port))
     name.sin_addr.s_addr = htonl(INADDR_ANY)

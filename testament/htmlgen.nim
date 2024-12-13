@@ -68,7 +68,7 @@ type
     successPercentage, ignoredPercentage, failedPercentage: BiggestFloat
 
 proc allTestResults(onlyFailing = false): AllTests =
-  result.data = newJArray()
+  result = AllTests(data: newJArray())
   for file in os.walkFiles("testresults/*.json"):
     let data = parseFile(file)
     if data.kind != JArray:

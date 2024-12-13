@@ -1659,7 +1659,7 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
           (t.config.selectedGC in {gcArc, gcOrc, gcAtomicArc} and
             (isClosure(typ.skipTypes(abstractInst)) or param.id in t.escapingParams)):
         createTypeBoundOps(t, typ, param.info)
-      if isOutParam(typ) and param.id notin t.init:
+      if isOutParam(typ) and param.id notin t.init and s.magic == mNone:
         message(g.config, param.info, warnProveInit, param.name.s)
 
   if not isEmptyType(s.typ.returnType) and

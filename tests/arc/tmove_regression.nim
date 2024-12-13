@@ -10,6 +10,7 @@ discard """
 import std / [os, strutils]
 
 proc finOp2(path, name: string): (string, File) = # Find & open FIRST `name`
+  result = default((string, File))
   var current = path
   while true:
     if current.isRootDir: break # <- current=="" => current.isRootDir

@@ -55,7 +55,7 @@ proc buildList(): PNode =
   result.prev.prev = result.next
 
 proc blockB =
-  var test3: TestObj
+  var test3: TestObj = TestObj()
   test3.test = 42
   test3.test2 = blah
   testit(test3)
