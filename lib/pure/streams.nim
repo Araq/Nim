@@ -462,7 +462,7 @@ proc readChar*(s: Stream): char =
     doAssert strm.readChar() == '3'
     doAssert strm.readChar() == '\x00'
     strm.close()
-
+  result = '\0'
   jsOrVmBlock:
     var str = " "
     if readDataStr(s, str, 0..0) != 1: result = '\0'
@@ -481,6 +481,7 @@ proc peekChar*(s: Stream): char =
     doAssert strm.peekChar() == '\x00'
     strm.close()
 
+  result = '\0'
   when defined(js):
     var str = " "
     if peekData(s, addr(str), sizeof(result)) != 1: result = '\0'
@@ -509,7 +510,7 @@ proc readBool*(s: Stream): bool =
     doAssertRaises(IOError): discard strm.readBool()
     strm.close()
 
-  var t: byte
+  var t: byte = byte(0)
   read(s, t)
   result = t != 0.byte
 
@@ -536,7 +537,7 @@ proc peekBool*(s: Stream): bool =
     doAssert strm.peekBool() == false
     strm.close()
 
-  var t: byte
+  var t: byte = byte(0)
   peek(s, t)
   result = t != 0.byte
 
@@ -556,7 +557,7 @@ proc readInt8*(s: Stream): int8 =
     doAssert strm.readInt8() == 2'i8
     doAssertRaises(IOError): discard strm.readInt8()
     strm.close()
-
+  result = int8(0)
   read(s, result)
 
 proc peekInt8*(s: Stream): int8 =
@@ -577,7 +578,7 @@ proc peekInt8*(s: Stream): int8 =
     doAssert strm.readInt8() == 1'i8
     doAssert strm.peekInt8() == 2'i8
     strm.close()
-
+  result = int8(0)
   peek(s, result)
 
 proc readInt16*(s: Stream): int16 =
@@ -596,7 +597,7 @@ proc readInt16*(s: Stream): int16 =
     doAssert strm.readInt16() == 2'i16
     doAssertRaises(IOError): discard strm.readInt16()
     strm.close()
-
+  result = int16(0)
   read(s, result)
 
 proc peekInt16*(s: Stream): int16 =
@@ -617,7 +618,7 @@ proc peekInt16*(s: Stream): int16 =
     doAssert strm.readInt16() == 1'i16
     doAssert strm.peekInt16() == 2'i16
     strm.close()
-
+  result = int16(0)
   peek(s, result)
 
 proc readInt32*(s: Stream): int32 =
@@ -636,7 +637,7 @@ proc readInt32*(s: Stream): int32 =
     doAssert strm.readInt32() == 2'i32
     doAssertRaises(IOError): discard strm.readInt32()
     strm.close()
-
+  result = int32(0)
   read(s, result)
 
 proc peekInt32*(s: Stream): int32 =
@@ -657,7 +658,7 @@ proc peekInt32*(s: Stream): int32 =
     doAssert strm.readInt32() == 1'i32
     doAssert strm.peekInt32() == 2'i32
     strm.close()
-
+  result = int32(0)
   peek(s, result)
 
 proc readInt64*(s: Stream): int64 =
@@ -676,7 +677,7 @@ proc readInt64*(s: Stream): int64 =
     doAssert strm.readInt64() == 2'i64
     doAssertRaises(IOError): discard strm.readInt64()
     strm.close()
-
+  result = int64(0)
   read(s, result)
 
 proc peekInt64*(s: Stream): int64 =
@@ -697,7 +698,7 @@ proc peekInt64*(s: Stream): int64 =
     doAssert strm.readInt64() == 1'i64
     doAssert strm.peekInt64() == 2'i64
     strm.close()
-
+  result = int64(0)
   peek(s, result)
 
 proc readUint8*(s: Stream): uint8 =
@@ -716,7 +717,7 @@ proc readUint8*(s: Stream): uint8 =
     doAssert strm.readUint8() == 2'u8
     doAssertRaises(IOError): discard strm.readUint8()
     strm.close()
-
+  result = uint8(0)
   read(s, result)
 
 proc peekUint8*(s: Stream): uint8 =
@@ -737,7 +738,7 @@ proc peekUint8*(s: Stream): uint8 =
     doAssert strm.readUint8() == 1'u8
     doAssert strm.peekUint8() == 2'u8
     strm.close()
-
+  result = uint8(0)
   peek(s, result)
 
 proc readUint16*(s: Stream): uint16 =
@@ -756,7 +757,7 @@ proc readUint16*(s: Stream): uint16 =
     doAssert strm.readUint16() == 2'u16
     doAssertRaises(IOError): discard strm.readUint16()
     strm.close()
-
+  result = uint16(0)
   read(s, result)
 
 proc peekUint16*(s: Stream): uint16 =
@@ -777,7 +778,7 @@ proc peekUint16*(s: Stream): uint16 =
     doAssert strm.readUint16() == 1'u16
     doAssert strm.peekUint16() == 2'u16
     strm.close()
-
+  result = uint16(0)
   peek(s, result)
 
 proc readUint32*(s: Stream): uint32 =
@@ -797,7 +798,7 @@ proc readUint32*(s: Stream): uint32 =
     doAssert strm.readUint32() == 2'u32
     doAssertRaises(IOError): discard strm.readUint32()
     strm.close()
-
+  result = uint32(0)
   read(s, result)
 
 proc peekUint32*(s: Stream): uint32 =
@@ -818,7 +819,7 @@ proc peekUint32*(s: Stream): uint32 =
     doAssert strm.readUint32() == 1'u32
     doAssert strm.peekUint32() == 2'u32
     strm.close()
-
+  result = uint32(0)
   peek(s, result)
 
 proc readUint64*(s: Stream): uint64 =
@@ -837,7 +838,7 @@ proc readUint64*(s: Stream): uint64 =
     doAssert strm.readUint64() == 2'u64
     doAssertRaises(IOError): discard strm.readUint64()
     strm.close()
-
+  result = uint64(0)
   read(s, result)
 
 proc peekUint64*(s: Stream): uint64 =
@@ -858,7 +859,7 @@ proc peekUint64*(s: Stream): uint64 =
     doAssert strm.readUint64() == 1'u64
     doAssert strm.peekUint64() == 2'u64
     strm.close()
-
+  result = uint64(0)
   peek(s, result)
 
 proc readFloat32*(s: Stream): float32 =
@@ -877,7 +878,7 @@ proc readFloat32*(s: Stream): float32 =
     doAssert strm.readFloat32() == 2'f32
     doAssertRaises(IOError): discard strm.readFloat32()
     strm.close()
-
+  result = 0.0
   read(s, result)
 
 proc peekFloat32*(s: Stream): float32 =
@@ -898,7 +899,7 @@ proc peekFloat32*(s: Stream): float32 =
     doAssert strm.readFloat32() == 1'f32
     doAssert strm.peekFloat32() == 2'f32
     strm.close()
-
+  result = 0.0
   peek(s, result)
 
 proc readFloat64*(s: Stream): float64 =
@@ -917,7 +918,7 @@ proc readFloat64*(s: Stream): float64 =
     doAssert strm.readFloat64() == 2'f64
     doAssertRaises(IOError): discard strm.readFloat64()
     strm.close()
-
+  result = 0.0
   read(s, result)
 
 proc peekFloat64*(s: Stream): float64 =
@@ -938,7 +939,7 @@ proc peekFloat64*(s: Stream): float64 =
     doAssert strm.readFloat64() == 1'f64
     doAssert strm.peekFloat64() == 2'f64
     strm.close()
-
+  result = 0.0
   peek(s, result)
 
 proc readStrPrivate(s: Stream, length: int, str: var string) =
@@ -1139,7 +1140,7 @@ iterator lines*(s: Stream): string =
     doAssert lines == @["The first line", "the second line", "the third line"]
     strm.close()
 
-  var line: string
+  var line: string = ""
   while s.readLine(line):
     yield line
 
@@ -1436,8 +1437,9 @@ proc newFileStream*(filename: string, mode: FileMode = fmRead,
       ## the third line
       removeFile("somefile.txt")
 
-  var f: File
+  var f: File = default(File)
   if open(f, filename, mode, bufSize): result = newFileStream(f)
+  else: result = nil
 
 proc openFileStream*(filename: string, mode: FileMode = fmRead,
     bufSize: int = -1): owned FileStream =
@@ -1467,7 +1469,7 @@ proc openFileStream*(filename: string, mode: FileMode = fmRead,
     except:
       stderr.write getCurrentExceptionMsg()
 
-  var f: File
+  var f: File = default(File)
   if open(f, filename, mode, bufSize):
     return newFileStream(f)
   else:

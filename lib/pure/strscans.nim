@@ -486,7 +486,7 @@ macro scanTuple*(input: untyped; pattern: static[string]; matcherTypes: varargs[
   var
     p = 0
     userMatches = 0
-    arguments: seq[NimNode]
+    arguments: seq[NimNode] = @[]
   result = newStmtList()
   template addVar(typ: string) =
     let varIdent = ident("temp" & $arguments.len)
@@ -531,7 +531,7 @@ template hasNxt*(input: string; idx: int): bool = idx < input.len
 #template prepare*(input: string): int = 0
 template success*(x: int): bool = x != 0
 
-template nxt*(input: string; idx, step: int = 1) = inc(idx, step)
+template nxt*(input: string; idx: int; step: int = 1) = inc(idx, step)
 
 macro scanp*(input, idx: typed; pattern: varargs[untyped]): bool =
   ## See top level documentation of this module about how ``scanp`` works.

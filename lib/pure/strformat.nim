@@ -440,9 +440,7 @@ proc parseStandardFormatSpecifier*(s: string; start = 0;
   ## should support the standard format specifiers. If `ignoreUnknownSuffix` is true,
   ## an unknown suffix after the `type` field is not an error.
   const alignChars = {'<', '>', '^'}
-  result.fill = ' '
-  result.align = '\0'
-  result.sign = '-'
+  result = StandardFormatSpecifier(fill: ' ', align: '\0', sign: '-')
   var i = start
   if i + 1 < s.len and s[i+1] in alignChars:
     result.fill = s[i]
@@ -707,7 +705,7 @@ proc strformatImpl(f: string; openChar, closeChar: char,
         if i == f.len:
           missingCloseChar
 
-        var x: NimNode
+        var x: NimNode = nil
         try:
           x = parseExpr(subexpr)
         except ValueError as e:
