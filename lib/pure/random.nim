@@ -605,8 +605,7 @@ proc initRand*(seed: int64): Rand =
     var r2 = initRand(now.toUnix * 1_000_000_000 + now.nanosecond)
   const seedFallback0 = int32.high # arbitrary
   let seed = if seed != 0: seed else: seedFallback0 # because 0 is a fixed point
-  result.a0 = Ui(seed shr 16)
-  result.a1 = Ui(seed and 0xffff)
+  result = Rand(a0: Ui(seed shr 16), a1: Ui(seed and 0xffff))
   when not defined(nimLegacyRandomInitRand):
     # calling `discard next(result)` (even a few times) would still produce
     # skewed numbers for the 1st call to `rand()`.
@@ -708,7 +707,8 @@ when not defined(standalone):
           if not result.isValid:
             result = DefaultRandSeed
         else:
-          var urand: array[sizeof(Rand), byte]
+          result = default(Rand)
+          var urand = default(array[sizeof(Rand), byte])
 
           for i in 0 .. 7:
             if sysrand.urandom(urand):

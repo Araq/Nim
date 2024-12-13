@@ -105,6 +105,8 @@ proc parseBin*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): i
   if foundDigit:
     number = output
     result = i
+  else:
+    result = 0
 
 proc parseOct*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): int {.noSideEffect.} =
   ## Parses an octal number and stores its value in ``number``.
@@ -151,6 +153,8 @@ proc parseOct*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): i
   if foundDigit:
     number = output
     result = i
+  else:
+    result = 0
 
 proc parseHex*[T: SomeInteger](s: openArray[char], number: var T, maxLen = 0): int {.noSideEffect.} =
   ## Parses a hexadecimal number and stores its value in ``number``.
@@ -225,6 +229,8 @@ proc parseIdent*(s: openArray[char], ident: var string): int =
     while i < s.len and s[i] in IdentChars: inc(i)
     ident = substr(s.toOpenArray(0, i-1))
     result = i
+  else:
+    result = 0
 
 proc parseIdent*(s: openArray[char]): string =
   ## Parses an identifier and returns it or an empty string in
@@ -234,12 +240,13 @@ proc parseIdent*(s: openArray[char]): string =
     doAssert parseIdent("Hello World", 1) == "ello"
     doAssert parseIdent("Hello World", 5) == ""
     doAssert parseIdent("Hello World", 6) == "World"
-  result = ""
   var i = 0
   if i < s.len and s[i] in IdentStartChars:
     inc(i)
     while i < s.len and s[i] in IdentChars: inc(i)
     result = substr(s.toOpenArray(0, i - 1))
+  else:
+    result = ""
 
 proc parseChar*(s: openArray[char], c: var char): int =
   ## Parses a single character, stores it in `c` and returns 1.
@@ -254,6 +261,8 @@ proc parseChar*(s: openArray[char], c: var char): int =
   if s.len > 0:
     c = s[0]
     result = 1
+  else:
+    result = 0
 
 proc skipWhitespace*(s: openArray[char]): int {.inline.} =
   ## Skips the whitespace starting at ``s[start]``. Returns the number of
@@ -417,7 +426,7 @@ proc captureBetween*(s: openArray[char], first: char, second = '\0'): string =
   result = ""
   discard parseUntil(s.toOpenArray(i, s.high), result, if second == '\0': first else: second)
 
-proc integerOutOfRangeError() {.noinline.} =
+proc integerOutOfRangeError() {.noinline, noreturn.} =
   raise newException(ValueError, "Parsed integer outside of valid range")
 
 # See #6752
@@ -448,6 +457,8 @@ proc rawParseInt(s: openArray[char], b: var BiggestInt): int =
     else:
       b = b * sign
       result = i
+  else:
+    result = 0
 
 when defined(js):
   {.pop.} # overflowChecks: off
@@ -510,6 +521,8 @@ proc parseSaturatedNatural*(s: openArray[char], b: var int): int {.
       inc(i)
       while i < s.len and s[i] == '_': inc(i) # underscores are allowed and ignored
     result = i
+  else:
+    result = 0
 
 proc rawParseUInt(s: openArray[char], b: var BiggestUInt): int =
   var
@@ -530,6 +543,8 @@ proc rawParseUInt(s: openArray[char], b: var BiggestUInt): int =
       while i < s.len and s[i] == '_': inc(i) # underscores are allowed and ignored
     b = res
     result = i
+  else:
+    result = 0
 
 proc parseBiggestUInt*(s: openArray[char], number: var BiggestUInt): int {.
   rtl, extern: "npuParseBiggestUInt", noSideEffect, raises: [ValueError].} =
@@ -632,7 +647,7 @@ func parseSize*(s: openArray[char], size: var int64, alwaysBin=false): int =
   const scaleB = [1.0, 1024, 1048576, 1073741824, 1099511627776.0,  # 2^(10*idx)
                   1125899906842624.0, 1152921504606846976.0,        # ldexp?
                   1.180591620717411303424e21, 1.208925819614629174706176e24]
-  var number: float
+  var number: float = 0.0
   var scale = 1.0
   result = parseFloat(s, number)
   if number < 0:                        # While parseFloat accepts negatives ..
