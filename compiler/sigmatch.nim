@@ -595,45 +595,6 @@ proc handleFloatRange(f, a: PType): TTypeRelation =
       else: result = isIntConv
     else: result = isNone
 
-proc reduceToBase(f: PType): PType =
-  #[
-    Returns the lowest order (most general) type that that is compatible with the input.
-    E.g.
-    A[T] = ptr object ... A -> ptr object
-    A[N: static[int]] = array[N, int] ... A -> array
-  ]#
-  case f.kind:
-  of tyGenericParam:
-    if f.len <= 0 or f.skipModifier == nil:
-      result = f
-    else:
-      result = reduceToBase(f.skipModifier)
-  of tyGenericInvocation:
-    result = reduceToBase(f.baseClass)
-  of tyCompositeTypeClass, tyAlias:
-    if not f.hasElementType or f.elementType == nil:
-      result = f
-    else:
-      result = reduceToBase(f.elementType)
-  of tyGenericInst:
-    result = reduceToBase(f.skipModifier)
-  of tyGenericBody:
-    result = reduceToBase(f.typeBodyImpl)
-  of tyUserTypeClass:
-    if f.isResolvedUserTypeClass:
-      result = f.base  # ?? idk if this is right
-    else:
-      result = f.skipModifier
-  of tyStatic, tyOwned, tyVar, tyLent, tySink:
-    result = reduceToBase(f.base)
-  of tyInferred:
-    # This is not true "After a candidate type is selected"
-    result = reduceToBase(f.base)
-  of tyRange:
-    result = f.elementType
-  else:
-    result = f
-
 proc genericParamPut(c: var TCandidate; last, fGenericOrigin: PType) =
   if fGenericOrigin != nil and last.kind == tyGenericInst and
      last.kidsLen-1 == fGenericOrigin.kidsLen:

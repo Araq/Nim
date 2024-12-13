@@ -102,6 +102,9 @@ const
   # typedescX is used if we're sure tyTypeDesc should be included (or skipped)
   typedescPtrs* = abstractPtrs + {tyTypeDesc}
   typedescInst* = abstractInst + {tyTypeDesc, tyOwned, tyUserTypeClass}
+  
+  # incorrect definition of `[]` and `[]=` for these types in system.nim
+  arrPutGetMagicApplies* = {tyArray, tyOpenArray, tyString, tySequence, tyCstring, tyTuple}
 
 proc invalidGenericInst*(f: PType): bool =
   result = f.kind == tyGenericInst and skipModifier(f) == nil
@@ -2038,3 +2041,42 @@ proc genericRoot*(t: PType): PType =
       result = t.sym.typ
     else:
       result = nil
+
+proc reduceToBase*(f: PType): PType =
+  #[
+    Returns the lowest order (most general) type that that is compatible with the input.
+    E.g.
+    A[T] = ptr object ... A -> ptr object
+    A[N: static[int]] = array[N, int] ... A -> array
+  ]#
+  case f.kind:
+  of tyGenericParam:
+    if f.len <= 0 or f.skipModifier == nil:
+      result = f
+    else:
+      result = reduceToBase(f.skipModifier)
+  of tyGenericInvocation:
+    result = reduceToBase(f.baseClass)
+  of tyCompositeTypeClass, tyAlias:
+    if not f.hasElementType or f.elementType == nil:
+      result = f
+    else:
+      result = reduceToBase(f.elementType)
+  of tyGenericInst:
+    result = reduceToBase(f.skipModifier)
+  of tyGenericBody:
+    result = reduceToBase(f.typeBodyImpl)
+  of tyUserTypeClass:
+    if f.isResolvedUserTypeClass:
+      result = f.base  # ?? idk if this is right
+    else:
+      result = f.skipModifier
+  of tyStatic, tyOwned, tyVar, tyLent, tySink:
+    result = reduceToBase(f.base)
+  of tyInferred:
+    # This is not true "After a candidate type is selected"
+    result = reduceToBase(f.base)
+  of tyRange:
+    result = f.elementType
+  else:
+    result = f
