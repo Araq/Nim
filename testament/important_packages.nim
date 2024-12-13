@@ -30,7 +30,7 @@ type NimblePackage* = object
 
 var packages*: seq[NimblePackage]
 
-proc pkg(name: string; cmd = "nimble test"; url = "", useHead = true, allowFailure = false) =
+proc pkg(name: string; cmd = "nimble test -l"; url = "", useHead = true, allowFailure = false) =
   packages.add NimblePackage(name: name, cmd: cmd, url: url, useHead: useHead, allowFailure: allowFailure)
 
 pkg "alea"
