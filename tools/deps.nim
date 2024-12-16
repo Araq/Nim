@@ -46,7 +46,5 @@ proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
 proc updateSubmodules*(dir: string) =
   let oldDir = getCurrentDir()
   setCurrentDir(dir)
-  try:
-    exec "git submodule update --init"
-  finally:
-    setCurrentDir(oldDir)
+  exec "git submodule update --init"
+  setCurrentDir(oldDir)
