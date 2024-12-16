@@ -26,4 +26,4 @@ if not exist %nim_csources% (
 )
 bin\nim.exe c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch
 koch boot -d:release --skipUserCfg --skipParentCfg --hints:off
-koch tools --skipUserCfg --skipParentCfg --hints:off
+koch tools --skipUserCfg --hints:off
