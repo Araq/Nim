@@ -589,7 +589,7 @@ proc foldDefine(m, s: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode
             raise newException(ValueError, "invalid enum value: " & str)
         else:
           localError(g.config, s.info, "unsupported type $1 for define '$2'" %
-            [name, typeToString(rawTyp)])
+            [typeToString(rawTyp), name])
       except ValueError as e:
         localError(g.config, s.info,
           "could not process define '$1' of type $2; $3" %
