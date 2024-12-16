@@ -14,6 +14,9 @@ rounding guarantees (via the
 
 - With `-d:nimPreviewCheckedClose`, the `close` function in the `std/syncio` module now raises an IO exception in case of an error.
 
+- Unknown warnings and hints now gives warnings `warnUnknownNotes` instead of
+errors.
+
 ## Standard library additions and changes
 
 [//]: # "Additions:"
