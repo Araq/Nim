@@ -622,7 +622,11 @@ proc checkDefineType(c: PContext; v: PSym; t: PType) =
     of mBoolDefine: {tyBool}
     of mGenericDefine: {tyString, tyCstring, tyInt..tyInt64, tyUInt..tyUInt64, tyBool, tyEnum}
     else: raiseAssert("unreachable")
-  if t.skipTypes(abstractVarRange-{tyDistinct}).kind notin typeKinds:
+  var skipped = abstractVarRange
+  if v.magic == mGenericDefine:
+    # no distinct types for generic define
+    skipped.excl tyDistinct
+  if t.skipTypes(skipped).kind notin typeKinds:
     let name = 
       case v.magic
       of mStrDefine: "strdefine"
