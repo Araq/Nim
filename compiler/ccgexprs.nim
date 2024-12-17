@@ -3591,6 +3591,12 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
   of nkConstSection:
     if useAliveDataFromDce in p.module.flags:
       genConstStmt(p, n)
+    else: # enforce addressable consts for exportc
+      let m = p.module
+      for it in n:
+        let symNode = skipPragmaExpr(it[0])
+        if symNode.kind == nkSym and sfExportc in symNode.sym.flags:
+          requestConstImpl(p, symNode.sym)
     # else: consts generated lazily on use
   of nkForStmt: internalError(p.config, n.info, "for statement not eliminated")
   of nkCaseStmt: genCase(p, n, d)
