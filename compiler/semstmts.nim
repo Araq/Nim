@@ -612,11 +612,38 @@ proc fillPartialObject(c: PContext; n: PNode; typ: PType) =
   else:
     localError(c.config, n.info, "nkDotNode requires 2 children")
 
+proc checkDefineType(c: PContext; v: PSym; t: PType) =
+  # see semfold.foldDefine for acceptable types
+  let typeKinds =
+    case v.magic
+    of mStrDefine: {tyString, tyCstring}
+    # this used to be not typechecked, so anything that accepts int nodes for compatbility:
+    of mIntDefine: {tyInt..tyInt64, tyUInt..tyUInt64, tyBool, tyChar, tyEnum}
+    of mBoolDefine: {tyBool}
+    of mGenericDefine: {tyString, tyCstring, tyInt..tyInt64, tyUInt..tyUInt64, tyBool, tyEnum}
+    else: raiseAssert("unreachable")
+  var skipped = abstractVarRange
+  if v.magic == mGenericDefine:
+    # no distinct types for generic define
+    skipped.excl tyDistinct
+  if t.skipTypes(skipped).kind notin typeKinds:
+    let name = 
+      case v.magic
+      of mStrDefine: "strdefine"
+      of mIntDefine: "intdefine"
+      of mBoolDefine: "booldefine"
+      of mGenericDefine: "define"
+      else: raiseAssert("unreachable")
+    localError(c.config, v.info, "unsupported type for constant '" & v.name.s &
+      "' with ." & name & " pragma: " & typeToString(t))
+
 proc setVarType(c: PContext; v: PSym, typ: PType) =
   if v.typ != nil and not sameTypeOrNil(v.typ, typ):
     localError(c.config, v.info, "inconsistent typing for reintroduced symbol '" &
         v.name.s & "': previous type was: " & typeToString(v.typ, preferDesc) &
         "; new type is: " & typeToString(typ, preferDesc))
+  if v.kind == skConst and v.magic in {mGenericDefine, mIntDefine, mStrDefine, mBoolDefine}:
+    checkDefineType(c, v, typ)
   v.typ = typ
 
 proc isPossibleMacroPragma(c: PContext, it: PNode, key: PNode): bool =
@@ -1698,12 +1725,14 @@ proc typeSectionRightSidePass(c: PContext, n: PNode) =
         obj.ast[0] = a[0].shallowCopy
         if a[0][0].kind == nkPostfix:
           obj.ast[0][0] = a[0][0].shallowCopy
+          obj.ast[0][0][0] = a[0][0][0] # ident "*"
           obj.ast[0][0][1] = symNode
         else:
           obj.ast[0][0] = symNode
         obj.ast[0][1] = a[0][1]
       of nkPostfix:
         obj.ast[0] = a[0].shallowCopy
+        obj.ast[0][0] = a[0][0] # ident "*"
         obj.ast[0][1] = symNode
       else: assert(false)
       obj.ast[1] = a[1]

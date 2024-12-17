@@ -61,3 +61,19 @@ block: # explicit generic with unresolved generic param, https://forum.nim-lang.
   var x = [1, 1]
   discard MyMedian(x) # emits "1\n"
   doAssert s == @["1"]
+
+block: # issue #16153
+  type
+    X[T] = openArray[T] | varargs[T] | seq[T]
+    Y[T] = ref object
+      dll: T
+
+  proc initY[T](): Y[T] =
+    new(result)
+
+  proc initY[T](v: X[T]): Y[T] =
+    new(result)
+    for e in v:
+      echo e
+
+  var deque: Y[int] = initY[int]()

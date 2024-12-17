@@ -72,7 +72,7 @@ proc newRStarTree*[M, D: Dim; RT, LT](minFill: range[30 .. 50] = 40): RStarTree[
   result.root = newLeaf[M, D, RT, LT]()
 
 proc center(r: Box): auto =#BoxCenter[r.len, typeof(r[0].a)] =
-  var res: BoxCenter[r.len, typeof(r[0].a)]
+  var res = default(BoxCenter[r.len, typeof(r[0].a)])
   for i in 0 .. r.high:
     when r[0].a is SomeInteger:
       res[i] = (r[i].a + r[i].b) div 2
@@ -82,7 +82,7 @@ proc center(r: Box): auto =#BoxCenter[r.len, typeof(r[0].a)] =
   return res
 
 proc distance(c1, c2: BoxCenter): auto =
-  var res: typeof(c1[0])
+  var res: typeof(c1[0]) = default(typeof(c1[0]))
   for i in 0 .. c1.high:
     res += (c1[i] - c2[i]) * (c1[i] - c2[i])
   return res
@@ -94,6 +94,7 @@ proc overlap(r1, r2: Box): auto =
     if result <= 0: return 0
 
 proc union(r1, r2: Box): Box =
+  result = default(Box)
   for i in 0 .. r1.high:
     result[i].a = min(r1[i].a, r2[i].a)
     result[i].b = max(r1[i].b, r2[i].b)
@@ -178,7 +179,7 @@ proc chooseSubtree[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; b: Box[D, RT]; lev
   return it
 
 proc pickSeeds[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; n: Node[M, D, RT, LT] | Leaf[M, D, RT, LT]; bx: Box[D, RT]): (int, int) =
-  var i0, j0: int
+  var i0, j0: int = 0
   var bi, bj: typeof(bx)
   var largestWaste = typeof(bx[0].a).low
   for i in -1 .. n.a.high:
@@ -198,6 +199,7 @@ proc pickSeeds[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; n: Node[M, D, RT, LT] 
   return (i0, j0)
 
 proc pickNext[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; n0, n1, n2: Node[M, D, RT, LT] | Leaf[M, D, RT, LT]; b1, b2: Box[D, RT]): int =
+  result = 0
   let a1 = area(b1)
   let a2 = area(b2)
   var d = typeof(a1).low
@@ -227,7 +229,7 @@ proc rstarSplit[M, D: Dim; RT, LT](t: RStarTree[M, D, RT, LT]; n: var Node[M, D,
   var lx = lx
   when n is Node[M, D, RT, LT]:
     lx.n.parent = n
-  var lxbest: typeof(lx)
+  var lxbest: typeof(lx) = default(typeof(lx))
   var m0 = lx.b[0].a.typeof.high
   for d2 in 0 ..< 2 * D:
     let d = d2 div 2
@@ -361,7 +363,7 @@ proc adjustTree[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; l, ll: H[M, D, RT, LT
     var i = 0
     while p.a[i].n != n:
       inc(i)
-    var b: typeof(p.a[0].b)
+    var b: typeof(p.a[0].b) = default(typeof(p.a[0].b))
     if n of Leaf[M, D, RT, LT]:
       when false:#if likely(nn.isNil): # no performance gain
         b = union(p.a[i].b, Leaf[M, D, RT, LT](n).a[n.numEntries - 1].b)
@@ -429,7 +431,7 @@ proc rsinsert[M, D: Dim; RT, LT](t: RStarTree[M, D, RT, LT]; leaf: N[M, D, RT, L
 proc reInsert[M, D: Dim; RT, LT](t: RStarTree[M, D, RT, LT]; n: var Node[M, D, RT, LT] | var Leaf[M, D, RT, LT]; lx: L[D, RT, LT] | N[M, D, RT, LT]) =
   type NL = typeof(lx)
   var lx = lx
-  var buf: typeof(n.a)
+  var buf: typeof(n.a) = default(typeof(n.a))
   let p = Node[M, D, RT, LT](n.parent)
   var i = 0
   while p.a[i].n != n:
@@ -510,7 +512,7 @@ proc findLeaf[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; leaf: L[D, RT, LT]): Le
 proc condenseTree[M, D: Dim; RT, LT](t: RTree[M, D, RT, LT]; leaf: Leaf[M, D, RT, LT]) =
   var n: H[M, D, RT, LT] = leaf
   var q = newSeq[H[M, D, RT, LT]]()
-  var b: typeof(leaf.a[0].b)
+  var b: typeof(leaf.a[0].b) = default(typeof(leaf.a[0].b))
   while n != t.root:
     let p = Node[M, D, RT, LT](n.parent)
     var i = 0
@@ -592,6 +594,7 @@ proc rseq_search(rs: RSeq; rse: RSE): seq[int] =
       result.add(i.l)
 
 proc rseq_delete(rs: var RSeq; rse: RSE): bool =
+  result = false
   for i in 0 .. rs.high:
     if rs[i] == rse:
       #rs.delete(i)
@@ -602,7 +605,7 @@ proc rseq_delete(rs: var RSeq; rse: RSE): bool =
 import random, algorithm
 
 proc test(n: int) =
-  var b: Box[2, int]
+  var b: Box[2, int] = default(Box[2, int])
   echo center(b)
   var x1, x2, y1, y2: int
   var t = newRStarTree[8, 2, int, int]()

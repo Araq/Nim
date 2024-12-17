@@ -786,6 +786,7 @@ main3()
 
 # misc
 proc smoltest(x: bool): bool =
+  result = false
   while true:
     if true: return x
 
@@ -832,6 +833,7 @@ proc convoluted =
   let _ = (;
     var val1: string;
     if true: val1 = "22"
+    else: val1 = ""
     true
   )
 

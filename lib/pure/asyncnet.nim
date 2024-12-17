@@ -915,7 +915,7 @@ proc recvFrom*(socket: AsyncSocket, data: FutureVar[string], size: int,
          "Cannot `recvFrom` on a TCP socket. Use `recv` or `recvInto` instead")
   assert(not socket.closed, "Cannot `recvFrom` on a closed socket")
   assert(size == len(data.mget()),
-         "`date` was not initialized correctly. `size` != `len(data.mget())`")
+         "`data` was not initialized correctly. `size` != `len(data.mget())`")
   assert(46 == len(address.mget()),
          "`address` was not initialized correctly. 46 != `len(address.mget())`")
 

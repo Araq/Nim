@@ -11,7 +11,7 @@
 
 const
   # examples of possible values for repos: Head, ea82b54
-  NimbleStableCommit = "46e2ae13eeb95619a371a74d16efc5aff30ea371" # 0.16.2
+  NimbleStableCommit = "4e7e646b9819b72044e5262c2800e9f7ccfd1b16" # 0.16.4
   AtlasStableCommit = "5faec3e9a33afe99a7d22377dd1b45a5391f5504"
   ChecksumsStableCommit = "bd9bf4eaea124bf8d01e08f92ac1b14c6879d8d3"
   SatStableCommit = "faf1617f44d7632ee9601ebc13887644925dcc01"
@@ -159,13 +159,9 @@ proc bundleNimbleExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: NimbleStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/nimble.git",
                   commit = commit, allowBundled = true)
-  cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/checksums.git",
-                commit = ChecksumsStableCommit, allowBundled = true) # or copy it from dist?
-  cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/sat.git",
-                commit = SatStableCommit, allowBundled = true)
-  # installer.ini expects it under $nim/bin
+  updateSubmodules(distDir / "nimble")
   nimCompile("dist/nimble/src/nimble.nim",
-             options = "-d:release -d:nimNimbleBootstrap --noNimblePath " & args)
+             options = "-d:release --noNimblePath " & args)
 
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit

@@ -146,6 +146,7 @@ func encodeQuery*(query: openArray[(string, string)], usePlus = true,
     assert encodeQuery({"a": "1", "b": "2"}) == "a=1&b=2"
     assert encodeQuery({"a": "1", "b": ""}) == "a=1&b"
     assert encodeQuery({"a": "1", "b": ""}, omitEq = false, sep = ';') == "a=1;b="
+  result = ""
   for elem in query:
     # Encode the `key = value` pairs and separate them with 'sep'
     if result.len > 0: result.add(sep)

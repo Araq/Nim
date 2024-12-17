@@ -140,6 +140,8 @@ proc repr*[T: tuple|object](x: T): string {.noSideEffect, raises: [].} =
   ##   ```
   when T is object:
     result = $typeof(x)
+  else:
+    result = ""
   reprObject(result, x)
 
 proc repr*[T](x: ref T | ptr T): string {.noSideEffect, raises: [].} =

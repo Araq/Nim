@@ -5,6 +5,7 @@ B[system.int]
 A[system.string]
 A[array[0..0, int]]
 A[seq[int]]
+char
 '''
 """
 import conceptsv2_helper
@@ -128,3 +129,38 @@ block: # more complex recursion
 
   var a = BufferImpl[5]()
   launch(a, WritableImpl())
+
+block:  # capture p1[T]
+  type
+    A[T] = object
+    C = concept
+      proc p1(x: Self, i: int): float
+
+  proc p1[T](a: A[T], idx: int): T = default(T)
+  proc p(a: C): int = discard
+  proc p[T](a: T):int = assert false
+
+  discard p(A[float]())
+
+block:  # mArrGet binding
+  type
+    ArrayLike[T] = concept
+      proc len(x: Self): int
+      proc `[]`(b: Self, i: int): T
+
+  proc p[T](a: ArrayLike[T]): int= discard
+  discard p([1,2])
+
+block:
+  type
+    A[T] = object
+    ArrayLike[T] = concept
+      proc len(x: Self): int
+      proc `[]`(b: Self, i: int): T
+      proc tell(s: Self, x: A[int])
+  
+  proc tell(x: string, h: A[int])= discard
+
+  proc spring[T](w: ArrayLike[T])= echo T
+  
+  spring("hi")

@@ -516,6 +516,8 @@ const
   errIllegalConvFromXtoY = "illegal conversion from '$1' to '$2'"
   errTooManyIterations = "interpretation requires too many iterations; " &
     "if you are sure this is not a bug in your code, compile with `--maxLoopIterationsVM:number` (current value: $1)"
+  errCallDepthExceeded = "maximum call depth for the VM exceeded; " &
+    "if you are sure this is not a bug in your code, compile with `--maxCallDepthVM:number` (current value: $1)"
   errFieldXNotFound = "node lacks field: "
 
 
@@ -590,6 +592,7 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       let newPc = c.cleanUpOnReturn(tos)
       # Perform any cleanup action before returning
       if newPc < 0:
+        inc(c.callDepth)
         pc = tos.comesFrom
         let retVal = regs[0]
         tos = tos.next
@@ -1445,6 +1448,14 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
           newFrame.slots[i] = regs[rb+i]
         if isClosure:
           newFrame.slots[rc] = TFullReg(kind: rkNode, node: regs[rb].node[1])
+        if c.callDepth <= 0:
+          if allowInfiniteRecursion in c.features:
+            c.callDepth = c.config.maxCallDepthVM
+          else:
+            msgWriteln(c.config, "stack trace: (most recent call last)", {msgNoUnitSep})
+            stackTraceAux(c, tos, pc)
+            globalError(c.config, c.debug[pc], errCallDepthExceeded % $c.config.maxCallDepthVM)
+        dec(c.callDepth)
         tos = newFrame
         updateRegsAlias
         # -1 for the following 'inc pc'
@@ -2311,6 +2322,7 @@ proc execute(c: PCtx, start: int): PNode =
 
 proc execProc*(c: PCtx; sym: PSym; args: openArray[PNode]): PNode =
   c.loopIterations = c.config.maxLoopIterationsVM
+  c.callDepth = c.config.maxCallDepthVM
   if sym.kind in routineKinds:
     if sym.typ.paramsLen != args.len:
       result = nil

@@ -40,6 +40,7 @@ var
   lvalue
   lnext
   tmpTupleAsgn
+result = default(Maybe)
 lresult = @[123]
 tmpTupleAsgn = (
   let blitTmp = lresult
@@ -227,6 +228,7 @@ type
     value: seq[int]
 
 proc p1(): Maybe =
+  result = default(Maybe)
   let lresult = @[123]
   var lvalue: seq[int]
   var lnext: string
@@ -248,7 +250,7 @@ proc tt(x: KeyValue) =
   echo a
 
 proc encodedQuery =
-  var query: seq[KeyValue]
+  var query: seq[KeyValue] = @[]
   query.add (key: @[1], val: @[2])
 
   for elem in query:

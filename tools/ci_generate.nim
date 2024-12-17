@@ -44,7 +44,7 @@ proc genBuildExtras(echoRun, koch, nim: string): string =
   result = fmt"""
 {echoRun}{nim} c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch
 {echoRun}{koch} boot -d:release --skipUserCfg --skipParentCfg --hints:off
-{echoRun}{koch} tools --skipUserCfg --skipParentCfg --hints:off
+{echoRun}{koch} tools --skipUserCfg --hints:off
 """
 
 proc genWindowsScript(buildAll: bool): string =

@@ -166,7 +166,7 @@ type
     x2: string
 
 proc test_myobject =
-  var x: MyObject
+  var x: MyObject = MyObject()
   x.x1 = "x1"
   x.x2 = "x2"
   x.y1 = "ljhkjhkjh"
@@ -213,6 +213,7 @@ type
       error*: string
 
 proc init(): RocksDBResult[string] =
+  result = default(RocksDBResult[string])
   {.cast(uncheckedAssign).}:
     result.ok = true
     result.value = "ok"

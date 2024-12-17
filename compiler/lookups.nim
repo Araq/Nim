@@ -726,7 +726,7 @@ proc qualifiedLookUp*(c: PContext, n: PNode, flags: set[TLookupFlag]): PSym =
 proc initOverloadIter*(o: var TOverloadIter, c: PContext, n: PNode): PSym =
   if n.kind == nkOpenSym:
     # maybe the logic in semexprs should be mirrored here instead
-    # for now it only seems this is called for `pickSym` in `getTypeIdent` 
+    # for now it only seems this is called for `pickSym` in `getTypeIdent`
     return initOverloadIter(o, c, n[0])
   o.importIdx = -1
   o.marked = initIntSet()
