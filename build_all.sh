@@ -13,5 +13,5 @@ nimBuildCsourcesIfNeeded "$@"
 
 echo_run bin/nim c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch
 echo_run ./koch boot -d:release --skipUserCfg --skipParentCfg --hints:off
-echo_run ./koch tools --skipUserCfg --hints:off
+echo_run ./koch tools --skipUserCfg --skipParentCfg --hints:off
 
