@@ -134,7 +134,8 @@ const
   #List of currently supported capabilities. So lang servers/ides can iterate over and check for what's enabled
   Capabilities = [
     "con", #current NimSuggest supports the `con` commmand
-    "exceptionInlayHints"
+    "exceptionInlayHints",
+    "unknownFile", #current NimSuggest can handle unknown files
   ]
 
 proc parseQuoted(cmd: string; outp: var string; start: int): int =
@@ -191,6 +192,7 @@ proc listEpc(): SexpNode =
 
 proc findNode(n: PNode; trackPos: TLineInfo): PSym =
   #echo "checking node ", n.info
+  result = nil
   if n.kind == nkSym:
     if isTracked(n.info, trackPos, n.sym.name.s.len): return n.sym
   else:
@@ -202,6 +204,8 @@ proc symFromInfo(graph: ModuleGraph; trackPos: TLineInfo): PSym =
   let m = graph.getModule(trackPos.fileIndex)
   if m != nil and m.ast != nil:
     result = findNode(m.ast, trackPos)
+  else:
+    result = nil
 
 template benchmark(benchmarkName: untyped, code: untyped) =
   block:
@@ -229,6 +233,14 @@ proc clearInstCache(graph: ModuleGraph, projectFileIdx: FileIndex) =
       procIdsToDelete.add id
   for id in procIdsToDelete:
     graph.procInstCache.del id
+
+  for tbl in mitems(graph.attachedOps):
+    var attachedOpsToDelete = newSeq[ItemId]()
+    for id in tbl.keys:
+      if id.module == projectFileIdx.int and sfOverridden in resolveAttachedOp(graph, tbl[id]).flags:
+        attachedOpsToDelete.add id
+    for id in attachedOpsToDelete:
+      tbl.del id
 
 proc executeNoHooks(cmd: IdeCmd, file, dirtyfile: AbsoluteFile, line, col: int, tag: string,
              graph: ModuleGraph) =
@@ -402,7 +414,7 @@ proc replTcp(x: ThreadParams) {.thread.} =
     server.bindAddr(x.port, x.address)
     server.listen()
   var inp = ""
-  var stdoutSocket: Socket
+  var stdoutSocket: Socket = Socket()
   while true:
     accept(server, stdoutSocket)
 
@@ -436,7 +448,7 @@ proc replEpc(x: ThreadParams) {.thread.} =
   echo port
   stdout.flushFile()
 
-  var client: Socket
+  var client: Socket = Socket()
   # Wait for connection
   accept(server, client)
   while true:
@@ -758,20 +770,16 @@ proc handleCmdLine(cache: IdentCache; conf: ConfigRef) =
 
   if gMode != mstdin:
     conf.writelnHook = proc (msg: string) = discard
-  # Find Nim's prefix dir.
-  let binaryPath = findExe("nim")
-  if binaryPath == "":
-    raise newException(IOError,
-        "Cannot find Nim standard library: Nim compiler not in PATH")
-  conf.prefixDir = AbsoluteDir binaryPath.splitPath().head.parentDir()
-  if not dirExists(conf.prefixDir / RelativeDir"lib"):
-    conf.prefixDir = AbsoluteDir""
-
+  conf.prefixDir = conf.getPrefixDir()
   #msgs.writelnHook = proc (line: string) = log(line)
   myLog("START " & conf.projectFull.string)
 
   var graph = newModuleGraph(cache, conf)
   if self.loadConfigsAndProcessCmdLine(cache, conf, graph):
+
+    if conf.selectedGC == gcUnselected and
+          conf.backend != backendJs:
+      initOrcDefines(conf)
     mainCommand(graph)
 
 # v3 start
@@ -844,6 +852,7 @@ func deduplicateSymInfoPair(xs: SuggestFileSymbolDatabase): SuggestFileSymbolDat
 
 proc findSymData(graph: ModuleGraph, trackPos: TLineInfo):
     ref SymInfoPair =
+  result = nil
   let db = graph.fileSymbols(trackPos.fileIndex).deduplicateSymInfoPair
   doAssert(db.fileIndex == trackPos.fileIndex)
   for i in db.lineInfo.low..db.lineInfo.high:
@@ -978,6 +987,7 @@ proc symbolEqual(left, right: PSym): bool =
   return left.info.exactEquals(right.info) and left.name == right.name
 
 proc findDef(n: PNode, line: uint16, col: int16): PNode =
+  result = nil
   if n.kind in {nkProcDef, nkIteratorDef, nkTemplateDef, nkMethodDef, nkMacroDef}:
     if n.info.line == line:
       return n
@@ -998,6 +1008,8 @@ proc findByTLineInfo(trackPos: TLineInfo, infoPairs: SuggestFileSymbolDatabase):
         break
 
 proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
+  result = false
+
   proc checkSymbol(sym: PSym, info: TLineInfo): bool =
     result = (sym.owner.kind in {skModule, skType} or sym.kind in {skProc, skMethod, skIterator, skTemplate, skType})
 
@@ -1012,6 +1024,7 @@ proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: Su
        return true
 
 proc handleIdentOrSym(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
+  result = false
   for child in n:
     if child.kind in {nkIdent, nkSym}:
       if graph.outlineNode(child, endInfo, infoPairs):
@@ -1062,13 +1075,9 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
 
   myLog fmt "cmd: {cmd}, file: {file}[{line}:{col}], dirtyFile: {dirtyfile}, tag: {tag}"
 
-  var fileIndex: FileIndex
+  var fileIndex: FileIndex = default(FileIndex)
 
   if not (cmd in {ideRecompile, ideGlobalSymbols}):
-    if not fileInfoKnown(conf, file):
-      myLog fmt "{file} is unknown, returning no results"
-      return
-
     fileIndex = fileInfoIdx(conf, file)
     msgs.setDirtyFile(
       conf,
@@ -1196,7 +1205,7 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     if not s.isNil:
       # find first mention of the symbol in the file containing the definition.
       # It is either the definition or the declaration.
-      var first: SymInfoPair
+      var first: SymInfoPair = default(SymInfoPair)
       let db = graph.fileSymbols(s.sym.info.fileIndex).deduplicateSymInfoPair
       for i in db.lineInfo.low..db.lineInfo.high:
         if s.sym.symbolEqual(db.sym[i]):
@@ -1255,7 +1264,7 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     var typeHints = true
     var exceptionHints = false
     while i <= tag.high:
-      var token: string
+      var token: string = ""
       i += parseUntil(tag, token, seps, i)
       i += skipWhile(tag, seps, i)
       case token:
@@ -1344,13 +1353,7 @@ else:
       conf.writelnHook = proc (msg: string) = discard
     # Find Nim's prefix dir.
     if nimPath == "":
-      let binaryPath = findExe("nim")
-      if binaryPath == "":
-        raise newException(IOError,
-            "Cannot find Nim standard library: Nim compiler not in PATH")
-      conf.prefixDir = AbsoluteDir binaryPath.splitPath().head.parentDir()
-      if not dirExists(conf.prefixDir / RelativeDir"lib"):
-        conf.prefixDir = AbsoluteDir""
+      conf.prefixDir = conf.getPrefixDir()
     else:
       conf.prefixDir = AbsoluteDir nimPath
 

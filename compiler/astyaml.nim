@@ -75,7 +75,7 @@ proc symToYamlAux(res: var string; conf: ConfigRef; n: PSym; marker: var IntSet;
     res.addf("\n$1storage: $2", [istr, makeYamlString($n.loc.storage)])
     if card(n.loc.flags) > 0:
       res.addf("\n$1flags: $2", [istr, makeYamlString($n.loc.flags)])
-    res.addf("\n$1r: $2", [istr, n.loc.r])
+    res.addf("\n$1snippet: $2", [istr, n.loc.snippet])
     res.addf("\n$1lode: $2", [istr])
     res.treeToYamlAux(conf, n.loc.lode, marker, indent + 1, maxRecDepth - 1)
 

@@ -110,6 +110,19 @@ template addAllNode(assignParam: NimNode, procParam: NimNode) =
   tempAssignList.add newLetStmt(tempNode, newDotExpr(objTemp, formalParams[i][0]))
   scratchRecList.add newIdentDefs(newIdentNode(formalParams[i][0].strVal), assignParam)
 
+proc analyseRootSym(s: NimNode): NimNode =
+  result = s
+  while true:
+    case result.kind
+    of nnkBracketExpr, nnkDerefExpr, nnkHiddenDeref,
+        nnkAddr, nnkHiddenAddr,
+        nnkObjDownConv, nnkObjUpConv:
+      result = result[0]
+    of nnkDotExpr, nnkCheckedFieldExpr, nnkHiddenStdConv, nnkHiddenSubConv:
+      result = result[1]
+    else:
+      break
+
 macro toTask*(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand | nkCallStrLit}): Task =
   ## Converts the call and its arguments to `Task`.
   runnableExamples:
@@ -121,11 +134,14 @@ macro toTask*(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand | nkC
   let retType = getTypeInst(e)
   let returnsVoid = retType.typeKind == ntyVoid
 
+  let rootSym = analyseRootSym(e[0])
+  expectKind rootSym, nnkSym
+
   when compileOption("threads"):
-    if not isGcSafe(e[0]):
+    if not isGcSafe(rootSym):
       error("'toTask' takes a GC safe call expression", e)
 
-  if hasClosure(e[0]):
+  if hasClosure(rootSym):
     error("closure call is not allowed", e)
 
   if e.len > 1:
@@ -209,7 +225,7 @@ macro toTask*(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand | nkC
     let funcCall = newCall(e[0], callNode)
     functionStmtList.add tempAssignList
 
-    let funcName = genSym(nskProc, e[0].strVal)
+    let funcName = genSym(nskProc, rootSym.strVal)
     let destroyName = genSym(nskProc, "destroyScratch")
     let objTemp2 = genSym(ident = "obj")
     let tempNode = quote("@") do:
@@ -241,7 +257,7 @@ macro toTask*(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand | nkC
       Task(callback: `funcName`, args: `scratchIdent`, destroy: `destroyName`)
   else:
     let funcCall = newCall(e[0])
-    let funcName = genSym(nskProc, e[0].strVal)
+    let funcName = genSym(nskProc, rootSym.strVal)
 
     if returnsVoid:
       result = quote do:

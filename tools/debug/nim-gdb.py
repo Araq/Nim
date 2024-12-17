@@ -151,7 +151,7 @@ class DollarPrintFunction (gdb.Function):
   "Nim's equivalent of $ operator as a gdb function, available in expressions `print $dollar(myvalue)"
 
   dollar_functions = re.findall(
-    '(?:NimStringDesc \*|NimStringV2)\s?(dollar__[A-z0-9_]+?)\(([^,)]*)\);',
+    r'(?:NimStringDesc \*|NimStringV2)\s?(dollar__[A-z0-9_]+?)\(([^,)]*)\);',
     gdb.execute("info functions dollar__", True, True)
   )
 
@@ -168,11 +168,11 @@ class DollarPrintFunction (gdb.Function):
       # this way of overload resolution cannot deal with type aliases,
       # therefore it won't find all overloads.
       if arg_typ == argTypeName:
-        func_value = gdb.lookup_global_symbol(func, gdb.SYMBOL_FUNCTIONS_DOMAIN).value()
+        func_value = gdb.lookup_global_symbol(func, gdb.SYMBOL_FUNCTION_DOMAIN).value()
         return func_value(arg)
 
       elif arg_typ == argTypeName + " *":
-        func_value = gdb.lookup_global_symbol(func, gdb.SYMBOL_FUNCTIONS_DOMAIN).value()
+        func_value = gdb.lookup_global_symbol(func, gdb.SYMBOL_FUNCTION_DOMAIN).value()
         return func_value(arg.address)
 
     if not ignore_errors:
@@ -387,7 +387,7 @@ def enumNti(typeNimName, idString):
 
 class NimEnumPrinter:
   pattern = re.compile(r'^tyEnum_([A-Za-z0-9]+)__([A-Za-z0-9]*)$')
-  enumReprProc = gdb.lookup_global_symbol("reprEnum", gdb.SYMBOL_FUNCTIONS_DOMAIN)
+  enumReprProc = gdb.lookup_global_symbol("reprEnum", gdb.SYMBOL_FUNCTION_DOMAIN)
 
   def __init__(self, val):
     self.val = val
@@ -677,7 +677,7 @@ def makematcher(klass):
   return matcher
 
 def register_nim_pretty_printers_for_object(objfile):
-  nimMainSym = gdb.lookup_global_symbol("NimMain", gdb.SYMBOL_FUNCTIONS_DOMAIN)
+  nimMainSym = gdb.lookup_global_symbol("NimMain", gdb.SYMBOL_FUNCTION_DOMAIN)
   if nimMainSym and nimMainSym.symtab.objfile == objfile:
     print("set Nim pretty printers for ", objfile.filename)
 

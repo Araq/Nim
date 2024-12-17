@@ -5,14 +5,14 @@ discard """
 import std/assertions
 
 proc foo =
-  var s:seq[string]
+  var s:seq[string] = @[]
   var res = ""
 
   for i in 0..3:
     s.add ("test" & $i)
     s.add ("test" & $i)
 
-  var lastname:string
+  var lastname:string = ""
 
   for i in s:
     var name = i[0..4]

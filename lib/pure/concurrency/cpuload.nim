@@ -65,10 +65,10 @@ proc advice*(s: var ThreadPoolState): ThreadPoolAdvice =
     proc fscanf(c: File, frmt: cstring) {.varargs, importc,
       header: "<stdio.h>".}
 
-    var f: File
+    var f: File = default(File)
     if f.open("/proc/loadavg"):
       var b: float
-      var busy, total: int
+      var busy, total: int = 0
       fscanf(f,"%lf %lf %lf %ld/%ld",
             addr b, addr b, addr b, addr busy, addr total)
       f.close()

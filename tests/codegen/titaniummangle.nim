@@ -5,11 +5,11 @@ discard """
   ccodecheck: "'_ZN14titaniummangle8testFuncE6stringN14titaniummangle3FooE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE3int7varargsI6stringE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncEN14titaniummangle3BooE'"
-  ccodecheck: "'_ZN8testFunc8testFuncE8typeDescIN14titaniummangle17EnumAnotherSampleEE'"
+  ccodecheck: "'_ZN14titaniummangle8testFuncE8typeDescIN14titaniummangle17EnumAnotherSampleEE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE3ptrI14uncheckedArrayI3intEE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE3setIN14titaniummangle10EnumSampleEE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE4procI6string6stringE'"
-  ccodecheck: "'_ZN8testFunc8testFuncE3intN10Comparable10ComparableE'"
+  ccodecheck: "'_ZN14titaniummangle8testFuncE3intN10Comparable10ComparableE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE3int3int'"
   ccodecheck: "'_ZN14titaniummangle8testFuncEN14titaniummangle10EnumSampleE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncEN14titaniummangle17EnumAnotherSampleE'"
@@ -37,7 +37,6 @@ type
   Comparable = concept x, y
     (x < y) is bool
 
-type 
   Foo = object
     a: int32
     b: int32
@@ -45,8 +44,10 @@ type
   FooTuple = tuple
     a: int
     b: int
+
   Container[T] = object
-    data: T  
+    data: T
+      
   Container2[T, T2] = object
     data: T
     data2: T2

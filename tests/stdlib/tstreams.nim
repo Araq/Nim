@@ -92,6 +92,10 @@ static: # Ensure streams it doesnt break with nimscript on arc/orc #19716
   let s = newStringStream("a")
   doAssert s.data == "a"
 
+static: # issue #24054, readStr
+  var s = newStringStream("foo bar baz")
+  doAssert s.readStr(3) == "foo"
+
 template main =
   var strm = newStringStream("abcde")
   var buffer = "12345"

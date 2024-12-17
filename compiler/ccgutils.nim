@@ -90,6 +90,9 @@ proc ccgIntroducedPtr*(conf: ConfigRef; s: PSym, retType: PType): bool =
     if s.typ.sym != nil and sfForward in s.typ.sym.flags:
       # forwarded objects are *always* passed by pointers for consistency!
       result = true
+    elif s.typ.kind == tySink and conf.selectedGC notin {gcArc, gcAtomicArc, gcOrc, gcHooks}:
+      # bug #23354:
+      result = false
     elif (optByRef in s.options) or (getSize(conf, pt) > conf.target.floatSize * 3):
       result = true           # requested anyway
     elif (tfFinal in pt.flags) and (pt[0] == nil):
@@ -122,7 +125,7 @@ proc encodeSym*(m: BModule; s: PSym; makeUnique: bool = false): string =
   var name = s.name.s
   if makeUnique:
     name = makeUnique(m, s, name)
-  "N" & encodeName(s.owner.name.s) & encodeName(name) & "E"
+  "N" & encodeName(s.skipGenericOwner.name.s) & encodeName(name) & "E"
 
 proc encodeType*(m: BModule; t: PType): string =
   result = ""

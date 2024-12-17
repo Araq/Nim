@@ -14,7 +14,7 @@ Introduction
 
 niminst is a tool to generate an installer for a Nim program. Currently
 it can create an installer for Windows
-via [Inno Setup](http://www.jrsoftware.org/isinfo.php) as well as
+via [Inno Setup](https://www.jrsoftware.org/isinfo.php) as well as
 installation/deinstallation scripts for UNIX. Later versions will support
 Linux' package management systems.
 

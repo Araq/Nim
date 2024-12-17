@@ -22,6 +22,7 @@ method `$`(token: Paragraph): string =
   if token.children.head == nil:
     result = ""
   else:
+    result = ""
     for c in token.children:
       result.add $c
 
@@ -69,7 +70,7 @@ type holder = object
   contents: outer
 
 proc main() = 
-  var t: holder
+  var t: holder = holder()
   t.contents = newOuter()
   
 main()

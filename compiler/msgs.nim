@@ -629,7 +629,7 @@ proc warningDeprecated*(conf: ConfigRef, info: TLineInfo = gCmdLineInfo, msg = "
   message(conf, info, warnDeprecated, msg)
 
 proc internalErrorImpl(conf: ConfigRef; info: TLineInfo, errMsg: string, info2: InstantiationInfo) =
-  if conf.cmd == cmdIdeTools and conf.structuredErrorHook.isNil: return
+  if conf.cmd in {cmdIdeTools, cmdCheck} and conf.structuredErrorHook.isNil: return
   writeContext(conf, info)
   liMessage(conf, info, errInternal, errMsg, doAbort, info2)
 
@@ -651,13 +651,16 @@ template lintReport*(conf: ConfigRef; info: TLineInfo, beau, got: string, extraM
   let msg = if optStyleError in conf.globalOptions: errGenerated else: hintName
   liMessage(conf, info, msg, m, doNothing, instLoc())
 
-proc quotedFilename*(conf: ConfigRef; i: TLineInfo): Rope =
-  if i.fileIndex.int32 < 0:
+proc quotedFilename*(conf: ConfigRef; fi: FileIndex): Rope =
+  if fi.int32 < 0:
     result = makeCString "???"
   elif optExcessiveStackTrace in conf.globalOptions:
-    result = conf.m.fileInfos[i.fileIndex.int32].quotedFullName
+    result = conf.m.fileInfos[fi.int32].quotedFullName
   else:
-    result = conf.m.fileInfos[i.fileIndex.int32].quotedName
+    result = conf.m.fileInfos[fi.int32].quotedName
+
+proc quotedFilename*(conf: ConfigRef; i: TLineInfo): Rope =
+  quotedFilename(conf, i.fileIndex)
 
 template listMsg(title, r) =
   msgWriteln(conf, title, {msgNoUnitSep})
@@ -665,31 +668,6 @@ template listMsg(title, r) =
 
 proc listWarnings*(conf: ConfigRef) = listMsg("Warnings:", warnMin..warnMax)
 proc listHints*(conf: ConfigRef) = listMsg("Hints:", hintMin..hintMax)
-
-proc uniqueModuleName*(conf: ConfigRef; fid: FileIndex): string =
-  ## The unique module name is guaranteed to only contain {'A'..'Z', 'a'..'z', '0'..'9', '_'}
-  ## so that it is useful as a C identifier snippet.
-  let path = AbsoluteFile toFullPath(conf, fid)
-  let rel =
-    if path.string.startsWith(conf.libpath.string):
-      relativeTo(path, conf.libpath).string
-    else:
-      relativeTo(path, conf.projectPath).string
-  let trunc = if rel.endsWith(".nim"): rel.len - len(".nim") else: rel.len
-  result = newStringOfCap(trunc)
-  for i in 0..<trunc:
-    let c = rel[i]
-    case c
-    of 'a'..'z':
-      result.add c
-    of {os.DirSep, os.AltSep}:
-      result.add 'Z' # because it looks a bit like '/'
-    of '.':
-      result.add 'O' # a circle
-    else:
-      # We mangle upper letters and digits too so that there cannot
-      # be clashes with our special meanings of 'Z' and 'O'
-      result.addInt ord(c)
 
 proc genSuccessX*(conf: ConfigRef) =
   let mem =

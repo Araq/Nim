@@ -74,3 +74,20 @@ block:
 
   doAssert getEnumOrdinal(y, "Hello") == 0
   doAssert getEnumOrdinal(y, "hello") == 1
+
+block: # bug #23556
+  proc test =
+    var
+      t: seq[int] = @[]
+      aseq = toAny(t)
+
+    invokeNewSeq(aseq, 0)
+
+    # Got random value only when loop 8 times.
+    for i in 1 .. 8:
+      extendSeq(aseq)
+
+    doAssert t == @[0, 0, 0, 0, 0, 0, 0, 0]
+
+  for i in 1 .. 7:
+    test()

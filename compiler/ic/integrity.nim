@@ -10,7 +10,7 @@
 ## Integrity checking for a set of .rod files.
 ## The set must cover a complete Nim project.
 
-import std/sets
+import std/[sets, tables]
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
@@ -108,18 +108,18 @@ proc checkModule(c: var CheckedContext; m: PackedModule) =
   # We check that:
   # - Every symbol references existing types and symbols.
   # - Every tree node references existing types and symbols.
-  for i in 0..high(m.syms):
-    checkLocalSym c, int32(i)
+  for _, v in pairs(m.syms):
+    checkLocalSym c, v.id
 
   checkTree c, m.toReplay
   checkTree c, m.topLevel
 
   for e in m.exports:
-    assert e[1] >= 0 and e[1] < m.syms.len
+    #assert e[1] >= 0 and e[1] < m.syms.len
     assert e[0] == m.syms[e[1]].name
 
   for e in m.compilerProcs:
-    assert e[1] >= 0 and e[1] < m.syms.len
+    #assert e[1] >= 0 and e[1] < m.syms.len
     assert e[0] == m.syms[e[1]].name
 
   checkLocalSymIds c, m, m.converters

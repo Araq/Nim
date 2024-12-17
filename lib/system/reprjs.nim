@@ -29,7 +29,7 @@ proc reprBool(x: bool): string {.compilerRtl.} =
 proc reprEnum(e: int, typ: PNimType): string {.compilerRtl.} =
   var tmp: bool
   let item = typ.node.sons[e]
-  {.emit: "`tmp` = `item` !== undefined".}
+  {.emit: "`tmp` = `item` !== undefined;".}
   if tmp:
     result = makeNimstrLit(item.name)
   else:
@@ -136,7 +136,7 @@ proc reprArray(a: pointer, typ: PNimType,
   add(result, "]")
 
 proc isPointedToNil(p: pointer): bool =
-  {. emit: "if (`p` === null) {`result` = true};\n" .}
+  {. emit: "if (`p` === null) {`result` = true;}\n" .}
 
 proc reprRef(result: var string, p: pointer, typ: PNimType,
           cl: var ReprClosure) =

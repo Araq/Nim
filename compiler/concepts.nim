@@ -11,7 +11,7 @@
 ## for details. Note this is a first implementation and only the "Concept matching"
 ## section has been implemented.
 
-import ast, astalgo, semdata, lookups, lineinfos, idents, msgs, renderer, types
+import ast, semdata, lookups, lineinfos, idents, msgs, renderer, types, layeredtable
 
 import std/intsets
 
@@ -78,6 +78,7 @@ type
     magic: TMagic  ## mArrGet and mArrPut is wrong in system.nim and
                    ## cannot be fixed that easily.
                    ## Thus we special case it here.
+    concpt: PType
 
 proc existingBinding(m: MatchCon; key: PType): PType =
   ## checks if we bound the type variable 'key' already to some
@@ -88,22 +89,52 @@ proc existingBinding(m: MatchCon; key: PType): PType =
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
 
-proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
+proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool
+
+proc acceptsAllTypes(t: PType): bool=
+  result = false
+  if t.kind == tyAnything:
+    result = true
+  elif t.kind == tyGenericParam:
+    if tfImplicitTypeParam in t.flags:
+      result = true
+    if not t.hasElementType or t.elementType.kind == tyNone:
+      result = true
+
+proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
+  result = true
+  for i in start..<f.kidsLen - ord(f.kind == tyGenericInst):
+    if not matchType(c, f[i], a[i], m): return false
+
+proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
   const
     ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyGenericInst, tyAlias, tyInferred}
+  
+  var a = ao
+  
+  case a.kind
+  of tyGenericParam:
+    let binding = m.existingBinding(a)
+    if binding != nil:
+      a = binding
+  else:
+    discard
+  
   case f.kind
   of tyAlias:
     result = matchType(c, f.skipModifier, a, m)
   of tyTypeDesc:
     if isSelf(f):
-      #let oldLen = m.inferred.len
-      result = matchType(c, a, m.potentialImplementation, m)
-      #echo "self is? ", result, " ", a.kind, " ", a, " ", m.potentialImplementation, " ", m.potentialImplementation.kind
-      #m.inferred.setLen oldLen
-      #echo "A for ", result, " to ", typeToString(a), " to ", typeToString(m.potentialImplementation)
+      if m.magic in {mArrPut, mArrGet}:
+        result = false
+        if m.potentialImplementation.reduceToBase.kind in arrPutGetMagicApplies:
+          m.inferred.add((a, last m.potentialImplementation))
+          result = true
+      else:
+        result = matchType(c, a, m.potentialImplementation, m)
     else:
       if a.kind == tyTypeDesc and f.hasElementType == a.hasElementType:
         if f.hasElementType:
@@ -112,14 +143,11 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
           result = true # both lack it
       else:
         result = false
-
   of tyGenericInvocation:
     result = false
     if a.kind == tyGenericInst and a.genericHead.kind == tyGenericBody:
       if sameType(f.genericHead, a.genericHead) and f.kidsLen == a.kidsLen-1:
-        for i in FirstGenericParamAt ..< f.kidsLen:
-          if not matchType(c, f[i], a[i], m): return false
-        return true
+        result = matchKids(c, f, a, m, start=FirstGenericParamAt)
   of tyGenericParam:
     let ak = a.skipTypes({tyVar, tySink, tyLent, tyOwned})
     if ak.kind in {tyTypeDesc, tyStatic} and not isSelf(ak):
@@ -136,7 +164,7 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
             when logBindings: echo "A adding ", f, " ", ak
             m.inferred.add((f, ak))
         elif m.magic == mArrGet and ak.kind in {tyArray, tyOpenArray, tySequence, tyVarargs, tyCstring, tyString}:
-          when logBindings: echo "B adding ", f, " ", lastSon ak
+          when logBindings: echo "B adding ", f, " ", last ak
           m.inferred.add((f, last ak))
           result = true
         else:
@@ -151,7 +179,6 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
       else:
         result = false
     #echo "B for ", result, " to ", typeToString(a), " to ", typeToString(m.potentialImplementation)
-
   of tyVar, tySink, tyLent, tyOwned:
     # modifiers in the concept must be there in the actual implementation
     # too but not vice versa.
@@ -170,22 +197,43 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = ak.kind == f.kind or ak.kind == tyOrdinal or
        (ak.kind == tyGenericParam and ak.hasElementType and ak.elementType.kind == tyOrdinal)
   of tyConcept:
-    let oldLen = m.inferred.len
-    let oldPotentialImplementation = m.potentialImplementation
-    m.potentialImplementation = a
-    result = conceptMatchNode(c, f.n.lastSon, m)
-    m.potentialImplementation = oldPotentialImplementation
-    if not result:
-      m.inferred.setLen oldLen
+    if a.kind == tyConcept and f.n == a.n:
+      result = true
+    elif m.concpt.size == szIllegalRecursion:
+      result = false
+    else:
+      let oldLen = m.inferred.len
+      let oldPotentialImplementation = m.potentialImplementation
+      m.potentialImplementation = a
+      m.concpt.size = szIllegalRecursion
+      let oldConcept = m.concpt
+      m.concpt = f
+      result = conceptMatchNode(c, f.n.lastSon, m)
+      m.potentialImplementation = oldPotentialImplementation
+      m.concpt = oldConcept
+      m.concpt.size = szUnknownSize
+      if not result:
+        m.inferred.setLen oldLen
+  of tyGenericBody:
+    var ak = a
+    if a.kind == tyGenericBody:
+      ak = last(a)
+    result = matchType(c, last(f), ak, m)
+  of tyCompositeTypeClass:
+    var ak = if a.kind == tyCompositeTypeClass: a.last else: a
+    result = matchType(c, last(f), ak, m)
   of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
      tyGenericInst:
     # ^ XXX Rewrite this logic, it's more complex than it needs to be.
-    result = false
-    let ak = a.skipTypes(ignorableForArgType - {f.kind})
-    if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
-      for i in 0..<ak.kidsLen:
-        if not matchType(c, f[i], ak[i], m): return false
-      return true
+    if f.kind == tyArray and f.kidsLen == 3:
+      # XXX: this is a work-around!
+      # system.nim creates these for the magic array typeclass
+      result = true
+    else:
+      result = false
+      let ak = a.skipTypes(ignorableForArgType - {f.kind})
+      if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
+        result = matchKids(c, f, ak, m)
   of tyOr:
     let oldLen = m.inferred.len
     if a.kind == tyOr:
@@ -221,6 +269,16 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     result = true
   of tyOrdinal:
     result = isOrdinalType(a, allowEnumWithHoles = false) or a.kind == tyGenericParam
+  of tyStatic:
+    result = false
+    var scomp = f.base
+    if scomp.kind == tyGenericParam:
+      if f.base.kidsLen > 0:
+        scomp = scomp.base
+    if a.kind == tyStatic:
+      result = matchType(c, scomp, a.base, m)
+    else:
+      result = matchType(c, scomp, a, m)
   else:
     result = false
 
@@ -271,7 +329,8 @@ proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
 proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bool =
   ## Walk the current scope, extract candidates which the same name as 'n[namePos]',
   ## 'n' is the nkProcDef or similar from the concept that we try to match.
-  let candidates = searchInScopesAllCandidatesFilterBy(c, n[namePos].sym.name, kinds)
+  var candidates = searchScopes(c, n[namePos].sym.name, kinds)
+  searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
   for candidate in candidates:
     #echo "considering ", typeToString(candidate.typ), " ", candidate.magic
     m.magic = candidate.magic
@@ -309,7 +368,7 @@ proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
     # error was reported earlier.
     result = false
 
-proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var TypeMapping; invocation: PType): bool =
+proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable; invocation: PType): bool =
   ## Entry point from sigmatch. 'concpt' is the concept we try to match (here still a PType but
   ## we extract its AST via 'concpt.n.lastSon'). 'arg' is the type that might fulfill the
   ## concept's requirements. If so, we return true and fill the 'bindings' with pairs of
@@ -318,7 +377,9 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var TypeMapping; i
   ## `C[S, T]` parent type that we look for. We need this because we need to store bindings
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
-  var m = MatchCon(inferred: @[], potentialImplementation: arg)
+  if arg.containsUnresolvedType:
+    return false
+  var m = MatchCon(inferred: @[], potentialImplementation: arg, concpt: concpt)
   result = conceptMatchNode(c, concpt.n.lastSon, m)
   if result:
     for (a, b) in m.inferred:
@@ -328,16 +389,16 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var TypeMapping; i
           dest = existingBinding(m, dest)
           if dest == nil or dest.kind != tyGenericParam: break
         if dest != nil:
-          bindings.idTablePut(a, dest)
+          bindings.put(a, dest)
           when logBindings: echo "A bind ", a, " ", dest
       else:
-        bindings.idTablePut(a, b)
+        bindings.put(a, b)
         when logBindings: echo "B bind ", a, " ", b
     # we have a match, so bind 'arg' itself to 'concpt':
-    bindings.idTablePut(concpt, arg)
+    bindings.put(concpt, arg)
     # invocation != nil means we have a non-atomic concept:
     if invocation != nil and arg.kind == tyGenericInst and invocation.kidsLen == arg.kidsLen-1:
       # bind even more generic parameters
       assert invocation.kind == tyGenericInvocation
       for i in FirstGenericParamAt ..< invocation.kidsLen:
-        bindings.idTablePut(invocation[i], arg[i])
+        bindings.put(invocation[i], arg[i])

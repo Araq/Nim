@@ -1182,6 +1182,9 @@ at runtime by 0, the second by 1, and so on. For example:
 
   var x = south     # `x` is of type `Direction`; its value is `south`
   echo x            # prints "south"
+
+  if x == Direction.south:
+    echo "It's south!"
   ```
 
 All the comparison operators can be used with enumeration types.

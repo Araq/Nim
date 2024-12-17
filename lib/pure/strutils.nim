@@ -334,9 +334,9 @@ func normalize*(s: string): string {.rtl, extern: "nsuNormalize".} =
 func cmpIgnoreCase*(a, b: string): int {.rtl, extern: "nsuCmpIgnoreCase".} =
   ## Compares two strings in a case insensitive manner. Returns:
   ##
-  ## | 0 if a == b
-  ## | < 0 if a < b
-  ## | > 0 if a > b
+  ## | `0` if a == b
+  ## | `< 0` if a < b
+  ## | `> 0` if a > b
   runnableExamples:
     doAssert cmpIgnoreCase("FooBar", "foobar") == 0
     doAssert cmpIgnoreCase("bar", "Foo") < 0
@@ -354,9 +354,9 @@ func cmpIgnoreStyle*(a, b: string): int {.rtl, extern: "nsuCmpIgnoreStyle".} =
   ##
   ## Returns:
   ##
-  ## | 0 if a == b
-  ## | < 0 if a < b
-  ## | > 0 if a > b
+  ## | `0` if a == b
+  ## | `< 0` if a < b
+  ## | `> 0` if a > b
   runnableExamples:
     doAssert cmpIgnoreStyle("foo_bar", "FooBar") == 0
     doAssert cmpIgnoreStyle("foo_bar_5", "FooBar4") > 0
@@ -565,7 +565,7 @@ iterator rsplit*(s: string, sep: char,
                  maxsplit: int = -1): string =
   ## Splits the string `s` into substrings from the right using a
   ## string separator. Works exactly the same as `split iterator
-  ## <#split.i,string,char,int>`_ except in reverse order.
+  ## <#split.i,string,char,int>`_ except in **reverse** order.
   ##
   ##   ```nim
   ##   for piece in "foo:bar".rsplit(':'):
@@ -592,7 +592,7 @@ iterator rsplit*(s: string, seps: set[char] = Whitespace,
                  maxsplit: int = -1): string =
   ## Splits the string `s` into substrings from the right using a
   ## string separator. Works exactly the same as `split iterator
-  ## <#split.i,string,char,int>`_ except in reverse order.
+  ## <#split.i,string,char,int>`_ except in **reverse** order.
   ##
   ##   ```nim
   ##   for piece in "foo bar".rsplit(WhiteSpace):
@@ -622,7 +622,7 @@ iterator rsplit*(s: string, sep: string, maxsplit: int = -1,
                  keepSeparators: bool = false): string =
   ## Splits the string `s` into substrings from the right using a
   ## string separator. Works exactly the same as `split iterator
-  ## <#split.i,string,string,int>`_ except in reverse order.
+  ## <#split.i,string,string,int>`_ except in **reverse** order.
   ##
   ##   ```nim
   ##   for piece in "foothebar".rsplit("the"):
@@ -805,7 +805,7 @@ func split*(s: string, sep: string, maxsplit: int = -1): seq[string] {.rtl,
 func rsplit*(s: string, sep: char, maxsplit: int = -1): seq[string] {.rtl,
     extern: "nsuRSplitChar".} =
   ## The same as the `rsplit iterator <#rsplit.i,string,char,int>`_, but is a func
-  ## that returns a sequence of substrings.
+  ## that returns a sequence of substrings in original order.
   ##
   ## A possible common use case for `rsplit` is path manipulation,
   ## particularly on systems that don't use a common delimiter.
@@ -835,7 +835,7 @@ func rsplit*(s: string, seps: set[char] = Whitespace,
              maxsplit: int = -1): seq[string]
              {.rtl, extern: "nsuRSplitCharSet".} =
   ## The same as the `rsplit iterator <#rsplit.i,string,set[char],int>`_, but is a
-  ## func that returns a sequence of substrings.
+  ## func that returns a sequence of substrings in original order.
   ##
   ## A possible common use case for `rsplit` is path manipulation,
   ## particularly on systems that don't use a common delimiter.
@@ -867,7 +867,7 @@ func rsplit*(s: string, seps: set[char] = Whitespace,
 func rsplit*(s: string, sep: string, maxsplit: int = -1): seq[string] {.rtl,
     extern: "nsuRSplitString".} =
   ## The same as the `rsplit iterator <#rsplit.i,string,string,int,bool>`_, but is a func
-  ## that returns a sequence of substrings.
+  ## that returns a sequence of substrings in original order.
   ##
   ## A possible common use case for `rsplit` is path manipulation,
   ## particularly on systems that don't use a common delimiter.
@@ -998,9 +998,9 @@ func toHex*[T: SomeInteger](x: T, len: Positive): string =
     doAssert b.toHex(4) == "1001"
     doAssert toHex(62, 3) == "03E"
     doAssert toHex(-8, 6) == "FFFFF8"
-  whenJsNoBigInt64:
+  when jsNoBigInt64:
     toHexImpl(cast[BiggestUInt](x), len, x < 0)
-  do:
+  else:
     when T is SomeSignedInt:
       toHexImpl(cast[BiggestUInt](BiggestInt(x)), len, x < 0)
     else:
@@ -1011,9 +1011,9 @@ func toHex*[T: SomeInteger](x: T): string =
   runnableExamples:
     doAssert toHex(1984'i64) == "00000000000007C0"
     doAssert toHex(1984'i16) == "07C0"
-  whenJsNoBigInt64:
+  when jsNoBigInt64:
     toHexImpl(cast[BiggestUInt](x), 2*sizeof(T), x < 0)
-  do:
+  else:
     when T is SomeSignedInt:
       toHexImpl(cast[BiggestUInt](BiggestInt(x)), 2*sizeof(T), x < 0)
     else:
@@ -1307,7 +1307,7 @@ func parseEnum*[T: enum](s: string): T =
   ## type contains multiple fields with the same string value.
   ##
   ## Raises `ValueError` for an invalid value in `s`. The comparison is
-  ## done in a style insensitive way.
+  ## done in a style insensitive way (first letter is still case-sensitive).
   runnableExamples:
     type
       MyEnum = enum
@@ -1327,7 +1327,7 @@ func parseEnum*[T: enum](s: string, default: T): T =
   ## type contains multiple fields with the same string value.
   ##
   ## Uses `default` for an invalid value in `s`. The comparison is done in a
-  ## style insensitive way.
+  ## style insensitive way (first letter is still case-sensitive).
   runnableExamples:
     type
       MyEnum = enum
@@ -1643,6 +1643,7 @@ func startsWith*(s, prefix: string): bool {.rtl, extern: "nsuStartsWith".} =
     let a = "abracadabra"
     doAssert a.startsWith("abra") == true
     doAssert a.startsWith("bra") == false
+  result = false
   startsWithImpl(s, prefix)
 
 func endsWith*(s: string, suffix: char): bool {.inline.} =
@@ -1671,6 +1672,7 @@ func endsWith*(s, suffix: string): bool {.rtl, extern: "nsuEndsWith".} =
     let a = "abracadabra"
     doAssert a.endsWith("abra") == true
     doAssert a.endsWith("dab") == false
+  result = false
   endsWithImpl(s, suffix)
 
 func continuesWith*(s, substr: string, start: Natural): bool {.rtl,
@@ -1687,6 +1689,7 @@ func continuesWith*(s, substr: string, start: Natural): bool {.rtl,
     doAssert a.continuesWith("ca", 4) == true
     doAssert a.continuesWith("ca", 5) == false
     doAssert a.continuesWith("dab", 6) == true
+  result = false
   var i = 0
   while true:
     if i >= substr.len: return true
@@ -2340,7 +2343,7 @@ func insertSep*(s: string, sep = '_', digits = 3): string {.rtl,
     doAssert insertSep("1000000") == "1_000_000"
   result = newStringOfCap(s.len)
   let hasPrefix = isDigit(s[s.low]) == false
-  var idx: int
+  var idx: int = 0
   if hasPrefix:
     result.add s[s.low]
     for i in (s.low + 1)..s.high:
@@ -2445,7 +2448,7 @@ func validIdentifier*(s: string): bool {.rtl, extern: "nsuValidIdentifier".} =
   ## and is followed by any number of characters of the set `IdentChars`.
   runnableExamples:
     doAssert "abc_def08".validIdentifier
-
+  result = false
   if s.len > 0 and s[0] in IdentStartChars:
     for i in 1..s.len-1:
       if s[i] notin IdentChars: return false

@@ -5,6 +5,7 @@ tdiscardable
 1
 something defered
 something defered
+hi
 '''
 """
 
@@ -110,3 +111,65 @@ block:
 
   doAssertRaises(ValueError):
     doAssert foo() == 12
+
+block: # issue #10440
+  proc x(): int {.discardable.} = discard
+  try:
+    x()
+  finally:
+    echo "hi"
+
+import macros
+
+block: # issue #14665
+  macro test(): untyped =   
+    let b = @[1, 2, 3, 4]
+
+    result = nnkStmtList.newTree()
+    var i = 0
+    while i < b.len:
+      if false:
+        # this quote do is mandatory, removing it fixes the problem
+        result.add quote do:
+          let testtest = 5
+      else:
+        result.add quote do:
+          let test = 6
+        inc i
+        # removing this continue fixes the problem too
+        continue
+      inc i
+  test()
+
+block: # bug #23775
+  proc retInt(): int {.discardable.} =
+    42
+
+  proc retString(): string {.discardable.} =
+    "text"
+
+  type
+    Enum = enum
+      A, B, C, D
+
+  proc doStuff(msg: Enum) =
+    case msg:
+    of A:
+      retString()
+    of B:
+      retInt()
+    of C:
+      discard retString()
+    else:
+      let _ = retString()
+
+  doStuff(C)
+
+block:
+  proc test(): (int, int) {.discardable.} =
+    discard
+
+  if true:
+    test()
+  else:
+    quit()

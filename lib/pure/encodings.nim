@@ -464,7 +464,7 @@ else:
     var outLen = csize_t len(result)
     var src = cstring(s)
     var dst = cstring(result)
-    var iconvres: csize_t
+    var iconvres: csize_t = csize_t(0)
     while inLen > 0:
       iconvres = iconv(c, addr src, addr inLen, addr dst, addr outLen)
       if iconvres == high(csize_t):

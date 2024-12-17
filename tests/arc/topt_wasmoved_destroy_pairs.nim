@@ -64,7 +64,7 @@ proc f(): seq[int] =
   @[1, 2, 3]
 
 proc main(cond: bool) =
-  var a, b: seq[seq[int]]
+  var a, b: seq[seq[int]] = @[]
   var x = f()
   if cond:
     a.add x
@@ -78,7 +78,7 @@ main(false)
 
 
 proc tfor(cond: bool) =
-  var a, b: seq[seq[int]]
+  var a, b: seq[seq[int]] = @[]
 
   var x = f()
 

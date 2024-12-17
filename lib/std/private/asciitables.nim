@@ -10,8 +10,8 @@ type Cell* = object
 iterator parseTableCells*(s: string, delim = '\t'): Cell =
   ## Iterates over all cells in a `delim`-delimited `s`, after a 1st
   ## pass that computes number of rows, columns, and width of each column.
-  var widths: seq[int]
-  var cell: Cell
+  var widths: seq[int] = @[]
+  var cell: Cell = Cell()
   template update() =
     if widths.len<=cell.col:
       widths.setLen cell.col+1
@@ -73,6 +73,7 @@ proc alignTable*(s: string, delim = '\t', fill = ' ', sep = " "): string =
   ## to a width that's computed for each column; consecutive columns are
   ## delimited by `sep`, and alignment space is filled using `fill`.
   ## More customized formatting can be done by calling `parseTableCells` directly.
+  result = ""
   for cell in parseTableCells(s, delim):
     result.add cell.text
     for i in cell.text.len..<cell.width:

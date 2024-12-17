@@ -14,6 +14,7 @@ __GNUC__
 __TINYC__
 __clang__
 __AVR__
+__arm__
 __EMSCRIPTEN__
 */
 
@@ -109,7 +110,7 @@ __EMSCRIPTEN__
 
 /*
   NIM_THREADVAR declaration based on
-  http://stackoverflow.com/questions/18298280/how-to-declare-a-variable-as-thread-local-portably
+  https://stackoverflow.com/questions/18298280/how-to-declare-a-variable-as-thread-local-portably
 */
 #if defined _WIN32
 #  if defined _MSC_VER || defined __BORLANDC__
@@ -272,11 +273,15 @@ __EMSCRIPTEN__
 #elif defined(__cplusplus)
 #define NIM_STATIC_ASSERT(x, msg) static_assert((x), msg)
 #else
-#define NIM_STATIC_ASSERT(x, msg) typedef int NIM_STATIC_ASSERT_AUX[(x) ? 1 : -1];
+#define _NIM_STATIC_ASSERT_FINAL(x, append_name) typedef int NIM_STATIC_ASSERT_AUX ## append_name[(x) ? 1 : -1];
+#define _NIM_STATIC_ASSERT_STAGE_3(x, line)      _NIM_STATIC_ASSERT_FINAL(x, _AT_LINE_##line)
+#define _NIM_STATIC_ASSERT_STAGE_2(x, line)      _NIM_STATIC_ASSERT_STAGE_3(x, line)
+#define NIM_STATIC_ASSERT(x, msg)                _NIM_STATIC_ASSERT_STAGE_2(x,__LINE__)
 // On failure, your C compiler will say something like:
-//   "error: 'NIM_STATIC_ASSERT_AUX' declared as an array with a negative size"
-// we could use a better fallback to also show line number, using:
-// http://www.pixelbeat.org/programming/gcc/static_assert.html
+//   "error: 'NIM_STATIC_ASSERT_AUX_AT_LINE_XXX' declared as an array with a negative size"
+// Adding the line number helps to avoid redefinitions which are not allowed in
+// old GCC versions, however the order of evaluation for __LINE__ is a little tricky,
+// hence all the helper macros. See https://stackoverflow.com/a/3385694 for more info.
 #endif
 
 /* C99 compiler? */
@@ -464,16 +469,11 @@ typedef char* NCSTRING;
 
 #define NIM_STRLIT_FLAG ((NU)(1) << ((NIM_INTBITS) - 2)) /* This has to be the same as system.strlitFlag! */
 
-#define STRING_LITERAL(name, str, length) \
-   static const struct {                   \
-     TGenericSeq Sup;                      \
-     NIM_CHAR data[(length) + 1];          \
-  } name = {{length, (NI) ((NU)length | NIM_STRLIT_FLAG)}, str}
-
 /* declared size of a sequence/variable length array: */
 #if defined(__cplusplus) && defined(__clang__)
 #  define SEQ_DECL_SIZE 1
-#elif defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+#elif defined(__GNUC__) || defined(_MSC_VER) || defined(__TINYC__) || \
+        (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)) // C99
 #  define SEQ_DECL_SIZE /* empty is correct! */
 #else
 #  define SEQ_DECL_SIZE 1000000
@@ -580,9 +580,16 @@ NIM_STATIC_ASSERT(sizeof(NI) == sizeof(void*) && NIM_INTBITS == sizeof(NI)*8, "P
   #define nimMulInt64(a, b, res) __builtin_smulll_overflow(a, b, (long long int*)res)
 
   #if NIM_INTBITS == 32
-    #define nimAddInt(a, b, res) __builtin_sadd_overflow(a, b, res)
-    #define nimSubInt(a, b, res) __builtin_ssub_overflow(a, b, res)
-    #define nimMulInt(a, b, res) __builtin_smul_overflow(a, b, res)
+    #if defined(__arm__) && defined(__GNUC__)
+      /* arm-none-eabi-gcc targets defines int32_t as long int */
+      #define nimAddInt(a, b, res) __builtin_saddl_overflow(a, b, res)
+      #define nimSubInt(a, b, res) __builtin_ssubl_overflow(a, b, res)
+      #define nimMulInt(a, b, res) __builtin_smull_overflow(a, b, res)
+    #else
+      #define nimAddInt(a, b, res) __builtin_sadd_overflow(a, b, res)
+      #define nimSubInt(a, b, res) __builtin_ssub_overflow(a, b, res)
+      #define nimMulInt(a, b, res) __builtin_smul_overflow(a, b, res)
+    #endif
   #else
     /* map it to the 'long long' variant */
     #define nimAddInt(a, b, res) __builtin_saddll_overflow(a, b, (long long int*)res)

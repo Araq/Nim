@@ -417,8 +417,8 @@ when defined(windows) or defined(nimdoc):
     # We do not have to 'GC_unref(customOverlapped)' because the destructor
     # does that for us.
 
-    # http://stackoverflow.com/a/12277264/492186
-    # TODO: http://www.serverframework.com/handling-multiple-pending-socket-read-and-write-operations.html
+    # https://stackoverflow.com/a/12277264/492186
+    # TODO: https://www.serverframework.com/handling-multiple-pending-socket-read-and-write-operations.html
     if res:
       # This is useful for ensuring the reliability of the overlapped struct.
       assert customOverlapped.data.fd == lpCompletionKey.AsyncFD
@@ -845,7 +845,7 @@ when defined(windows) or defined(nimdoc):
             failAccept(errcode)
     )
 
-    # http://msdn.microsoft.com/en-us/library/windows/desktop/ms737524%28v=vs.85%29.aspx
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms737524%28v=vs.85%29.aspx
     let ret = acceptEx(socket.SocketHandle, clientSock, addr lpOutputBuf[0],
                        dwReceiveDataLength,
                        dwLocalAddressLength,
@@ -1696,12 +1696,12 @@ proc drain*(timeout = 500) =
   ## Waits for completion of **all** events and processes them. Raises `ValueError`
   ## if there are no pending operations. In contrast to `poll` this
   ## processes as many events as are available until the timeout has elapsed.
-  var curTimeout = timeout
-  let start = now()
+  var elapsed = 0
+  let start = getMonoTime()
   while hasPendingOperations():
-    discard runOnce(curTimeout)
-    curTimeout -= (now() - start).inMilliseconds.int
-    if curTimeout < 0:
+    discard runOnce(timeout - elapsed)
+    elapsed = int (getMonoTime() - start).inMilliseconds
+    if elapsed >= timeout:
       break
 
 proc poll*(timeout = 500) =

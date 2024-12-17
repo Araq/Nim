@@ -90,6 +90,12 @@ proc prepareSeqAdd(len: int; p: pointer; addlen, elemSize, elemAlign: int): poin
       q.cap = newCap
       result = q
 
+proc zeroNewElements(len: int; q: pointer; addlen, elemSize, elemAlign: int) {.
+    noSideEffect, tags: [], raises: [], compilerRtl.} =
+  {.noSideEffect.}:
+    let headerSize = align(sizeof(NimSeqPayloadBase), elemAlign)
+    zeroMem(q +! headerSize +! len * elemSize, addlen * elemSize)
+
 proc prepareSeqAddUninit(len: int; p: pointer; addlen, elemSize, elemAlign: int): pointer {.
     noSideEffect, tags: [], raises: [], compilerRtl.} =
   {.noSideEffect.}:

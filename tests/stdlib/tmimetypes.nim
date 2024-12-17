@@ -19,5 +19,10 @@ template main() =
   # see also `runnableExamples`.
   # xxx we should have a way to avoid duplicating code between runnableExamples and tests
 
+  doAssert m.getMimetype("nim") == "text/nim"
+  doAssert m.getMimetype("nimble") == "text/nimble"
+  doAssert m.getMimetype("nimf") == "text/nim"
+  doAssert m.getMimetype("nims") == "text/nim"
+
 static: main()
 main()

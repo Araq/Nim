@@ -46,10 +46,10 @@ type
     case isTryBlock: bool
     of false:
       label: PSym
-      breakFixups: seq[(TPosition, seq[PNode])] #Contains the gotos for the breaks along with their pending finales
+      breakFixups: seq[(TPosition, seq[PNode])] # Contains the gotos for the breaks along with their pending finales
     of true:
       finale: PNode
-      raiseFixups: seq[TPosition] #Contains the gotos for the raises
+      raiseFixups: seq[TPosition] # Contains the gotos for the raises
 
   Con = object
     code: ControlFlowGraph
@@ -181,14 +181,6 @@ proc genIf(c: var Con, n: PNode) =
     goto Lend3
   L3:
     D
-    goto Lend3 # not eliminated to simplify the join generation
-  Lend3:
-    join F3
-  Lend2:
-    join F2
-  Lend:
-    join F1
-
   ]#
   var endings: seq[TPosition] = @[]
   let oldInteresting = c.interestingInstructions
@@ -213,7 +205,6 @@ proc genAndOr(c: var Con; n: PNode) =
   #   fork lab1
   #   asgn dest, b
   # lab1:
-  #   join F1
   c.gen(n[1])
   forkT:
     c.gen(n[2])
@@ -324,7 +315,7 @@ proc genRaise(c: var Con; n: PNode) =
       if c.blocks[i].isTryBlock:
         genBreakOrRaiseAux(c, i, n)
         return
-    assert false #Unreachable
+    assert false # Unreachable
   else:
     genNoReturn(c)
 
@@ -390,7 +381,6 @@ proc genCall(c: var Con; n: PNode) =
     # fork lab1
     # goto exceptionHandler (except or finally)
     # lab1:
-    # join F1
     forkT:
       for i in countdown(c.blocks.high, 0):
         if c.blocks[i].isTryBlock:

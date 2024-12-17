@@ -186,3 +186,11 @@ block:
 
   var b: JsonValueRef[string]
   scanValue(b)
+
+block: # bug #21347
+  type K[T] = object
+  template s[T]() = discard
+  proc b1(n: bool | bool) = s[K[K[int]]]()
+  proc b2(n: bool) =        s[K[K[int]]]()
+  b1(false)   # Error: 's' has unspecified generic parameters
+  b2(false)   # Builds, on its own

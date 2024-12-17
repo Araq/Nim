@@ -54,3 +54,14 @@ proc toBinString*(data: openArray[uint8], col: int): string =
 
 doAssert @[0b0000_1111'u8, 0b1010_1010].toBinString(8) == "0000111110101010"
 doAssert @[0b1000_0000'u8, 0b0000_0000].toBinString(1) == "10"
+
+block: # bug #23982
+  iterator `..`(a, b: ptr int16): ptr int16 = discard
+  var a: seq[int16] #; let p = a[0].addr
+  var b: seq[ptr int16]
+
+  try:
+    for x in a[0].addr .. b[1]: # `p .. b[1]` works
+      discard
+  except IndexDefect:
+    discard

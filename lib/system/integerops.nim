@@ -117,6 +117,7 @@ template divImplFallback(name, T) {.dirty.} =
     if a == low(T) and b == T(-1):
       result = true
     else:
+      result = false
       res[] = a div b
 
 divImplFallback(nimDivInt, int)

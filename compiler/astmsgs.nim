@@ -24,6 +24,12 @@ proc addDeclaredLoc*(result: var string, conf: ConfigRef; typ: PType) =
     result.add " declared in " & toFileLineCol(conf, typ.sym.info)
   result.add "]"
 
+proc addTypeNodeDeclaredLoc*(result: var string, conf: ConfigRef; typ: PType) =
+  result.add " [$1" % typ.kind.toHumanStr
+  if typ.sym != nil:
+    result.add " declared in " & toFileLineCol(conf, typ.sym.info)
+  result.add "]"
+
 proc addDeclaredLocMaybe*(result: var string, conf: ConfigRef; typ: PType) =
   if optDeclaredLocs in conf.globalOptions: addDeclaredLoc(result, conf, typ)
 

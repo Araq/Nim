@@ -4,7 +4,7 @@ internal API for now, API subject to change
 
 # xxx move other git utilities here; candidate for stdlib.
 
-import std/[os, osproc, strutils, tempfiles]
+import std/[os, paths, osproc, strutils, tempfiles]
 
 when defined(nimPreviewSlimSystem):
   import std/[assertions, syncio]
@@ -32,15 +32,8 @@ template retryCall*(maxRetry = 3, backoffDuration = 1.0, call: untyped): bool =
   result
 
 proc isGitRepo*(dir: string): bool =
-  ## This command is used to get the relative path to the root of the repository.
-  ## Using this, we can verify whether a folder is a git repository by checking
-  ## whether the command success and if the output is empty.
-  let (output, status) = execCmdEx("git rev-parse --show-cdup", workingDir = dir)
-  # On Windows there will be a trailing newline on success, remove it.
-  # The value of a successful call typically won't have a whitespace (it's
-  # usually a series of ../), so we know that it's safe to unconditionally
-  # remove trailing whitespaces from the result.
-  result = status == 0 and output.strip() == ""
+  ## Avoid calling git since it depends on /bin/sh existing and fails in Nix.
+  return fileExists(dir/".git/HEAD")
 
 proc diffFiles*(path1, path2: string): tuple[output: string, same: bool] =
   ## Returns a human readable diff of files `path1`, `path2`, the exact form of
@@ -48,6 +41,7 @@ proc diffFiles*(path1, path2: string): tuple[output: string, same: bool] =
   # This could be customized, e.g. non-git diff with `diff -uNdr`, or with
   # git diff options (e.g. --color-moved, --word-diff).
   # in general, `git diff` has more options than `diff`.
+  result = default(tuple[output: string, same: bool])
   var status = 0
   (result.output, status) = execCmdEx("git diff --no-index $1 $2" % [path1.quoteShell, path2.quoteShell])
   doAssert (status == 0) or (status == 1)

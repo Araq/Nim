@@ -98,7 +98,7 @@ proc getMonoTime*(): MonoTime {.tags: [TimeEffect].} =
     result = MonoTime(ticks: (ticks * 1_000_000_000).int64)
   elif defined(macosx):
     let ticks = mach_absolute_time()
-    var machAbsoluteTimeFreq: MachTimebaseInfoData
+    var machAbsoluteTimeFreq: MachTimebaseInfoData = default(MachTimebaseInfoData)
     mach_timebase_info(machAbsoluteTimeFreq)
     result = MonoTime(ticks: ticks * machAbsoluteTimeFreq.numer div
       machAbsoluteTimeFreq.denom)
@@ -106,15 +106,15 @@ proc getMonoTime*(): MonoTime {.tags: [TimeEffect].} =
     let ticks = k_ticks_to_ns_floor64(k_uptime_ticks())
     result = MonoTime(ticks: ticks)
   elif defined(posix):
-    var ts: Timespec
+    var ts: Timespec = default(Timespec)
     discard clock_gettime(CLOCK_MONOTONIC, ts)
     result = MonoTime(ticks: ts.tv_sec.int64 * 1_000_000_000 +
       ts.tv_nsec.int64)
   elif defined(windows):
-    var ticks: uint64
+    var ticks: uint64 = 0'u64
     QueryPerformanceCounter(ticks)
 
-    var freq: uint64
+    var freq: uint64 = 0'u64
     QueryPerformanceFrequency(freq)
     let queryPerformanceCounterFreq = 1_000_000_000'u64 div freq
     result = MonoTime(ticks: (ticks * queryPerformanceCounterFreq).int64)

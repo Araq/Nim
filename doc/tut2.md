@@ -166,7 +166,7 @@ An example:
   n.strVal = ""
   ```
 
-As can been seen from the example, an advantage to an object hierarchy is that
+As can be seen from the example, an advantage to an object hierarchy is that
 no conversion between different object types is needed. Yet, access to invalid
 object fields raises an exception.
 

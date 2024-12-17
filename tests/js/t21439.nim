@@ -1,8 +1,5 @@
-discard """
-  action: "compile"
-"""
-
 proc test(a: openArray[string]): proc =
+  let a = @a
   result = proc =
     for i in a:
       discard i

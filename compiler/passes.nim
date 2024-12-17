@@ -42,10 +42,7 @@ proc makePass*(open: TPassOpen = nil,
                process: TPassProcess = nil,
                close: TPassClose = nil,
                isFrontend = false): TPass =
-  result.open = open
-  result.close = close
-  result.process = process
-  result.isFrontend = isFrontend
+  result = (open, process, close, isFrontend)
 
 const
   maxPasses = 10
@@ -100,8 +97,8 @@ proc processModule*(graph: ModuleGraph; module: PSym; idgen: IdGenerator;
                     stream: PLLStream): bool {.discardable.} =
   if graph.stopCompile(): return true
   var
-    p: Parser
-    a: TPassContextArray
+    p: Parser = default(Parser)
+    a: TPassContextArray = default(TPassContextArray)
     s: PLLStream
     fileIdx = module.fileIdx
   prepareConfigNotes(graph, module)

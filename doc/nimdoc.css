@@ -623,8 +623,8 @@ pre {
 
 table.line-nums-table {
   border-radius: 4px;
-  border: 1px solid #cccccc;
-  background-color: ghostwhite;
+  border: 1px solid var(--border);
+  background-color: var(--secondary-background);
   border-collapse: separate;
   margin-top: 15px;
   margin-bottom: 25px; }
@@ -660,6 +660,9 @@ table {
   border-collapse: collapse;
   border-color: var(--third-background);
   border-spacing: 0;
+}
+
+table:not(.line-nums-table) {
   font-size: 0.9em;
 }
 
@@ -678,7 +681,7 @@ table th.docinfo-name {
   text-align: right;
 }
 
-table tr:hover {
+table:not(.line-nums-table) tr:hover {
   background-color: var(--third-background); }
 
 

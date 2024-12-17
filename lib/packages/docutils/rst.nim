@@ -507,7 +507,7 @@ proc len(filenames: RstFileTable): int = filenames.idxToFilename.len
 proc addFilename*(s: PRstSharedState, file1: string): FileIndex =
   ## Returns index of filename, adding it if it has not been used before
   let nextIdx = s.filenames.len.FileIndex
-  result = getOrDefault(s.filenames.filenameToIdx, file1, default = nextIdx)
+  result = getOrDefault(s.filenames.filenameToIdx, file1, nextIdx)
   if result == nextIdx:
     s.filenames.filenameToIdx[file1] = result
     s.filenames.idxToFilename.add file1
@@ -1526,7 +1526,7 @@ proc parseMarkdownCodeblockFields(p: var RstParser): PRstNode =
     result = nil
   else:
     result = newRstNode(rnFieldList)
-  while currentTok(p).kind != tkIndent:
+  while currentTok(p).kind notin {tkIndent, tkEof}:
     if currentTok(p).kind == tkWhite:
       inc p.idx
     else:
@@ -1603,6 +1603,7 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
   else:
     args = nil
   var n = newLeaf("")
+  var isFirstLine = true
   while true:
     if currentTok(p).kind == tkEof:
       rstMessage(p, meMissingClosing,
@@ -1614,7 +1615,8 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
       inc p.idx, 2
       break
     elif currentTok(p).kind == tkIndent:
-      n.text.add "\n"
+      if not isFirstLine:
+        n.text.add "\n"
       if currentTok(p).ival > baseCol:
         n.text.add " ".repeat(currentTok(p).ival - baseCol)
       elif currentTok(p).ival < baseCol:
@@ -1624,6 +1626,7 @@ proc parseMarkdownCodeblock(p: var RstParser): PRstNode =
     else:
       n.text.add(currentTok(p).symbol)
       inc p.idx
+    isFirstLine = false
   result.sons[0] = args
   if result.sons[2] == nil:
     var lb = newRstNode(rnLiteralBlock)
@@ -3361,7 +3364,7 @@ proc dirCodeBlock(p: var RstParser, nimExtension = false): PRstNode =
   ## description of ``parseDirective`` for further structure information.
   ##
   ## Code blocks can come in two forms, the standard `code directive
-  ## <http://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
+  ## <https://docutils.sourceforge.net/docs/ref/rst/directives.html#code>`_ and
   ## the nim extension ``.. code-block::``. If the block is an extension, we
   ## want the default language syntax highlighting to be Nim, so we create a
   ## fake internal field to communicate with the generator. The field is named

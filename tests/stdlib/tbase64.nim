@@ -18,6 +18,8 @@ template main() =
   doAssert encode("") == ""
   doAssert decode("") == ""
 
+  doAssert decode(" ") == ""
+
   const testInputExpandsTo76 = "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
   const testInputExpands = "++++++++++++++++++++++++++++++"
   const longText = """Man is distinguished, not only by his reason, but by this

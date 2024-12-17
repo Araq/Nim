@@ -124,3 +124,13 @@ proc bug22597 = # bug #22597
   doAssert i == 1
 
 bug22597()
+
+block: # bug #20048
+  type
+    Test = object
+      tokens: openArray[string]
+
+  func init(Self: typedesc[Test], tokens: openArray[string]): Self = Self(tokens: tokens)
+
+  let data = Test.init(["123"])
+  doAssert @(data.tokens) == @["123"] 

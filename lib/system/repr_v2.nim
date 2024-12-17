@@ -41,7 +41,7 @@ proc repr*(x: char): string {.noSideEffect, raises: [].} =
   ##   ```Nim
   ##   assert repr('c') == "'c'"
   ##   ```
-  result.add '\''
+  result = "'"
   # Elides string creations if not needed
   if x in {'\\', '\0'..'\31', '\127'..'\255'}:
     result.add '\\'
@@ -54,7 +54,7 @@ proc repr*(x: char): string {.noSideEffect, raises: [].} =
 proc repr*(x: string | cstring): string {.noSideEffect, raises: [].} =
   ## repr for a string argument. Returns `x`
   ## converted to a quoted and escaped string.
-  result.add '\"'
+  result = "\""
   for i in 0..<x.len:
     if x[i] in {'"', '\\', '\0'..'\31', '\127'..'\255'}:
       result.add '\\'
@@ -140,6 +140,8 @@ proc repr*[T: tuple|object](x: T): string {.noSideEffect, raises: [].} =
   ##   ```
   when T is object:
     result = $typeof(x)
+  else:
+    result = ""
   reprObject(result, x)
 
 proc repr*[T](x: ref T | ptr T): string {.noSideEffect, raises: [].} =

@@ -1,4 +1,5 @@
 discard """
+matrix: "--legacy:jsnolambdalifting;"
 output: '''
 3
 2
@@ -180,7 +181,7 @@ block: # Test lit
 block: # Test bindMethod
   type TestObject = object
     a: int
-    onWhatever: proc(e: int): int
+    onWhatever: proc(e: int): int {.nimcall.}
   proc handleWhatever(this: TestObject, e: int): int =
     e + this.a
   block:
@@ -269,5 +270,5 @@ block: # test **
 block: # issue #21208
   type MyEnum = enum baz
   var obj: JsObject
-  {.emit: "`obj` = {bar: {baz: 123}}".}
+  {.emit: "`obj` = {bar: {baz: 123}};".}
   discard obj.bar.baz

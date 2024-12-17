@@ -67,3 +67,23 @@ template fn=
   doAssert test([0,1,2,3,4,5]).id == 0
 fn() # ok
 static: fn()
+
+
+block: # bug #22095
+  type
+    StUint = object
+      limbs: array[4, uint64]
+
+  func shlAddMod(a: var openArray[uint64]) =  
+    a[0] = 10
+
+  func divRem(r: var openArray[uint64]) =
+    shlAddMod(r.toOpenArray(0, 3))
+
+  func fn(): StUint =
+    divRem(result.limbs)
+
+  const
+    z = fn()
+
+  doAssert z.limbs[0] == 10

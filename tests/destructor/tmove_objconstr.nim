@@ -137,28 +137,29 @@ doAssert seq3[0] == 1.0
 var seq4, seq5: MySeqNonCopyable
 (seq4, i, seq5) = myfunc2(2, 3)
 
-seq4 = block:
-  var tmp = newMySeq(4, 1.0)
-  tmp[0] = 3.0
-  tmp
+proc foo =
+  seq4 = block:
+    var tmp = newMySeq(4, 1.0)
+    tmp[0] = 3.0
+    tmp
 
-doAssert seq4[0] == 3.0
+  doAssert seq4[0] == 3.0
 
-import macros
 
-seq4 =
-  if i > 0: newMySeq(2, 5.0)
-  elif i < -100: raise newException(ValueError, "Parse Error")
-  else: newMySeq(2, 3.0)
+  seq4 =
+    if i > 0: newMySeq(2, 5.0)
+    elif i < -100: raise newException(ValueError, "Parse Error")
+    else: newMySeq(2, 3.0)
 
-seq4 =
-  case (char) i:
-    of 'A', {'W'..'Z'}: newMySeq(2, 5.0)
-    of 'B': quit(-1)
-    else:
-      let (x1, x2, x3) = myfunc2(2, 3)
-      x3
+  seq4 =
+    case (char) i:
+      of 'A', {'W'..'Z'}: newMySeq(2, 5.0)
+      of 'B': quit(-1)
+      else:
+        let (x1, x2, x3) = myfunc2(2, 3)
+        x3
 
+foo()
 
 #------------------------------------------------------------
 #-- Move into array constructor

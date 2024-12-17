@@ -24,7 +24,7 @@ on the different supported platforms. It is not a definition of the Nim
 programming language (which is covered in the [manual](manual.html)).
 
 Nim is free software; it is licensed under the
-[MIT License](http://www.opensource.org/licenses/mit-license.php).
+[MIT License](https://www.opensource.org/licenses/mit-license.php).
 
 
 Compiler Usage
@@ -481,6 +481,28 @@ They are:
 5. nl_types. No headers for this.
 6. As mmap is not supported, the nimAllocPagesViaMalloc option has to be used.
 
+GPU Compilation
+===============
+
+Compiling for GPU computation can be achieved with `--cc:nvcc` for CUDA with nvcc, or with `--cc:hipcc` for AMD GPUs with HIP. Both compilers require building for C++ with `nim cpp`.
+
+Here's a very simple CUDA kernel example using emit, which can be compiled with `nim cpp --cc:nvcc --define:"useMalloc" hello_kernel.nim` assuming you have the CUDA toolkit installed.
+
+```nim
+{.emit: """
+__global__ void add(int a, int b) {
+  int c;
+  c = a + b;
+}
+""".}
+
+proc main() =
+  {.emit: """
+  add<<<1,1>>>(2,7);
+  """.}
+
+main()
+```
 
 DLL generation
 ==============

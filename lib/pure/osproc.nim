@@ -157,7 +157,7 @@ proc close*(p: Process) {.rtl, extern: "nosp$1", raises: [IOError, OSError], tag
   ##
   ## .. warning:: If the process has not finished executing, this will forcibly
   ##   terminate the process. Doing so may result in zombie processes and
-  ##   `pty leaks <http://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
+  ##   `pty leaks <https://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
 
 proc suspend*(p: Process) {.rtl, extern: "nosp$1", tags: [].}
   ## Suspends the process `p`.
@@ -212,7 +212,7 @@ proc processID*(p: Process): int {.rtl, extern: "nosp$1".} =
   return p.id
 
 proc waitForExit*(p: Process, timeout: int = -1): int {.rtl,
-    extern: "nosp$1", raises: [OSError, ValueError], tags: [].}
+    extern: "nosp$1", raises: [OSError, ValueError], tags: [TimeEffect].}
   ## Waits for the process to finish and returns `p`'s error code.
   ##
   ## .. warning:: Be careful when using `waitForExit` for processes created without
@@ -457,7 +457,7 @@ proc execProcesses*(cmds: openArray[string],
       if afterRunEvent != nil: afterRunEvent(i, p)
       close(p)
 
-iterator lines*(p: Process, keepNewLines = false): string {.since: (1, 3), raises: [OSError, IOError, ValueError], tags: [ReadIOEffect].} =
+iterator lines*(p: Process, keepNewLines = false): string {.since: (1, 3), raises: [OSError, IOError, ValueError], tags: [ReadIOEffect, TimeEffect].} =
   ## Convenience iterator for working with `startProcess` to read data from a
   ## background process.
   ##
@@ -487,7 +487,7 @@ iterator lines*(p: Process, keepNewLines = false): string {.since: (1, 3), raise
   discard waitForExit(p)
 
 proc readLines*(p: Process): (seq[string], int) {.since: (1, 3),
-    raises: [OSError, IOError, ValueError], tags: [ReadIOEffect].} =
+    raises: [OSError, IOError, ValueError], tags: [ReadIOEffect, TimeEffect].} =
   ## Convenience function for working with `startProcess` to read data from a
   ## background process.
   ##
@@ -740,7 +740,8 @@ when defined(windows) and not defined(useNimRtl):
       if poInteractive in result.options: close(result)
       const errInvalidParameter = 87.int
       const errFileNotFound = 2.int
-      if lastError.int in {errInvalidParameter, errFileNotFound}:
+      case lastError.int
+      of errInvalidParameter, errFileNotFound:
         raiseOSError(lastError,
               "Requested command not found: '" & command & "'. OS error:")
       else:
@@ -1123,14 +1124,13 @@ elif not defined(useNimRtl):
       var error: cint
       let sizeRead = read(data.pErrorPipe[readIdx], addr error, sizeof(error))
       if sizeRead == sizeof(error):
-        raiseOSError(osLastError(),
+        raiseOSError(OSErrorCode(error),
                       "Could not find command: '" & $data.sysCommand & "'. OS error: " & $strerror(error))
 
       return pid
 
     {.push stacktrace: off, profiler: off.}
-    proc startProcessFail(data: ptr StartProcessData) =
-      var error: cint = errno
+    proc startProcessFail(data: ptr StartProcessData, error: cint = errno) =
       discard write(data.pErrorPipe[writeIdx], addr error, sizeof(error))
       exitnow(1)
 
@@ -1167,7 +1167,11 @@ elif not defined(useNimRtl):
       if (poUsePath in data.options):
         when defined(uClibc) or defined(linux) or defined(haiku):
           # uClibc environment (OpenWrt included) doesn't have the full execvpe
-          let exe = findExe(data.sysCommand)
+          var exe: string
+          try:
+            exe = findExe(data.sysCommand)
+          except OSError as e:
+            startProcessFail(data, e.errorCode)
           discard execve(exe.cstring, data.sysArgs, data.sysEnv)
         else:
           # MacOSX doesn't have execvpe, so we need workaround.
@@ -1353,114 +1357,63 @@ elif not defined(useNimRtl):
       result = exitStatusLikeShell(p.exitStatus)
 
   else:
-    import std/times
-
-    const
-      hasThreadSupport = compileOption("threads") and not defined(nimscript)
+    import std/times except getTime
+    import std/monotimes
 
     proc waitForExit(p: Process, timeout: int = -1): int =
-      template adjustTimeout(t, s, e: Timespec) =
-        var diff: int
-        var b: Timespec
-        b.tv_sec = e.tv_sec
-        b.tv_nsec = e.tv_nsec
-        e.tv_sec = e.tv_sec - s.tv_sec
-        if e.tv_nsec >= s.tv_nsec:
-          e.tv_nsec -= s.tv_nsec
-        else:
-          if e.tv_sec == posix.Time(0):
-            raise newException(ValueError, "System time was modified")
-          else:
-            diff = s.tv_nsec - e.tv_nsec
-            e.tv_nsec = 1_000_000_000 - diff
-        t.tv_sec = t.tv_sec - e.tv_sec
-        if t.tv_nsec >= e.tv_nsec:
-          t.tv_nsec -= e.tv_nsec
-        else:
-          t.tv_sec = t.tv_sec - posix.Time(1)
-          diff = e.tv_nsec - t.tv_nsec
-          t.tv_nsec = 1_000_000_000 - diff
-        s.tv_sec = b.tv_sec
-        s.tv_nsec = b.tv_nsec
-
       if p.exitFlag:
         return exitStatusLikeShell(p.exitStatus)
 
-      if timeout == -1:
-        var status: cint = 1
+      if timeout < 0:
+        # Backwards compatibility with previous verison to
+        # handle cases where timeout == -1, but extend
+        # to handle cases where timeout < 0
+        var status: cint
         if waitpid(p.id, status, 0) < 0:
           raiseOSError(osLastError())
         p.exitFlag = true
         p.exitStatus = status
       else:
-        var nmask, omask: Sigset
-        var sinfo: SigInfo
-        var stspec, enspec, tmspec: Timespec
-
-        discard sigemptyset(nmask)
-        discard sigemptyset(omask)
-        discard sigaddset(nmask, SIGCHLD)
-
-        when hasThreadSupport:
-          if pthread_sigmask(SIG_BLOCK, nmask, omask) == -1:
-            raiseOSError(osLastError())
-        else:
-          if sigprocmask(SIG_BLOCK, nmask, omask) == -1:
-            raiseOSError(osLastError())
-
-        if timeout >= 1000:
-          tmspec.tv_sec = posix.Time(timeout div 1_000)
-          tmspec.tv_nsec = (timeout %% 1_000) * 1_000_000
-        else:
-          tmspec.tv_sec = posix.Time(0)
-          tmspec.tv_nsec = (timeout * 1_000_000)
-
-        try:
-          if clock_gettime(CLOCK_REALTIME, stspec) == -1:
-            raiseOSError(osLastError())
-          while true:
-            let res = sigtimedwait(nmask, sinfo, tmspec)
-            if res == SIGCHLD:
-              if sinfo.si_pid == p.id:
-                var status: cint = 1
-                if waitpid(p.id, status, 0) < 0:
-                  raiseOSError(osLastError())
-                p.exitFlag = true
-                p.exitStatus = status
-                break
-              else:
-                # we have SIGCHLD, but not for process we are waiting,
-                # so we need to adjust timeout value and continue
-                if clock_gettime(CLOCK_REALTIME, enspec) == -1:
-                  raiseOSError(osLastError())
-                adjustTimeout(tmspec, stspec, enspec)
-            elif res < 0:
-              let err = osLastError()
-              if err.cint == EINTR:
-                # we have received another signal, so we need to
-                # adjust timeout and continue
-                if clock_gettime(CLOCK_REALTIME, enspec) == -1:
-                  raiseOSError(osLastError())
-                adjustTimeout(tmspec, stspec, enspec)
-              elif err.cint == EAGAIN:
-                # timeout expired, so we trying to kill process
-                if posix.kill(p.id, SIGKILL) == -1:
-                  raiseOSError(osLastError())
-                var status: cint = 1
-                if waitpid(p.id, status, 0) < 0:
-                  raiseOSError(osLastError())
-                p.exitFlag = true
-                p.exitStatus = status
-                break
-              else:
-                raiseOSError(err)
-        finally:
-          when hasThreadSupport:
-            if pthread_sigmask(SIG_UNBLOCK, nmask, omask) == -1:
-              raiseOSError(osLastError())
+        # Max 50ms delay
+        const maxWait = initDuration(milliseconds = 50)
+        let wait = initDuration(milliseconds = timeout)
+        let deadline = getMonoTime() + wait
+        # starting 50μs delay
+        var delay = initDuration(microseconds = 50)
+        
+        while true:
+          var status: cint
+          let pid = waitpid(p.id, status, WNOHANG)
+          if p.id == pid :
+            p.exitFlag = true
+            p.exitStatus = status
+            break
+          elif pid.int == -1:
+            raiseOsError(osLastError())
           else:
-            if sigprocmask(SIG_UNBLOCK, nmask, omask) == -1:
-              raiseOSError(osLastError())
+            # Continue waiting if needed
+            if getMonoTime() >= deadline:
+              # Previous version of `waitForExit`
+              # foricibly killed the process.
+              # We keep this so we don't break programs
+              # that depend on this behavior
+              if posix.kill(p.id, SIGKILL) < 0:
+                raiseOSError(osLastError())
+            else:
+              const max = 1_000_000_000
+              let 
+                newWait = getMonoTime() + delay
+                ticks = newWait.ticks()
+                ns = ticks mod max
+                secs = ticks div max
+              var 
+                waitSpec: TimeSpec
+                unused: Timespec
+              waitSpec.tv_sec = posix.Time(secs)
+              waitSpec.tv_nsec = clong ns 
+              discard posix.clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, waitSpec, unused)
+              let remaining = deadline - getMonoTime()
+              delay = min([delay * 2, remaining, maxWait])
 
       result = exitStatusLikeShell(p.exitStatus)
 

@@ -97,6 +97,8 @@ type
     length*: int
     addrList*: seq[string]
 
+const IPPROTO_NONE* = IPPROTO_IP ## Use this if your socket type requires a protocol value of zero (e.g. Unix sockets).
+
 when useWinVersion:
   let
     osInvalidSocket* = winlean.INVALID_SOCKET
@@ -228,7 +230,7 @@ proc close*(socket: SocketHandle) =
   else:
     discard posix.close(socket)
   # TODO: These values should not be discarded. An OSError should be raised.
-  # http://stackoverflow.com/questions/12463473/what-happens-if-you-call-close-on-a-bsd-socket-multiple-times
+  # https://stackoverflow.com/questions/12463473/what-happens-if-you-call-close-on-a-bsd-socket-multiple-times
 
 when declared(setInheritable) or defined(nimdoc):
   proc setInheritable*(s: SocketHandle, inheritable: bool): bool {.inline.} =

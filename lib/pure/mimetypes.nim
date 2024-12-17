@@ -432,6 +432,10 @@ const mimes* = {
   "msty": "application/vnd.muvee.style",
   "taglet": "application/vnd.mynfc",
   "nlu": "application/vnd.neurolanguage.nlu",
+  "nim": "text/nim",
+  "nimble": "text/nimble",
+  "nimf": "text/nim",
+  "nims": "text/nim",
   "ntf": "application/vnd.nitf",
   "nitf": "application/vnd.nitf",
   "nnd": "application/vnd.noblenet-directory",
@@ -1034,7 +1038,7 @@ func newMimetypes*(): MimeDB =
   ## Creates a new Mimetypes database. The database will contain the most
   ## common mimetypes.
   {.cast(noSideEffect).}:
-    result.mimes = mimes.toOrderedTable()
+    result = MimeDB(mimes: mimes.toOrderedTable())
 
 func getMimetype*(mimedb: MimeDB, ext: string, default = "text/plain"): string =
   ## Gets mimetype which corresponds to `ext`. Returns `default` if `ext`

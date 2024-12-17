@@ -166,7 +166,7 @@ type
     x2: string
 
 proc test_myobject =
-  var x: MyObject
+  var x: MyObject = MyObject()
   x.x1 = "x1"
   x.x2 = "x2"
   x.y1 = "ljhkjhkjh"
@@ -213,6 +213,7 @@ type
       error*: string
 
 proc init(): RocksDBResult[string] =
+  result = default(RocksDBResult[string])
   {.cast(uncheckedAssign).}:
     result.ok = true
     result.value = "ok"
@@ -338,3 +339,29 @@ block:
       doAssert ff.s == 12
 
     mainSync()
+
+import std/sequtils
+
+# bug #23690
+type
+  SomeObj* = object of RootObj
+
+  Item* = object
+    case kind*: 0..1
+    of 0:
+      a*: int
+      b*: SomeObj
+    of 1:
+      c*: string
+
+  ItemExt* = object
+    a*: Item
+    b*: string
+
+proc do1(x: int): seq[(string, Item)] =
+  result = @[("zero", Item(kind: 1, c: "first"))]
+
+proc do2(x: int, e: ItemExt): seq[(string, ItemExt)] =
+  do1(x).map(proc(v: (string, Item)): auto = (v[0], ItemExt(a: v[1], b: e.b)))
+
+doAssert $do2(0, ItemExt(a: Item(kind: 1, c: "second"), b: "third")) == """@[("zero", (a: (kind: 1, c: "first"), b: "third"))]"""

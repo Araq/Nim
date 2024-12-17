@@ -11,7 +11,7 @@
 ## IDE-like features. It uses the set of .rod files to accomplish
 ## its task. The set must cover a complete Nim project.
 
-import std/sets
+import std/[sets, tables]
 
 from std/os import nil
 from std/private/miscdollars import toLocation
@@ -20,7 +20,7 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 import ".." / [ast, modulegraphs, msgs, options]
-import ".." / nir / nirlineinfos
+import iclineinfos
 import packed_ast, bitabs, ic
 
 type

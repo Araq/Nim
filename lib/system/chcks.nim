@@ -73,30 +73,35 @@ proc chckIndx(i, a, b: int): int =
   if i >= a and i <= b:
     return i
   else:
+    result = 0
     raiseIndexError3(i, a, b)
 
 proc chckRange(i, a, b: int): int =
   if i >= a and i <= b:
     return i
   else:
+    result = 0
     raiseRangeError(i)
 
 proc chckRange64(i, a, b: int64): int64 {.compilerproc.} =
   if i >= a and i <= b:
     return i
   else:
+    result = 0
     raiseRangeError(i)
 
 proc chckRangeU(i, a, b: uint64): uint64 {.compilerproc.} =
   if i >= a and i <= b:
     return i
   else:
+    result = 0
     sysFatal(RangeDefect, "value out of range")
 
 proc chckRangeF(x, a, b: float): float =
   if x >= a and x <= b:
     return x
   else:
+    result = 0.0
     when hostOS == "standalone":
       sysFatal(RangeDefect, "value out of range")
     else:

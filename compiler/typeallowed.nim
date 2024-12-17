@@ -27,6 +27,7 @@ type
     taProcContextIsNotMacro
     taIsCastable
     taIsDefaultField
+    taVoid # only allow direct void fields of objects/tuples
 
   TTypeAllowedFlags* = set[TTypeAllowedFlag]
 
@@ -60,6 +61,8 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
   if typ == nil: return nil
   if containsOrIncl(marker, typ.id): return nil
   var t = skipTypes(typ, abstractInst-{tyTypeDesc, tySink})
+
+  let flags = if t.kind == tyVoid: flags else: flags-{taVoid}
   case t.kind
   of tyVar, tyLent:
     if kind in {skProc, skFunc, skConst} and (views notin c.features):
@@ -115,7 +118,7 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
   of tyStatic:
     if kind notin {skParam}: result = t
   of tyVoid:
-    if taField notin flags: result = t
+    if taVoid notin flags: result = t
   of tyTypeClasses:
     if tfGenericTypeParam in t.flags or taConcept in flags: #or taField notin flags:
       discard
@@ -184,12 +187,12 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
         t.baseClass != nil and taIsDefaultField notin flags:
       result = t
     else:
-      let flags = flags+{taField}
+      let flags = flags+{taField, taVoid}
       result = typeAllowedAux(marker, t.baseClass, kind, c, flags)
       if result.isNil and t.n != nil:
         result = typeAllowedNode(marker, t.n, kind, c, flags)
   of tyTuple:
-    let flags = flags+{taField}
+    let flags = flags+{taField, taVoid}
     for a in t.kids:
       result = typeAllowedAux(marker, a, kind, c, flags)
       if result != nil: break
@@ -197,7 +200,7 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
       result = typeAllowedNode(marker, t.n, kind, c, flags)
   of tyEmpty:
     if kind in {skVar, skLet}: result = t
-  of tyProxy:
+  of tyError:
     # for now same as error node; we say it's a valid type as it should
     # prevent cascading errors:
     result = nil
@@ -206,9 +209,6 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
       result = typeAllowedAux(marker, t.skipModifier, kind, c, flags+{taHeap})
     else:
       result = t
-  of tyConcept:
-    if kind != skParam: result = t
-    else: result = nil
 
 proc typeAllowed*(t: PType, kind: TSymKind; c: PContext; flags: TTypeAllowedFlags = {}): PType =
   # returns 'nil' on success and otherwise the part of the type that is

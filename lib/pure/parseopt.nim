@@ -176,6 +176,7 @@
 
 include "system/inclrtl"
 
+import std/strutils
 import std/os
 
 type
@@ -236,22 +237,30 @@ proc initOptParser*(cmdline: seq[string], shortNoVal: set[char] = {},
     p = initOptParser(@["--left", "--debug:3", "-l", "-r:2"])
     p = initOptParser(@["--left", "--debug:3", "-l", "-r:2"],
                       shortNoVal = {'l'}, longNoVal = @["left"])
-
-  result.pos = 0
-  result.idx = 0
-  result.inShortState = false
-  result.shortNoVal = shortNoVal
-  result.longNoVal = longNoVal
-  result.allowWhitespaceAfterColon = allowWhitespaceAfterColon
+  result = OptParser(pos: 0, idx: 0, inShortState: false,
+                    shortNoVal: shortNoVal, longNoVal: longNoVal,
+                    allowWhitespaceAfterColon: allowWhitespaceAfterColon
+                    )
   if cmdline.len != 0:
     result.cmds = newSeq[string](cmdline.len)
     for i in 0..<cmdline.len:
       result.cmds[i] = cmdline[i]
   else:
     when declared(paramCount):
-      result.cmds = newSeq[string](paramCount())
-      for i in countup(1, paramCount()):
-        result.cmds[i-1] = paramStr(i)
+      when defined(nimscript):
+        var ctr = 0
+        var firstNimsFound = false
+        for i in countup(0, paramCount()):
+          if firstNimsFound: 
+            result.cmds[ctr] = paramStr(i)
+            inc ctr, 1
+          if paramStr(i).endsWith(".nims") and not firstNimsFound:
+            firstNimsFound = true 
+            result.cmds = newSeq[string](paramCount()-i)
+      else:
+        result.cmds = newSeq[string](paramCount())
+        for i in countup(1, paramCount()):
+          result.cmds[i-1] = paramStr(i)
     else:
       # we cannot provide this for NimRtl creation on Posix, because we can't
       # access the command line arguments then!

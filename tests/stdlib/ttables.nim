@@ -314,3 +314,18 @@ block countTableWithoutInit:
   d.inc("f")
   merge(d, e)
   doAssert d["f"] == 7
+
+block: # issue #23587
+  type
+    A = proc ()
+
+  proc main =
+    let repo = initTable[uint32, A]()
+
+    let c1 = repo.getOrDefault(uint32(1), nil)
+    doAssert c1.isNil
+
+    let c2 = repo.getOrDefault(uint32(1), A(nil))
+    doAssert c2.isNil
+
+  main()

@@ -72,6 +72,10 @@ proc getCurrentExceptionMsg*(): string =
 proc setCurrentException*(exc: ref Exception) =
   lastJSError = cast[PJSError](exc)
 
+proc closureIterSetupExc(e: ref Exception) {.compilerproc, inline.} =
+  ## Used to set up exception handling for closure iterators
+  setCurrentException(e)
+
 proc auxWriteStackTrace(f: PCallFrame): string =
   type
     TempFrame = tuple[procname: cstring, line: int, filename: cstring]
@@ -333,6 +337,18 @@ proc SetMinus(a, b: int): int {.compilerproc, asmNoStackFrame.} =
     return result;
   """.}
 
+proc SetXor(a, b: int): int {.compilerproc, asmNoStackFrame.} =
+  {.emit: """
+    var result = {};
+    for (var elem in `a`) {
+      if (!`b`[elem]) { result[elem] = true; }
+    }
+    for (var elem in `b`) {
+      if (!`a`[elem]) { result[elem] = true; }
+    }
+    return result;
+  """.}
+
 proc cmpStrings(a, b: string): int {.asmNoStackFrame, compilerproc.} =
   {.emit: """
     if (`a` == `b`) return 0;
@@ -508,7 +524,7 @@ proc absInt64(a: int64): int64 {.compilerproc.} =
 proc nimMin(a, b: int): int {.compilerproc.} = return if a <= b: a else: b
 proc nimMax(a, b: int): int {.compilerproc.} = return if a >= b: a else: b
 
-proc chckNilDisp(p: pointer) {.compilerproc.} =
+proc chckNilDisp(p: JSRef) {.compilerproc.} =
   if p == nil:
     sysFatal(NilAccessDefect, "cannot dispatch; dispatcher is nil")
 
@@ -617,37 +633,6 @@ proc nimCopy(dest, src: JSRef, ti: PNimType): JSRef =
     """.}
   else:
     result = src
-
-proc genericReset(x: JSRef, ti: PNimType): JSRef {.compilerproc.} =
-  {.emit: "`result` = null;".}
-  case ti.kind
-  of tyPtr, tyRef, tyVar, tyNil:
-    if isFatPointer(ti):
-      {.emit: """
-        `result` = [null, 0];
-      """.}
-  of tySet:
-    {.emit: """
-      `result` = {};
-    """.}
-  of tyTuple, tyObject:
-    if ti.kind == tyObject:
-      {.emit: "`result` = {m_type: `ti`};".}
-    else:
-      {.emit: "`result` = {};".}
-  of tySequence, tyOpenArray, tyString:
-    {.emit: """
-      `result` = [];
-    """.}
-  of tyArrayConstr, tyArray:
-    {.emit: """
-      `result` = new Array(`x`.length);
-      for (var i = 0; i < `x`.length; ++i) {
-        `result`[i] = genericReset(`x`[i], `ti`.base);
-      }
-    """.}
-  else:
-    discard
 
 proc arrayConstr(len: int, value: JSRef, typ: PNimType): JSRef {.
                 asmNoStackFrame, compilerproc.} =
@@ -781,3 +766,15 @@ if (!Math.trunc) {
   };
 }
 """.}
+
+proc cmpClosures(a, b: JSRef): bool {.compilerproc, asmNoStackFrame.} =
+  # Both `a` and `b` need to be a closure
+  {.emit: """
+    if (`a` !== null && `a`.ClP_0 !== undefined &&
+        `b` !== null && `b`.ClP_0 !== undefined) {
+      return `a`.ClP_0 == `b`.ClP_0 && `a`.ClE_0 == `b`.ClE_0;
+    } else {
+      return `a` == `b`;
+    }
+  """
+  .}

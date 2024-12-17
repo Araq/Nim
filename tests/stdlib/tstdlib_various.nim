@@ -159,7 +159,7 @@ block tsegfaults:
     var crashes = 0
     proc main =
       try:
-        var x: ptr int
+        var x: ptr int = nil
         echo x[]
         try:
           raise newException(ValueError, "not a crash")

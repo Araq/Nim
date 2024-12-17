@@ -48,8 +48,16 @@ block:
   foo4(x)
 
 block: # bug #9550
-  type Foo = concept c
-    for v in c: (v is char)
+  block:
+    type Foo = concept c
+      for v in c: (v is char)
 
-  func foo(c: Foo) = (for v in c: discard)
-  foo @['a', 'b' ,'c']
+    func foo(c: Foo) = (for v in c: discard)
+    foo @['a', 'b' ,'c']
+
+  block:
+    type Foo = concept c
+      for v in c: (v is char)
+
+    func foo(c: Foo) = (for v in c: discard)
+    foo ['a', 'b' ,'c']

@@ -1,6 +1,5 @@
 discard """
   cmd: "nim cpp $file"
-  output: '''{"vas": "kas", "123": "123"}'''
   targets: "cpp"
 """
 
@@ -18,4 +17,4 @@ import tables
 var t = initTable[string, string]()
 discard t.hasKeyOrPut("123", "123")
 discard t.mgetOrPut("vas", "kas")
-echo t
+doAssert t.len == 2

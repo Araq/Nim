@@ -33,7 +33,7 @@ block:
     doAssert cast[float64](got) == test
 
 block:
-  var hugeIntArray: array[50, byte]
+  var hugeIntArray: array[9, byte]
   var readedInt: uint64
 
   template chk(a) =

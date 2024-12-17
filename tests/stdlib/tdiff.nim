@@ -8,6 +8,7 @@ import std/strutils
 import std/assertions
 
 proc testHelper(f: seq[Item]): string =
+  result = ""
   for it in f:
     result.add(
       $it.deletedA & "." & $it.insertedB & "." & $it.startA & "." & $it.startB & "*"

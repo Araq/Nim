@@ -26,34 +26,54 @@ var
 
 
 proc parseData(data: seq[string]) =
-  for line in data:
+  proc doAdd(firstCode, lastCode: int, category, uc, lc, tc: string) =
+    if category notin spaces and category notin letters:
+      return
+
+    if firstCode != lastCode:
+      doAssert uc == "" and lc == "" and tc == ""
+    if uc.len > 0:
+      let diff = 500 + uc.parseHexInt() - firstCode
+      toUpper.add (firstCode, diff)
+    if lc.len > 0:
+      let diff = 500 + lc.parseHexInt() - firstCode
+      toLower.add (firstCode, diff)
+    if tc.len > 0 and tc != uc:
+      # if titlecase is different than uppercase
+      let diff = 500 + tc.parseHexInt() - firstCode
+      if diff != 500:
+        toTitle.add (firstCode, diff)
+
+    for code in firstCode..lastCode:
+      if category in spaces:
+        unispaces.add code
+      else:
+        alphas.add code
+
+  var idx = 0
+  while idx < data.len:
     let
+      line = data[idx]
       fields = line.split(';')
       code = fields[0].parseHexInt()
+      name = fields[1]
       category = fields[2]
       uc = fields[12]
       lc = fields[13]
       tc = fields[14]
-
-    if category notin spaces and category notin letters:
-      continue
-
-    if uc.len > 0:
-      let diff = 500 + uc.parseHexInt() - code
-      toUpper.add (code, diff)
-    if lc.len > 0:
-      let diff = 500 + lc.parseHexInt() - code
-      toLower.add (code, diff)
-    if tc.len > 0 and tc != uc:
-      # if titlecase is different than uppercase
-      let diff = 500 + tc.parseHexInt() - code
-      if diff != 500:
-        toTitle.add (code, diff)
-
-    if category in spaces:
-      unispaces.add code
+    inc(idx)
+    if name.endsWith(", First>"):
+      doAssert idx < data.len
+      let
+        nextLine = data[idx]
+        nextFields = nextLine.split(';')
+        nextCode = nextFields[0].parseHexInt()
+        nextName = nextFields[1]
+      inc(idx)
+      doAssert nextName.endsWith(", Last>")
+      doAdd(code, nextCode, category, uc, lc, tc)
     else:
-      alphas.add code
+      doAdd(code, code, category, uc, lc, tc)
 
 proc splitRanges(a: seq[Singlets], r: var seq[Ranges], s: var seq[Singlets]) =
   ## Splits `toLower`, `toUpper` and `toTitle` into separate sequences:
@@ -153,18 +173,18 @@ proc createHeader(output: var string) =
 
 proc `$`(r: Ranges): string =
   let
-    start = "0x" & toHex(r.start, 5)
-    stop = "0x" & toHex(r.stop, 5)
+    start = "0x" & toHex(r.start, 5) & "'i32"
+    stop = "0x" & toHex(r.stop, 5) & "'i32"
   result = "$#, $#, $#,\n" % [start, stop, $r.diff]
 
 proc `$`(r: Singlets): string =
-  let code = "0x" & toHex(r.code, 5)
+  let code = "0x" & toHex(r.code, 5) & "'i32"
   result = "$#, $#,\n" % [code, $r.diff]
 
 proc `$`(r: NonLetterRanges): string =
   let
-    start = "0x" & toHex(r.start, 5)
-    stop = "0x" & toHex(r.stop, 5)
+    start = "0x" & toHex(r.start, 5) & "'i32"
+    stop = "0x" & toHex(r.stop, 5) & "'i32"
   result = "$#, $#,\n" % [start, stop]
 
 
@@ -178,7 +198,7 @@ proc outputSeq(s: seq[Ranges|Singlets|NonLetterRanges], name: string,
 proc outputSeq(s: seq[int], name: string, output: var string) =
   output.add "  $# = [\n" % name
   for i in s:
-    output.add "    0x$#,\n" % toHex(i, 5)
+    output.add "    0x$#'i32,\n" % toHex(i, 5)
   output.add "  ]\n\n"
 
 proc outputSpaces(s: seq[int], name: string, output: var string) =

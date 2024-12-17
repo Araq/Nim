@@ -224,13 +224,15 @@ sub/mmain.idx""", context
     doAssert exitCode == 0, msg
 
     let data = parseJson(readFile(output))["entries"]
-    doAssert data.len == 4
+    doAssert data.len == 5
     let doSomething = data[0]
     doAssert doSomething["name"].getStr == "doSomething"
     doAssert doSomething["type"].getStr == "skProc"
     doAssert doSomething["line"].getInt == 1
     doAssert doSomething["col"].getInt == 0
     doAssert doSomething["code"].getStr == "proc doSomething(x, y: int): int {.raises: [], tags: [], forbids: [].}"
+    let foo2 = data[4]
+    doAssert $foo2["signature"] == """{"arguments":[{"name":"x","type":"T"},{"name":"y","type":"U"},{"name":"z","type":"M"}],"genericParams":[{"name":"T","types":"int"},{"name":"M","types":"string"},{"name":"U"}]}"""
 
   block: # nim jsondoc # bug #11953
     let file = testsDir / "misc/mjsondoc.nim"
@@ -241,7 +243,7 @@ sub/mmain.idx""", context
     doAssert exitCode == 0, msg
 
     let data = parseJson(readFile(destDir / "mjsondoc.json"))["entries"]
-    doAssert data.len == 4
+    doAssert data.len == 5
     let doSomething = data[0]
     doAssert doSomething["name"].getStr == "doSomething"
     doAssert doSomething["type"].getStr == "skProc"

@@ -157,7 +157,7 @@ proc toHeapQueue*[T](x: openArray[T]): HeapQueue[T] {.since: (1, 3).} =
     assert heap[0] == 8
 
   # see https://en.wikipedia.org/wiki/Binary_heap#Building_a_heap
-  result.data = @x
+  result = HeapQueue[T](data: @x)
   for i in countdown(x.len div 2 - 1, 0):
     siftdown(result, i)
 

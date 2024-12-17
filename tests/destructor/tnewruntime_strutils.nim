@@ -1,6 +1,6 @@
 discard """
   valgrind: true
-  cmd: '''nim c -d:nimAllocStats --gc:arc -d:useMalloc $file'''
+  cmd: '''nim c -d:nimAllocStats --mm:arc -d:useMalloc $file'''
   output: '''
 @[(input: @["KXSC", "BGMC"]), (input: @["PXFX"]), (input: @["WXRQ", "ZSCZD"])]
 14
@@ -251,4 +251,49 @@ proc main =
       "test" & $i
 
 main()
+
+
+block:
+  block:
+    type
+      JsonNode = ref object
+
+    proc foo(d: JsonNode) =
+      discard
+
+    proc test_something()=
+      var a = JsonNode()
+      foo ensureMove(a)
+
+    test_something()
+
+  block:
+    type
+      JsonNode = object
+        data: int
+
+    proc foo(d: JsonNode) =
+      discard
+
+    proc test_something()=
+      var a = JsonNode()
+      foo ensureMove(a)
+
+    test_something()
+
+  block:
+    type
+      JsonNode = object
+        data: int
+
+    proc `=destroy`(x: JsonNode) = discard
+
+    proc foo(d: JsonNode) =
+      discard
+
+    proc test_something()=
+      var a = JsonNode()
+      foo ensureMove(a)
+
+    test_something()
 

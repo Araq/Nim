@@ -122,6 +122,7 @@ case $uos in
   *netbsd* )
     myos="netbsd"
     LINK_FLAGS="$LINK_FLAGS -lm"
+    ucpu=`uname -p`
     ;;
   *darwin* )
     myos="macosx"

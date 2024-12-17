@@ -10,20 +10,18 @@
 ## This module contains code for generating volatile loads and stores,
 ## which are useful in embedded and systems programming.
 
-template volatileLoad*[T](src: ptr T): T =
+proc volatileLoad*[T](src: ptr T): T {.inline, noinit.} =
   ## Generates a volatile load of the value stored in the container `src`.
   ## Note that this only effects code generation on `C` like backends.
   when nimvm:
-    src[]
+    result = src[]
   else:
     when defined(js):
-      src[]
+      result = src[]
     else:
-      var res: T
-      {.emit: [res, " = (*(", typeof(src[]), " volatile*)", src, ");"].}
-      res
+      {.emit: [result, " = (*(", typeof(src[]), " volatile*)", src, ");"].}
 
-template volatileStore*[T](dest: ptr T, val: T) =
+proc volatileStore*[T](dest: ptr T, val: T) {.inline.} =
   ## Generates a volatile store into the container `dest` of the value
   ## `val`. Note that this only effects code generation on `C` like
   ## backends.

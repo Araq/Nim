@@ -1,6 +1,6 @@
 discard """
   joinable: false # to avoid messing with global rand state
-  matrix: "--mm:refc; --mm:orc; --backend:js --jsbigint64:off; --backend:js --jsbigint64:on"
+  matrix: "--mm:refc; --mm:orc; --backend:js --jsbigint64:off -d:nimStringHash2; --backend:js --jsbigint64:on"
 """
 import std/[assertions, formatfloat]
 import std/[random, math, stats, sets, tables]
@@ -11,7 +11,7 @@ when not defined(js):
 randomize(233)
 
 proc main() =
-  var occur: array[1000, int]
+  var occur: array[1000, int] = default(array[1000, int])
 
   for i in 0..100_000:
     let x = rand(high(occur))
@@ -47,6 +47,8 @@ block:
   type DiceRoll = range[0..6]
   when not defined(js):
     doAssert rand(DiceRoll).int == 3
+  elif compileOption("jsbigint64"):
+    doAssert rand(DiceRoll).int == 1
   else:
     doAssert rand(DiceRoll).int == 6
 
@@ -223,8 +225,9 @@ block: # same as above but use slice overload
       doAssert a3.type is a2.type
   test cast[uint](int.high)
   test cast[uint](int.high) + 1
-  whenJsNoBigInt64: discard
-  do:
+  when hasWorkingInt64 and defined(js):
+    # weirdly this has to run only in JS for the final int32.high test
+    # to be the same between C/C++ and --jsbigint64:on
     test uint64.high
     test uint64.high - 1
   test uint.high - 2
@@ -296,7 +299,13 @@ block: # bug #22360
     else:
       inc fc
 
-  when defined(js):
-    doAssert (tc, fc) == (483, 517), $(tc, fc)
+  when defined(js) and not compileOption("jsbigint64"):
+    doAssert (tc, fc) == (515, 485), $(tc, fc)
   else:
     doAssert (tc, fc) == (510, 490), $(tc, fc)
+
+block:
+  when defined(js) and not compileOption("jsbigint64"):
+    doAssert rand(int32.high) == 335507522
+  else:
+    doAssert rand(int32.high) == 607539621

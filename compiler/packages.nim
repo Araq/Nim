@@ -51,3 +51,11 @@ func belongsToProjectPackage*(conf: ConfigRef, sym: PSym): bool =
   ## See Also:
   ## * `modulegraphs.belongsToStdlib`
   conf.mainPackageId == sym.getPackageId
+
+func belongsToProjectPackageMaybeNil*(conf: ConfigRef, sym: PSym): bool =
+  ## Return whether the symbol belongs to the project's package.
+  ## Returns `false` if `sym` is nil.
+  ##
+  ## See Also:
+  ## * `modulegraphs.belongsToStdlib`
+  sym != nil and conf.mainPackageId == sym.getPackageId

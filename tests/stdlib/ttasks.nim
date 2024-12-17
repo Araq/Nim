@@ -513,13 +513,49 @@ block:
 
     proc testReturnValues() =
       let t = toTask returnsSomething(2233, 11)
-      var res: int
+      var res: int = 0
       t.invoke(addr res)
       doAssert res == 2233+11
 
       let tb = toTask noArgsButReturnsSomething()
-      var resB: string
+      var resB: string = ""
       tb.invoke(addr resB)
       doAssert resB == "abcdef"
 
     testReturnValues()
+
+
+block: # bug #23635
+  block:
+    type
+      Store = object
+        run: proc (a: int) {.nimcall, gcsafe.}
+
+    block:
+      var count = 0
+      proc hello(a: int) =
+        inc count, a
+
+      var store = Store()
+      store.run = hello
+
+      let b = toTask store.run(13)
+      b.invoke()
+      doAssert count == 13
+
+  block:
+    type
+      Store = object
+        run: proc () {.nimcall, gcsafe.}
+
+    block:
+      var count = 0
+      proc hello() =
+        inc count, 1
+
+      var store = Store()
+      store.run = hello
+
+      let b = toTask store.run()
+      b.invoke()
+      doAssert count == 1

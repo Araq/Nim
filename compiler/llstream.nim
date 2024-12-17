@@ -68,6 +68,7 @@ when not declared(readLineFromStdin):
   # fallback implementation:
   proc readLineFromStdin(prompt: string, line: var string): bool =
     stdout.write(prompt)
+    stdout.flushFile()
     result = readLine(stdin, line)
     if not result:
       stdout.write("\n")

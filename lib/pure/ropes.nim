@@ -107,7 +107,7 @@ proc insertInCache(s: string, tree: Rope): Rope =
     result = newRope(s)
     when countCacheMisses: inc(misses)
     return
-  var cmp: int
+  var cmp: int = 0
   t = splay(s, t, cmp)
   if cmp == 0:
     # We get here if it's already in the Tree
@@ -209,7 +209,7 @@ proc `&`*(a: openArray[Rope]): Rope {.rtl, extern: "nroConcOpenArray".} =
   runnableExamples:
     let r = &[rope("Hello, "), rope("Nim"), rope("!")]
     doAssert $r == "Hello, Nim!"
-
+  result = nil
   for item in a: result = result & item
 
 proc add*(a: var Rope, b: Rope) {.rtl, extern: "nro$1Rope".} =
@@ -239,7 +239,7 @@ proc `[]`*(r: Rope, i: int): char {.rtl, extern: "nroCharAt".} =
     doAssert r[0] == 'H'
     doAssert r[7] == 'N'
     doAssert r[22] == '\0'
-
+  result = '\0'
   var x = r
   var j = i
   if x == nil or i < 0 or i >= r.len: return
@@ -362,7 +362,7 @@ when not defined(js) and not defined(nimscript):
   proc equalsFile*(r: Rope, f: File): bool {.rtl, extern: "nro$1File".} =
     ## Returns true if the contents of the file `f` equal `r`.
     var
-      buf: array[bufSize, char]
+      buf: array[bufSize, char] = default(array[bufSize, char])
       bpos = buf.len
       blen = buf.len
 
@@ -389,7 +389,7 @@ when not defined(js) and not defined(nimscript):
   proc equalsFile*(r: Rope, filename: string): bool {.rtl, extern: "nro$1Str".} =
     ## Returns true if the contents of the file `f` equal `r`. If `f` does not
     ## exist, false is returned.
-    var f: File
+    var f: File = default(File)
     result = open(f, filename)
     if result:
       result = equalsFile(r, f)

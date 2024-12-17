@@ -273,6 +273,16 @@ proc test15939() = # bug #15939 (v2)
   else: # can't take address of cstring element in js
     when not defined(js): cstringTest()
 
+block: # bug #23499
+  template volatileStore[T](dest: ptr T, val: T) =
+    dest[] = val
+
+  proc foo =
+    var ctr = 0
+    volatileStore(addr ctr, 0)
+
+  foo()
+
 template main =
   # xxx wrap all other tests here like that so they're also tested in VM
   test14420()

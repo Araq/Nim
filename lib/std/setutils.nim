@@ -75,3 +75,31 @@ func `[]=`*[T](t: var set[T], key: T, val: bool) {.inline.} =
     s[a3] = true
     assert s == {a2, a3}
   if val: t.incl key else: t.excl key
+
+when defined(nimHasXorSet):
+  func symmetricDifference*[T](x, y: set[T]): set[T] {.magic: "XorSet".} =
+    ## This operator computes the symmetric difference of two sets,
+    ## equivalent to but more efficient than `x + y - x * y` or
+    ## `(x - y) + (y - x)`.
+    runnableExamples:
+      assert symmetricDifference({1, 2, 3}, {2, 3, 4}) == {1, 4}
+else:
+  func symmetricDifference*[T](x, y: set[T]): set[T] {.inline.} =
+    result = x + y - (x * y)
+
+proc `-+-`*[T](x, y: set[T]): set[T] {.inline.} =
+  ## Operator alias for `symmetricDifference`.
+  runnableExamples:
+    assert {1, 2, 3} -+- {2, 3, 4} == {1, 4}
+  result = symmetricDifference(x, y)
+
+proc toggle*[T](x: var set[T], y: set[T]) {.inline.} =
+  ## Toggles the existence of each value of `y` in `x`.
+  ## If any element in `y` is also in `x`, it is excluded from `x`;
+  ## otherwise it is included.
+  ## Equivalent to `x = symmetricDifference(x, y)`.
+  runnableExamples:
+    var x = {1, 2, 3}
+    x.toggle({2, 3, 4})
+    assert x == {1, 4}
+  x = symmetricDifference(x, y)

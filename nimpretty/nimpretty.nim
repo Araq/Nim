@@ -116,7 +116,13 @@ proc main =
   for kind, key, val in getopt():
     case kind
     of cmdArgument:
-      infiles.add(key.addFileExt(".nim"))
+      if dirExists(key):
+        for file in walkDirRec(key, skipSpecial = true):
+          if file.endsWith(".nim") or file.endsWith(".nimble"):
+            infiles.add(file)
+      else:
+        infiles.add(key.addFileExt(".nim"))
+
     of cmdLongOption, cmdShortOption:
       case normalize(key)
       of "help", "h": writeHelp()

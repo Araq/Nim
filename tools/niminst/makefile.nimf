@@ -45,6 +45,7 @@ endif
 ifeq ($(uos),netbsd)
   myos = netbsd
   LDFLAGS += -lm
+  ucpu = $(shell sh -c 'uname -p')
 endif
 ifeq ($(uos),darwin)
   myos = macosx
