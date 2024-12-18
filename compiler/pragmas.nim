@@ -637,7 +637,7 @@ proc semAsmOrEmit*(con: PContext, n: PNode, marker: char): PNode =
         # XXX what to do here if 'amb' is true?
         if e != nil:
           incl(e.flags, sfUsed)
-          result.add newSymNode(e)
+          result.add con.semExprWithType(con, newSymNode(e), {efTypeAllowed})
         else:
           result.add newStrNode(nkStrLit, sub)
       else:
