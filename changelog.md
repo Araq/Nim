@@ -17,7 +17,7 @@ rounding guarantees (via the
 - Unknown warnings and hints now gives warnings `warnUnknownNotes` instead of
 errors.
 
-- With `-d:nimPreviewAsmSemSymbol`, backticked symbols are type checked in the asm/emit statements.
+- With `-d:nimPreviewAsmSemSymbol`, backticked symbols are type checked in the `asm/emit` statements.
 
 ## Standard library additions and changes
 
