@@ -173,5 +173,3 @@ proc initDefines*(symbols: StringTableRef) =
   defineSymbol("nimHasXorSet")
 
   defineSymbol("nimHasLegacyNoStrictDefs")
-
-  defineSymbol("nimHasAsmSemSymbol")
