@@ -1551,7 +1551,7 @@ else:
     var retFuture = newFuture[void]("sendTo")
 
     # we will preserve address in our stack
-    var staddr: array[128, char] = default(array[128, char]) # SOCKADDR_STORAGE size is 128 bytes
+    var staddr {.noinit.} : array[128, char] # SOCKADDR_STORAGE size is 128 bytes
     var stalen = saddrLen
     zeroMem(addr(staddr[0]), 128)
     copyMem(addr(staddr[0]), saddr, saddrLen)
