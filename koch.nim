@@ -164,7 +164,7 @@ proc bundleNimbleExe(latest: bool, args: string) =
              options = "-d:release --noNimblePath " & args)
   let zippyTests = "dist/nimble/vendor/zippy/tests"
   if dirExists(zippyTests):
-    removeDir("dist/nimble/vendor/zippy/tests")
+    removeDir(zippyTests)
 
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
