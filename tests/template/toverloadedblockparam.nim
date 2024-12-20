@@ -50,7 +50,7 @@ block: # adapted tests from PR #18618 for RFC 402, covers issue #19556
     t1(x = 1, 3): discard v
     t1(2): discard v
 
-  block: # multiple overloads, covers issue #14827
+  block: # multiple overloads, block version of issue #14827
     template fun(a: bool, body: untyped): untyped = discard
     template fun(a: int, body: untyped): untyped = discard
     template fun(body: untyped): untyped = discard
@@ -63,7 +63,7 @@ block: # adapted tests from PR #18618 for RFC 402, covers issue #19556
     varargsUntypedRedirection(1): nonexistant
     varargsUntypedRedirection: nonexistant
 
-when false: # issue #20274, pragma macros
+block: # issue #20274, pragma macros
   macro a(path: string, fn: untyped): untyped =
     result = fn
   macro a(fn: untyped): untyped =
