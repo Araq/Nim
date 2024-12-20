@@ -421,6 +421,7 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
   ## Returns the full (`absolute`:idx:) path of an existing file `filename`.
   ##
   ## Raises `OSError` in case of an error. Follows symlinks.
+  result = ""
   when defined(windows):
     var bufsize = MAX_PATH.int32
     var unused: WideCString = nil
@@ -452,7 +453,9 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
       result = $r
       c_free(cast[pointer](r))
 
-proc getCurrentCompilerExe*(): string {.compileTime.} = discard
+proc getCurrentCompilerExe*(): string {.compileTime.} =
+  result = ""
+  discard "implemented in the vmops"
   ## Returns the path of the currently running Nim compiler or nimble executable.
   ##
   ## Can be used to retrieve the currently executing
@@ -838,6 +841,7 @@ proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
   ## * `getFileInfo(path, followSymlink) proc`_
 
   # Done: ID, Kind, Size, Permissions, Link Count
+  result = default(FileInfo)
   when defined(windows):
     var rawInfo: BY_HANDLE_FILE_INFORMATION
     # We have to use the super special '_get_osfhandle' call (wrapped above)
@@ -847,7 +851,7 @@ proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
       raiseOSError(osLastError(), $handle)
     rawToFormalFileInfo(rawInfo, "", result)
   else:
-    var rawInfo: Stat
+    var rawInfo: Stat = default(Stat)
     if fstat(handle, rawInfo) < 0'i32:
       raiseOSError(osLastError(), $handle)
     rawToFormalFileInfo(rawInfo, "", result)
@@ -909,6 +913,7 @@ proc sameFileContent*(path1, path2: string): bool {.rtl, extern: "nos$1",
   ##
   ## See also:
   ## * `sameFile proc`_
+  result = false
   var
     a, b: File = default(File)
   if not open(a, path1): return false

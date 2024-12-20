@@ -362,7 +362,7 @@ when not defined(js) and not defined(nimscript):
   proc equalsFile*(r: Rope, f: File): bool {.rtl, extern: "nro$1File".} =
     ## Returns true if the contents of the file `f` equal `r`.
     var
-      buf: array[bufSize, char] = default(array[bufSize, char])
+      buf {.noinit.}: array[bufSize, char]
       bpos = buf.len
       blen = buf.len
 

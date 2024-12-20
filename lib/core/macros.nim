@@ -1440,7 +1440,7 @@ template findChild*(n: NimNode; cond: untyped): NimNode {.dirty.} =
   ##                          it.basename.ident == ident"foo")
   ##   ```
   block:
-    var res: NimNode
+    var res: NimNode = nil
     for it in n.children:
       if cond:
         res = it

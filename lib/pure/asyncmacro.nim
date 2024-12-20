@@ -218,6 +218,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
   elif returnType.kind == nnkEmpty:
     baseType = returnType
   else:
+    baseType = nil
     verifyReturnType(repr(returnType), returnType)
 
   let futureVarIdents = getFutureVarIdents(prc.params)
