@@ -2920,7 +2920,20 @@ proc matchesAux(c: PContext, n, nOrig: PNode, m: var TCandidate, marker: var Int
           internalError(c.config, n[a].info, "matches")
           noMatch()
         if flexibleOptionalParams in c.features and a >= firstArgBlock:
+          # this is a post-expr block, matched to the tail of the routine params
+          let prevPos = f
           f = max(f, m.callee.n.len - (n.len - a))
+          if f > prevPos:
+            # check that every previous required parameter is given
+            # fail the match early if not, to prevent semchecking for untyped args 
+            for i in prevPos ..< f:
+              let prevFormal = m.callee.n[i].sym
+              if prevFormal.ast == nil and prevFormal.typ.kind notin {tyVoid, tyVarargs}:
+                # param is required but wasn't given
+                m.state = csNoMatch
+                m.firstMismatch.kind = kMissingParam
+                m.firstMismatch.formal = prevFormal
+                noMatch()
         formal = m.callee.n[f].sym
         m.firstMismatch.kind = kTypeMismatch
         if containsOrIncl(marker, formal.position) and container.isNil:
