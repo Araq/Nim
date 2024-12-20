@@ -162,7 +162,7 @@ proc bundleNimbleExe(latest: bool, args: string) =
   updateSubmodules(distDir / "nimble", allowBundled = true)
   nimCompile("dist/nimble/src/nimble.nim",
              options = "-d:release --noNimblePath " & args)
-  let zippyTests = "dist/nimble/vendor/zippy/tests"
+  const zippyTests = "dist/nimble/vendor/zippy/tests"
   if dirExists(zippyTests):
     removeDir(zippyTests)
 
