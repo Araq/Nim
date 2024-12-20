@@ -135,8 +135,6 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
     if inst:
       if allowRecursion:
         result = mapTypeToAstR(t.skipModifier, info)
-        # keep original type info for getType calls on the output node:
-        result.typ() = t
       else:
         result = newNodeX(nkBracketExpr)
         #result.add mapTypeToAst(t.last, info)
@@ -145,8 +143,6 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
           result.add mapTypeToAst(a, info)
     else:
       result = mapTypeToAstX(cache, t.skipModifier, info, idgen, inst, allowRecursion)
-      # keep original type info for getType calls on the output node:
-      result.typ() = t
   of tyGenericBody:
     if inst:
       result = mapTypeToAstR(t.typeBodyImpl, info)
@@ -165,6 +161,9 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
         result = mapTypeToBracket("distinct", mDistinct, t, info)
       else:
         result = atomicType(t.sym)
+        if tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody:
+          # keep original type, t.sym can have type tyGenericBody:
+          result.typ() = t
   of tyGenericParam, tyForward:
     result = atomicType(t.sym)
   of tyObject:
@@ -195,6 +194,9 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
         result.add copyTree(t.n)
       else:
         result = atomicType(t.sym)
+        if tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody:
+          # keep original type, t.sym can have type tyGenericBody:
+          result.typ() = t
   of tyEnum:
     result = newNodeIT(nkEnumTy, if t.n.isNil: info else: t.n.info, t)
     result.add newNodeI(nkEmpty, info)  # pragma node, currently always empty for enum
