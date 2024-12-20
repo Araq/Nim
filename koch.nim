@@ -162,6 +162,9 @@ proc bundleNimbleExe(latest: bool, args: string) =
   updateSubmodules(distDir / "nimble", allowBundled = true)
   nimCompile("dist/nimble/src/nimble.nim",
              options = "-d:release --noNimblePath " & args)
+  const zippyTests = "dist/nimble/vendor/zippy/tests"
+  if dirExists(zippyTests):
+    removeDir(zippyTests)
 
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
