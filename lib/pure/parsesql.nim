@@ -584,7 +584,7 @@ proc add*(father, n: SqlNode) =
 proc getTok(p: var SqlParser) =
   getTok(p, p.tok)
 
-proc sqlError(p: SqlParser, msg: string) =
+proc sqlError(p: SqlParser, msg: string) {.noreturn.} =
   var e: ref SqlParseError
   new(e)
   e.msg = errorStr(p, msg)
@@ -683,6 +683,7 @@ proc parseExpr(p: var SqlParser): SqlNode {.gcsafe.}
 proc parseSelect(p: var SqlParser): SqlNode {.gcsafe.}
 
 proc identOrLiteral(p: var SqlParser): SqlNode =
+  result = nil
   case p.tok.kind
   of tkQuotedIdentifier:
     result = newNode(nkQuotedIdent, p.tok.literal)
@@ -719,7 +720,7 @@ proc identOrLiteral(p: var SqlParser): SqlNode =
       getTok(p)
     else:
       sqlError(p, "expression expected")
-      getTok(p) # we must consume a token here to prevent endless loops!
+      # getTok(p) # we must consume a token here to prevent endless loops!
 
 proc primary(p: var SqlParser): SqlNode =
   if (p.tok.kind == tkOperator and (p.tok.literal == "+" or p.tok.literal ==
@@ -760,7 +761,7 @@ proc primary(p: var SqlParser): SqlNode =
       getTok(p)
     else: break
 
-proc lowestExprAux(p: var SqlParser, v: var SqlNode, limit: int): int =
+proc lowestExprAux(p: var SqlParser, v: out SqlNode, limit: int): int =
   var
     v2, node, opNode: SqlNode
   v = primary(p) # expand while operators have priorities higher than 'limit'
@@ -1531,9 +1532,7 @@ proc ra(n: SqlNode, s: var SqlWriter) =
 
 proc renderSql*(n: SqlNode, upperCase = false): string =
   ## Converts an SQL abstract syntax tree to its string representation.
-  var s: SqlWriter
-  s.buffer = ""
-  s.upperCase = upperCase
+  var s = SqlWriter(buffer: "", upperCase: upperCase)
   ra(n, s)
   return s.buffer
 
@@ -1575,8 +1574,7 @@ proc parseSql*(input: Stream, filename: string, considerTypeParams = false): Sql
   ## parses the SQL from `input` into an AST and returns the AST.
   ## `filename` is only used for error messages.
   ## Syntax errors raise an `SqlParseError` exception.
-  var p: SqlParser
-  p.considerTypeParams = considerTypeParams
+  var p: SqlParser = SqlParser(considerTypeParams: considerTypeParams)
   open(p, input, filename)
   try:
     result = parse(p)

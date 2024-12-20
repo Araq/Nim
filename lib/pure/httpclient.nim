@@ -1035,6 +1035,7 @@ proc format(entry: MultipartEntry, boundary: string): string =
 
 proc format(client: HttpClient | AsyncHttpClient,
             multipart: MultipartData): Future[seq[string]] {.multisync.} =
+  result = @[]
   let bound = getBoundary(multipart)
   client.headers["Content-Type"] = "multipart/form-data; boundary=" & bound
 

@@ -65,7 +65,7 @@ when not defined(windows):
         if ret.line.len > 0: echo ret.line
         if ret.status == lnCtrlD: break
       echo "exiting"
-    var data: LinenoiseData
+    var data: LinenoiseData = default(LinenoiseData)
     let buf = linenoiseExtra(prompt, data.addr)
     result.line = $buf
     free(buf)
