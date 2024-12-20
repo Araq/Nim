@@ -251,11 +251,11 @@ proc genOp(c: var Con; t: PType; kind: TTypeAttachedOp; dest, ri: PNode): PNode 
   c.genOp(op, dest)
 
 proc genDestroy(c: var Con; dest: PNode): PNode =
-  let t = dest.typ.skipTypes({tyGenericInst, tyAlias, tySink})
+  let t = dest.typ.skipTypes({tyAlias, tySink})
   result = c.genOp(t, attachedDestructor, dest, nil)
 
 proc canBeMoved(c: Con; t: PType): bool {.inline.} =
-  let t = t.skipTypes({tyGenericInst, tyAlias, tySink})
+  let t = t.skipTypes({tyAlias, tySink})
   if optOwnedRefs in c.graph.config.globalOptions:
     result = t.kind != tyRef and getAttachedOp(c.graph, t, attachedSink) != nil
   else:
@@ -281,7 +281,7 @@ proc genSink(c: var Con; s: var Scope; dest, ri: PNode; flags: set[MoveOrCopyFla
     # optimize sink call into a bitwise memcopy
     result = newTree(nkFastAsgn, dest, ri)
   else:
-    let t = dest.typ.skipTypes({tyGenericInst, tyAlias, tySink})
+    let t = dest.typ.skipTypes({tyAlias, tySink})
     if getAttachedOp(c.graph, t, attachedSink) != nil:
       result = c.genOp(t, attachedSink, dest, ri)
       result.add ri
@@ -336,7 +336,7 @@ proc genMarkCyclic(c: var Con; result, dest: PNode) =
         result.add callCodegenProc(c.graph, "nimMarkCyclic", dest.info, xenv)
 
 proc genCopyNoCheck(c: var Con; dest, ri: PNode; a: TTypeAttachedOp): PNode =
-  let t = dest.typ.skipTypes({tyGenericInst, tyAlias, tySink})
+  let t = dest.typ.skipTypes({tyAlias, tySink})
   result = c.genOp(t, a, dest, ri)
   assert ri.typ != nil
 
@@ -392,7 +392,7 @@ It is best to factor out piece of object that needs custom destructor into separ
   result.add newTree(nkFastAsgn, le, tmp)
 
 proc genWasMoved(c: var Con, n: PNode): PNode =
-  let typ = n.typ.skipTypes({tyGenericInst, tyAlias, tySink})
+  let typ = n.typ.skipTypes({tyAlias, tySink})
   let op = getAttachedOp(c.graph, n.typ, attachedWasMoved)
   if op != nil:
     if sfError in op.flags:
@@ -450,7 +450,7 @@ proc passCopyToSink(n: PNode; c: var Con; s: var Scope): PNode =
   let nTyp = n.typ.skipTypes(tyUserTypeClasses)
   let tmp = c.getTemp(s, nTyp, n.info)
   if hasDestructor(c, nTyp):
-    let typ = nTyp.skipTypes({tyGenericInst, tyAlias, tySink})
+    let typ = nTyp.skipTypes({tyAlias, tySink})
     let op = getAttachedOp(c.graph, typ, attachedDup)
     if op != nil and tfHasOwned notin typ.flags:
       if sfError in op.flags:

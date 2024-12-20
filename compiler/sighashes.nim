@@ -120,7 +120,7 @@ proc hashType(c: var MD5Context, t: PType; flags: set[ConsiderFlag]; conf: Confi
     else:
       c.hashSym(t.sym)
   of tyGenericInst:
-    if sfInfixCall in t.base.sym.flags:
+    if sfInfixCall in t.base.sym.flags or CoConsiderOwned in flags:
       # This is an imported C++ generic type.
       # We cannot trust the `lastSon` to hold a properly populated and unique
       # value for each instantiation, so we hash the generic parameters here:

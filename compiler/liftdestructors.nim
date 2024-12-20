@@ -38,7 +38,7 @@ template assignment*(t: PType): PSym = getAttachedOp(c.g, t, attachedAsgn)
 template dup*(t: PType): PSym = getAttachedOp(c.g, t, attachedDup)
 template asink*(t: PType): PSym = getAttachedOp(c.g, t, attachedSink)
 
-proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode)
+proc fillBody(c: var TLiftCtx; orig: PType; body, x, y: PNode)
 proc produceSym(g: ModuleGraph; c: PContext; typ: PType; kind: TTypeAttachedOp;
               info: TLineInfo; idgen: IdGenerator; isDistinct = false): PSym
 
@@ -369,7 +369,7 @@ proc instantiateGeneric(c: var TLiftCtx; op: PSym; t, typeInst: PType): PSym =
       "cannot generate destructor for generic type: " & typeToString(t))
     result = nil
 
-proc considerAsgnOrSink(c: var TLiftCtx; t: PType; body, x, y: PNode;
+proc considerAsgnOrSink(c: var TLiftCtx; orig, t: PType; body, x, y: PNode;
                         field: var PSym): bool =
   if optSeqDestructors in c.g.config.globalOptions:
     var op = field
@@ -409,7 +409,7 @@ proc considerAsgnOrSink(c: var TLiftCtx; t: PType; body, x, y: PNode;
     onUse(c.info, op)
     # We also now do generic instantiations in the destructor lifting pass:
     if op.ast.isGenericRoutine:
-      op = instantiateGeneric(c, op, t, t.typeInst)
+      op = instantiateGeneric(c, op, t, orig)
       field = op
       #echo "trying to use ", op.ast
       #echo "for ", op.name.s, " "
@@ -428,8 +428,8 @@ proc addDestructorCall(c: var TLiftCtx; orig: PType; body, x: PNode) =
   if op != nil and sfOverridden in op.flags:
     if op.ast.isGenericRoutine:
       # patch generic destructor:
-      op = instantiateGeneric(c, op, t, t.typeInst)
-      setAttachedOp(c.g, c.idgen.module, t, attachedDestructor, op)
+      op = instantiateGeneric(c, op, t, orig)
+      setAttachedOp(c.g, c.idgen.module, orig, attachedDestructor, op)
 
   if op == nil and (useNoGc(c, t) or requiresDestructor(c, t)):
     op = produceSym(c.g, c.c, t, attachedDestructor, c.info, c.idgen)
@@ -444,7 +444,7 @@ proc addDestructorCall(c: var TLiftCtx; orig: PType; body, x: PNode) =
     internalError(c.g.config, c.info,
       "type-bound operator could not be resolved")
 
-proc considerUserDefinedOp(c: var TLiftCtx; t: PType; body, x, y: PNode): bool =
+proc considerUserDefinedOp(c: var TLiftCtx; orig, t: PType; body, x, y: PNode): bool =
   case c.kind
   of attachedDestructor:
     var op = t.destructor
@@ -452,8 +452,8 @@ proc considerUserDefinedOp(c: var TLiftCtx; t: PType; body, x, y: PNode): bool =
 
       if op.ast.isGenericRoutine:
         # patch generic destructor:
-        op = instantiateGeneric(c, op, t, t.typeInst)
-        setAttachedOp(c.g, c.idgen.module, t, attachedDestructor, op)
+        op = instantiateGeneric(c, op, t, orig)
+        setAttachedOp(c.g, c.idgen.module, orig, attachedDestructor, op)
 
       #markUsed(c.g.config, c.info, op, c.g.usageSym)
       onUse(c.info, op)
@@ -467,10 +467,10 @@ proc considerUserDefinedOp(c: var TLiftCtx; t: PType; body, x, y: PNode): bool =
     if op != nil and sfOverridden in op.flags:
       if op.ast.isGenericRoutine:
         # patch generic =trace:
-        op = instantiateGeneric(c, op, t, t.typeInst)
+        op = instantiateGeneric(c, op, t, orig)
         setAttachedOp(c.g, c.idgen.module, t, c.kind, op)
 
-    result = considerAsgnOrSink(c, t, body, x, y, op)
+    result = considerAsgnOrSink(c, orig, t, body, x, y, op)
     if op != nil:
       setAttachedOp(c.g, c.idgen.module, t, c.kind, op)
 
@@ -490,7 +490,7 @@ proc considerUserDefinedOp(c: var TLiftCtx; t: PType; body, x, y: PNode): bool =
 
       if op.ast.isGenericRoutine:
         # patch generic destructor:
-        op = instantiateGeneric(c, op, t, t.typeInst)
+        op = instantiateGeneric(c, op, t, orig)
         setAttachedOp(c.g, c.idgen.module, t, attachedWasMoved, op)
 
       #markUsed(c.g.config, c.info, op, c.g.usageSym)
@@ -506,7 +506,7 @@ proc considerUserDefinedOp(c: var TLiftCtx; t: PType; body, x, y: PNode): bool =
 
       if op.ast.isGenericRoutine:
         # patch generic destructor:
-        op = instantiateGeneric(c, op, t, t.typeInst)
+        op = instantiateGeneric(c, op, t, orig)
         setAttachedOp(c.g, c.idgen.module, t, attachedDup, op)
 
       #markUsed(c.g.config, c.info, op, c.g.usageSym)
@@ -954,7 +954,8 @@ proc ownedClosureOp(c: var TLiftCtx; t: PType; body, x, y: PNode) =
   of attachedTrace: discard
   of attachedWasMoved: body.add genBuiltin(c, mWasMoved, "`=wasMoved`", x)
 
-proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode) =
+proc fillBody(c: var TLiftCtx; orig: PType; body, x, y: PNode) =
+  let t = orig.skipTypes({tyGenericInst, tyAlias})
   case t.kind
   of tyNone, tyEmpty, tyVoid: discard
   of tyPointer, tySet, tyBool, tyChar, tyEnum, tyInt..tyUInt64, tyCstring,
@@ -1000,7 +1001,7 @@ proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode) =
     elif optSeqDestructors in c.g.config.globalOptions:
       # note that tfHasAsgn is propagated so we need the check on
       # 'selectedGC' here to determine if we have the new runtime.
-      discard considerUserDefinedOp(c, t, body, x, y)
+      discard considerUserDefinedOp(c, orig, t, body, x, y)
     elif tfHasAsgn in t.flags:
       if c.kind in {attachedAsgn, attachedSink, attachedDeepCopy}:
         body.add newSeqCall(c, x, y)
@@ -1011,11 +1012,11 @@ proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode) =
     if useNoGc(c, t):
       useSeqOrStrOp(c, t, body, x, y)
     elif tfHasAsgn in t.flags:
-      discard considerUserDefinedOp(c, t, body, x, y)
+      discard considerUserDefinedOp(c, orig, t, body, x, y)
     else:
       defaultOp(c, t, body, x, y)
   of tyObject:
-    if not considerUserDefinedOp(c, t, body, x, y):
+    if not considerUserDefinedOp(c, orig, t, body, x, y):
       if t.sym != nil and sfImportc in t.sym.flags:
         case c.kind
         of {attachedAsgn, attachedSink, attachedDup}:
@@ -1036,7 +1037,7 @@ proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode) =
         else:
           fillBodyObjT(c, t, body, x, y)
   of tyDistinct:
-    if not considerUserDefinedOp(c, t, body, x, y):
+    if not considerUserDefinedOp(c, orig, t, body, x, y):
       fillBody(c, t.elementType, body, x, y)
   of tyTuple:
     fillBodyTup(c, t, body, x, y)
@@ -1052,10 +1053,9 @@ proc fillBody(c: var TLiftCtx; t: PType; body, x, y: PNode) =
      tyTypeDesc, tyGenericInvocation, tyForward, tyStatic:
     #internalError(c.g.config, c.info, "assignment requested for type: " & typeToString(t))
     discard
-  of tyOrdinal, tyRange, tyInferred,
-     tyGenericInst, tyAlias, tySink:
+  of tyOrdinal, tyRange, tyInferred, tySink:
     fillBody(c, skipModifier(t), body, x, y)
-  of tyConcept, tyIterable: raiseAssert "unreachable"
+  of tyConcept, tyIterable, tyAlias, tyGenericInst: raiseAssert "unreachable"
 
 proc produceSymDistinctType(g: ModuleGraph; c: PContext; typ: PType;
                             kind: TTypeAttachedOp; info: TLineInfo;
@@ -1253,13 +1253,13 @@ proc patchBody(g: ModuleGraph; c: PContext; n: PNode; info: TLineInfo; idgen: Id
         n[0] = newSymNode(op)
   for x in n: patchBody(g, c, x, info, idgen)
 
-proc inst(g: ModuleGraph; c: PContext; t: PType; kind: TTypeAttachedOp; idgen: IdGenerator;
+proc inst(g: ModuleGraph; c: PContext; orig, t: PType; kind: TTypeAttachedOp; idgen: IdGenerator;
           info: TLineInfo) =
   let op = getAttachedOp(g, t, kind)
   if op != nil and op.ast != nil and op.ast.isGenericRoutine:
     if t.typeInst != nil:
       var a = TLiftCtx(info: info, g: g, kind: kind, c: c, idgen: idgen)
-      let opInst = instantiateGeneric(a, op, t, t.typeInst)
+      let opInst = instantiateGeneric(a, op, t, orig)
       if opInst.ast != nil:
         patchBody(g, c, opInst.ast, info, a.idgen)
       setAttachedOp(g, idgen.module, t, kind, opInst)
@@ -1281,11 +1281,13 @@ proc createTypeBoundOps(g: ModuleGraph; c: PContext; orig: PType; info: TLineInf
   if origRoot != nil:
     incl origRoot.flags, tfGenericHasDestructor
 
-  let skipped = orig.skipTypes({tyGenericInst, tyAlias, tySink})
+  let skipped = orig.skipTypes({tyAlias, tySink})
   if isEmptyContainer(skipped) or skipped.kind == tyStatic: return
 
   let h = sighashes.hashType(skipped, g.config, {CoType, CoConsiderOwned, CoDistinct})
   var canon = g.canonTypes.getOrDefault(h)
+
+  #echo "NOW FOR ", typeToString(skipped), " ", canon == nil
   if canon == nil:
     g.canonTypes[h] = skipped
     canon = skipped
@@ -1305,7 +1307,7 @@ proc createTypeBoundOps(g: ModuleGraph; c: PContext; orig: PType; info: TLineInf
   # bug #15122: We need to produce all prototypes before entering the
   # mind boggling recursion. Hacks like these imply we should rewrite
   # this module.
-  var generics: array[attachedWasMoved..attachedTrace, bool] = default(array[attachedWasMoved..attachedTrace, bool])
+  var generics = default(array[attachedWasMoved..attachedTrace, bool])
   for k in attachedWasMoved..lastAttached:
     generics[k] = getAttachedOp(g, canon, k) != nil
     if not generics[k]:
@@ -1317,7 +1319,7 @@ proc createTypeBoundOps(g: ModuleGraph; c: PContext; orig: PType; info: TLineInf
     if not generics[k]:
       discard produceSym(g, c, canon, k, info, idgen)
     else:
-      inst(g, c, canon, k, idgen, info)
+      inst(g, c, canon, canon, k, idgen, info)
     if canon != orig:
       setAttachedOp(g, idgen.module, orig, k, getAttachedOp(g, canon, k))
 
