@@ -1257,11 +1257,16 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
   if a.isResolvedUserTypeClass:
     return typeRel(c, f, a.skipModifier, flags)
 
-  template bindingRet(res) =
+  template bindingRet(res, bound) =
     if doBind:
-      let bound = aOrig.skipTypes({tyRange}).skipIntLit(c.c.idgen)
       put(c, f, bound)
     return res
+
+  template defaultBinding(): PType =
+    aOrig#[.skipTypes({tyRange})]#.skipIntLit(c.c.idgen)
+
+  template bindingRet(res) =
+    bindingRet(res, defaultBinding())
 
   template considerPreviousT(body: untyped) =
     var prev = lookup(c.bindings, f)
@@ -1808,18 +1813,42 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       result = isNone
       let oldInheritancePenalty = c.inheritancePenalty
       var minInheritance = maxInheritancePenalty
+      var bestMatch: PType = nil
+        # the best match in the branches so far, preferring earlier branches
+        # this is to resolve ambiguity in cases like matching an int literal
+        # against `int8 | int16`, picking the earlier `int8`
+        # this keeps compatibility with legacy behavior
       for branch in f.kids:
         c.inheritancePenalty = -1
         let x = typeRel(c, branch, aOrig, flags)
         if x >= result:
           if  c.inheritancePenalty > -1:
-            minInheritance = min(minInheritance, c.inheritancePenalty)
+            if c.inheritancePenalty < minInheritance:
+              minInheritance = c.inheritancePenalty
+              if x > result:
+                # has to be strictly better so we prefer earlier matches
+                # also true for inheritance penalty in this case
+                bestMatch = branch
+          elif x > result:
+            # has to be strictly better so we prefer earlier matches
+            bestMatch = branch
           result = x
       if result >= isIntConv:
         if minInheritance < maxInheritancePenalty:
           c.inheritancePenalty = oldInheritancePenalty + minInheritance
+        var bound: PType = nil
+        if (result in {isConvertible, isIntConv, isSubrange, isFromIntLit} or
+            (result == isSubtype and a.isEmptyContainer)) and bestMatch != nil:
+          # match needs a conversion, bind to the constraint so the
+          # conversion can be generated
+          # supertypes act like typeclasses, only consider as concrete for
+          # empty collections
+          bound = bestMatch
+        else:
+          # default, bind to matched type
+          bound = defaultBinding()
         if result > isGeneric: result = isGeneric
-        bindingRet result
+        bindingRet result, bound
       else:
         result = isNone
   of tyNot:
@@ -1904,6 +1933,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     let doBindGP = doBind or trBindGenericParam in flags
     var x = lookup(c.bindings, f)
     if x == nil:
+      var bound: PType = nil
       if c.callee.kind == tyGenericBody and not c.typedescMatched:
         # XXX: The fact that generic types currently use tyGenericParam for
         # their parameters is really a misnomer. tyGenericParam means "match
@@ -1937,11 +1967,35 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       else:
         # check if 'T' has a constraint as in 'proc p[T: Constraint](x: T)'
         if f.len > 0 and f[0].kind != tyNone:
-          result = typeRel(c, f[0], a, flags + {trDontBind, trBindGenericParam})
+          # constraints need a new type binding context layer,
+          # so that matches to typeclasses in the constraint don't
+          # bind to that typeclass for the entire candidate
+          c.bindings = newTypeMapLayer(c.bindings)
+          # generic params in the constraint are an exception,
+          # so that we can infer things like `T: U`
+          result = typeRel(c, f[0], a, flags + {trBindGenericParam})
+          if f[0].skipTypes({tyAlias}).kind == tyOr:
+            # `or` types have special binding rules, they bind to
+            # one of their branches if the match needs a conversion
+            # we reuse this binding for the generic parameter
+            bound = lookup(c.bindings, f[0])
+            if bound == nil: bound = a
+          elif result in {isConvertible, isIntConv, isSubrange, isFromIntLit} or
+              (result == isSubtype and a.isEmptyContainer):
+            # match needs a conversion, bind to the constraint so the
+            # conversion can be generated
+            # supertypes act like typeclasses, only consider as concrete for
+            # empty collections
+            bound = f[0]
+          else:
+            # default, bind to matched type
+            bound = a
+          setToPreviousLayer(c.bindings)
           if doBindGP and result notin {isNone, isGeneric}:
-            let concrete = concreteType(c, a, f)
+            let concrete = concreteType(c, bound, f)
             if concrete == nil: return isNone
-            put(c, f, concrete)
+            # generic params have to be bound up to the root binding context
+            putRecursive(c.bindings, f, concrete)
           if result in {isEqual, isSubtype}:
             result = isGeneric
         elif a.kind == tyTypeDesc:
@@ -1953,7 +2007,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           result = isGeneric
 
       if result == isGeneric:
-        var concrete = a
+        if bound == nil: bound = a
         if tfWildcard in a.flags:
           a.sym.transitionGenericParamToType()
           a.flags.excl tfWildcard
@@ -1963,11 +2017,12 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           # reason about and maintain. Refactoring typeRel to not be responsible for setting, or
           # at least validating, bindings can have multiple benefits. This is debatable. I'm not 100% sure.
           # A design that allows a proper complexity analysis of types like `tyOr` would be ideal.
-          concrete = concreteType(c, a, f)
-          if concrete == nil:
+          bound = concreteType(c, bound, f)
+          if bound == nil:
             return isNone
         if doBindGP:
-          put(c, f, concrete)
+          # generic params have to be bound up to the root binding context
+          putRecursive(c.bindings, f, bound)
       elif result > isGeneric:
         result = isGeneric
     elif a.kind == tyEmpty:

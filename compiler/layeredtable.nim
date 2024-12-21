@@ -80,3 +80,23 @@ proc put(typeMap: var LayeredIdTable, key: ItemId, value: PType) {.inline.} =
 template put*(typeMap: var LayeredIdTable, key, value: PType) =
   ## binds `key` to `value` only in current layer
   put(typeMap, key.itemId, value)
+
+proc putRecursive(typeMap: ref LayeredIdTableObj, key: ItemId, value: PType) =
+  var tm = typeMap
+  while tm != nil:
+    tm.topLayer[key] = value
+    tm = tm.nextLayer
+
+template putRecursive*(typeMap: ref LayeredIdTableObj, key, value: PType) =
+  ## binds `key` to `value` in all previous layers
+  putRecursive(typeMap, key.itemId, value)
+
+when not useRef:
+  proc putRecursive(typeMap: var LayeredIdTableObj, key: ItemId, value: PType) {.inline.} =
+    put(typeMap, key, value)
+    if typeMap.nextLayer != nil:
+      putRecursive(typeMap.nextLayer, key, value)
+
+  template putRecursive*(typeMap: var LayeredIdTableObj, key, value: PType) =
+    ## binds `key` to `value` in all previous layers
+    putRecursive(typeMap, key.itemId, value)

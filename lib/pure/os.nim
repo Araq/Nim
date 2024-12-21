@@ -984,7 +984,7 @@ proc setLastModificationTime*(file: string, t: times.Time) {.noWeirdTarget.} =
   ## an error.
   when defined(posix):
     let unixt = posix.Time(t.toUnix)
-    let micro = convert(Nanoseconds, Microseconds, t.nanosecond)
+    let micro = convert(Nanoseconds, Microseconds, t.nanosecond).int32
     var timevals = [Timeval(tv_sec: unixt, tv_usec: micro),
       Timeval(tv_sec: unixt, tv_usec: micro)] # [last access, last modification]
     if utimes(file, timevals.addr) != 0: raiseOSError(osLastError(), file)
