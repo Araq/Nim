@@ -1,7 +1,7 @@
 discard """
-  cmd: '''nim c --mm:arc -d:nimAllocStats $file'''
-  output: '''1000
-(allocCount: 9010, deallocCount: 9004)'''
+  valgrind: true
+  cmd: '''nim c --mm:arc -d:nimAllocStats -d:useMalloc $file'''
+  output: '''1000'''
 """
 
 import std/asyncdispatch
@@ -20,4 +20,9 @@ for _ in 0..<1000:
 while hasPendingOperations(): poll()
 
 echo count
-echo getAllocStats()
+
+setGlobalDispatcher(nil)
+
+import std/importutils
+privateAccess(AllocStats)
+doAssert getAllocStats().allocCount - getAllocStats().deallocCount < 10
