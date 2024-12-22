@@ -79,7 +79,7 @@ proc semConstrField(c: PContext, flags: TExprFlags,
     if nfSkipFieldChecking in assignment[1].flags:
       discard
     elif not fieldVisible(c, field):
-      localError(c.config, initExpr.info,
+      localError(c.config, assignment[0].info,
         "the field '$1' is not accessible." % [field.name.s])
       return
 

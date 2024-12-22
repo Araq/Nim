@@ -1,7 +1,8 @@
 import mobjconstr_msgs
 
 
-discard PrivateField(
-  priv: "test" #[tt.Error
-  ^ the field 'priv' is not accessible]#
-)
+block: # Private field has correct line info
+  discard PrivateField(
+    priv: "test" #[tt.Error
+    ^ the field 'priv' is not accessible]#
+  )
