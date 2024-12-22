@@ -302,7 +302,7 @@ proc presentFailedCandidates(c: PContext, n: PNode, errors: CandidateErrors):
 
     if err.sym.kind in routineKinds and err.sym.ast != nil:
       candidates.add(renderTree(err.sym.ast,
-            {renderNoBody, renderNoComments, renderNoPragmas}))
+        {renderNoBody, renderNoComments, renderNoPragmas, renderNoPostfix}))
     else:
       candidates.add(getProcHeader(c.config, err.sym, prefer))
     candidates.addDeclaredLocMaybe(c.config, err.sym)

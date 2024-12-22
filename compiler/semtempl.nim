@@ -699,7 +699,10 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
   incl(s.flags, sfNoalias)
   pushOwner(c, s)
   openScope(c)
-  n[namePos] = newSymNode(s)
+  if n[namePos].kind == nkPostfix:
+    n[namePos][1] = newSymNode(s)
+  else:
+    n[namePos] = newSymNode(s)
   s.ast = n # for implicitPragmas to use
   pragmaCallable(c, s, n, templatePragmas)
   implicitPragmas(c, s, n.info, templatePragmas)

@@ -805,9 +805,7 @@ proc getAllRunnableExamples(d: PDoc, n: PNode, dest: var ItemPre) =
 proc isVisible(d: PDoc; n: PNode): bool =
   result = false
   if n.kind == nkPostfix:
-    if n.len == 2 and n[0].kind == nkIdent:
-      var v = n[0].ident
-      result = v.id == ord(wStar) or v.id == ord(wMinus)
+    result = isVisible(d, n[1])
   elif n.kind == nkSym:
     # we cannot generate code for forwarded symbols here as we have no
     # exception tracking information here. Instead we copy over the comment
@@ -1126,7 +1124,7 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
 
   var attype = ""
   if k in routineKinds and symNameNode.kind == nkSym:
-    let att = attachToType(d, nameNode.sym)
+    let att = attachToType(d, symNameNode.sym)
     if att != nil:
       attype = esc(d.target, att.name.s)
   elif k == skType and symNameNode.kind == nkSym and
@@ -1297,7 +1295,7 @@ proc exportSym(d: PDoc; s: PSym) =
                    symbolOrId])
 
 proc documentNewEffect(cache: IdentCache; n: PNode): PNode =
-  let s = n[namePos].sym
+  let s = skipPostfix(n[namePos]).sym
   if tfReturnsNew in s.typ.flags:
     result = newIdentNode(getIdent(cache, "new"), n.info)
   else:
@@ -1306,7 +1304,7 @@ proc documentNewEffect(cache: IdentCache; n: PNode): PNode =
 proc documentEffect(cache: IdentCache; n, x: PNode, effectType: TSpecialWord, idx: int): PNode =
   let spec = effectSpec(x, effectType)
   if isNil(spec):
-    let s = n[namePos].sym
+    let s = skipPostfix(n[namePos]).sym
 
     let actual = s.typ.n[0]
     if actual.len != effectListLen: return
@@ -1328,7 +1326,7 @@ proc documentEffect(cache: IdentCache; n, x: PNode, effectType: TSpecialWord, id
     result = nil
 
 proc documentWriteEffect(cache: IdentCache; n: PNode; flag: TSymFlag; pragmaName: string): PNode =
-  let s = n[namePos].sym
+  let s = skipPostfix(n[namePos]).sym
   let params = s.typ.n
 
   var effects = newNodeI(nkBracket, n.info)
@@ -1343,7 +1341,7 @@ proc documentWriteEffect(cache: IdentCache; n: PNode; flag: TSymFlag; pragmaName
     result = nil
 
 proc documentRaises*(cache: IdentCache; n: PNode) =
-  if n[namePos].kind != nkSym: return
+  if skipPostfix(n[namePos]).kind != nkSym: return
   let pragmas = n[pragmasPos]
   let p1 = documentEffect(cache, n, pragmas, wRaises, exceptionEffects)
   let p2 = documentEffect(cache, n, pragmas, wTags, tagEffects)
