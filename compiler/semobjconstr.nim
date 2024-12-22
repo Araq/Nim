@@ -521,7 +521,7 @@ proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType 
       for j in 1..<i:
         let prevId = considerQuotedIdent(c, result[j][0])
         if prevId.id == id.id:
-          localError(c.config, field.info, errFieldInitTwice % id.s)
+          localError(c.config, field[0].info, errFieldInitTwice % id.s)
           hasError = true
           break
       # 2) No such field exists in the constructed type
