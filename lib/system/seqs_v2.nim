@@ -203,6 +203,12 @@ func setLenUninit*[T](s: var seq[T], newlen: Natural) {.nodestroy.} =
   ## Sets the length of seq `s` to `newlen`. `T` may be any sequence type.
   ## New slots will not be initialized.
   ##
+  ## .. warning:: Assigning to the uninitialized slots can generate
+  ##   destructor calls. If the slots have garbage data, they can still
+  ##   be interpreted as well-formed, potentially causing crashes.
+  ##   To prevent this, destructor injections should be disabled in the
+  ##   context, currently possible via the [nodestroy pragma](destructors.html#nodestroy-pragma).
+  ##
   ## If the current length is greater than the new length,
   ## `s` will be truncated.
   ##   ```nim
