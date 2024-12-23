@@ -168,9 +168,9 @@ template await*[T](f: Future[T]): auto {.used.} =
   template yieldFuture {.redefine.} = yield FutureBase()
 
   when compiles(yieldFuture):
+    var internalTmpFuture: FutureBase = f
+    yield internalTmpFuture
     {.line: instantiationInfo(fullPaths = true).}:
-      var internalTmpFuture: FutureBase = f
-      yield internalTmpFuture
       (cast[typeof(f)](internalTmpFuture)).read()
   else:
     macro errorAsync(futureError: Future[T]) =
