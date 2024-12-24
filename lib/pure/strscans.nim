@@ -324,7 +324,7 @@ macro scanf*(input: string; pattern: static[string]; results: varargs[typed]): b
   template at(s: string; i: int): char = (if i < s.len: s[i] else: '\0')
   template matchError() =
     error("type mismatch between pattern '$" & pattern[p] & "' (position: " & $p &
-      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'")
+      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'", results[i])
 
   var i = 0
   var p = 0
