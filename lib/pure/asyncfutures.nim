@@ -323,9 +323,9 @@ proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string =
   var j = 0
   while i >= 0:
     if entries[i].line == reraisedFromBegin or i == 0:
-      j = i
+      j = i + int(i != 0)
       while j < L:
-        if entries[j].line == reraisedFromEnd:
+        if entries[j].line == reraisedFromBegin:
           break
         if entries[j].line >= 0 and not isInternal(entries[j]):
           # this skips recursive calls sadly
