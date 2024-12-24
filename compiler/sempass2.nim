@@ -212,6 +212,7 @@ proc varDecl(a: PEffects; n: PNode) {.inline.} =
 proc skipHiddenDeref(n: PNode): PNode {.inline.} =
   result = if n.kind == nkHiddenDeref: n[0] else: n
 
+
 proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
   let n = skipHiddenDeref(n)
   if n.kind != nkSym: return
@@ -220,7 +221,7 @@ proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
     if volatileCheck: makeVolatile(a, s)
     for x in a.init:
       if x == s.id:
-        if strictDefs in a.c.features and s.kind == skLet:
+        if noStrictDefs notin a.c.config.legacyFeatures and s.kind == skLet:
           localError(a.config, n.info, errXCannotBeAssignedTo %
                     renderTree(n, {renderNoComments}
                 ))
@@ -378,7 +379,7 @@ proc useVar(a: PEffects, n: PNode) =
       if s.typ.requiresInit:
         message(a.config, n.info, warnProveInit, s.name.s)
       elif a.leftPartOfAsgn <= 0:
-        if strictDefs in a.c.features:
+        if noStrictDefs notin a.c.config.legacyFeatures:
           if s.kind == skLet:
             localError(a.config, n.info, errLetNeedsInit)
           else:
@@ -1301,7 +1302,12 @@ proc track(tracked: PEffects, n: PNode) =
       let last = lastSon(child)
       track(tracked, last)
   of nkCaseStmt: trackCase(tracked, n)
-  of nkWhen, nkIfStmt, nkIfExpr: trackIf(tracked, n)
+  of nkWhen: # This should be a "when nimvm" node.
+    let oldState = tracked.init.len
+    track(tracked, n[0][1])
+    tracked.init.setLen(oldState)
+    track(tracked, n[1][0])
+  of nkIfStmt, nkIfExpr: trackIf(tracked, n)
   of nkBlockStmt, nkBlockExpr: trackBlock(tracked, n[1])
   of nkWhileStmt:
     # 'while true' loop?
@@ -1638,6 +1644,9 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
      s.kind in {skProc, skFunc, skConverter, skMethod}:
     var res = s.ast[resultPos].sym # get result symbol
     t.scopes[res.id] = t.currentBlock
+    if sfNoInit in s.flags:
+      # marks result "noinit"
+      incl res.flags, sfNoInit
 
   track(t, body)
 
@@ -1650,13 +1659,14 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
           (t.config.selectedGC in {gcArc, gcOrc, gcAtomicArc} and
             (isClosure(typ.skipTypes(abstractInst)) or param.id in t.escapingParams)):
         createTypeBoundOps(t, typ, param.info)
-      if isOutParam(typ) and param.id notin t.init:
+      if isOutParam(typ) and param.id notin t.init and s.magic == mNone:
         message(g.config, param.info, warnProveInit, param.name.s)
 
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
-       strictDefs in c.features) and
-     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone:
+       noStrictDefs notin c.config.legacyFeatures) and
+     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone and
+     sfNoInit notin s.flags:
     var res = s.ast[resultPos].sym # get result symbol
     if res.id notin t.init and breaksBlock(body) != bsNoReturn:
       if tfRequiresInit in s.typ.returnType.flags:

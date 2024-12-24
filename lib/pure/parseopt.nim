@@ -237,13 +237,10 @@ proc initOptParser*(cmdline: seq[string], shortNoVal: set[char] = {},
     p = initOptParser(@["--left", "--debug:3", "-l", "-r:2"])
     p = initOptParser(@["--left", "--debug:3", "-l", "-r:2"],
                       shortNoVal = {'l'}, longNoVal = @["left"])
-
-  result.pos = 0
-  result.idx = 0
-  result.inShortState = false
-  result.shortNoVal = shortNoVal
-  result.longNoVal = longNoVal
-  result.allowWhitespaceAfterColon = allowWhitespaceAfterColon
+  result = OptParser(pos: 0, idx: 0, inShortState: false,
+                    shortNoVal: shortNoVal, longNoVal: longNoVal,
+                    allowWhitespaceAfterColon: allowWhitespaceAfterColon
+                    )
   if cmdline.len != 0:
     result.cmds = newSeq[string](cmdline.len)
     for i in 0..<cmdline.len:

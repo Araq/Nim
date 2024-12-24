@@ -403,6 +403,7 @@ proc `$`*(data: MultipartData): string {.since: (1, 1).} =
   ## convert MultipartData to string so it's human readable when echo
   ## see https://github.com/nim-lang/Nim/issues/11863
   const sep = "-".repeat(30)
+  result = ""
   for pos, entry in data.content:
     result.add(sep & center($pos, 3) & sep)
     result.add("\nname=\"" & entry.name & "\"")
@@ -476,7 +477,7 @@ proc addFiles*(p: MultipartData, xs: openArray[tuple[name, file: string]],
   ##   data.addFiles({"uploaded_file": "public/test.html"})
   ##   ```
   for name, file in xs.items:
-    var contentType: string
+    var contentType: string = ""
     let (_, fName, ext) = splitFile(file)
     if ext.len > 0:
       contentType = mimeDb.getMimetype(ext[1..ext.high], "")
@@ -864,7 +865,7 @@ proc parseResponse(client: HttpClient | AsyncHttpClient,
   while true:
     linei = 0
     when client is HttpClient:
-      line = await client.socket.recvLine(client.timeout)
+      line = client.socket.recvLine(client.timeout)
     else:
       line = await client.socket.recvLine()
     if line == "":
@@ -970,7 +971,7 @@ proc newConnection(client: HttpClient | AsyncHttpClient,
       else: nativesockets.Port(connectionUrl.port.parseInt)
 
     when client is HttpClient:
-      client.socket = await net.dial(connectionUrl.hostname, port)
+      client.socket = net.dial(connectionUrl.hostname, port)
     elif client is AsyncHttpClient:
       client.socket = await asyncnet.dial(connectionUrl.hostname, port)
     else: {.fatal: "Unsupported client type".}
@@ -1034,12 +1035,13 @@ proc format(entry: MultipartEntry, boundary: string): string =
 
 proc format(client: HttpClient | AsyncHttpClient,
             multipart: MultipartData): Future[seq[string]] {.multisync.} =
+  result = @[]
   let bound = getBoundary(multipart)
   client.headers["Content-Type"] = "multipart/form-data; boundary=" & bound
 
   await client.readFileSizes(multipart)
 
-  var length: int64
+  var length: int64 = int64(0)
   for entry in multipart.content:
     result.add(format(entry, bound) & httpNewLine)
     if entry.isFile:
@@ -1082,7 +1084,7 @@ proc requestAux(client: HttpClient | AsyncHttpClient, url: Uri,
 
   var newHeaders: HttpHeaders
 
-  var data: seq[string]
+  var data: seq[string] = @[]
   if multipart != nil and multipart.content.len > 0:
     # `format` modifies `client.headers`, see 
     # https://github.com/nim-lang/Nim/pull/18208#discussion_r647036979
@@ -1105,7 +1107,7 @@ proc requestAux(client: HttpClient | AsyncHttpClient, url: Uri,
   await client.socket.send(headerString)
 
   if data.len > 0:
-    var buffer: string
+    var buffer: string = ""
     for i, entry in multipart.content:
       buffer.add data[i]
       if not entry.isFile: continue
@@ -1211,7 +1213,7 @@ proc request*(client: HttpClient | AsyncHttpClient, url: Uri | string,
       redirectBody = body
     else:
       # Unreachable
-      doAssert(false)
+      raiseAssert "unreachable"
 
     # Check if the redirection is to the same domain or a sub-domain (foo.com
     # -> sub.foo.com)

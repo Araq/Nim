@@ -439,7 +439,7 @@ proc parseEntity(my: var XmlParser, dest: var string) =
   var pos = my.bufpos+1
   my.kind = xmlCharData
   if my.buf[pos] == '#':
-    var r: int
+    var r: int = 0
     inc(pos)
     if my.buf[pos] == 'x':
       inc(pos)

@@ -44,6 +44,9 @@ runnableExamples:
     assert mcCounter.value == 3
 
 
+when defined(nimPreviewSlimSystem):
+  import std/assertions
+
 type
   CacheSeq* = distinct string
     ## Compile-time sequence of `NimNode`s.
@@ -207,7 +210,7 @@ proc hasKey*(t: CacheTable; key: string): bool =
       mcTable["foo"] = newEmptyNode()
       # Will now be true since we inserted a value
       assert mcTable.hasKey("foo")
-  discard "Implemented in vmops"
+  raiseAssert "implemented in the vmops"
 
 proc contains*(t: CacheTable; key: string): bool {.inline.} =
   ## Alias of [hasKey][hasKey(CacheTable, string)] for use with the `in` operator.

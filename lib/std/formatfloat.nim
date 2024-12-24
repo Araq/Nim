@@ -140,4 +140,5 @@ proc addFloat*(result: var string; x: float | float32) {.inline.} =
 when defined(nimPreviewSlimSystem):
   func `$`*(x: float | float32): string =
     ## Outplace version of `addFloat`.
+    result = ""
     result.addFloat(x)

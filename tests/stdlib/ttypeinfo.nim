@@ -78,7 +78,7 @@ block:
 block: # bug #23556
   proc test =
     var
-      t: seq[int]
+      t: seq[int] = @[]
       aseq = toAny(t)
 
     invokeNewSeq(aseq, 0)

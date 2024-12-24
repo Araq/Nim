@@ -203,13 +203,14 @@ proc processSpecificNote*(arg: string, state: TSpecialWord, pass: TCmdLinePass,
   else: invalidCmdLineOption(conf, pass, orig, info)
 
   let isSomeHint = state in {wHint, wHintAsError}
+  let isSomeWarning = state in {wWarning, wWarningAsError}
   template findNote(noteMin, noteMax, name) =
     # unfortunately, hintUser and warningUser clash, otherwise implementation would simplify a bit
     let x = findStr(noteMin, noteMax, id, errUnknown)
     if x != errUnknown: notes = {TNoteKind(x)}
     else:
-      if isSomeHint:
-        message(conf, info, hintUnknownHint, id)
+      if isSomeHint or isSomeWarning:
+        message(conf, info, warnUnknownNotes, "unknown $#: $#" % [name, id])
       else:
         localError(conf, info, "unknown $#: $#" % [name, id])
   case id.normalize
@@ -919,6 +920,12 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
     discard parseSaturatedNatural(arg, value)
     if not value > 0: localError(conf, info, "maxLoopIterationsVM must be a positive integer greater than zero")
     conf.maxLoopIterationsVM = value
+  of "maxcalldepthvm":
+    expectArg(conf, switch, arg, pass, info)
+    var value: int = 2_000
+    discard parseSaturatedNatural(arg, value)
+    if value <= 0: localError(conf, info, "maxCallDepthVM must be a positive integer greater than zero")
+    conf.maxCallDepthVM = value
   of "errormax":
     expectArg(conf, switch, arg, pass, info)
     # Note: `nim check` (etc) can overwrite this.

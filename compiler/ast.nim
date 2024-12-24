@@ -279,7 +279,7 @@ const
   GcTypeKinds* = {tyRef, tySequence, tyString}
 
   tyTypeClasses* = {tyBuiltInTypeClass, tyCompositeTypeClass,
-                    tyUserTypeClass, tyUserTypeClassInst,
+                    tyUserTypeClass, tyUserTypeClassInst, tyConcept,
                     tyAnd, tyOr, tyNot, tyAnything}
 
   tyMetaTypes* = {tyGenericParam, tyTypeDesc, tyUntyped} + tyTypeClasses
@@ -447,6 +447,8 @@ const
   tfReturnsNew* = tfInheritable
   tfNonConstExpr* = tfExplicitCallConv
     ## tyFromExpr where the expression shouldn't be evaluated as a static value
+  tfGenericHasDestructor* = tfExplicitCallConv
+    ## tyGenericBody where an instance has a generated destructor
   skError* = skUnknown
 
 var

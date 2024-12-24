@@ -989,8 +989,9 @@ func frexp*[T: float32|float64](x: T): tuple[frac: T, exp: int] {.inline.} =
       doAssert frexp(Inf).frac == Inf # +- Inf preserved
       doAssert frexp(NaN).frac.isNaN
 
+  result = default(tuple[frac: T, exp: int])
   when not defined(js):
-    var exp: cint
+    var exp: cint = cint(0)
     result.frac = c_frexp2(x, exp)
     result.exp = exp
   else:
@@ -1068,10 +1069,8 @@ func splitDecimal*[T: float32|float64](x: T): tuple[intpart: T, floatpart: T] =
   runnableExamples:
     doAssert splitDecimal(5.25) == (intpart: 5.0, floatpart: 0.25)
     doAssert splitDecimal(-2.73) == (intpart: -2.0, floatpart: -0.73)
-
-  var
-    absolute: T
-  absolute = abs(x)
+  result = default(tuple[intpart: T, floatpart: T])
+  var absolute: T = abs(x)
   result.intpart = floor(absolute)
   result.floatpart = absolute - result.intpart
   if x < 0:
@@ -1128,7 +1127,7 @@ func sum*[T](x: openArray[T]): T =
   runnableExamples:
     doAssert sum([1, 2, 3, 4]) == 10
     doAssert sum([-4, 3, 5]) == 4
-
+  result = default(T)
   for i in items(x): result = result + i
 
 func prod*[T](x: openArray[T]): T =
@@ -1156,7 +1155,7 @@ func cumsummed*[T](x: openArray[T]): seq[T] =
   ## * `cumsum func <#cumsum,openArray[T]>`_ for the in-place version
   runnableExamples:
     doAssert cumsummed([1, 2, 3, 4]) == @[1, 3, 6, 10]
-
+  result = @[]
   let xLen = x.len
   if xLen == 0:
     return @[]

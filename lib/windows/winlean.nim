@@ -843,7 +843,7 @@ proc inet_ntop_emulated(family: cint, paddr: pointer, pStringBuffer: cstring,
                   stringBufSize: int32): cstring {.stdcall.} =
   case family
   of AF_INET:
-    var sa: Sockaddr_in
+    var sa: Sockaddr_in = default(Sockaddr_in)
     sa.sin_family = AF_INET
     sa.sin_addr = cast[ptr InAddr](paddr)[]
     var bs = stringBufSize.DWORD
@@ -853,7 +853,7 @@ proc inet_ntop_emulated(family: cint, paddr: pointer, pStringBuffer: cstring,
     else:
       result = pStringBuffer
   of AF_INET6:
-    var sa: Sockaddr_in6
+    var sa: Sockaddr_in6 = default(Sockaddr_in6)
     sa.sin6_family = AF_INET6
     sa.sin6_addr = cast[ptr In6_addr](paddr)[]
     var bs = stringBufSize.DWORD
@@ -868,7 +868,7 @@ proc inet_ntop_emulated(family: cint, paddr: pointer, pStringBuffer: cstring,
 
 proc inet_ntop*(family: cint, paddr: pointer, pStringBuffer: cstring,
                   stringBufSize: int32): cstring {.stdcall.} =
-  var ver: OSVERSIONINFO
+  var ver: OSVERSIONINFO = default(OSVERSIONINFO)
   ver.dwOSVersionInfoSize = sizeof(ver).DWORD
   let res = getVersionExW(ver.addr)
   if res == 0:

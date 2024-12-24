@@ -218,7 +218,7 @@ proc fuzzyLookup(c: PContext, n: PNode, flags: TSemGenericFlags,
     let ident = considerQuotedIdent(c, n)
     # could be type conversion if like a.T and not a.T()
     let symKinds = if inCall: routineKinds else: routineKinds+{skType}
-    var candidates = searchInScopesFilterBy(c, ident, symKinds)
+    var candidates = selectFromScopesElseAll(c, ident, symKinds)
     if candidates.len > 0:
       let s = candidates[0] # XXX take into account the other candidates!
       isMacro = s.kind in {skTemplate, skMacro}

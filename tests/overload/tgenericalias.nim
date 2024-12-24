@@ -11,3 +11,12 @@ block: # issue #13799
   proc works2(): Y[int] = t(X[int, int])
   proc works3(): Y[int] = t(Y[int])
   proc broken(): Y[int] = s(Y[int])
+
+block: # issue #24415
+  type GVec2[T] = object
+    x, y: T
+  type Uniform[T] = T
+  proc foo(v: Uniform[GVec2[float32]]): float32 =
+    result = v.x
+  let f = GVec2[float32](x: 1.0f, y: 2.0f)
+  doAssert foo(f) == 1.0f

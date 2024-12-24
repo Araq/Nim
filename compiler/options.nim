@@ -222,7 +222,7 @@ type
     strictEffects,
     unicodeOperators, # deadcode
     flexibleOptionalParams,
-    strictDefs,
+    strictDefs, # deadcode
     strictCaseObjects,
     inferGenericTypes,
     openSym, # remove nfDisabledOpenSym when this is default
@@ -248,6 +248,8 @@ type
       ## Useful for libraries that rely on local passC
     jsNoLambdaLifting
       ## Old transformation for closures in JS backend
+    noStrictDefs
+      ## disable "strictdefs"
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest
@@ -383,6 +385,7 @@ type
     warnCounter*: int
     errorMax*: int
     maxLoopIterationsVM*: int ## VM: max iterations of all loops
+    maxCallDepthVM*: int ## VM: max call depth
     isVmTrace*: bool
     configVars*: StringTableRef
     symbols*: StringTableRef ## We need to use a StringTableRef here as defined
@@ -598,6 +601,7 @@ proc newConfigRef*(): ConfigRef =
     arguments: "",
     suggestMaxResults: 10_000,
     maxLoopIterationsVM: 10_000_000,
+    maxCallDepthVM: 2_000,
     vmProfileData: newProfileData(),
     spellSuggestMax: spellSuggestSecretSauce,
     currentConfigDir: ""

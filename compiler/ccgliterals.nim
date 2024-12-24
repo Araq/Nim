@@ -40,7 +40,7 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
   res.addVarWithTypeAndInitializer(AlwaysConst, name = tmp):
     res.addSimpleStruct(m, name = "", baseType = ""):
       res.addField(name = "Sup", typ = "TGenericSeq")
-      res.addArrayField(name = "data", elementType = "NIM_CHAR", len = s.len + 1)
+      res.addArrayField(name = "data", elementType = NimChar, len = s.len + 1)
   do:
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
@@ -50,14 +50,14 @@ proc genStringLiteralDataOnlyV1(m: BModule, s: string; result: var Rope) =
           res.addField(seqInit, name = "len"):
             res.addIntValue(s.len)
           res.addField(seqInit, name = "reserved"):
-            res.add(cCast("NI", bitOr(cCast("NU", rope(s.len)), "NIM_STRLIT_FLAG")))
+            res.add(cCast(NimInt, cOp(BitOr, NimUint, cCast(NimUint, cIntValue(s.len)), NimStrlitFlag)))
       res.addField(strInit, name = "data"):
         res.add(makeCString(s))
-  m.s[cfsStrData].add(res)
+  m.s[cfsStrData].add(extract(res))
 
-proc genStringLiteralV1(m: BModule; n: PNode; result: var Rope) =
+proc genStringLiteralV1(m: BModule; n: PNode; result: var Builder) =
   if s.isNil:
-    result.add(cCast(ptrType(cgsymValue(m, "NimStringDesc")), "NIM_NIL"))
+    result.add(cCast(ptrType(cgsymValue(m, "NimStringDesc")), NimNil))
   else:
     let id = nodeTableTestOrSet(m.dataCache, n, m.labels)
     var name: string = ""
@@ -76,18 +76,18 @@ proc genStringLiteralDataOnlyV2(m: BModule, s: string; result: Rope; isConst: bo
       if isConst: AlwaysConst else: Global,
       name = result):
     res.addSimpleStruct(m, name = "", baseType = ""):
-      res.addField(name = "cap", typ = "NI")
-      res.addArrayField(name = "data", elementType = "NIM_CHAR", len = s.len + 1)
+      res.addField(name = "cap", typ = NimInt)
+      res.addArrayField(name = "data", elementType = NimChar, len = s.len + 1)
   do:
     var structInit: StructInitializer
     res.addStructInitializer(structInit, kind = siOrderedStruct):
       res.addField(structInit, name = "cap"):
-        res.add(bitOr(rope(s.len), "NIM_STRLIT_FLAG"))
+        res.add(cOp(BitOr, NimInt, cIntValue(s.len), NimStrlitFlag))
       res.addField(structInit, name = "data"):
         res.add(makeCString(s))
-  m.s[cfsStrData].add(res)
+  m.s[cfsStrData].add(extract(res))
 
-proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Rope) =
+proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Builder) =
   let id = nodeTableTestOrSet(m.dataCache, n, m.labels)
   var litName: string
   if id == m.labels:
@@ -101,20 +101,19 @@ proc genStringLiteralV2(m: BModule; n: PNode; isConst: bool; result: var Rope) =
   let tmp = getTempName(m)
   result.add tmp
   var res = newBuilder("")
-  res.addVarWithTypeAndInitializer(
+  res.addVarWithInitializer(
       if isConst: AlwaysConst else: Global,
-      name = tmp):
-    res.add("NimStringV2")
-  do:
+      name = tmp,
+      typ = "NimStringV2"):
     var strInit: StructInitializer
     res.addStructInitializer(strInit, kind = siOrderedStruct):
       res.addField(strInit, name = "len"):
         res.addIntValue(n.strVal.len)
       res.addField(strInit, name = "p"):
         res.add(cCast(ptrType("NimStrPayload"), cAddr(litName)))
-  m.s[cfsStrData].add(res)
+  m.s[cfsStrData].add(extract(res))
 
-proc genStringLiteralV2Const(m: BModule; n: PNode; isConst: bool; result: var Rope) =
+proc genStringLiteralV2Const(m: BModule; n: PNode; isConst: bool; result: var Builder) =
   let id = nodeTableTestOrSet(m.dataCache, n, m.labels)
   var pureLit: Rope
   if id == m.labels:
@@ -145,10 +144,10 @@ proc genStringLiteralDataOnly(m: BModule; s: string; info: TLineInfo;
   else:
     localError(m.config, info, "cannot determine how to produce code for string literal")
 
-proc genNilStringLiteral(m: BModule; info: TLineInfo; result: var Rope) =
-  result.add(cCast(ptrType(cgsymValue(m, "NimStringDesc")), "NIM_NIL"))
+proc genNilStringLiteral(m: BModule; info: TLineInfo; result: var Builder) =
+  result.add(cCast(ptrType(cgsymValue(m, "NimStringDesc")), NimNil))
 
-proc genStringLiteral(m: BModule; n: PNode; result: var Rope) =
+proc genStringLiteral(m: BModule; n: PNode; result: var Builder) =
   case detectStrVersion(m)
   of 0, 1: genStringLiteralV1(m, n, result)
   of 2: genStringLiteralV2(m, n, isConst = true, result)

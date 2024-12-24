@@ -453,7 +453,7 @@ proc getKeyValPair(c: var CfgParser, kind: CfgEventKind): CfgEvent =
     case kind
     of cfgOption, cfgKeyValuePair:
       result = CfgEvent(kind: kind, key: c.tok.literal.move, value: "")
-    else: discard
+    else: result = CfgEvent()
     rawGetTok(c, c.tok)
     if c.tok.kind in {tkEquals, tkColon}:
       rawGetTok(c, c.tok)
@@ -512,7 +512,7 @@ proc loadConfig*(stream: Stream, filename: string = "[stream]"): Config =
   var curSection = "" ## Current section,
                       ## the default value of the current section is "",
                       ## which means that the current section is a common
-  var p: CfgParser
+  var p: CfgParser = default(CfgParser)
   open(p, stream, filename)
   while true:
     var e = next(p)
@@ -574,7 +574,7 @@ proc writeConfig*(dict: Config, stream: Stream) =
       else:
         stream.writeLine("[" & section & "]")
     for key, value in sectionData.pairs():
-      var kv, segmentChar: string
+      var kv, segmentChar: string = ""
       if key.len > 1 and key[0] == '-' and key[1] == '-': ## If it is a command key
         segmentChar = ":"
         if not allCharsInSet(key[2..key.len()-1], SymChars):

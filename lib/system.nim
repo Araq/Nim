@@ -2143,7 +2143,7 @@ when not defined(js) and declared(alloc0) and declared(dealloc):
     let x = cast[ptr UncheckedArray[string]](a)
     for i in 0 .. a.high:
       result[i] = cast[cstring](alloc0(x[i].len+1))
-      copyMem(result[i], addr(x[i][0]), x[i].len)
+      copyMem(result[i], x[i].cstring, x[i].len)
 
   proc deallocCStringArray*(a: cstringArray) =
     ## Frees a NULL terminated cstringArray.
@@ -2357,7 +2357,7 @@ when notJSnotNims:
       else:
         let c3 = cast[proc(y: int; env: pointer): int {.nimcall.}](p)
         echo c3(3, e)
-
+    result = nil
     {.emit: """
     `result` = (void*)`x`.ClP_0;
     """.}
@@ -2365,12 +2365,14 @@ when notJSnotNims:
   proc rawEnv*[T: proc {.closure.} | iterator {.closure.}](x: T): pointer {.noSideEffect, inline.} =
     ## Retrieves the raw environment pointer of the closure `x`. See also `rawProc`.
     ## This is not available for the JS target.
+    result = nil
     {.emit: """
     `result` = `x`.ClE_0;
     """.}
 
 proc finished*[T: iterator {.closure.}](x: T): bool {.noSideEffect, inline, magic: "Finished".} =
   ## It can be used to determine if a first class iterator has finished.
+  result = false
   when defined(js):
     # TODO: mangle `:state`
     {.emit: """
@@ -2688,7 +2690,7 @@ proc locals*(): RootObj {.magic: "Plugin", noSideEffect.} =
 
 when hasAlloc and notJSnotNims:
   # XXX how to implement 'deepCopy' is an open problem.
-  proc deepCopy*[T](x: var T, y: T) {.noSideEffect, magic: "DeepCopy".} =
+  proc deepCopy*[T](x: out T, y: T) {.noSideEffect, magic: "DeepCopy".} =
     ## Performs a deep copy of `y` and copies it into `x`.
     ##
     ## This is also used by the code generator
@@ -2965,9 +2967,12 @@ when notJSnotNims and not defined(nimSeqsV2):
 
 proc arrayWith*[T](y: T, size: static int): array[size, T] {.raises: [].} =
   ## Creates a new array filled with `y`.
+  result = zeroDefault(array[size, T])
   for i in 0..size-1:
-    when nimvm:
-      result[i] = y
-    else:
-      # TODO: fixme it should be `=dup`
-      result[i] = y
+    result[i] = y
+
+proc arrayWithDefault*[T](size: static int): array[size, T] {.raises: [].} =
+  ## Creates a new array filled with `default(T)`.
+  result = zeroDefault(array[size, T])
+  for i in 0..size-1:
+    result[i] = default(T)

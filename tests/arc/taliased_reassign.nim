@@ -26,7 +26,7 @@ proc `+.`[T](t1, t2: Tensor[T]): Tensor[T] =
 proc toTensor*[T](a: sink seq[T]): Tensor[T] =
   ## This breaks it: Using `T` instead makes it work
   type U = typeof(a[0])
-  var t: Tensor[U] # Tensor[T] works
+  var t: Tensor[U] = default(Tensor[U]) # Tensor[T] works
   t.buf = a
   result = t
 

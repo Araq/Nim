@@ -85,7 +85,7 @@ when hasAlloc and not defined(js):
 
   else:
     template incStat(what: untyped) = discard
-    proc getAllocStats*(): AllocStats = discard
+    proc getAllocStats*(): AllocStats = result = default(AllocStats)
 
   template alloc*(size: Natural): pointer =
     ## Allocates a new memory block with at least `size` bytes.

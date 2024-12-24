@@ -201,6 +201,7 @@ type
   TSandboxFlag* = enum        ## what the evaluation engine should allow
     allowCast,                ## allow unsafe language feature: 'cast'
     allowInfiniteLoops        ## allow endless loops
+    allowInfiniteRecursion    ## allow infinite recursion
   TSandboxFlags* = set[TSandboxFlag]
 
   TSlotKind* = enum   # We try to re-use slots in a smart way to
@@ -257,7 +258,7 @@ type
     mode*: TEvalMode
     features*: TSandboxFlags
     traceActive*: bool
-    loopIterations*: int
+    loopIterations*, callDepth*: int
     comesFromHeuristic*: TLineInfo # Heuristic for better macro stack traces
     callbacks*: seq[VmCallback]
     callbackIndex*: Table[string, int]
@@ -294,6 +295,7 @@ proc newCtx*(module: PSym; cache: IdentCache; g: ModuleGraph; idgen: IdGenerator
   PCtx(code: @[], debug: @[],
     globals: newNode(nkStmtListExpr), constants: newNode(nkStmtList), types: @[],
     prc: PProc(blocks: @[]), module: module, loopIterations: g.config.maxLoopIterationsVM,
+    callDepth: g.config.maxCallDepthVM,
     comesFromHeuristic: unknownLineInfo, callbacks: @[], callbackIndex: initTable[string, int](), errorFlag: "",
     cache: cache, config: g.config, graph: g, idgen: idgen)
 
@@ -301,6 +303,7 @@ proc refresh*(c: PCtx, module: PSym; idgen: IdGenerator) =
   c.module = module
   c.prc = PProc(blocks: @[])
   c.loopIterations = c.config.maxLoopIterationsVM
+  c.callDepth = c.config.maxCallDepthVM
   c.idgen = idgen
 
 proc reverseName(s: string): string =

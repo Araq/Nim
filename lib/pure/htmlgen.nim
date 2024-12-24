@@ -74,6 +74,8 @@ proc delete[T](s: var seq[T], attr: T): bool =
     s[idx] = s[L-1]
     setLen(s, L-1)
     result = true
+  else:
+    result = false
 
 proc xmlCheckedTag*(argsList: NimNode, tag: string, optAttr = "", reqAttr = "",
     isLeaf = false): NimNode =

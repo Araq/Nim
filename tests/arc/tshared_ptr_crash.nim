@@ -26,6 +26,7 @@ proc `=copy`*[T](dest: var SharedPtr[T], src: SharedPtr[T]) =
   dest.val = src.val
 
 proc newSharedPtr*[T](val: sink T): SharedPtr[T] {.nodestroy.} =
+  result = SharedPtr[T]()
   result.val = cast[typeof(result.val)](allocShared(sizeof(result.val[])))
   result.val.atomicCounter = 0
   result.val.value = val

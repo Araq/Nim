@@ -190,7 +190,7 @@ proc main() =
     doAssert $a == "[10, 20, 30]"
 
   block:
-    var a, b: Deque[int]
+    var a, b: Deque[int] = initDeque[int]()
     for i in 1 .. 256:
       a.addLast(i)
     for i in 1 .. 255:

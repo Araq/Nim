@@ -25,6 +25,7 @@ block: # bug #17454
 block: # unpackVarargs
   block:
     proc bar1(a: varargs[int]): string =
+      result = ""
       for ai in a: result.add " " & $ai
     proc bar2(a: varargs[int]) =
       let s1 = bar1(a)

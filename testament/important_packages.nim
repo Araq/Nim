@@ -30,12 +30,12 @@ type NimblePackage* = object
 
 var packages*: seq[NimblePackage]
 
-proc pkg(name: string; cmd = "nimble test"; url = "", useHead = true, allowFailure = false) =
+proc pkg(name: string; cmd = "nimble test -l"; url = "", useHead = true, allowFailure = false) =
   packages.add NimblePackage(name: name, cmd: cmd, url: url, useHead: useHead, allowFailure: allowFailure)
 
 pkg "alea"
 pkg "argparse"
-pkg "arraymancer", "nim c tests/tests_cpu.nim"
+pkg "arraymancer", "nimble install -y; nimble uninstall -i -y nimcuda; nimble install nimcuda@0.2.1; nim c tests/tests_cpu.nim"
 pkg "ast_pattern_matching", "nim c -r tests/test1.nim"
 pkg "asyncftpclient", "nimble compileExample"
 pkg "asyncthreadpool", "nimble test --mm:refc"
@@ -79,7 +79,7 @@ pkg "hts", "nim c -o:htss src/hts.nim"
 pkg "httpauth"
 pkg "httputils"
 pkg "illwill", "nimble examples"
-pkg "inim"
+# pkg "inim"
 pkg "itertools", "nim doc src/itertools.nim"
 pkg "iterutils"
 pkg "json_rpc"

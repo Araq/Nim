@@ -34,11 +34,13 @@ func startsWith*(s, prefix: cstring): bool {.rtl, extern: "csuStartsWith".} =
     assert startsWith(cstring"Hello", cstring"")
 
   when nimvm:
+    result = false
     startsWithImpl(s, prefix)
   else:
     when defined(js):
       result = jsStartsWith(s, prefix)
     else:
+      result = false
       var i = 0
       while true:
         if prefix[i] == '\0': return true
@@ -55,11 +57,13 @@ func endsWith*(s, suffix: cstring): bool {.rtl, extern: "csuEndsWith".} =
     assert endsWith(cstring"Hello", cstring"")
 
   when nimvm:
+    result = false
     endsWithImpl(s, suffix)
   else:
     when defined(js):
       result = jsEndsWith(s, suffix)
     else:
+      result = false
       let slen = s.len
       var i = 0
       var j = slen - len(suffix)

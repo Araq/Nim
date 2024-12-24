@@ -111,3 +111,5 @@ func find*(s, sub: cstring, start: Natural = 0, last = 0): int =
       result = cast[int](found) -% cast[int](s)
     else:
       result = -1
+  else:
+    result = 0

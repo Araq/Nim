@@ -595,45 +595,6 @@ proc handleFloatRange(f, a: PType): TTypeRelation =
       else: result = isIntConv
     else: result = isNone
 
-proc reduceToBase(f: PType): PType =
-  #[
-    Returns the lowest order (most general) type that that is compatible with the input.
-    E.g.
-    A[T] = ptr object ... A -> ptr object
-    A[N: static[int]] = array[N, int] ... A -> array
-  ]#
-  case f.kind:
-  of tyGenericParam:
-    if f.len <= 0 or f.skipModifier == nil:
-      result = f
-    else:
-      result = reduceToBase(f.skipModifier)
-  of tyGenericInvocation:
-    result = reduceToBase(f.baseClass)
-  of tyCompositeTypeClass, tyAlias:
-    if not f.hasElementType or f.elementType == nil:
-      result = f
-    else:
-      result = reduceToBase(f.elementType)
-  of tyGenericInst:
-    result = reduceToBase(f.skipModifier)
-  of tyGenericBody:
-    result = reduceToBase(f.typeBodyImpl)
-  of tyUserTypeClass:
-    if f.isResolvedUserTypeClass:
-      result = f.base  # ?? idk if this is right
-    else:
-      result = f.skipModifier
-  of tyStatic, tyOwned, tyVar, tyLent, tySink:
-    result = reduceToBase(f.base)
-  of tyInferred:
-    # This is not true "After a candidate type is selected"
-    result = reduceToBase(f.base)
-  of tyRange:
-    result = f.elementType
-  else:
-    result = f
-
 proc genericParamPut(c: var TCandidate; last, fGenericOrigin: PType) =
   if fGenericOrigin != nil and last.kind == tyGenericInst and
      last.kidsLen-1 == fGenericOrigin.kidsLen:
@@ -642,12 +603,22 @@ proc genericParamPut(c: var TCandidate; last, fGenericOrigin: PType) =
       if x == nil:
         put(c, fGenericOrigin[i], last[i])
 
+proc isGenericObjectOf(f, a: PType): bool =
+  ## checks if `f` is an unparametrized generic type
+  ## that `a` is an instance of
+  if not (f.sym != nil and f.sym.typ.kind == tyGenericBody):
+    # covers the case where `f` is the last child (body) of the `tyGenericBody`
+    return false
+  let aRoot = genericRoot(a)
+  # use sym equality to check if the `tyGenericBody` types are equal
+  result = aRoot != nil and f.sym == aRoot.sym
+
 proc isObjectSubtype(c: var TCandidate; a, f, fGenericOrigin: PType): int =
   var t = a
   assert t.kind == tyObject
   var depth = 0
   var last = a
-  while t != nil and not sameObjectTypes(f, t):
+  while t != nil and not (sameObjectTypes(f, t) or isGenericObjectOf(f, t)):
     if t.kind != tyObject:  # avoid entering generic params etc
       return -1
     t = t.baseClass
@@ -1868,9 +1839,12 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       let target = f.genericHead
       let targetKind = target.kind
       var effectiveArgType = reduceToBase(a)
+      # the skipped child of tyBuiltInTypeClass can be structured differently,
+      # newConstraint constructs them with no children
+      let typeClassArg = effectiveArgType.kind == tyBuiltInTypeClass
       effectiveArgType = effectiveArgType.skipTypes({tyBuiltInTypeClass})
       if targetKind == effectiveArgType.kind:
-        if effectiveArgType.isEmptyContainer:
+        if not typeClassArg and effectiveArgType.isEmptyContainer:
           return isNone
         if targetKind == tyProc:
           if target.flags * {tfIterator} != effectiveArgType.flags * {tfIterator}:
@@ -2277,7 +2251,7 @@ proc isLValue(c: PContext; n: PNode, isOutParam = false): bool {.inline.} =
     result = c.inUncheckedAssignSection > 0
   of arAddressableConst:
     let sym = getRoot(n)
-    result = strictDefs in c.features and sym != nil and sym.kind == skLet and isOutParam
+    result = noStrictDefs notin c.config.legacyFeatures and sym != nil and sym.kind == skLet and isOutParam
   else:
     result = false
 

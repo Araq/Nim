@@ -539,6 +539,7 @@ when not defined(js):
   # ------
 
   proc countLogLines(logger: RollingFileLogger): int =
+    result = 0
     let fp = open(logger.baseName, fmRead)
     for line in fp.lines():
       result.inc()

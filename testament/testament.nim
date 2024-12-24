@@ -123,12 +123,12 @@ proc getFileDir(filename: string): string =
   if not result.isAbsolute():
     result = getCurrentDir() / result
 
-proc execCmdEx2(command: string, args: openArray[string]; workingDir, input: string = ""): tuple[
+proc execCmdEx2(command: string, args: openArray[string]; workingDir: string = "", input: string = ""): tuple[
                 cmdLine: string,
                 output: string,
                 exitCode: int] {.tags:
                 [ExecIOEffect, ReadIOEffect, RootEffect], gcsafe.} =
-
+  result = ("", "", 0)
   result.cmdLine.add quoteShell(command)
   for arg in args:
     result.cmdLine.add ' '
@@ -173,8 +173,8 @@ proc prepareTestCmd(cmdTemplate, filename, options, nimcache: string,
 
 proc callNimCompiler(cmdTemplate, filename, options, nimcache: string,
                      target: TTarget, extraOptions = ""): TSpec =
-  result.cmd = prepareTestCmd(cmdTemplate, filename, options, nimcache, target,
-                          extraOptions)
+  result = TSpec(cmd: prepareTestCmd(cmdTemplate, filename, options, nimcache, target,
+                          extraOptions))
   verboseCmd(result.cmd)
   var p = startProcess(command = result.cmd,
                        options = {poStdErrToStdOut, poUsePath, poEvalCommand})
@@ -229,11 +229,13 @@ proc callNimCompiler(cmdTemplate, filename, options, nimcache: string,
   trimUnitSep result.msg
 
 proc initResults: TResults =
-  result.total = 0
-  result.passed = 0
-  result.failedButAllowed = 0
-  result.skipped = 0
-  result.data = ""
+  result = TResults(
+    total: 0,
+    passed: 0,
+    failedButAllowed: 0,
+    skipped: 0,
+    data: ""
+  )
 
 macro ignoreStyleEcho(args: varargs[typed]): untyped =
   let typForegroundColor = bindSym"ForegroundColor".getType
@@ -370,7 +372,7 @@ proc finishTestRetryable(r: var TResults, test: TTest, target: TTarget,
     addResult(r, test, target, extraOptions, expected, given, success, duration, allowFailure, givenSpec)
 
 proc toString(inlineError: InlineError, filename: string): string =
-  result.add "$file($line, $col) $kind: $msg" % [
+  result = "$file($line, $col) $kind: $msg" % [
     "file", filename,
     "line", $inlineError.line,
     "col", $inlineError.col,
@@ -379,6 +381,7 @@ proc toString(inlineError: InlineError, filename: string): string =
   ]
 
 proc inlineErrorsMsgs(expected: TSpec): string =
+  result = ""
   for inlineError in expected.inlineErrors.items:
     result.addLine inlineError.toString(expected.filename)
 
@@ -622,17 +625,18 @@ proc testSpecWithNimcache(r: var TResults, test: TTest; nimcache: string) {.used
     testSpecHelper(r, testClone, test.spec, target, "", nimcache)
 
 proc makeTest(test, options: string, cat: Category): TTest =
-  result.cat = cat
-  result.name = test
-  result.options = options
-  result.spec = parseSpec(addFileExt(test, ".nim"))
-  result.startTime = epochTime()
+  result = TTest(
+    cat: cat,
+    name: test,
+    options: options,
+    spec: parseSpec(addFileExt(test, ".nim")),
+    startTime: epochTime()
+  )
 
 proc makeRawTest(test, options: string, cat: Category): TTest {.used.} =
-  result.cat = cat
-  result.name = test
-  result.options = options
-  result.spec = initSpec(addFileExt(test, ".nim"))
+  result = TTest(cat: cat, name: test, options: options,
+                spec: initSpec(addFileExt(test, ".nim"))
+                )
   result.spec.action = actionCompile
   result.spec.targets = {getTestSpecTarget()}
   result.startTime = epochTime()
@@ -668,6 +672,7 @@ else:
 include categories
 
 proc loadSkipFrom(name: string): seq[string] =
+  result = @[]
   if name.len == 0: return
   # One skip per line, comments start with #
   # used by `nlvm` (at least)
@@ -769,7 +774,7 @@ proc main() =
     if skipFrom.len > 0:
       myself &= " " & quoteShell("--skipFrom:" & skipFrom)
 
-    var cats: seq[string]
+    var cats: seq[string] = @[]
     let rest = if p.cmdLineRest.len > 0: " " & p.cmdLineRest else: ""
     for kind, dir in walkDir(testsDir):
       assert testsDir.startsWith(testsDir)
@@ -780,7 +785,7 @@ proc main() =
       cats.add AdditionalCategories
     if useMegatest: cats.add MegaTestCat
 
-    var cmds: seq[string]
+    var cmds: seq[string] = @[]
     for cat in cats:
       let runtype = if useMegatest: " pcat " else: " cat "
       cmds.add(myself & runtype & quoteShell(cat) & rest)

@@ -33,7 +33,7 @@ proc addEdge(self: Graph; source, neighbor: Node) =
   source.neighbors.add(Edge(neighbor: neighbor))
 
 proc main =
-  var graph: Graph
+  var graph: Graph = Graph()
   let nodeA = graph.addNode("a")
   let nodeB = graph.addNode("b")
   let nodeC = graph.addNode("c")
