@@ -7,7 +7,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std/[os, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
+import std/[os, sets, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
 
 import system/stacktraces
 
@@ -299,7 +299,7 @@ proc format(entry: StackTraceEntry): string =
   result = spaces(2) & "$# $#\n" % [left, procname]
 
 proc isInternal(entry: StackTraceEntry): bool =
-  # support --excessiveStackTrace:off
+  # --excessiveStackTrace:off
   const internals = [
     "asyncdispatch.nim",
     "asyncfutures.nim",
@@ -319,16 +319,17 @@ proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string =
     let entries = stackTraceEntries
   var allEntries = newSeq[StackTraceEntry]()
   var currEntries = newSeq[StackTraceEntry]()
+  var seenEntries = initHashSet[StackTraceEntry]()
   var i = entries.len-1
   while i >= 0:
     while i >= 0:
       if entries[i].line == reraisedFromBegin:
         break
-      if entries[i].line > 0 and not isInternal(entries[i]):
-        # XXX n^2
-        # this removes recursive traces sadly
-        if entries[i] notin allEntries:
+      if entries[i].line >= 0 and not isInternal(entries[i]):
+        # this skips recursive calls sadly
+        if entries[i] notin seenEntries:
           currEntries.add entries[i]
+          seenEntries.incl entries[i]
       dec i
     for j in countdown(currEntries.len-1, 0):
       allEntries.add currEntries[j]
