@@ -100,11 +100,11 @@ block:  # interleaved async work
     raise newException(ValueError, "the_error_msg")
 
   proc bar() {.async.} =
-    await sleepAsync(1)
+    #await sleepAsync(1)
     await baz()
 
   proc foo() {.async.} =
-    #await sleepAsync(1)
+    await sleepAsync(1)
     await bar()
 
   proc main {.async.} =
