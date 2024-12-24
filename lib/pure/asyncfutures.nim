@@ -317,26 +317,23 @@ proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string =
     let entries = addDebuggingInfo(stackTraceEntries)
   else:
     let entries = stackTraceEntries
-  var allEntries = newSeq[StackTraceEntry]()
-  var currEntries = newSeq[StackTraceEntry]()
   var seenEntries = initHashSet[StackTraceEntry]()
-  var i = entries.len-1
+  let L = entries.len-1
+  var i = L
+  var j = 0
   while i >= 0:
-    while i >= 0:
-      if entries[i].line == reraisedFromBegin:
-        break
-      if entries[i].line >= 0 and not isInternal(entries[i]):
-        # this skips recursive calls sadly
-        if entries[i] notin seenEntries:
-          currEntries.add entries[i]
-          seenEntries.incl entries[i]
-      dec i
-    for j in countdown(currEntries.len-1, 0):
-      allEntries.add currEntries[j]
-    currEntries.setLen 0
+    if entries[i].line == reraisedFromBegin or i == 0:
+      j = i
+      while j < L:
+        if entries[j].line == reraisedFromEnd:
+          break
+        if entries[j].line >= 0 and not isInternal(entries[j]):
+          # this skips recursive calls sadly
+          if entries[j] notin seenEntries:
+            result.add format(entries[j])
+            seenEntries.incl entries[j]
+        inc j
     dec i
-  for entry in allEntries:
-    result.add format(entry)
 
 proc injectStacktrace[T](future: Future[T]) =
   when not defined(release):
