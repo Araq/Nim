@@ -170,7 +170,8 @@ template await*[T](f: Future[T]): auto {.used.} =
   when compiles(yieldFuture):
     var internalTmpFuture: FutureBase = f
     yield internalTmpFuture
-    (cast[typeof(f)](internalTmpFuture)).read()
+    {.line: instantiationInfo(fullPaths = true).}:
+      (cast[typeof(f)](internalTmpFuture)).read()
   else:
     macro errorAsync(futureError: Future[T]) =
       error(
