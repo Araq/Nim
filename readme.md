@@ -15,6 +15,7 @@ the latest release, check out [Nim's website][nim-site] or [bleeding edge docs](
 [![Get help][badge-nim-forum-gethelp]][nim-forum]
 [![View Nim posts on Stack Overflow][badge-nim-stackoverflow]][nim-stackoverflow-newest]
 [![Follow @nim_lang on Twitter][badge-nim-twitter]][nim-twitter]
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Nim%20Guru-006BFF)](https://gurubase.io/g/nim)
 
 * The [forum][nim-forum] - the best place to ask questions and to discuss Nim.
 * [#nim IRC Channel (Libera Chat)][nim-irc] - a place to discuss Nim in real-time.
