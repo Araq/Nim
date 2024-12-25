@@ -303,6 +303,12 @@ var
   timer: Timeout
   loadIndexFut: Future[void] = nil
 
+proc hideSearch*() =
+  ## hides the search results element
+  # If its nil, then results haven't been shown anyways
+  if not oldToc.isNil:
+    replaceById("tocRoot", oldToc)
+
 proc search*() {.exportc.} =
   proc wrapper() =
     let elem = document.getElementById("searchInput")
@@ -312,8 +318,8 @@ proc search*() {.exportc.} =
         oldtoc = document.getElementById("tocRoot")
       let results = dosearch(value)
       replaceById("tocRoot", results)
-    elif not oldtoc.isNil:
-      replaceById("tocRoot", oldtoc)
+    else:
+      hideSearch()
   # Start loading index as soon as user starts typing.
   # Will only be loaded the once anyways
   if loadIndexFut == nil:
@@ -330,6 +336,10 @@ window.addEventListener("keypress") do (e: Event):
     let searchElem = document.getElementById("searchInput")
     searchElem.focus()
     searchElem.parentElement.scrollIntoView()
+
+# Hide the search results when we jump around the page so we can read the page
+window.addEventListener("hashchange") do (e: Event):
+  hideSearch()
 
 proc copyToClipboard*() {.exportc.} =
     {.emit: """
