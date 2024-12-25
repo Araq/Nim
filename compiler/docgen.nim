@@ -740,7 +740,7 @@ proc getAllRunnableExamplesImpl(d: PDoc; n: PNode, dest: var ItemPre,
   case n.kind
   of nkCommentStmt:
     if state in {rsStart, rsRunnable}:
-      dest.add genRecComment(d, n).get()
+      dest.add genRecComment(d, n)
       return rsComment
   of nkCallKinds:
     if isRunnableExamples(n[0]) and
