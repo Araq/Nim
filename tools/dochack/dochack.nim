@@ -303,31 +303,33 @@ var
   timer: Timeout
   loadIndexFut: Future[void] = nil
 
-proc hideSearch*() =
+proc hideSearch() =
   ## hides the search results element
   # If its nil, then results haven't been shown anyways
   if not oldToc.isNil:
     replaceById("tocRoot", oldToc)
 
+proc runSearch() =
+  ## Runs a search and shows the results in the page
+  let elem = document.getElementById("searchInput")
+  let value = elem.value
+  if value != "":
+    if oldtoc.isNil:
+      oldtoc = document.getElementById("tocRoot")
+    let results = dosearch(value)
+    replaceById("tocRoot", results)
+  else:
+    hideSearch()
+
 proc search*() {.exportc.} =
-  proc wrapper() =
-    let elem = document.getElementById("searchInput")
-    let value = elem.value
-    if value.len != 0:
-      if oldtoc.isNil:
-        oldtoc = document.getElementById("tocRoot")
-      let results = dosearch(value)
-      replaceById("tocRoot", results)
-    else:
-      hideSearch()
   # Start loading index as soon as user starts typing.
   # Will only be loaded the once anyways
   if loadIndexFut == nil:
     loadIndexFut = loadIndex()
     # Run wrapper once loaded so we don't miss the users query
-    discard loadIndexFut.then(wrapper)
+    discard loadIndexFut.then(runSearch)
   if timer != nil: clearTimeout(timer)
-  timer = setTimeout(wrapper, 400)
+  timer = setTimeout(runSearch, 400)
 
 # Register `/` hotkey to jump to search
 window.addEventListener("keypress") do (e: Event):
@@ -336,6 +338,10 @@ window.addEventListener("keypress") do (e: Event):
     let searchElem = document.getElementById("searchInput")
     searchElem.focus()
     searchElem.parentElement.scrollIntoView()
+
+    # Run search, so results are shown again if user is jumping back to
+    # a partial search
+    runSearch()
 
 # Hide the search results when we jump around the page so we can read the page
 window.addEventListener("hashchange") do (e: Event):
