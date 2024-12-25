@@ -113,6 +113,9 @@ type
 
 proc add(dest: var ItemPre, rst: PRstNode) = dest.add ItemFragment(isRst: true, rst: rst)
 proc add(dest: var ItemPre, str: string) = dest.add ItemFragment(isRst: false, str: str)
+proc add(dest: var ItemPre, item: sink Option[ItemFragment]) =
+  if item.isSome():
+    dest.add item.unsafeGet()
 
 proc addRstFileIndex(d: PDoc, fileIndex: lineinfos.FileIndex): rstast.FileIndex =
   let invalid = rstast.FileIndex(-1)
@@ -477,14 +480,6 @@ proc genRecComment(d: PDoc, n: PNode): Option[ItemFragment] =
     else:
       result = genRecCommentAux(d, n)
 
-proc findDocString(n: PNode): string =
-  result = ""
-  if n.comment != "":
-    result = n.comment
-  elif n.kind in {nkProcDef, nkFuncDef, nkMethodDef, nkIteratorDef,
-                  nkMacroDef, nkTemplateDef, nkConverterDef}:
-    result = findDocString(n[bodyPos])
-
 proc getPlainDocstring(n: PNode): string =
   ## Gets the plain text docstring of a node non destructively.
   ##
@@ -809,8 +804,7 @@ proc getAllRunnableExamples(d: PDoc, n: PNode, dest: var ItemPre) =
   template fn(n2, topLevel) =
     state = getAllRunnableExamplesImpl(d, n2, dest, state, topLevel)
   let comment = genComment(d, n)
-  if comment.isSome():
-    dest.add genComment(d, n).unsafeGet()
+  dest.add genComment(d, n)
   case n.kind
   of routineDefs:
     n = n.getRoutineBody
@@ -1075,7 +1069,7 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
   if n.kind in routineDefs:
     getAllRunnableExamples(d, n, comm)
   else:
-    comm.add genRecComment(d, n).get()
+    comm.add genRecComment(d, n)
 
   # Obtain the plain rendered string for hyperlink titles.
   var r: TSrcGen = initTokRender(n, {renderNoBody, renderNoComments, renderDocComments,
@@ -1184,7 +1178,6 @@ proc genItem(d: PDoc, n, nameNode: PNode, k: TSymKind, docFlags: DocFlags, nonEx
 proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): JsonItem =
   if not isVisible(d, nameNode): return
   var
-    plainDocs = n.findDocString()
     name = getNameEsc(d, nameNode)
     comm = genRecComment(d, n)
     r: TSrcGen
@@ -1571,7 +1564,8 @@ proc finishGenerateDoc*(d: var PDoc) =
     d.section[k].secItems.clear
   if optDocRaw in d.conf.globalOptions:
     for item in d.modDescPre:
-      d.modDescFinal &= item.str
+      d.modDescFinal &= item.str & '\n'
+    d.modDescFinal.setLen(d.modDescFinal.high)
   else:
     renderItemPre(d, d.modDescPre, d.modDescFinal)
   d.modDescPre.setLen 0
