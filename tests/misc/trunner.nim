@@ -253,14 +253,13 @@ sub/mmain.idx""", context
 
   block: # nim jsondoc --raw switch
     let file = testsDir / "misc/mrawjson.nim"
-    let destdir = testsDir / "misc/rawjsondocs"
-    removeDir(destDir)
-    defer: removeDir(destDir)
-    let (msg, exitCode) = execCmdEx(fmt"{nim} jsondoc --raw {file}")
+    let output = "nimcache_tjsondoc.json"
+    defer: removeFile(output)
+    let (msg, exitCode) = execCmdEx(fmt"{nim} jsondoc --raw  -o:{output} {file}")
     doAssert exitCode == 0, msg
 
-    let data = parseJson(readFile(destDir / "mrawjson.json"))
-    doAssert data["moduleDescription"].getStr == "Module description. See [someProc]"
+    let data = parseFile(output)
+    doAssert data["moduleDescription"].getStr == "Module description. See [someProc]", data["moduleDescription"].getStr
     let someProc = data["entries"][0]
     doAssert someProc["description"].getStr == "Code should be used like `someProc(1, 2)`"
 
