@@ -323,6 +323,14 @@ proc search*() {.exportc.} =
   if timer != nil: clearTimeout(timer)
   timer = setTimeout(wrapper, 400)
 
+# Register `/` hotkey to jump to search
+window.addEventListener("keypress") do (e: Event):
+  if KeyboardEvent(e).key == "/":
+    e.preventDefault()
+    let searchElem = document.getElementById("searchInput")
+    searchElem.focus()
+    searchElem.parentElement.scrollIntoView()
+
 proc copyToClipboard*() {.exportc.} =
     {.emit: """
 
@@ -331,23 +339,23 @@ proc copyToClipboard*() {.exportc.} =
       const allPreTags = document.querySelectorAll("pre:not(.line-nums)")
 
       allPreTags.forEach((e) => {
-      
+
           const div = document.createElement("div")
           div.classList.add("copyToClipBoard")
-    
+
           const preTag = document.createElement("pre")
           preTag.innerHTML = e.innerHTML
-    
+
           const button = document.createElement("button")
-          button.value = e.textContent.replace('...', '') 
+          button.value = e.textContent.replace('...', '')
           button.classList.add("copyToClipBoardBtn")
           button.style.cursor = "pointer"
-    
+
           div.appendChild(preTag)
           div.appendChild(button)
-    
+
           e.outerHTML = div.outerHTML
-      
+
       })
     }
 
@@ -372,7 +380,7 @@ proc copyToClipboard*() {.exportc.} =
             e.target.nextElementSibling.style.setProperty("--clipboard-image", "var(--clipboard-image-normal)")
         }
     })
-    
+
     window.addEventListener("DOMContentLoaded", updatePreTags)
 
     """
