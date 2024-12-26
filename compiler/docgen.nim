@@ -115,7 +115,7 @@ proc add(dest: var ItemPre, rst: PRstNode) = dest.add ItemFragment(isRst: true, 
 proc add(dest: var ItemPre, str: string) = dest.add ItemFragment(isRst: false, str: str)
 proc add(dest: var ItemPre, item: sink Option[ItemFragment]) =
   if item.isSome():
-    dest.add item.unsafeGet()
+    dest.add item.unsafeGet
 
 proc addRstFileIndex(d: PDoc, fileIndex: lineinfos.FileIndex): rstast.FileIndex =
   let invalid = rstast.FileIndex(-1)
@@ -466,14 +466,14 @@ proc genRecCommentAux(d: PDoc, n: PNode): Option[ItemFragment] =
       # notin {nkEmpty..nkNilLit, nkEnumTy, nkTupleTy}:
       for i in 0..<n.len:
         result = genRecCommentAux(d, n[i])
-        if result.isSome(): return
+        if result.isSome: return
   else:
     n.comment = ""
 
 proc genRecComment(d: PDoc, n: PNode): Option[ItemFragment] =
   if n == nil: return none(ItemFragment)
   result = genComment(d, n)
-  if result.isNone():
+  if result.isNone:
     if n.kind in {nkProcDef, nkFuncDef, nkMethodDef, nkIteratorDef,
                   nkMacroDef, nkTemplateDef, nkConverterDef}:
       result = genRecCommentAux(d, n[bodyPos])
@@ -740,7 +740,7 @@ proc getAllRunnableExamplesImpl(d: PDoc; n: PNode, dest: var ItemPre,
   case n.kind
   of nkCommentStmt:
     if state in {rsStart, rsRunnable}:
-      dest.add genRecComment(d, n).get()
+      dest.add genRecComment(d, n)
       return rsComment
   of nkCallKinds:
     if isRunnableExamples(n[0]) and
@@ -803,7 +803,6 @@ proc getAllRunnableExamples(d: PDoc, n: PNode, dest: var ItemPre) =
   var state = rsStart
   template fn(n2, topLevel) =
     state = getAllRunnableExamplesImpl(d, n2, dest, state, topLevel)
-  let comment = genComment(d, n)
   dest.add genComment(d, n)
   case n.kind
   of routineDefs:
@@ -1189,8 +1188,8 @@ proc genJsonItem(d: PDoc, n, nameNode: PNode, k: TSymKind, nonExports = false): 
   result = JsonItem(json: %{ "name": %name, "type": %($k), "line": %n.info.line.int,
                    "col": %n.info.col}
   )
-  if comm.isSome():
-    let c = comm.unsafeGet()
+  if comm.isSome:
+    let c = comm.unsafeGet
     if c.isRst:
       result.rst = c.rst
       result.rstField = "description"
@@ -1592,7 +1591,7 @@ proc generateJson*(d: PDoc, n: PNode, config: ConfigRef, includeComments: bool =
       d.add JsonItem(rst: genComment(d, n).get().rst, rstField: "comment",
                      json: %Table[string, string]())
     else:
-      d.modDescPre.add(genComment(d, n).get())
+      d.modDescPre.add(genComment(d, n))
   of nkProcDef, nkFuncDef:
     when useEffectSystem: documentRaises(d.cache, n)
     d.add genJsonItem(d, n, n[namePos], skProc)
