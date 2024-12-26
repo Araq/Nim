@@ -259,7 +259,7 @@ sub/mmain.idx""", context
     doAssert exitCode == 0, msg
 
     let data = parseFile(output)
-    doAssert data["moduleDescription"].getStr == "Module description. See [someProc]", data["moduleDescription"].getStr
+    doAssert data["moduleDescription"].getStr == "Module description. See [someProc]\nanother line"
     let someProc = data["entries"][0]
     doAssert someProc["description"].getStr == "Code should be used like `someProc(1, 2)`"
 
