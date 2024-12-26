@@ -69,4 +69,4 @@ errors.
 
 ## Tool changes
 
-
+- Added `--raw` flag when generating JSON docs to not render markup.

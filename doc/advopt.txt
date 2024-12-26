@@ -113,6 +113,7 @@ Advanced options:
   --docSeeSrcUrl:url        activate 'see source' for doc command
                             (see doc.item.seesrc in config/nimdoc.cfg)
   --docInternal             also generate documentation for non-exported symbols
+  --raw                     doesn't render markup when generating JSON docs
   --lineDir:on|off          generation of #line directive on|off
   --embedsrc:on|off         embeds the original source code as comments
                             in the generated output

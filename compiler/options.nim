@@ -110,7 +110,7 @@ type                          # please make sure we have under 32 options
     optEnableDeepCopy         # ORC specific: enable 'deepcopy' for all types.
     optShowNonExportedFields  # for documentation: show fields that are not exported
     optJsBigInt64             # use bigints for 64-bit integers in JS
-    optDocRaw                 # for documentation: Don't render HTML for JSON output
+    optDocRaw                 # for documentation: Don't render markdown for JSON output
 
   TGlobalOptions* = set[TGlobalOption]
 
