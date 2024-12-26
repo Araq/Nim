@@ -740,7 +740,7 @@ proc getAllRunnableExamplesImpl(d: PDoc; n: PNode, dest: var ItemPre,
   case n.kind
   of nkCommentStmt:
     if state in {rsStart, rsRunnable}:
-      dest.add genRecComment(d, n)
+      dest.add genRecComment(d, n).get()
       return rsComment
   of nkCallKinds:
     if isRunnableExamples(n[0]) and
@@ -1394,7 +1394,7 @@ proc generateDoc*(d: PDoc, n, orig: PNode, config: ConfigRef, docFlags: DocFlags
     let doctypeNode = findPragma(n, wDoctype)
     setDoctype(d, doctypeNode)
   of nkCommentStmt:
-    d.modDescPre.add(genComment(d, n).get())
+    d.modDescPre.add(genComment(d, n))
   of nkProcDef, nkFuncDef:
     when useEffectSystem: documentRaises(d.cache, n)
     genItemAux(skProc)
@@ -1562,12 +1562,7 @@ proc finishGenerateDoc*(d: var PDoc) =
       else:
         d.section[k].finalMarkup.add(nameContent)
     d.section[k].secItems.clear
-  if optDocRaw in d.conf.globalOptions:
-    for item in d.modDescPre:
-      d.modDescFinal &= item.str & '\n'
-    d.modDescFinal.setLen(d.modDescFinal.high)
-  else:
-    renderItemPre(d, d.modDescPre, d.modDescFinal)
+  renderItemPre(d, d.modDescPre, d.modDescFinal)
   d.modDescPre.setLen 0
 
   # Finalize fragments of ``.json`` file
