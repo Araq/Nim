@@ -250,6 +250,8 @@ type
       ## Old transformation for closures in JS backend
     noStrictDefs
       ## disable "strictdefs"
+    noAsmSemSymbol
+      ## disable type checking for backticked symbols in the `asm/emit` statements
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest

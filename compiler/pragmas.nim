@@ -637,10 +637,11 @@ proc semAsmOrEmit*(con: PContext, n: PNode, marker: char): PNode =
         # XXX what to do here if 'amb' is true?
         if e != nil:
           incl(e.flags, sfUsed)
-          if isDefined(con.config, "nimPreviewAsmSemSymbol"):
-            result.add con.semExprWithType(con, newSymNode(e), {efTypeAllowed})
-          else:
+
+          if noAsmSemSymbol in con.config.legacyFeatures:
             result.add newSymNode(e)
+          else:
+            result.add con.semExprWithType(con, newSymNode(e), {efTypeAllowed})
         else:
           result.add newStrNode(nkStrLit, sub)
       else:

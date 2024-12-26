@@ -38,7 +38,6 @@ switch("define", "nimPreviewHashRef")
 switch("define", "nimPreviewRangeDefault")
 switch("define", "nimPreviewNonVarDestructor")
 switch("define", "nimPreviewCheckedClose")
-switch("define", "nimPreviewAsmSemSymbol")
 
 switch("warningAserror", "UnnamedBreak")
 when not defined(testsConciseTypeMismatch):
