@@ -9,7 +9,7 @@
 
 ## Implements the `async` and `multisync` macros for `asyncdispatch`.
 
-import std/[macros, strutils, asyncfutures]
+import std/[macros, strutils, asyncfutures, effecttraits]
 
 type
   Context = ref object
@@ -49,9 +49,10 @@ template createCb(futTyp, strName, identName, futureVarCompletions: untyped) =
     except:
       futureVarCompletions
       if fut.finished:
-        # Take a look at tasyncexceptions for the bug which this fixes.
-        # That test explains it better than I can here.
-        raise
+        {.cast(raises: []).}:
+          # Take a look at tasyncexceptions for the bug which this fixes.
+          # That test explains it better than I can here.
+          raise
       else:
         fut.fail(getCurrentException())
   {.pop.}
@@ -158,6 +159,9 @@ proc verifyReturnType(typeName: string, node: NimNode = nil) =
     error("Expected return type of 'Future' got '$1'" %
           typeName, node)
 
+template isUntracked[T](f: Future[T]): bool =
+  getTypeInst(getType(typeof f))[1][0] == getTypeInst(getType(FutureUntracked[T]))[1][0]
+
 template await*(f: typed): untyped {.used.} =
   static:
     error "await expects Future[T], got " & $typeof(f)
@@ -171,7 +175,11 @@ template await*[T](f: Future[T]): auto {.used.} =
     var internalTmpFuture: FutureBase = f
     yield internalTmpFuture
     {.line: instantiationInfo(fullPaths = true).}:
-      (cast[typeof(f)](internalTmpFuture)).read()
+      when f.isUntracked:
+        {.cast(raises: []).}:
+          cast[typeof(f)](internalTmpFuture).read()
+      else:
+        cast[typeof(f)](internalTmpFuture).read()
   else:
     macro errorAsync(futureError: Future[T]) =
       error(
@@ -179,6 +187,16 @@ template await*[T](f: Future[T]): auto {.used.} =
         "'waitFor' when calling an 'async' proc in a non-async scope instead",
         futureError)
     errorAsync(f)
+
+template await*[T, E](f: FutureTracked[T, E]): untyped =
+  template yieldFuture = yield FutureBase()
+  when compiles(yieldFuture):
+    var internalTmpFuture: FutureBase = Future[T](f)
+    yield internalTmpFuture
+    {.line: instantiationInfo(fullPaths = true).}:
+      cast[typeof(f)](internalTmpFuture).read()
+  else:
+    {.error: "await is only available within {.async.}".}
 
 proc asyncSingleProc(prc: NimNode): NimNode =
   ## This macro transforms a single procedure into a closure iterator.
@@ -303,7 +321,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
       newVarStmt(retFutureSym,
         newCall(
           newNimNode(nnkBracketExpr, prc.body).add(
-            newIdentNode("newFuture"),
+            newIdentNode("newFutureUntracked"),
             subRetType),
         newLit(prcName)))) # Get type from return type of this proc
 
@@ -317,7 +335,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
   # Add discardable pragma.
   if returnType.kind == nnkEmpty:
     # xxx consider removing `owned`? it's inconsistent with non-void case
-    result.params[0] = quote do: owned(Future[void])
+    result.params[0] = quote do: owned(FutureUntracked[void])
 
   # based on the yglukhov's patch to chronos: https://github.com/status-im/nim-chronos/pull/47
   if procBody.kind != nnkEmpty:
@@ -394,3 +412,24 @@ macro multisync*(prc: untyped): untyped =
   result = newStmtList()
   result.add(asyncSingleProc(asyncPrc))
   result.add(sync)
+
+macro trackFuture*(prc: typed): untyped =
+  # XXX error instead of asserts
+  #echo repr getRaisesList(prc[0])
+  #assert prc.kind == nnkCall
+  let procImpl = getTypeImpl(prc[0])
+  #assert procImpl.kind == nnkProcTy
+  let retTyp = procImpl.params[0]
+  #assert retTyp.kind == nnkBracketExpr
+  let fut = repr(retTyp[0])
+  #assert fut == "FutureUntracked", fut
+  let baseTyp = retTyp[1]
+  let raisesList = getRaisesList(prc[0])
+  let exTyp = if raisesList.len == 0:
+    newIdentNode("void")
+  else:
+    newNimNode(nnkTupleConstr)
+  for r in raisesList:
+    exTyp.add r
+  result = quote do:
+    FutureTracked[`baseTyp`, `exTyp`](`prc`)

@@ -7,7 +7,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std/[os, sets, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
+import std/[os, macros, sets, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
 
 import system/stacktraces
 
@@ -38,6 +38,10 @@ type
     value: T                            ## Stored value
 
   FutureVar*[T] = distinct Future[T]
+
+  FutureUntracked*[T] = Future[T]
+
+  FutureTracked*[T, E] = distinct Future[T]
 
   FutureError* = object of Defect
     cause*: FutureBase
@@ -136,6 +140,9 @@ proc newFutureVar*[T](fromProc = "unspecified"): owned(FutureVar[T]) =
   result = typeof(result)(fo)
   when isFutureLoggingEnabled: logFutureStart(Future[T](result))
 
+proc newFutureUntracked*[T](fromProc = "unspecified"): FutureUntracked[T] =
+  newFuture[T](fromProc)
+
 proc clean*[T](future: FutureVar[T]) =
   ## Resets the `finished` status of `future`.
   Future[T](future).finished = false
@@ -162,11 +169,13 @@ proc checkFinished[T](future: Future[T]) =
       err.cause = future
       raise err
 
-proc call(callbacks: var CallbackList) =
+proc call(callbacks: var CallbackList) {.raises: [].} =
   var current = callbacks
   while true:
     if not current.function.isNil:
-      callSoon(current.function)
+      # XXX make callbacks {.raise: [].}
+      {.cast(raises: []).}:
+        callSoon(current.function)
 
     if current.next.isNil:
       break
@@ -383,6 +392,28 @@ proc read*[T](future: Future[T] | FutureVar[T]): lent T =
 
 proc read*(future: Future[void] | FutureVar[void]) =
   readImpl(future, void)
+
+macro readTrackedImpl(future: FutureTracked): untyped =
+  # XXX refactor readImpl
+  let t = getTypeInst(future)[1]
+  let e = getTypeInst(future)[2]
+  let types = getType(e)
+  var raisesList = newNimNode(nnkBracket)
+  for r in types[1..^1]:
+    raisesList.add(r)
+  #echo repr raisesList
+  #echo repr t
+  let theCast = quote do:
+    cast(raises: `raisesList`)
+  quote do:
+    {.`theCast`.}:
+      readImpl(`future`, `t`)
+
+proc read*[T, E](future: FutureTracked[T, E]): lent T =
+  readTrackedImpl(future)
+
+proc read*[E](future: FutureTracked[void, E]) =
+  readTrackedImpl(future)
 
 proc readError*[T](future: Future[T]): ref Exception =
   ## Retrieves the exception stored in `future`.
