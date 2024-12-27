@@ -166,7 +166,7 @@ proc containsVariable(n: PNode): bool =
 proc checkIsolate*(n: PNode): bool =
   if types.containsTyRef(n.typ):
     # XXX Maybe require that 'n.typ' is acyclic. This is not much
-    # worse than the already exisiting inheritance and closure restrictions.
+    # worse than the already existing inheritance and closure restrictions.
     case n.kind
     of nkCharLit..nkNilLit:
       result = true
