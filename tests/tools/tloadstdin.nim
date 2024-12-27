@@ -1,6 +1,6 @@
 discard """
   action: "compile"
-  cmd: "cat $file | nim check --stdinfile:$file -"
+  cmd: "cat $file | $nim check --stdinfile:$file -"
 """
 
 import std/assertions
