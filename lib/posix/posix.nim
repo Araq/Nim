@@ -585,7 +585,7 @@ proc pwrite*(a1: cint, a2: pointer, a3: int, a4: Off): int {.
 proc read*(a1: cint, a2: pointer, a3: int): int {.importc, header: "<unistd.h>".}
 when not defined(nintendoswitch):
   proc readlink*(a1, a2: cstring, a3: int): int {.importc, header: "<unistd.h>".}
-proc ioctl*(f: FileHandle, device: uint): int {.importc: "ioctl",
+proc ioctl*(f: cint, device: uint): int {.importc: "ioctl",
       header: "<sys/ioctl.h>", varargs, tags: [WriteIOEffect].}
   ## A system call for device-specific input/output operations and other
   ## operations which cannot be expressed by regular system calls
