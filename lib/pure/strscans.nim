@@ -324,7 +324,7 @@ macro scanf*(input: string; pattern: static[string]; results: varargs[typed]): b
   template at(s: string; i: int): char = (if i < s.len: s[i] else: '\0')
   template matchError() =
     error("type mismatch between pattern '$" & pattern[p] & "' (position: " & $p &
-      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'")
+      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'", results[i])
 
   var i = 0
   var p = 0
@@ -490,7 +490,7 @@ macro scanTuple*(input: untyped; pattern: static[string]; matcherTypes: varargs[
   result = newStmtList()
   template addVar(typ: string) =
     let varIdent = ident("temp" & $arguments.len)
-    result.add(newNimNode(nnkVarSection).add(newIdentDefs(varIdent, ident(typ), newEmptyNode())))
+    result.add(newVarStmt(varIdent, newCall(ident"default", ident(typ))))
     arguments.add(varIdent)
   while p < pattern.len:
     if pattern[p] == '$':

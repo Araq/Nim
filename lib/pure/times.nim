@@ -2255,9 +2255,10 @@ proc parse*(input: string, f: TimeFormat, zone: Timezone = local(),
     let f = initTimeFormat("yyyy-MM-dd")
     let dt = dateTime(2000, mJan, 01, 00, 00, 00, 00, utc())
     doAssert dt == "2000-01-01".parse(f, utc())
+  result = default(DateTime)
   var inpIdx = 0 # Input index
   var patIdx = 0 # Pattern index
-  var parsed: ParsedTime
+  var parsed: ParsedTime = default(ParsedTime)
   while inpIdx <= input.high and patIdx <= f.patterns.high:
     let pattern = f.patterns[patIdx].FormatPattern
     case pattern
@@ -2352,9 +2353,9 @@ proc `$`*(time: Time): string {.tags: [], raises: [], benign.} =
 # TimeInterval
 #
 
-proc initTimeInterval*(nanoseconds, microseconds, milliseconds,
-                       seconds, minutes, hours,
-                       days, weeks, months, years: int = 0): TimeInterval =
+proc initTimeInterval*(nanoseconds = 0, microseconds = 0, milliseconds = 0,
+                       seconds = 0, minutes = 0, hours = 0,
+                       days = 0, weeks = 0, months = 0, years = 0): TimeInterval =
   ## Creates a new `TimeInterval <#TimeInterval>`_.
   ##
   ## This proc doesn't perform any normalization! For example,
@@ -2847,7 +2848,7 @@ when not defined(js):
     when defined(posix) and not defined(osx) and declared(CLOCK_THREAD_CPUTIME_ID):
       # 'clocksPerSec' is a compile-time constant, possibly a
       # rather awful one, so use clock_gettime instead
-      var ts: Timespec
+      var ts: Timespec = default(Timespec)
       discard clock_gettime(CLOCK_THREAD_CPUTIME_ID, ts)
       result = toFloat(ts.tv_sec.int) +
         toFloat(ts.tv_nsec.int) / 1_000_000_000

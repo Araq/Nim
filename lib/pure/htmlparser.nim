@@ -1961,6 +1961,7 @@ proc untilElementEnd(x: var XmlParser, result: XmlNode,
       result.addNode(parse(x, errors))
 
 proc parse(x: var XmlParser, errors: var seq[string]): XmlNode =
+  result = nil
   case x.kind
   of xmlComment:
     result = newComment(x.rawData)
@@ -2017,7 +2018,7 @@ proc parseHtml*(s: Stream, filename: string,
                 errors: var seq[string]): XmlNode =
   ## Parses the XML from stream `s` and returns a `XmlNode`. Every
   ## occurred parsing error is added to the `errors` sequence.
-  var x: XmlParser
+  var x: XmlParser = default(XmlParser)
   open(x, s, filename, {reportComments, reportWhitespace, allowUnquotedAttribs,
     allowEmptyAttribs})
   next(x)

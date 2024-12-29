@@ -212,7 +212,7 @@ when defined(posix) and not defined(lwip):
   from std/posix import TPollfd, POLLIN, POLLPRI, POLLOUT, POLLWRBAND, Tnfds
 
   template monitorPollEvent(x: var SocketHandle, y, timeout: cint): int =
-    var tpollfd: TPollfd
+    var tpollfd: TPollfd = default(TPollfd)
     tpollfd.fd = cast[cint](x)
     tpollfd.events = y
     posix.poll(addr(tpollfd), Tnfds(1), timeout)
@@ -255,6 +255,7 @@ proc isDisconnectionError*(flags: set[SocketFlag],
 
 proc toOSFlags*(socketFlags: set[SocketFlag]): cint =
   ## Converts the flags into the underlying OS representation.
+  result = cint(0)
   for f in socketFlags:
     case f
     of SocketFlag.Peek:
@@ -1031,7 +1032,7 @@ proc bindAddr*(socket: Socket, port = Port(0), address = "") {.
   var aiList = getAddrInfo(realaddr, port, socket.domain)
   if bindAddr(socket.fd, aiList.ai_addr, aiList.ai_addrlen.SockLen) < 0'i32:
     freeAddrInfo(aiList)
-    var address2: string
+    var address2: string = ""
     address2.addQuoted address
     raiseOSError(osLastError(), "address: $# port: $#" % [address2, $port])
   freeAddrInfo(aiList)
@@ -1478,7 +1479,7 @@ proc waitFor(socket: Socket, waited: var Duration, timeout, size: int,
 proc recv*(socket: Socket, data: pointer, size: int, timeout: int): int {.
   tags: [ReadIOEffect, TimeEffect].} =
   ## overload with a `timeout` parameter in milliseconds.
-  var waited: Duration # duration already waited
+  var waited: Duration = default(Duration) # duration already waited
 
   var read = 0
   while read < size:
@@ -1605,7 +1606,7 @@ proc readLine*(socket: Socket, line: var string, timeout = -1,
     socket.socketError(n, lastError = lastError, flags = flags)
     return
 
-  var waited: Duration
+  var waited: Duration = default(Duration) # duration already waited
 
   setLen(line, 0)
   while true:
@@ -1708,7 +1709,7 @@ proc skip*(socket: Socket, size: int, timeout = -1) =
   ## bytes takes longer than specified a TimeoutError exception will be raised.
   ##
   ## Returns the number of skipped bytes.
-  var waited: Duration
+  var waited: Duration = default(Duration) # duration already waited
   var dummy = alloc(size)
   var bytesSkipped = 0
   while bytesSkipped != size:
@@ -1838,8 +1839,8 @@ proc sendTo*(socket: Socket, address: IpAddress, port: Port,
   assert(socket.protocol != IPPROTO_TCP, "Cannot `sendTo` on a TCP socket")
   assert(not socket.isClosed, "Cannot `sendTo` on a closed socket")
 
-  var sa: Sockaddr_storage
-  var sl: SockLen
+  var sa: Sockaddr_storage = default(Sockaddr_storage)
+  var sl: SockLen = default(SockLen)
   toSockAddr(address, port, sa, sl)
   result = sendto(socket.fd, cstring(data), data.len().cint, flags.cint,
                   cast[ptr SockAddr](addr sa), sl)
@@ -1998,7 +1999,7 @@ proc dial*(address: string, port: Port,
 
   let aiList = getAddrInfo(address, port, AF_UNSPEC, sockType, protocol)
 
-  var fdPerDomain: array[low(Domain).ord..high(Domain).ord, SocketHandle]
+  var fdPerDomain = default(array[low(Domain).ord..high(Domain).ord, SocketHandle])
   for i in low(fdPerDomain)..high(fdPerDomain):
     fdPerDomain[i] = osInvalidSocket
   template closeUnusedFds(domainToKeep = -1) {.dirty.} =
@@ -2007,10 +2008,10 @@ proc dial*(address: string, port: Port,
         fd.close()
 
   var success = false
-  var lastError: OSErrorCode
+  var lastError: OSErrorCode = default(OSErrorCode)
   var it = aiList
-  var domain: Domain
-  var lastFd: SocketHandle
+  var domain: Domain = default(Domain)
+  var lastFd: SocketHandle = default(SocketHandle)
   while it != nil:
     let domainOpt = it.ai_family.toKnownDomain()
     if domainOpt.isNone:
@@ -2041,6 +2042,7 @@ proc dial*(address: string, port: Port,
     result = newSocket(lastFd, domain, sockType, protocol, buffered)
   elif lastError != 0.OSErrorCode:
     lastFd.close()
+    result = default(Socket)
     raiseOSError(lastError)
   else:
     lastFd.close()
@@ -2057,7 +2059,7 @@ proc connect*(socket: Socket, address: string,
   var aiList = getAddrInfo(address, port, socket.domain)
   # try all possibilities:
   var success = false
-  var lastError: OSErrorCode
+  var lastError: OSErrorCode = default(OSErrorCode)
   var it = aiList
   while it != nil:
     if connect(socket.fd, it.ai_addr, it.ai_addrlen.SockLen) == 0'i32:
@@ -2097,7 +2099,7 @@ proc connectAsync(socket: Socket, name: string, port = Port(0),
   var aiList = getAddrInfo(name, port, af)
   # try all possibilities:
   var success = false
-  var lastError: OSErrorCode
+  var lastError: OSErrorCode = default(OSErrorCode)
   var it = aiList
   while it != nil:
     var ret = connect(socket.fd, it.ai_addr, it.ai_addrlen.SockLen)
