@@ -1150,9 +1150,9 @@ func cumprod*[T](x: var openArray[T]) =
   ## product.
   ##
   ## See also:
-  ## * `sum proc <#sum,openArray[T]>`_
-  ## * `cumprodmed proc <#cumprodmed,openArray[T]>`_ for a version which
-  ##   returns cumprodmed sequence
+  ## * `prod proc <#sum,openArray[T]>`_
+  ## * `cumproded proc <#cumproded,openArray[T]>`_ for a version which
+  ##   returns cumproded sequence
   runnableExamples:
     var a = [1, 2, 3, 4]
     cumprod(a)
@@ -1163,8 +1163,8 @@ func cumproded*[T](x: openArray[T]): seq[T] =
   ## Return cumulative (aka prefix) product of ``x``.
   ##
   ## See also:
-  ## * `sum proc <#prod,openArray[T]>`_
-  ## * `cumsum proc <#cumprod,openArray[T]>`_ for the in-place version
+  ## * `prod proc <#prod,openArray[T]>`_
+  ## * `cumprod proc <#cumprod,openArray[T]>`_ for the in-place version
   runnableExamples:
     let a = [1, 2, 3, 4]
     doAssert cumproded(a) == @[1, 2, 6, 24]
