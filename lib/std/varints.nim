@@ -112,5 +112,4 @@ proc encodeZigzag*(x: int64): uint64 {.inline.} =
   (xu shl 1) xor (xu shr 63)
 
 proc decodeZigzag*(x: uint64): int64 {.inline.} =
-  let xi = cast[int64](x)
-  (xi shr 1) xor (-(xi and 1))
+  cast[int64]((x shr 1) xor (x shl 63))
