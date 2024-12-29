@@ -78,19 +78,14 @@ elif defined(haiku):
     SIGTERM* = cint(15)
     SIGPIPE* = cint(7)
     SIG_DFL* = CSighandlerT(nil)
-else:
-  when defined(nimscript):
-    {.error: "SIGABRT not ported to your platform".}
-  else:
-    var
-      SIGINT* {.importc: "SIGINT", nodecl.}: cint
-      SIGSEGV* {.importc: "SIGSEGV", nodecl.}: cint
-      SIGABRT* {.importc: "SIGABRT", nodecl.}: cint
-      SIGFPE* {.importc: "SIGFPE", nodecl.}: cint
-      SIGILL* {.importc: "SIGILL", nodecl.}: cint
-      SIG_DFL* {.importc: "SIG_DFL", nodecl.}: CSighandlerT
-    when defined(macosx) or defined(linux):
-      var SIGPIPE* {.importc: "SIGPIPE", nodecl.}: cint
+elif not defined(nimscript):
+  var
+    SIGINT* {.importc: "SIGINT", nodecl.}: cint
+    SIGSEGV* {.importc: "SIGSEGV", nodecl.}: cint
+    SIGABRT* {.importc: "SIGABRT", nodecl.}: cint
+    SIGFPE* {.importc: "SIGFPE", nodecl.}: cint
+    SIGILL* {.importc: "SIGILL", nodecl.}: cint
+    SIG_DFL* {.importc: "SIG_DFL", nodecl.}: CSighandlerT
 
 when defined(macosx):
   const SIGBUS* = cint(10)
