@@ -248,21 +248,21 @@ template main() =
   block: # cumprod
     block: #cumprod int seq return
       let counts = [ 1, 2, 3, 4 ]
-      check counts.cumproded == [ 1, 2, 6, 24 ]
+      doAssert counts.cumproded == [ 1, 2, 6, 24 ]
 
     block: # cumprod float seq return
       let counts = [ 1.0, 2.0, 3.0, 4.0 ]
-      check counts.cumproded == [ 1.0, 2.0, 6.0, 24.0 ]
+      doAssert counts.cumproded == [ 1.0, 2.0, 6.0, 24.0 ]
 
     block: # cumprod int in-place
       var counts = [ 1, 2, 3, 4 ]
       counts.cumprod
-      check counts == [ 1, 2, 6, 24 ]
+      doAssert counts == [ 1, 2, 6, 24 ]
 
     block: # cumprod float in-place
       var counts = [ 1.0, 2.0, 3.0, 4.0 ]
       counts.cumprod
-      check counts == [ 1.0, 2.0, 6.0, 24.0 ]
+      doAssert counts == [ 1.0, 2.0, 6.0, 24.0 ]
 
   block: # ^ compiles for valid types
     doAssert: compiles(5 ^ 2)
