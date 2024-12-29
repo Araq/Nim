@@ -1168,9 +1168,13 @@ func cumproded*[T](x: openArray[T]): seq[T] =
   runnableExamples:
     let a = [1, 2, 3, 4]
     doAssert cumproded(a) == @[1, 2, 6, 24]
-  result.setLen(x.len)
+  result = @[]
+  let xLen = x.len
+  if xLen == 0:
+    return @[]
+  result.setLen(xLen)
   result[0] = x[0]
-  for i in 1 ..< x.len: result[i] = result[i-1] * x[i]
+  for i in 1 ..< xLen: result[i] = result[i-1] * x[i]
 
 func cumsummed*[T](x: openArray[T]): seq[T] =
   ## Returns the cumulative (aka prefix) summation of `x`.
