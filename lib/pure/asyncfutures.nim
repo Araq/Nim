@@ -39,9 +39,7 @@ type
 
   FutureVar*[T] = distinct Future[T]
 
-  FutureUntracked*[T] = Future[T]
-
-  FutureTracked*[T, E] = distinct Future[T]
+  FutureEx*[T, E] = ref object of Future[T]
 
   FutureError* = object of Defect
     cause*: FutureBase
@@ -139,9 +137,6 @@ proc newFutureVar*[T](fromProc = "unspecified"): owned(FutureVar[T]) =
   let fo = newFuture[T](fromProc)
   result = typeof(result)(fo)
   when isFutureLoggingEnabled: logFutureStart(Future[T](result))
-
-proc newFutureUntracked*[T](fromProc = "unspecified"): FutureUntracked[T] =
-  newFuture[T](fromProc)
 
 proc clean*[T](future: FutureVar[T]) =
   ## Resets the `finished` status of `future`.
@@ -393,7 +388,7 @@ proc read*[T](future: Future[T] | FutureVar[T]): lent T =
 proc read*(future: Future[void] | FutureVar[void]) =
   readImpl(future, void)
 
-macro readTrackedImpl(future: FutureTracked): untyped =
+macro readTrackedImpl(future: FutureEx): untyped =
   # XXX refactor readImpl
   let t = getTypeInst(future)[1]
   let e = getTypeInst(future)[2]
@@ -409,10 +404,10 @@ macro readTrackedImpl(future: FutureTracked): untyped =
     {.`theCast`.}:
       readImpl(`future`, `t`)
 
-proc read*[T, E](future: FutureTracked[T, E]): lent T =
+proc read*[T, E](future: FutureEx[T, E]): lent T =
   readTrackedImpl(future)
 
-proc read*[E](future: FutureTracked[void, E]) =
+proc read*[E](future: FutureEx[void, E]) =
   readTrackedImpl(future)
 
 proc readError*[T](future: Future[T]): ref Exception =

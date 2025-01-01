@@ -159,9 +159,6 @@ proc verifyReturnType(typeName: string, node: NimNode = nil) =
     error("Expected return type of 'Future' got '$1'" %
           typeName, node)
 
-template isUntracked[T](f: Future[T]): bool =
-  getTypeInst(getType(typeof f))[1][0] == getTypeInst(getType(FutureUntracked[T]))[1][0]
-
 template await*(f: typed): untyped {.used.} =
   static:
     error "await expects Future[T], got " & $typeof(f)
@@ -175,11 +172,7 @@ template await*[T](f: Future[T]): auto {.used.} =
     var internalTmpFuture: FutureBase = f
     yield internalTmpFuture
     {.line: instantiationInfo(fullPaths = true).}:
-      when f.isUntracked:
-        {.cast(raises: []).}:
-          cast[typeof(f)](internalTmpFuture).read()
-      else:
-        cast[typeof(f)](internalTmpFuture).read()
+      cast[typeof(f)](internalTmpFuture).read()
   else:
     macro errorAsync(futureError: Future[T]) =
       error(
@@ -188,7 +181,7 @@ template await*[T](f: Future[T]): auto {.used.} =
         futureError)
     errorAsync(f)
 
-template await*[T, E](f: FutureTracked[T, E]): untyped =
+template await*[T, E](f: FutureEx[T, E]): untyped =
   template yieldFuture = yield FutureBase()
   when compiles(yieldFuture):
     var internalTmpFuture: FutureBase = Future[T](f)
@@ -321,7 +314,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
       newVarStmt(retFutureSym,
         newCall(
           newNimNode(nnkBracketExpr, prc.body).add(
-            newIdentNode("newFutureUntracked"),
+            newIdentNode("newFuture"),
             subRetType),
         newLit(prcName)))) # Get type from return type of this proc
 
@@ -335,13 +328,19 @@ proc asyncSingleProc(prc: NimNode): NimNode =
   # Add discardable pragma.
   if returnType.kind == nnkEmpty:
     # xxx consider removing `owned`? it's inconsistent with non-void case
-    result.params[0] = quote do: owned(FutureUntracked[void])
+    result.params[0] = quote do: owned(Future[void])
 
   # based on the yglukhov's patch to chronos: https://github.com/status-im/nim-chronos/pull/47
   if procBody.kind != nnkEmpty:
+    result.name = newIdentNode($result.name & "_asyncinternal")
+    let prcName = result.name
     body2.add quote do:
       `outerProcBody`
     result.body = body2
+    result = quote do:
+      asyncraises:
+        `result`
+        `prcName`
 
 macro async*(prc: untyped): untyped =
   ## Macro which processes async procedures into the appropriate
@@ -413,23 +412,39 @@ macro multisync*(prc: untyped): untyped =
   result.add(asyncSingleProc(asyncPrc))
   result.add(sync)
 
-macro trackFuture*(prc: typed): untyped =
-  # XXX error instead of asserts
-  #echo repr getRaisesList(prc[0])
-  #assert prc.kind == nnkCall
-  let procImpl = getTypeImpl(prc[0])
-  #assert procImpl.kind == nnkProcTy
-  let retTyp = procImpl.params[0]
-  #assert retTyp.kind == nnkBracketExpr
-  let fut = repr(retTyp[0])
-  #assert fut == "FutureUntracked", fut
-  let baseTyp = retTyp[1]
-  let raisesList = getRaisesList(prc[0])
+proc asyncraisesImpl(body: NimNode): NimNode =
+  expectKind(body, nnkStmtListExpr)
+  expectKind(body[0], nnkProcDef)
+  expectKind(body[1], nnkSym)
+  var prc = copyNimTree(body[0])  # XXX ?
+  expectKind(prc.params[0], nnkCall)  # owned(Future[T])
+  let retTyp = prc.params[0][1]
+  let baseTyp = if retTyp.kind == nnkBracketExpr:
+    retTyp[1]
+  else:  # Future[void]
+    expectKind(retTyp, nnkCall)
+    retTyp[2]
+  let raisesList = getRaisesList(body[1])
   let exTyp = if raisesList.len == 0:
     newIdentNode("void")
   else:
     newNimNode(nnkTupleConstr)
   for r in raisesList:
     exTyp.add r
-  result = quote do:
-    FutureTracked[`baseTyp`, `exTyp`](`prc`)
+  prc.params[0] = quote do: FutureEx[`baseTyp`, `exTyp`]
+  #echo repr prc.params[0]
+  let prcName = $prc.name
+  let suffix = "_asyncinternal"
+  prc.name = newIdentNode(prcName[0 .. ^(suffix.len+1)])
+  expectKind(prc.body, nnkStmtList)
+  let prcBody = if prc.body[^1].kind == nnkStmtList:
+    prc.body[^1]
+  else:
+    prc.body
+  expectKind(prcBody[^1], nnkReturnStmt)
+  let returnValue = prcBody[^1][0][1]
+  prcBody[^1][0][1] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
+  return prc
+
+macro asyncraises*(prc: typed): untyped =
+  asyncraisesImpl(prc)
