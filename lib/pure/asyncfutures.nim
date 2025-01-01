@@ -394,8 +394,10 @@ macro readTrackedImpl(future: FutureEx): untyped =
   let e = getTypeInst(future)[2]
   let types = getType(e)
   var raisesList = newNimNode(nnkBracket)
-  for r in types[1..^1]:
-    raisesList.add(r)
+  if types.len > 0:
+    for r in types[1..^1]:
+      raisesList.add(r)
+  # else check repr(types) == "void"
   #echo repr raisesList
   #echo repr t
   let theCast = quote do:

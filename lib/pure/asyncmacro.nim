@@ -182,7 +182,9 @@ template await*[T](f: Future[T]): auto {.used.} =
     errorAsync(f)
 
 template await*[T, E](f: FutureEx[T, E]): untyped =
-  template yieldFuture = yield FutureBase()
+  when not defined(nimHasTemplateRedefinitionPragma):
+    {.pragma: redefine.}
+  template yieldFuture {.redefine.} = yield FutureBase()
   when compiles(yieldFuture):
     var internalTmpFuture: FutureBase = Future[T](f)
     yield internalTmpFuture
@@ -231,7 +233,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
     verifyReturnType(fut, returnType[0])
     baseType = returnType[2]
   elif returnType.kind == nnkEmpty:
-    baseType = returnType
+    baseType = newIdentNode("void")
   else:
     baseType = nil
     verifyReturnType(repr(returnType), returnType)
@@ -244,9 +246,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
   # transformation even more complex.
   let body2 = extractDocCommentsAndRunnables(prc.body)
 
-  var subRetType =
-    if returnType.kind == nnkEmpty: newIdentNode("void")
-    else: baseType
+  let subRetType = baseType
   let retFutParamSym = genSym(nskParam, "retFutParamSym")
 
   # -> iterator nameIter(retFutParam: Future[T]): FutureBase {.closure.} =
@@ -332,15 +332,18 @@ proc asyncSingleProc(prc: NimNode): NimNode =
 
   # based on the yglukhov's patch to chronos: https://github.com/status-im/nim-chronos/pull/47
   if procBody.kind != nnkEmpty:
-    result.name = newIdentNode($result.name & "_asyncinternal")
-    let prcName = result.name
     body2.add quote do:
       `outerProcBody`
     result.body = body2
+    let prcCopy = copyNimTree(result)
+    prcCopy.name = newIdentNode($prcCopy.name & "_asyncinternal")
+    let prcName = prcCopy.name
     result = quote do:
       asyncraises:
         `result`
+        `prcCopy`
         `prcName`
+    #echo treeRepr result
 
 macro async*(prc: untyped): untyped =
   ## Macro which processes async procedures into the appropriate
@@ -413,18 +416,28 @@ macro multisync*(prc: untyped): untyped =
   result.add(sync)
 
 proc asyncraisesImpl(body: NimNode): NimNode =
+  #echo repr body
   expectKind(body, nnkStmtListExpr)
-  expectKind(body[0], nnkProcDef)
-  expectKind(body[1], nnkSym)
-  var prc = copyNimTree(body[0])  # XXX ?
-  expectKind(prc.params[0], nnkCall)  # owned(Future[T])
-  let retTyp = prc.params[0][1]
+  var prc = if body[0].kind == nnkStmtList:  # XXX ?
+    expectKind(body[0][1], nnkProcDef)
+    body[0][1]
+  else:
+    expectKind(body[0], nnkProcDef)
+    body[0]
+  expectKind(body[2], nnkSym)
+  var retTyp = prc.params[0]
+  if retTyp.kind in nnkCallKinds and retTyp[0].eqIdent("owned") and retTyp.len == 2:
+    retTyp = retTyp[1]
   let baseTyp = if retTyp.kind == nnkBracketExpr:
     retTyp[1]
-  else:  # Future[void]
-    expectKind(retTyp, nnkCall)
+  elif retTyp.kind in nnkCallKinds and retTyp[0].eqIdent("[]"):
     retTyp[2]
-  let raisesList = getRaisesList(body[1])
+  else:
+    expectKind(retTyp, nnkEmpty)
+    newIdentNode("void")
+  echo repr body[2]
+  let raisesList = getRaisesList(body[2])
+  echo repr raisesList
   let exTyp = if raisesList.len == 0:
     newIdentNode("void")
   else:
@@ -432,18 +445,21 @@ proc asyncraisesImpl(body: NimNode): NimNode =
   for r in raisesList:
     exTyp.add r
   prc.params[0] = quote do: FutureEx[`baseTyp`, `exTyp`]
-  #echo repr prc.params[0]
-  let prcName = $prc.name
-  let suffix = "_asyncinternal"
-  prc.name = newIdentNode(prcName[0 .. ^(suffix.len+1)])
   expectKind(prc.body, nnkStmtList)
   let prcBody = if prc.body[^1].kind == nnkStmtList:
     prc.body[^1]
   else:
     prc.body
   expectKind(prcBody[^1], nnkReturnStmt)
-  let returnValue = prcBody[^1][0][1]
-  prcBody[^1][0][1] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
+  echo treeRepr prcBody[^1]
+  echo repr prcBody[^1][0].kind
+  if prcBody[^1][0].kind == nnkAsgn:
+    let returnValue = prcBody[^1][0][1]
+    prcBody[^1][0][1] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
+  else:
+    expectKind(prcBody[^1][0], nnkSym)
+    let returnValue = prcBody[^1][0]
+    prcBody[^1][0] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
   return prc
 
 macro asyncraises*(prc: typed): untyped =
