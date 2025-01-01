@@ -2842,7 +2842,7 @@ proc readTableRow(p: var RstParser): ColSeq =
 proc getColContents(p: var RstParser, colLim: ColumnLimits): string =
   for i in colLim.first ..< colLim.last:
     result.add(p.tok[i].symbol)
-  result.strip
+  result = result.strip
 
 proc isValidDelimiterRow(p: var RstParser, colNum: int): bool =
   let row = readTableRow(p)

@@ -2082,7 +2082,6 @@ proc semAsgn(c: PContext, n: PNode; mode=asgnNormal): PNode =
     let lhs = n[0]
     let rhs = semExprWithType(c, n[1], {efTypeAllowed}, le)
     if lhs.kind == nkSym and lhs.sym.kind == skResult:
-      n.typ() = c.enforceVoidContext
       if c.p.owner.kind != skMacro and resultTypeIsInferrable(lhs.sym.typ):
         var rhsTyp = rhs.typ
         if rhsTyp.kind in tyUserTypeClasses and rhsTyp.isResolvedUserTypeClass:
@@ -2113,10 +2112,12 @@ proc semReturn(c: PContext, n: PNode): PNode =
   if c.p.owner.kind in {skConverter, skMethod, skProc, skFunc, skMacro} or
       (not c.p.owner.typ.isNil and isClosureIterator(c.p.owner.typ)):
     if n[0].kind != nkEmpty:
+      var removeResultSymUsed = false
       if n[0].kind == nkAsgn and n[0][0].kind == nkSym and c.p.resultSym == n[0][0].sym:
         discard "return is already transformed"
       elif c.p.resultSym != nil:
         # transform ``return expr`` to ``result = expr; return``
+        removeResultSymUsed = sfUsed notin c.p.resultSym.flags
         var a = newNodeI(nkAsgn, n[0].info)
         a.add newSymNode(c.p.resultSym)
         a.add n[0]
@@ -2125,6 +2126,8 @@ proc semReturn(c: PContext, n: PNode): PNode =
         localError(c.config, n.info, errNoReturnTypeDeclared)
         return
       result[0] = semAsgn(c, n[0])
+      if removeResultSymUsed:
+        c.p.resultSym.flags.excl sfUsed
       # optimize away ``result = result``:
       if result[0][1].kind == nkSym and result[0][1].sym == c.p.resultSym:
         result[0] = c.graph.emptyNode
@@ -2137,7 +2140,10 @@ proc semProcBody(c: PContext, n: PNode; expectedType: PType = nil): PNode =
       return n
   openScope(c)
   result = semExpr(c, n, expectedType = expectedType)
-  if c.p.resultSym != nil and not isEmptyType(result.typ):
+  if c.p.resultSym != nil and
+      not isEmptyType(result.typ) and
+      sfUsed notin c.p.resultSym.flags:
+    incl(c.p.resultSym.flags, sfUsed)
     if result.kind == nkNilLit:
       # or ImplicitlyDiscardable(result):
       # new semantic: 'result = x' triggers the void context
