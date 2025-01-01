@@ -1712,7 +1712,7 @@ proc genNimMainBody(m: BModule, preMainCode: Snippet) =
   genNimMainProc(m, preMainCode)
 
 proc genPosixCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader("main", CInt, cProcParams(
+  m.s[cfsProcs].addProcHeader(cSymbol("main"), CInt, cProcParams(
     (name: "argc", typ: CInt),
     (name: "args", typ: ptrType(ptrType(CChar))),
     (name: "env", typ: ptrType(ptrType(CChar)))))
@@ -1724,7 +1724,7 @@ proc genPosixCMain(m: BModule) =
   m.s[cfsProcs].addNewline()
 
 proc genStandaloneCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader("main", CInt, cProcParams())
+  m.s[cfsProcs].addProcHeader(cSymbol("main"), CInt, cProcParams())
   m.s[cfsProcs].finishProcHeaderWithBody():
     genMainProcs(m)
     m.s[cfsProcs].addReturn(cIntValue(0))
@@ -1734,10 +1734,10 @@ proc genWinNimMain(m: BModule, preMainCode: Snippet) =
   genNimMainBody(m, preMainCode)
 
 proc genWinCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader(ccStdCall, "WinMain", CInt, cProcParams(
-    (name: "hCurInstance", typ: "HINSTANCE"),
-    (name: "hPrevInstance", typ: "HINSTANCE"),
-    (name: "lpCmdLine", typ: "LPSTR"),
+  m.s[cfsProcs].addProcHeader(ccStdCall, cSymbol("WinMain"), CInt, cProcParams(
+    (name: "hCurInstance", typ: cSymbol("HINSTANCE")),
+    (name: "hPrevInstance", typ: cSymbol("HINSTANCE")),
+    (name: "lpCmdLine", typ: cSymbol("LPSTR")),
     (name: "nCmdShow", typ: CInt)))
   m.s[cfsProcs].finishProcHeaderWithBody():
     genMainProcsWithResult(m)
@@ -1750,12 +1750,12 @@ proc genWinNimDllMain(m: BModule, preMainCode: Snippet) =
 
 proc genWinCDllMain(m: BModule) =
   # used to use WINAPI macro, now ccStdCall:
-  m.s[cfsProcs].addProcHeader(ccStdCall, "DllMain", "BOOL", cProcParams(
-    (name: "hinstDLL", typ: "HINSTANCE"),
-    (name: "fwdreason", typ: "DWORD"),
-    (name: "lpvReserved", typ: "LPVOID")))
+  m.s[cfsProcs].addProcHeader(ccStdCall, cSymbol("DllMain"), cSymbol("BOOL"), cProcParams(
+    (name: "hinstDLL", typ: cSymbol("HINSTANCE")),
+    (name: "fwdreason", typ: cSymbol("DWORD")),
+    (name: "lpvReserved", typ: cSymbol("LPVOID"))))
   m.s[cfsProcs].finishProcHeaderWithBody():
-    m.s[cfsProcs].addSingleIfStmt(removeSinglePar(cOp(Equal, "fwdreason", "DLL_PROCESS_ATTACH"))):
+    m.s[cfsProcs].addSingleIfStmt(removeSinglePar(cOp(Equal, "fwdreason", cSymbol("DLL_PROCESS_ATTACH")))):
       genMainProcs(m)
     m.s[cfsProcs].addReturn(cIntValue(1))
   m.s[cfsProcs].addNewline()
@@ -1771,7 +1771,7 @@ proc genPosixCDllMain(m: BModule) =
   m.s[cfsProcs].addNewline()
 
 proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
-  let typName = "Genode::Env"
+  let typName = cSymbol("Genode::Env")
   m.s[cfsProcs].addDeclWithVisibility(Extern):
     m.s[cfsProcs].addVar(name = "nim_runtime_env", typ = ptrType(typName))
   m.s[cfsProcs].addDeclWithVisibility(ExternC):
@@ -1780,13 +1780,13 @@ proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
   genNimMainBody(m, preMainCode)
 
 proc genComponentConstruct(m: BModule) =
-  let fnName = "Libc::Component::construct"
-  let typName = "Libc::Env"
+  let fnName = cSymbol("Libc::Component::construct")
+  let typName = cSymbol("Libc::Env")
   m.s[cfsProcs].addProcHeader(fnName, CVoid, cProcParams((name: "env", typ: cppRefType(typName))))
   m.s[cfsProcs].finishProcHeaderWithBody():
     m.s[cfsProcs].addLineComment("Set Env used during runtime initialization")
     m.s[cfsProcs].addAssignment("nim_runtime_env", cAddr("env"))
-    let callFn = "Libc::with_libc"
+    let callFn = cSymbol("Libc::with_libc")
     var call: CallBuilder
     m.s[cfsProcs].addStmt():
       m.s[cfsProcs].addCall(call, callFn):

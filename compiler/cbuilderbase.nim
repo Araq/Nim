@@ -157,6 +157,10 @@ proc cIntType*(bits: BiggestInt): Snippet =
 proc cUintType*(bits: BiggestInt): Snippet =
   "NU" & $bits
 
+template cSymbol*(name: string): Snippet =
+  ## a symbol `name` imported from C, unmangled
+  name
+
 type
   IfBuilderState* = enum
     WaitingIf, WaitingElseIf, InBlock

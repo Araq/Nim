@@ -1097,10 +1097,10 @@ proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
       if not hasDefault:
         if hasBuiltinUnreachable in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__builtin_unreachable")
+            p.s(cpsStmts).addCallStmt(cSymbol("__builtin_unreachable"))
         elif hasAssume in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__assume", cIntValue(0))
+            p.s(cpsStmts).addCallStmt(cSymbol("__assume"), cIntValue(0))
   if lend != "": fixLabel(p, lend)
 
 proc genCase(p: BProc, t: PNode, d: var TLoc) =
