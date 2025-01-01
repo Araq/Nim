@@ -213,6 +213,8 @@ type
 
 const DepthLimit = 1000
 
+proc isNamedTuple(T: typedesc): bool {.magic: "TypeTrait".}
+
 proc newJString*(s: string): JsonNode =
   ## Creates a new `JString JsonNode`.
   result = JsonNode(kind: JString, str: s)
@@ -363,7 +365,8 @@ proc `%`*(keyVals: openArray[tuple[key: string, val: JsonNode]]): JsonNode =
 
 template `%`*(j: JsonNode): JsonNode = j
 
-proc `%`*[T](elements: openArray[T]): JsonNode =
+#tuples must not be allowed - issue #24082
+proc `%`*[T: not tuple](elements: openArray[T]): JsonNode =
   ## Generic constructor for JSON data. Creates a new `JArray JsonNode`
   result = newJArray()
   for elem in elements: result.add(%elem)
@@ -396,8 +399,21 @@ proc `[]=`*(obj: JsonNode, key: string, val: JsonNode) {.inline.} =
   assert(obj.kind == JObject)
   obj.fields[key] = val
 
+#Bug #16321 - create seperate proc for tuple and object
+proc `%`*[T: tuple](o: T): JsonNode =
+  ## Construct JsonNode from tuples.
+  ##
+  ## If passed an anonymous tuple, creates `JArray JsonNode`,
+  ## otherwise (named tuples) `JObject JsonNode`.
+  when T is isNamedTuple(T):
+    result = newJObject()
+    for k, v in o.fieldPairs: result[k] = %v
+  else:
+    result = newJArray()
+    for v in o.fields: result.add(%v)
+
 proc `%`*[T: object](o: T): JsonNode =
-  ## Construct JsonNode from tuples and objects.
+  ## Construct JsonNode from objects.
   result = newJObject()
   for k, v in o.fieldPairs: result[k] = %v
 

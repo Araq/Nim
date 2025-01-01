@@ -175,6 +175,14 @@ doAssert($ %*{} == "{}")
 
 doAssert(not compiles(%{"error": "No messages"}))
 
+# issue #24082
+block test_tuple:
+  doAssert $(%(a1: 10, a2: "foo")) == """{"a1":10,"a2":"foo"}"""
+  doAssert $(%(10, "foo")) == """[10,"foo"]"""
+
+  doAssert $(%* (a1: 10, a2: "foo")) == """{"a1":10,"a2":"foo"}"""
+  doAssert $(%* (10, "foo")) == """[10,"foo"]"""
+
 # bug #9111
 block:
   type
