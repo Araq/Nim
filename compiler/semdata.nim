@@ -123,7 +123,7 @@ type
     patterns*: seq[PSym]       # sequence of pattern matchers
     optionStack*: seq[POptionEntry]
     libs*: seq[PLib]           # all libs used by this module
-    semConstExpr*: proc (c: PContext, n: PNode; expectedType: PType = nil): PNode {.nimcall.} # for the pragmas
+    semConstExpr*: proc (c: PContext, n: PNode; expectedType: PType = nil, owner: PSym = nil): PNode {.nimcall.} # for the pragmas
     semExpr*: proc (c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType = nil): PNode {.nimcall.}
     semExprWithType*: proc (c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType = nil): PNode {.nimcall.}
     semTryExpr*: proc (c: PContext, n: PNode, flags: TExprFlags = {}): PNode {.nimcall.}
@@ -173,6 +173,7 @@ type
     importModuleLookup*: Table[int, seq[int]] # (module.ident.id, [module.id])
     skipTypes*: seq[PNode] # used to skip types between passes in type section. So far only used for inheritance, sets and generic bodies.
     inTypeofContext*: int
+    localOwner*: PSym # owner of local symbols, can be block label
   TBorrowState* = enum
     bsNone, bsReturnNotMatch, bsNoDistinct, bsGeneric, bsNotSupported, bsMatch
 

@@ -2,7 +2,7 @@ discard """
   action: reject
   nimout: '''
 stack trace: (most recent call last)
-tnilclosurecallstacktrace.nim(23, 6) tnilclosurecallstacktrace
+tnilclosurecallstacktrace.nim(23, 6) :static
 tnilclosurecallstacktrace.nim(20, 6) baz
 tnilclosurecallstacktrace.nim(17, 6) bar
 tnilclosurecallstacktrace.nim(14, 4) foo

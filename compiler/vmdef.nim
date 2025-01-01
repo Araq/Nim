@@ -253,7 +253,7 @@ type
     currentExceptionA*, currentExceptionB*: PNode
     exceptionInstr*: int # index of instruction that raised the exception
     prc*: PProc
-    module*: PSym
+    module*, owner*: PSym
     callsite*: PNode
     mode*: TEvalMode
     features*: TSandboxFlags

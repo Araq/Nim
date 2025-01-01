@@ -744,6 +744,8 @@ type
                               # for skModule the string literal to output for
                               # deprecated modules.
     instantiatedFrom*: PSym   # for instances, the generic symbol where it came from.
+                              # for locals in `const`/`static`, the block label
+                              # of the context they're declared in
     when defined(nimsuggest):
       allUsages*: seq[TLineInfo]
 

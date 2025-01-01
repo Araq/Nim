@@ -1047,12 +1047,16 @@ proc evalAtCompileTime(c: PContext, n: PNode): PNode =
 
 proc semStaticExpr(c: PContext, n: PNode; expectedType: PType = nil): PNode =
   inc c.inStaticContext
+  let owner = makeStaticOwner(c, c.cache.getIdent(":static"), n.info)
+  let oldOwner = c.localOwner
+  c.localOwner = owner
   openScope(c)
   let a = semExprWithType(c, n, expectedType = expectedType)
   closeScope(c)
+  c.localOwner = oldOwner
   dec c.inStaticContext
   if a.findUnresolvedStatic != nil: return a
-  result = evalStaticExpr(c.module, c.idgen, c.graph, a, c.p.owner)
+  result = evalStaticExpr(c.module, c.idgen, c.graph, a, owner)
   if result.isNil:
     localError(c.config, n.info, errCannotInterpretNodeX % renderTree(n))
     result = c.graph.emptyNode

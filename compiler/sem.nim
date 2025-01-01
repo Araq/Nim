@@ -386,7 +386,7 @@ proc tryConstExpr(c: PContext, n: PNode; expectedType: PType = nil): PNode =
 const
   errConstExprExpected = "constant expression expected"
 
-proc semConstExpr(c: PContext, n: PNode; expectedType: PType = nil): PNode =
+proc semConstExpr(c: PContext, n: PNode; expectedType: PType = nil, owner: PSym = nil): PNode =
   var e = semExprWithType(c, n, expectedType = expectedType)
   if e == nil:
     localError(c.config, n.info, errConstExprExpected)
@@ -396,7 +396,7 @@ proc semConstExpr(c: PContext, n: PNode; expectedType: PType = nil): PNode =
   result = getConstExpr(c.module, e, c.idgen, c.graph)
   if result == nil:
     #if e.kind == nkEmpty: globalError(n.info, errConstExprExpected)
-    result = evalConstExpr(c.module, c.idgen, c.graph, e)
+    result = evalConstExpr(c.module, c.idgen, c.graph, e, owner)
     if result == nil or result.kind == nkEmpty:
       if e.info != n.info:
         pushInfoContext(c.config, n.info)
