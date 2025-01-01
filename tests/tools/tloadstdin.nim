@@ -1,6 +1,8 @@
 discard """
   action: "compile"
   cmd: "cat $file | $nim check --stdinfile:$file -"
+  # Don't believe cat and pipes works on windows
+  disabled: "win"
 """
 
 import std/[assertions, paths]

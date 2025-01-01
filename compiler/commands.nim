@@ -937,10 +937,8 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
     conf.errorMax = if value == 0: high(int) else: value
   of "stdinfile":
     expectArg(conf, switch, arg, pass, info)
-    conf.stdinFile = if
-              os.isAbsolute(arg): AbsoluteFile(arg)
-             else:
-              AbsoluteFile(getCurrentDir() / arg)
+    conf.stdinFile = if os.isAbsolute(arg): AbsoluteFile(arg)
+                     else: AbsoluteFile(getCurrentDir() / arg)
   of "verbosity":
     expectArg(conf, switch, arg, pass, info)
     let verbosity = parseInt(arg)
