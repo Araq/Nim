@@ -75,11 +75,7 @@ template endsWithImpl*[T: string | cstring](s, suffix: T) =
 func cmpNimIdentifier*[T: string | cstring](a, b: T): int =
   cmpIgnoreStyleImpl(a, b, true)
 
-func c_memchr(cstr: pointer, c: char, n: csize_t): pointer {.
-              importc: "memchr", header: "<string.h>".}
-func c_strstr(haystack, needle: cstring): cstring {.
-  importc: "strstr", header: "<string.h>".}
-
+from system/ansi_c import c_memchr, c_strstr
 
 func find*(s: cstring, sub: char, start: Natural = 0, last = 0): int =
   ## Searches for `sub` in `s` inside the range `start..last` (both ends included).
@@ -91,7 +87,7 @@ func find*(s: cstring, sub: char, start: Natural = 0, last = 0): int =
   let last = if last == 0: s.high else: last
   let L = last-start+1
   if L > 0:
-    let found = c_memchr(s[start].unsafeAddr, sub, cast[csize_t](L))
+    let found = c_memchr(s[start].unsafeAddr, cint(sub), cast[csize_t](L))
     if not found.isNil:
       return cast[int](found) -% cast[int](s)
   return -1
