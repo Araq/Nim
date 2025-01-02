@@ -7,7 +7,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std/[os, macros, sets, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
+import std/[os, macros, sets, tables, strutils, strformat, times, heapqueue, options, deques, cstrutils, typetraits]
 
 import system/stacktraces
 
@@ -39,7 +39,7 @@ type
 
   FutureVar*[T] = distinct Future[T]
 
-  FutureEx*[T, E] = ref object of Future[T]
+  FutureEx*[T, E] = distinct Future[T]
 
   FutureError* = object of Defect
     cause*: FutureBase
@@ -143,7 +143,7 @@ proc clean*[T](future: FutureVar[T]) =
   Future[T](future).finished = false
   Future[T](future).error = nil
 
-proc checkFinished[T](future: Future[T]) =
+proc checkFinished[T](future: Future[T]) {.raises: [].} =
   ## Checks whether `future` is finished. If it is then raises a
   ## `FutureError`.
   when not defined(release):
@@ -297,12 +297,11 @@ template getFilenameProcname(entry: StackTraceEntry): (string, string) =
   else:
     ($entry.filename, $entry.procname)
 
-proc format(entry: StackTraceEntry): string =
+proc format(entry: StackTraceEntry): string {.raises: [].} =
   let (filename, procname) = getFilenameProcname(entry)
-  let left = "$#($#)" % [filename, $entry.line]
-  result = spaces(2) & "$# $#\n" % [left, procname]
+  result = &"{spaces(2)}{filename}({$entry.line}) {procname}\n"
 
-proc isInternal(entry: StackTraceEntry): bool =
+proc isInternal(entry: StackTraceEntry): bool {.raises: [].} =
   # --excessiveStackTrace:off
   const internals = [
     "asyncdispatch.nim",
@@ -315,7 +314,7 @@ proc isInternal(entry: StackTraceEntry): bool =
       return true
   return false
 
-proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string =
+proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string {.raises: [].} =
   result = ""
   when defined(nimStackTraceOverride):
     let entries = addDebuggingInfo(stackTraceEntries)
@@ -394,16 +393,14 @@ macro readTrackedImpl(future: FutureEx): untyped =
   let e = getTypeInst(future)[2]
   let types = getType(e)
   var raisesList = newNimNode(nnkBracket)
-  if types.len > 0:
-    for r in types[1..^1]:
-      raisesList.add(r)
-  # else check repr(types) == "void"
+  for r in types[1..^1]:
+    raisesList.add(r)
   #echo repr raisesList
   #echo repr t
-  let theCast = quote do:
+  let raisesCast = quote do:
     cast(raises: `raisesList`)
   quote do:
-    {.`theCast`.}:
+    {.`raisesCast`.}:
       readImpl(`future`, `t`)
 
 proc read*[T, E](future: FutureEx[T, E]): lent T =

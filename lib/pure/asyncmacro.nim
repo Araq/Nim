@@ -159,6 +159,34 @@ proc verifyReturnType(typeName: string, node: NimNode = nil) =
     error("Expected return type of 'Future' got '$1'" %
           typeName, node)
 
+macro withRaises[T](f: Future[T], body: untyped): untyped =
+  #echo repr f.kind
+  # XXX support more cases
+  let prcSym = case f.kind
+  of nnkSym:
+    if f.getImpl.kind == nnkIdentDefs and f.getImpl[^1].kind == nnkCall:
+      f.getImpl[^1][0]
+    else:
+      nil
+  of nnkCall:
+    if f[0].kind == nnkSym: f[0] else: nil
+  else:
+    nil
+  #echo repr prcSym
+  if prcSym != nil:
+    let raisesList = getRaisesList(prcSym)
+    var raisesListTyp = newNimNode(nnkBracket)
+    if raisesList.len > 0:
+      for r in raisesList[1..^1]:
+        raisesListTyp.add(r)
+    let raisesCast = quote do:
+      cast(raises: `raisesListTyp`)
+    quote do:
+      {.`raisesCast`.}:
+        `body`
+  else:
+    body
+
 template await*(f: typed): untyped {.used.} =
   static:
     error "await expects Future[T], got " & $typeof(f)
@@ -172,7 +200,8 @@ template await*[T](f: Future[T]): auto {.used.} =
     var internalTmpFuture: FutureBase = f
     yield internalTmpFuture
     {.line: instantiationInfo(fullPaths = true).}:
-      cast[typeof(f)](internalTmpFuture).read()
+      withRaises f:
+        cast[typeof(f)](internalTmpFuture).read()
   else:
     macro errorAsync(futureError: Future[T]) =
       error(
@@ -182,9 +211,7 @@ template await*[T](f: Future[T]): auto {.used.} =
     errorAsync(f)
 
 template await*[T, E](f: FutureEx[T, E]): untyped =
-  when not defined(nimHasTemplateRedefinitionPragma):
-    {.pragma: redefine.}
-  template yieldFuture {.redefine.} = yield FutureBase()
+  template yieldFuture = yield FutureBase()
   when compiles(yieldFuture):
     var internalTmpFuture: FutureBase = Future[T](f)
     yield internalTmpFuture
@@ -233,7 +260,7 @@ proc asyncSingleProc(prc: NimNode): NimNode =
     verifyReturnType(fut, returnType[0])
     baseType = returnType[2]
   elif returnType.kind == nnkEmpty:
-    baseType = newIdentNode("void")
+    baseType = returnType
   else:
     baseType = nil
     verifyReturnType(repr(returnType), returnType)
@@ -246,7 +273,9 @@ proc asyncSingleProc(prc: NimNode): NimNode =
   # transformation even more complex.
   let body2 = extractDocCommentsAndRunnables(prc.body)
 
-  let subRetType = baseType
+  var subRetType =
+    if returnType.kind == nnkEmpty: newIdentNode("void")
+    else: baseType
   let retFutParamSym = genSym(nskParam, "retFutParamSym")
 
   # -> iterator nameIter(retFutParam: Future[T]): FutureBase {.closure.} =
@@ -335,15 +364,6 @@ proc asyncSingleProc(prc: NimNode): NimNode =
     body2.add quote do:
       `outerProcBody`
     result.body = body2
-    let prcCopy = copyNimTree(result)
-    prcCopy.name = newIdentNode($prcCopy.name & "_asyncinternal")
-    let prcName = prcCopy.name
-    result = quote do:
-      asyncraises:
-        `result`
-        `prcCopy`
-        `prcName`
-    #echo treeRepr result
 
 macro async*(prc: untyped): untyped =
   ## Macro which processes async procedures into the appropriate
@@ -415,52 +435,23 @@ macro multisync*(prc: untyped): untyped =
   result.add(asyncSingleProc(asyncPrc))
   result.add(sync)
 
-proc asyncraisesImpl(body: NimNode): NimNode =
-  #echo repr body
-  expectKind(body, nnkStmtListExpr)
-  var prc = if body[0].kind == nnkStmtList:  # XXX ?
-    expectKind(body[0][1], nnkProcDef)
-    body[0][1]
-  else:
-    expectKind(body[0], nnkProcDef)
-    body[0]
-  expectKind(body[2], nnkSym)
-  var retTyp = prc.params[0]
-  if retTyp.kind in nnkCallKinds and retTyp[0].eqIdent("owned") and retTyp.len == 2:
-    retTyp = retTyp[1]
-  let baseTyp = if retTyp.kind == nnkBracketExpr:
-    retTyp[1]
-  elif retTyp.kind in nnkCallKinds and retTyp[0].eqIdent("[]"):
-    retTyp[2]
-  else:
-    expectKind(retTyp, nnkEmpty)
-    newIdentNode("void")
-  echo repr body[2]
-  let raisesList = getRaisesList(body[2])
-  echo repr raisesList
+macro toFutureEx*(prc: typed): untyped =
+  # XXX error instead of asserts
+  #echo repr getRaisesList(prc[0])
+  #assert prc.kind == nnkCall
+  let procImpl = getTypeImpl(prc[0])
+  #assert procImpl.kind == nnkProcTy
+  let retTyp = procImpl.params[0]
+  #assert retTyp.kind == nnkBracketExpr
+  #let fut = repr(retTyp[0])
+  #assert fut == "FutureUntracked", fut
+  let baseTyp = retTyp[1]
+  let raisesList = getRaisesList(prc[0])
   let exTyp = if raisesList.len == 0:
     newIdentNode("void")
   else:
     newNimNode(nnkTupleConstr)
   for r in raisesList:
     exTyp.add r
-  prc.params[0] = quote do: FutureEx[`baseTyp`, `exTyp`]
-  expectKind(prc.body, nnkStmtList)
-  let prcBody = if prc.body[^1].kind == nnkStmtList:
-    prc.body[^1]
-  else:
-    prc.body
-  expectKind(prcBody[^1], nnkReturnStmt)
-  echo treeRepr prcBody[^1]
-  echo repr prcBody[^1][0].kind
-  if prcBody[^1][0].kind == nnkAsgn:
-    let returnValue = prcBody[^1][0][1]
-    prcBody[^1][0][1] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
-  else:
-    expectKind(prcBody[^1][0], nnkSym)
-    let returnValue = prcBody[^1][0]
-    prcBody[^1][0] = quote do: cast[FutureEx[`baseTyp`, `exTyp`]](`returnValue`)
-  return prc
-
-macro asyncraises*(prc: typed): untyped =
-  asyncraisesImpl(prc)
+  result = quote do:
+    FutureEx[`baseTyp`, `exTyp`](`prc`)
