@@ -135,6 +135,22 @@ block: # issue #7008
   explicitGenericProc1(n, 5) # works
   explicitGenericProc2(n, 5) # doesn't
 
+block: # issue #7009
+  type Node[T] = object
+    val: T
+
+  proc genericProc(s: Node; key: s.T) =
+    discard # body doesn't matter
+  proc explicitGenericProc[T](s: Node[T]; key: T) =
+    discard # body doesn't matter
+  proc concreteProc(s: Node[cstring]; key: s.T) =
+    discard # body doesn't matter 
+    
+  var strs: Node[cstring]
+  concreteProc(strs, "string") # string converts to cstring
+  explicitGenericProc(strs, "string") # still converts
+  genericProc(strs, "string") # doesn't convert: COMPILE ERROR
+
 block: # issue #20027
   block:
     type Test[T] = object
@@ -266,3 +282,9 @@ block: # issue #22276
     a = x * 2)
   doAssert a == 18
   foo(B, proc (x: float) = doAssert x == 9)
+
+block: # issue #9190
+  func foo[T, U]: type(T.low + U.low) = 
+    T.low + U.low
+  
+  doAssert foo[uint8, uint8]() == uint8.low

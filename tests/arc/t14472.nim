@@ -15,7 +15,8 @@ type
     meshes*: seq[Mesh]
 
 proc bork() : ImportedScene =
-  var mats: seq[ImportMaterial]
+  result = ImportedScene()
+  var mats: seq[ImportMaterial] = @[]
 
   setLen(mats, 1)
   add(result.meshes, Mesh(material: mats[0]))

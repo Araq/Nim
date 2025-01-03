@@ -102,25 +102,26 @@ for i in 0..1000:
 
 
 proc lambdaTest2(a: MyAligned, z: ref MyAligned): auto =
-  var x1: MyAligned
+  var x1: MyAligned = default(MyAligned)
   x1.a = a.a + z.a  
-  var x2: MyAligned
+  var x2: MyAligned = default(MyAligned)
   x2.a = a.a - z.a
   let capturingLambda = proc(x: MyAligned): MyAligned =
-    var cc: MyAligned
-    var bb: MyAligned
+    result = default(MyAligned)
+    var cc: MyAligned = default(MyAligned)
+    var bb: MyAligned = default(MyAligned)
     isAlignedCheck(x1.addr, MyAligned.alignOf)
     isAlignedCheck(x2.addr, MyAligned.alignOf)
     isAlignedCheck(cc.addr, MyAligned.alignOf)
     isAlignedCheck(bb.addr, MyAligned.alignOf)
     isAlignedCheck(z, MyAligned.alignOf)
-        
+
     cc.a = x1.a + x1.a + z.a
     bb.a = x2.a - z.a
     
     isAlignedCheck(result.addr, MyAligned.alignOf)
     result.a = cc.a + bb.a + x2.a
-    
+
   return capturingLambda
 
 

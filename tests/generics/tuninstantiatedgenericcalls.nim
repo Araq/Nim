@@ -353,6 +353,11 @@ block: # issue #15959
   my3(x, x)
   doAssert not compiles(my3(x, x[0]))
 
+block: # issue #14877
+  proc fn[T](a: T, index: int): typeof(a.x) = a.x # ok
+  proc fn2(a: seq[int], index: int): typeof(a[0]) = a[index] # ok
+  proc fn3[T](a: T, index: int): typeof(a[0]) = a[index] # Error: type mismatch: got <T, int literal(0)>
+
 block: # issue #22342, type section version of #22607
   type GenAlias[isInt: static bool] = (
     when isInt:
@@ -515,3 +520,37 @@ block: # issue #16175
   var s = Thing[1]()
   doAssert s.kid is Thing[0.uint]
   doAssert s.kid.kid is char
+
+block: # issue #23287
+  template emitTupleType(trait: typedesc): untyped =
+    trait
+
+  type
+    Traitor[Traits] = ref object of RootObj ##
+      vtable: emitTupleType(Traits)
+
+  type Generic[X] = object
+
+  proc test2[Traits](val: Traitor[Generic[Traits]]) =
+    static: assert val.vtable is Generic[int]
+
+  proc test[X](val: Traitor[Generic[X]]) = discard
+
+  test2 Traitor[Generic[int]]() # This should error,  but passes
+  test Traitor[Generic[int]]()
+
+block: # issue #20367, example 1
+  template someTemp(T:type):typedesc = T
+  type
+    Foo[T2] = someTemp(T2)
+    Bar[T1] = Foo[T1]
+  var u:Foo[float] # works
+  var v:Bar[float] # Error: invalid type: 'None' in this context: 'Bar[system.float]' for var
+
+block: # issue #20367, example 2
+  template someOtherTemp(p:static[int]):untyped = array[p,int]
+  type
+    Foo2[n:static[int]] = someOtherTemp(n)
+    Bar2[m:static[int]] = Foo2[m]
+  var x:Foo2[1] # works
+  var y:Bar2[1] # Error: undeclared identifier: 'n'

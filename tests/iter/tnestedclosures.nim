@@ -137,3 +137,22 @@ block: #3824
       echo x
 
   main()
+
+block: # issue #12487
+  iterator FaiReader(): string {.closure.} =
+    yield "something"
+
+  template toClosure(i): auto =
+    iterator j: string {.closure.} =
+      for x in FaiReader():
+        yield x
+    j
+
+  proc main = 
+    var reader = toClosure(FaiReader())
+    var s: seq[string] = @[]
+    for x in reader():
+      s.add(x)
+    doAssert s == @["something"]
+
+  main()

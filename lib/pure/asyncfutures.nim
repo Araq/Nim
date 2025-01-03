@@ -7,7 +7,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std/[os, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
+import std/[os, sets, tables, strutils, times, heapqueue, options, deques, cstrutils, typetraits]
 
 import system/stacktraces
 
@@ -293,57 +293,47 @@ template getFilenameProcname(entry: StackTraceEntry): (string, string) =
   else:
     ($entry.filename, $entry.procname)
 
-proc getHint(entry: StackTraceEntry): string =
-  ## We try to provide some hints about stack trace entries that the user
-  ## may not be familiar with, in particular calls inside the stdlib.
-
+proc format(entry: StackTraceEntry): string =
   let (filename, procname) = getFilenameProcname(entry)
+  let left = "$#($#)" % [filename, $entry.line]
+  result = spaces(2) & "$# $#\n" % [left, procname]
 
-  result = ""
-  if procname == "processPendingCallbacks":
-    if cmpIgnoreStyle(filename, "asyncdispatch.nim") == 0:
-      return "Executes pending callbacks"
-  elif procname == "poll":
-    if cmpIgnoreStyle(filename, "asyncdispatch.nim") == 0:
-      return "Processes asynchronous completion events"
-
-  if procname.endsWith(NimAsyncContinueSuffix):
-    if cmpIgnoreStyle(filename, "asyncmacro.nim") == 0:
-      return "Resumes an async procedure"
+proc isInternal(entry: StackTraceEntry): bool =
+  # --excessiveStackTrace:off
+  const internals = [
+    "asyncdispatch.nim",
+    "asyncfutures.nim",
+    "threadimpl.nim",  # XXX ?
+  ]
+  let (filename, procname) = getFilenameProcname(entry)
+  for line in internals:
+    if filename.endsWith line:
+      return true
+  return false
 
 proc `$`*(stackTraceEntries: seq[StackTraceEntry]): string =
+  result = ""
   when defined(nimStackTraceOverride):
     let entries = addDebuggingInfo(stackTraceEntries)
   else:
     let entries = stackTraceEntries
-
-  result = ""
-  # Find longest filename & line number combo for alignment purposes.
-  var longestLeft = 0
-  for entry in entries:
-    let (filename, procname) = getFilenameProcname(entry)
-
-    if procname == "": continue
-
-    let leftLen = filename.len + len($entry.line)
-    if leftLen > longestLeft:
-      longestLeft = leftLen
-
-  # Format the entries.
-  for entry in entries:
-    let (filename, procname) = getFilenameProcname(entry)
-
-    if procname == "" and entry.line == reraisedFromBegin:
-      break
-
-    let left = "$#($#)" % [filename, $entry.line]
-    result.add((spaces(2) & "$# $#\n") % [
-      left,
-      procname
-    ])
-    let hint = getHint(entry)
-    if hint.len > 0:
-      result.add(spaces(4) & "## " & hint & "\n")
+  var seenEntries = initHashSet[StackTraceEntry]()
+  let L = entries.len-1
+  var i = L
+  var j = 0
+  while i >= 0:
+    if entries[i].line == reraisedFromBegin or i == 0:
+      j = i + int(i != 0)
+      while j < L:
+        if entries[j].line == reraisedFromBegin:
+          break
+        if entries[j].line >= 0 and not isInternal(entries[j]):
+          # this skips recursive calls sadly
+          if entries[j] notin seenEntries:
+            result.add format(entries[j])
+            seenEntries.incl entries[j]
+        inc j
+    dec i
 
 proc injectStacktrace[T](future: Future[T]) =
   when not defined(release):
@@ -355,7 +345,6 @@ proc injectStacktrace[T](future: Future[T]) =
       # containing the async traceback.
       let start = exceptionMsg.find(header)
       exceptionMsg = exceptionMsg[0..<start]
-
 
     var newMsg = exceptionMsg & header
 

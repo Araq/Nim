@@ -10,9 +10,28 @@
 ## Implements type sanity checking for ASTs resulting from macros. Lots of
 ## room for improvement here.
 
-import ast, msgs, types, options
+import ast, msgs, types, options, trees, nimsets
 
-proc ithField(n: PNode, field: var int): PSym =
+type
+  FieldTracker = object
+    index: int
+    remaining: int
+    constr: PNode
+    delete: bool # to delete fields from inactive case branches
+  FieldInfo = ref object
+    sym: PSym
+    delete: bool
+
+proc caseBranchMatchesExpr(branch, matched: PNode): bool =
+  # copied from sem
+  result = false
+  for i in 0 ..< branch.len-1:
+    if branch[i].kind == nkRange:
+      if overlap(branch[i], matched): return true
+    elif exprStructuralEquivalent(branch[i], matched):
+      return true
+
+proc ithField(n: PNode, field: var FieldTracker): FieldInfo =
   result = nil
   case n.kind
   of nkRecList:
@@ -23,18 +42,42 @@ proc ithField(n: PNode, field: var int): PSym =
     if n[0].kind != nkSym: return
     result = ithField(n[0], field)
     if result != nil: return
+    # value of the discriminator field, from (index - remaining - 1 + 1):
+    # - 1 because the `ithField` call above decreased it by 1,
+    # + 1 because the constructor node has an initial type child
+    let val = field.constr[field.index - field.remaining][1]
+    var branchFound = false
     for i in 1..<n.len:
+      let previousDelete = field.delete
       case n[i].kind
-      of nkOfBranch, nkElse:
+      of nkOfBranch:
+        if branchFound or previousDelete or
+            not caseBranchMatchesExpr(n[i], val):
+          # if this is not the active case branch,
+          # mark all fields inside as deleted
+          field.delete = true
+        else:
+          branchFound = true
         result = ithField(lastSon(n[i]), field)
         if result != nil: return
+        field.delete = previousDelete
+      of nkElse:
+        if branchFound:
+          # if this is not the active case branch,
+          # mark all fields inside as deleted
+          field.delete = true
+        result = ithField(lastSon(n[i]), field)
+        if result != nil: return
+        field.delete = previousDelete
       else: discard
   of nkSym:
-    if field == 0: result = n.sym
-    else: dec(field)
+    if field.remaining == 0:
+      result = FieldInfo(sym: n.sym, delete: field.delete)
+    else:
+      dec(field.remaining)
   else: discard
 
-proc ithField(t: PType, field: var int): PSym =
+proc ithField(t: PType, field: var FieldTracker): FieldInfo =
   var base = t.baseClass
   while base != nil:
     let b = skipTypes(base, skipPtrs)
@@ -53,13 +96,16 @@ proc annotateType*(n: PNode, t: PType; conf: ConfigRef) =
     n.typ() = t
     n[0].typ() = t
     for i in 1..<n.len:
-      var j = i-1
-      let field = x.ithField(j)
+      var tracker = FieldTracker(index: i-1, remaining: i-1, constr: n, delete: false)
+      let field = x.ithField(tracker)
       if field.isNil:
         globalError conf, n.info, "invalid field at index " & $i
       else:
         internalAssert(conf, n[i].kind == nkExprColonExpr)
-        annotateType(n[i][1], field.typ, conf)
+        annotateType(n[i][1], field.sym.typ, conf)
+        if field.delete:
+          # only codegen fields from active case branches
+          incl(n[i].flags, nfPreventCg)
   of nkPar, nkTupleConstr:
     if x.kind == tyTuple:
       n.typ() = t

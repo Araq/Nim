@@ -299,6 +299,7 @@ proc extractSpec(filename: string; spec: var TSpec): string =
     result = ""
 
 proc parseTargets*(value: string): set[TTarget] =
+  result = default(set[TTarget])
   for v in value.normalize.splitWhitespace:
     case v
     of "c": result.incl(targetC)
@@ -308,7 +309,7 @@ proc parseTargets*(value: string): set[TTarget] =
     else: raise newException(ValueError, "invalid target: '$#'" % v)
 
 proc initSpec*(filename: string): TSpec =
-  result.file = filename
+  result = TSpec(file: filename)
 
 proc isCurrentBatch*(testamentData: TestamentData; filename: string): bool =
   if testamentData.testamentNumBatch != 0:
@@ -317,13 +318,12 @@ proc isCurrentBatch*(testamentData: TestamentData; filename: string): bool =
     true
 
 proc parseSpec*(filename: string): TSpec =
-  result.file = filename
-  result.filename = extractFilename(filename)
+  result = TSpec(file: filename, filename: extractFilename(filename))
   let specStr = extractSpec(filename, result)
   var ss = newStringStream(specStr)
-  var p: CfgParser
+  var p: CfgParser = default(CfgParser)
   open(p, ss, filename, 1)
-  var flags: HashSet[string]
+  var flags: HashSet[string] = initHashSet[string]()
   var nimoutFound = false
   while true:
     var e = next(p)

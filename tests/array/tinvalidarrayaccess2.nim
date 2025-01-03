@@ -1,5 +1,5 @@
 discard """
-  errormsg: "index 3 not in 0 .. 1"
+  errormsg: "conversion from int literal(3) to range 0..1(int) is invalid"
   line: 9
 """
 

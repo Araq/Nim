@@ -366,6 +366,19 @@ proc transformAsgn(c: PTransf, n: PNode): PNode =
   result[0] = letSection
   result[1] = asgnNode
 
+template assignTupleUnpacking(c: PTransf, e: PNode) =
+  for i in 0..<c.transCon.forStmt.len - 2:
+    if c.transCon.forStmt[i].kind == nkVarTuple:
+      for j in 0..<c.transCon.forStmt[i].len-1:
+        let lhs = c.transCon.forStmt[i][j]
+        let rhs = transform(c, newTupleAccess(c.graph, newTupleAccess(c.graph, e, i), j))
+        result.add(asgnTo(lhs, rhs))
+    else:
+      let lhs = c.transCon.forStmt[i]
+      let rhs = transform(c, newTupleAccess(c.graph, e, i))
+      result.add(asgnTo(lhs, rhs))
+
+
 proc transformYield(c: PTransf, n: PNode): PNode =
   proc asgnTo(lhs: PNode, rhs: PNode): PNode =
     # Choose the right assignment instruction according to the given ``lhs``
@@ -400,7 +413,8 @@ proc transformYield(c: PTransf, n: PNode): PNode =
           let lhs = c.transCon.forStmt[i]
           let rhs = transform(c, v)
           result.add(asgnTo(lhs, rhs))
-    elif e.kind notin {nkAddr, nkHiddenAddr}: # no need to generate temp for address operation
+    elif e.kind notin {nkAddr, nkHiddenAddr} and e.kind != nkSym:
+      # no need to generate temp for address operation + nodes without sideeffects
       # TODO do not use temp for nodes which cannot have side-effects
       var tmp = newTemp(c, e.typ, e.info)
       let v = newNodeI(nkVarSection, e.info)
@@ -408,21 +422,9 @@ proc transformYield(c: PTransf, n: PNode): PNode =
 
       result.add transform(c, v)
 
-      for i in 0..<c.transCon.forStmt.len - 2:
-        if c.transCon.forStmt[i].kind == nkVarTuple:
-          for j in 0..<c.transCon.forStmt[i].len-1:
-            let lhs = c.transCon.forStmt[i][j]
-            let rhs = transform(c, newTupleAccess(c.graph, newTupleAccess(c.graph, tmp, i), j))
-            result.add(asgnTo(lhs, rhs))
-        else:
-          let lhs = c.transCon.forStmt[i]
-          let rhs = transform(c, newTupleAccess(c.graph, tmp, i))
-          result.add(asgnTo(lhs, rhs))
+      assignTupleUnpacking(c, tmp)
     else:
-      for i in 0..<c.transCon.forStmt.len - 2:
-        let lhs = c.transCon.forStmt[i]
-        let rhs = transform(c, newTupleAccess(c.graph, e, i))
-        result.add(asgnTo(lhs, rhs))
+      assignTupleUnpacking(c, e)
   else:
     if c.transCon.forStmt[0].kind == nkVarTuple:
       var notLiteralTuple = false # we don't generate temp for tuples with const value: (1, 2, 3)
@@ -435,7 +437,8 @@ proc transformYield(c: PTransf, n: PNode): PNode =
       else:
         notLiteralTuple = true
 
-      if e.kind notin {nkAddr, nkHiddenAddr} and notLiteralTuple:
+      if e.kind notin {nkAddr, nkHiddenAddr} and notLiteralTuple and e.kind != nkSym:
+        # no need to generate temp for address operation + nodes without sideeffects
         # TODO do not use temp for nodes which cannot have side-effects
         var tmp = newTemp(c, e.typ, e.info)
         let v = newNodeI(nkVarSection, e.info)
@@ -507,7 +510,9 @@ proc transformAddrDeref(c: PTransf, n: PNode, kinds: TNodeKinds, isAddr = false)
         ) and not (n[0][0].kind == nkSym and n[0][0].sym.kind == skParam and
           n.typ.kind == tyVar and
           n.typ.skipTypes(abstractVar).kind == tyOpenArray and
-          n[0][0].typ.skipTypes(abstractVar).kind == tyString)
+          n[0][0].typ.skipTypes(abstractVar).kind == tyString) and
+          not (isAddr and n.typ.kind == tyVar and n[0][0].typ.kind == tyRef and
+              n[0][0].kind == nkObjConstr)
         : # elimination is harmful to `for tuple unpack` because of newTupleAccess
           # it is also harmful to openArrayLoc (var openArray) for strings
       # addr ( deref ( x )) --> x
@@ -637,6 +642,12 @@ proc putArgInto(arg: PNode, formal: PType): TPutArgInto =
     case arg.kind
     of nkStmtListExpr:
       return paComplexOpenarray
+    of nkCall:
+      if skipTypes(arg.typ, abstractInst).kind in {tyOpenArray, tyVarargs}:
+        # XXX incorrect, causes #13417 when `arg` has side effects.
+        return paDirectMapping
+      else:
+        return paComplexOpenarray
     of nkBracket:
       return paFastAsgnTakeTypeFromArg
     else:
@@ -803,7 +814,7 @@ proc transformFor(c: PTransf, n: PNode): PNode =
       stmtList.add(newAsgnStmt(c, nkFastAsgn, temp, addrExp, true))
       newC.mapping[formal.itemId] = newDeref(temp)
     of paComplexOpenarray:
-      # arrays will deep copy here (pretty bad).
+      # XXX arrays will deep copy here (pretty bad).
       var temp = newTemp(c, arg.typ, formal.info)
       addVar(v, temp)
       stmtList.add(newAsgnStmt(c, nkFastAsgn, temp, arg, true))
@@ -857,9 +868,18 @@ proc transformArrayAccess(c: PTransf, n: PNode): PNode =
   if n[0].kind == nkSym and n[0].sym.kind == skType:
     result = n
   else:
-    result = newTransNode(n)
-    for i in 0..<n.len:
-      result[i] = transform(c, skipConv(n[i]))
+    result = transformSons(c, n)
+    if n.len >= 2 and result[1].kind in {nkChckRange, nkChckRange64} and
+        n[1].kind in {nkHiddenStdConv, nkHiddenSubConv}:
+      # implicit conversion, was transformed into range check
+      # remove in favor of index check if conversion to array index type
+      # has to be done here because the array index type needs to be relaxed
+      # i.e. a uint32 index can implicitly convert to range[0..3] but not int
+      let arr = skipTypes(n[0].typ, abstractVarRange)
+      if arr.kind == tyArray and
+          firstOrd(c.graph.config, arr) == getOrdValue(result[1][1]) and
+          lastOrd(c.graph.config, arr) == getOrdValue(result[1][2]):
+        result[1] = result[1].skipConv
 
 proc getMergeOp(n: PNode): PSym =
   case n.kind
@@ -1069,9 +1089,7 @@ proc transform(c: PTransf, n: PNode, noConstFold = false): PNode =
   of nkBreakStmt: result = transformBreak(c, n)
   of nkCallKinds:
     result = transformCall(c, n)
-  of nkHiddenAddr:
-    result = transformAddrDeref(c, n, {nkHiddenDeref}, isAddr = true)
-  of nkAddr:
+  of nkAddr, nkHiddenAddr:
     result = transformAddrDeref(c, n, {nkDerefExpr, nkHiddenDeref}, isAddr = true)
   of nkDerefExpr:
     result = transformAddrDeref(c, n, {nkAddr, nkHiddenAddr})

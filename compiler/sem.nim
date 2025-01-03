@@ -526,7 +526,9 @@ proc semMacroExpr(c: PContext, n, nOrig: PNode, sym: PSym,
   if efNoSemCheck notin flags:
     result = semAfterMacroCall(c, n, result, sym, flags, expectedType)
   if c.config.macrosToExpand.hasKey(sym.name.s):
-    message(c.config, nOrig.info, hintExpandMacro, renderTree(result))
+    message(c.config, nOrig.info, hintExpandMacro, renderTree(result, {
+      renderNonExportedFields, renderDocComments, renderNoComments
+    }))
   result = wrapInComesFrom(nOrig.info, sym, result)
   popInfoContext(c.config)
 
@@ -671,8 +673,9 @@ proc defaultNodeField(c: PContext, a: PNode, aTyp: PType, checkDefault: bool): P
     if child != nil:
       let node = newNode(nkIntLit)
       node.intVal = toInt64(lengthOrd(c.graph.config, aTypSkip))
-      result = semExpr(c, newTree(nkCall, newSymNode(getSysSym(c.graph, a.info, "arrayWith"), a.info),
-              semExprWithType(c, child),
+      let typeNode = newNode(nkType)
+      typeNode.typ() = makeTypeDesc(c, aTypSkip[1])
+      result = semExpr(c, newTree(nkCall, newTree(nkBracketExpr, newSymNode(getSysSym(c.graph, a.info, "arrayWithDefault"), a.info), typeNode),
               node
                 ))
       result.typ() = aTyp
@@ -733,6 +736,7 @@ proc preparePContext*(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PCo
   result.semInferredLambda = semInferredLambda
   result.semGenerateInstance = generateInstance
   result.instantiateOnlyProcType = instantiateOnlyProcType
+  result.fitDefaultNode = fitDefaultNode
   result.semTypeNode = semTypeNode
   result.instTypeBoundOp = sigmatch.instTypeBoundOp
   result.hasUnresolvedArgs = hasUnresolvedArgs
@@ -853,9 +857,9 @@ proc semWithPContext*(c: PContext, n: PNode): PNode =
 
 proc reportUnusedModules(c: PContext) =
   if c.config.cmd == cmdM: return
-  for i in 0..high(c.unusedImports):
-    if sfUsed notin c.unusedImports[i][0].flags:
-      message(c.config, c.unusedImports[i][1], warnUnusedImportX, c.unusedImports[i][0].name.s)
+  for (s, info) in c.unusedImports:
+    if sfUsed notin s.flags:
+      message(c.config, info, warnUnusedImportX, s.name.s)
 
 proc closePContext*(graph: ModuleGraph; c: PContext, n: PNode): PNode =
   if c.config.cmd == cmdIdeTools and not c.suggestionsMade:

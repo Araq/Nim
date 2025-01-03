@@ -16,8 +16,9 @@ proc `$`*(a: MinValue): string {.inline.} =
     result = "hello"
     for i in a.symbols:
       result = "hello"
-  else: discard
+  else: result = ""
 
 proc parseMinValue*(): MinValue =
   # or this echo
+  result = MinValue()
   echo result

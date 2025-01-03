@@ -47,14 +47,15 @@ template call(f) =
     raiseOSError(err.OSErrorCode, astToStr(f))
 
 proc getUnicodeValue*(path, key: string; handle: HKEY): string =
+  result = ""
   let hh = newWideCString path
   let kk = newWideCString key
-  var bufSize: int32
+  var bufSize: int32 = int32(0)
   # try a couple of different flag settings:
   var flags: int32 = RRF_RT_ANY
   let err = regGetValue(handle, hh, kk, flags, nil, nil, addr bufSize)
   if err != 0:
-    var newHandle: HKEY
+    var newHandle: HKEY = default(HKEY)
     call regOpenKeyEx(handle, hh, 0, KEY_READ or KEY_WOW64_64KEY, newHandle)
     call regGetValue(newHandle, nil, kk, flags, nil, nil, addr bufSize)
     if bufSize > 0:

@@ -612,11 +612,38 @@ proc fillPartialObject(c: PContext; n: PNode; typ: PType) =
   else:
     localError(c.config, n.info, "nkDotNode requires 2 children")
 
+proc checkDefineType(c: PContext; v: PSym; t: PType) =
+  # see semfold.foldDefine for acceptable types
+  let typeKinds =
+    case v.magic
+    of mStrDefine: {tyString, tyCstring}
+    # this used to be not typechecked, so anything that accepts int nodes for compatbility:
+    of mIntDefine: {tyInt..tyInt64, tyUInt..tyUInt64, tyBool, tyChar, tyEnum}
+    of mBoolDefine: {tyBool}
+    of mGenericDefine: {tyString, tyCstring, tyInt..tyInt64, tyUInt..tyUInt64, tyBool, tyEnum}
+    else: raiseAssert("unreachable")
+  var skipped = abstractVarRange
+  if v.magic == mGenericDefine:
+    # no distinct types for generic define
+    skipped.excl tyDistinct
+  if t.skipTypes(skipped).kind notin typeKinds:
+    let name = 
+      case v.magic
+      of mStrDefine: "strdefine"
+      of mIntDefine: "intdefine"
+      of mBoolDefine: "booldefine"
+      of mGenericDefine: "define"
+      else: raiseAssert("unreachable")
+    localError(c.config, v.info, "unsupported type for constant '" & v.name.s &
+      "' with ." & name & " pragma: " & typeToString(t))
+
 proc setVarType(c: PContext; v: PSym, typ: PType) =
   if v.typ != nil and not sameTypeOrNil(v.typ, typ):
     localError(c.config, v.info, "inconsistent typing for reintroduced symbol '" &
         v.name.s & "': previous type was: " & typeToString(v.typ, preferDesc) &
         "; new type is: " & typeToString(typ, preferDesc))
+  if v.kind == skConst and v.magic in {mGenericDefine, mIntDefine, mStrDefine, mBoolDefine}:
+    checkDefineType(c, v, typ)
   v.typ = typ
 
 proc isPossibleMacroPragma(c: PContext, it: PNode, key: PNode): bool =
@@ -948,7 +975,7 @@ proc semVarOrLet(c: PContext, n: PNode, symkind: TSymKind): PNode =
           else:
             checkNilable(c, v)
           # allow let to not be initialised if imported from C:
-          if v.kind == skLet and sfImportc notin v.flags and (strictDefs notin c.features or not isLocalSym(v)):
+          if v.kind == skLet and sfImportc notin v.flags and (noStrictDefs in c.config.legacyFeatures or not isLocalSym(v)):
             localError(c.config, a.info, errLetNeedsInit)
         if sfCompileTime in v.flags:
           var x = newNodeI(result.kind, v.info)
@@ -1698,12 +1725,14 @@ proc typeSectionRightSidePass(c: PContext, n: PNode) =
         obj.ast[0] = a[0].shallowCopy
         if a[0][0].kind == nkPostfix:
           obj.ast[0][0] = a[0][0].shallowCopy
+          obj.ast[0][0][0] = a[0][0][0] # ident "*"
           obj.ast[0][0][1] = symNode
         else:
           obj.ast[0][0] = symNode
         obj.ast[0][1] = a[0][1]
       of nkPostfix:
         obj.ast[0] = a[0].shallowCopy
+        obj.ast[0][0] = a[0][0] # ident "*"
         obj.ast[0][1] = symNode
       else: assert(false)
       obj.ast[1] = a[1]
@@ -2035,13 +2064,26 @@ proc canonType(c: PContext, t: PType): PType =
   else:
     result = t
 
-proc prevDestructor(c: PContext; prevOp: PSym; obj: PType; info: TLineInfo) =
-  var msg = "cannot bind another '" & prevOp.name.s & "' to: " & typeToString(obj)
-  if sfOverridden notin prevOp.flags:
+proc prevDestructor(c: PContext; op: TTypeAttachedOp; prevOp: PSym; obj: PType; info: TLineInfo) =
+  var msg = "cannot bind another '" & AttachedOpToStr[op] & "' to: " & typeToString(obj)
+  if prevOp == nil:
+    # happens if the destructor was implicitly constructed for a specific instance,
+    # not the entire generic type
+    msg.add "; previous declaration was constructed implicitly"
+  elif sfOverridden notin prevOp.flags:
     msg.add "; previous declaration was constructed here implicitly: " & (c.config $ prevOp.info)
   else:
     msg.add "; previous declaration was here: " & (c.config $ prevOp.info)
   localError(c.config, info, errGenerated, msg)
+
+proc checkedForDestructor(t: PType): bool =
+  if tfCheckedForDestructor in t.flags:
+    return true
+  # maybe another instance was instantiated, marking the generic root:
+  let root = genericRoot(t)
+  if root != nil and tfGenericHasDestructor in root.flags:
+    return true
+  result = false
 
 proc whereToBindTypeHook(c: PContext; t: PType): PType =
   result = t
@@ -2076,10 +2118,10 @@ proc bindDupHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp) =
       let ao = getAttachedOp(c.graph, obj, op)
       if ao == s:
         discard "forward declared destructor"
-      elif ao.isNil and tfCheckedForDestructor notin obj.flags:
+      elif ao.isNil and not checkedForDestructor(obj):
         setAttachedOp(c.graph, c.module.position, obj, op, s)
       else:
-        prevDestructor(c, ao, obj, n.info)
+        prevDestructor(c, op, ao, obj, n.info)
       noError = true
       if obj.owner.getModule != s.getModule:
         localError(c.config, n.info, errGenerated,
@@ -2092,7 +2134,7 @@ proc bindDupHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp) =
   incl(s.flags, sfUsed)
   incl(s.flags, sfOverridden)
 
-proc bindTypeHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp; suppressVarDestructorWarning = false) =
+proc bindTypeHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp) =
   let t = s.typ
   var noError = false
   let cond = case op
@@ -2116,14 +2158,17 @@ proc bindTypeHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp; suppressV
       elif obj.kind == tyGenericInvocation: obj = obj.genericHead
       else: break
     if obj.kind in {tyObject, tyDistinct, tySequence, tyString}:
+      if op == attachedDestructor and t.firstParamType.kind == tyVar and
+          c.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
+        message(c.config, n.info, warnDeprecated, "A custom '=destroy' hook which takes a 'var T' parameter is deprecated; it should take a 'T' parameter")
       obj = canonType(c, obj)
       let ao = getAttachedOp(c.graph, obj, op)
       if ao == s:
         discard "forward declared destructor"
-      elif ao.isNil and tfCheckedForDestructor notin obj.flags:
+      elif ao.isNil and not checkedForDestructor(obj):
         setAttachedOp(c.graph, c.module.position, obj, op, s)
       else:
-        prevDestructor(c, ao, obj, n.info)
+        prevDestructor(c, op, ao, obj, n.info)
       noError = true
       if obj.owner.getModule != s.getModule:
         localError(c.config, n.info, errGenerated,
@@ -2214,10 +2259,10 @@ proc semOverride(c: PContext, s: PSym, n: PNode) =
         let ao = getAttachedOp(c.graph, obj, k)
         if ao == s:
           discard "forward declared op"
-        elif ao.isNil and tfCheckedForDestructor notin obj.flags:
+        elif ao.isNil and not checkedForDestructor(obj):
           setAttachedOp(c.graph, c.module.position, obj, k, s)
         else:
-          prevDestructor(c, ao, obj, n.info)
+          prevDestructor(c, k, ao, obj, n.info)
         if obj.owner.getModule != s.getModule:
           localError(c.config, n.info, errGenerated,
             "type bound operation `" & name & "` can be defined only in the same module with its type (" & obj.typeToString() & ")")
@@ -2356,6 +2401,7 @@ proc semProcAux(c: PContext, n: PNode, kind: TSymKind,
   of nkEmpty:
     s = newSym(kind, c.cache.idAnon, c.idgen, c.getCurrOwner, n.info)
     s.flags.incl sfUsed
+    s.flags.incl sfGenSym
     n[namePos] = newSymNode(s)
   of nkSym:
     s = n[namePos].sym
@@ -2644,7 +2690,7 @@ proc semIterator(c: PContext, n: PNode): PNode =
     incl(s.typ.flags, tfCapturesEnv)
   else:
     s.typ.callConv = ccInline
-  if n[bodyPos].kind == nkEmpty and s.magic == mNone and c.inConceptDecl == 0:
+  if result[bodyPos].kind == nkEmpty and s.magic == mNone and c.inConceptDecl == 0:
     localError(c.config, n.info, errImplOfXexpected % s.name.s)
   if optOwnedRefs in c.config.globalOptions and result.typ != nil:
     result.typ() = makeVarType(c, result.typ, tyOwned)

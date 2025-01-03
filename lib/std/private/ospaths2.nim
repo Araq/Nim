@@ -997,6 +997,7 @@ proc sameFile*(path1, path2: string): bool {.rtl, extern: "nos$1",
   ##
   ## See also:
   ## * `sameFileContent proc`_
+  result = false
   when defined(windows):
     var success = true
     var f1 = openHandle(path1)

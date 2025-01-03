@@ -1,5 +1,5 @@
 discard """
-  matrix: "--mm:refc; --mm:orc"
+  matrix: "--mm:refc; --mm:orc; --exceptions:goto"
   targets: "c cpp js"
   output: '''
 PEG AST traversal output
@@ -192,7 +192,7 @@ block:
     expr.rule = sequence(capture(ident), *sequence(
                   nonterminal(ws), term('+'), nonterminal(ws), nonterminal(expr)))
 
-    var c: Captures
+    var c: Captures = default(Captures)
     var s = "a+b +  c +d+e+f"
     doAssert rawMatch(s, expr.rule, 0, c) == len(s)
     var a = ""
@@ -208,7 +208,7 @@ block:
     doAssert match("_______ana", peg"A <- 'ana' / . A")
     doAssert match("abcs%%%", peg"A <- ..A / .A / '%'")
 
-    var matches: array[0..MaxSubpatterns-1, string]
+    var matches: array[0..MaxSubpatterns-1, string] = default(array[0..MaxSubpatterns-1, string])
     if "abc" =~ peg"{'a'}'bc' 'xyz' / {\ident}":
       doAssert matches[0] == "abc"
     else:
@@ -325,7 +325,7 @@ block:
   call()
 call()
 """
-      var c: Captures
+      var c: Captures = default(Captures)
       doAssert program.len == program.rawMatch(grammar, 0, c)
       doAssert c.ml == 1
 

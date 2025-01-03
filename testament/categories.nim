@@ -347,7 +347,7 @@ proc compileExample(r: var TResults, pattern, options: string, cat: Category) =
     testSpec r, test
 
 proc testStdlib(r: var TResults, pattern, options: string, cat: Category) =
-  var files: seq[string]
+  var files: seq[string] = @[]
 
   proc isValid(file: string): bool =
     for dir in parentDirs(file, inclusive = false):
@@ -383,11 +383,13 @@ proc testStdlib(r: var TResults, pattern, options: string, cat: Category) =
 
 # ----------------------------- nimble ----------------------------------------
 proc listPackagesAll(): seq[NimblePackage] =
+  result = @[]
   var nimbleDir = getEnv("NIMBLE_DIR")
   if nimbleDir.len == 0: nimbleDir = getHomeDir() / ".nimble"
   let packageIndex = nimbleDir / "packages_official.json"
   let packageList = parseFile(packageIndex)
   proc findPackage(name: string): JsonNode =
+    result = nil
     for a in packageList:
       if a["name"].str == name: return a
   for pkg in important_packages.packages.items:
@@ -411,17 +413,15 @@ proc listPackages(packageFilter: string): seq[NimblePackage] =
     elif testamentData0.testamentNumBatch == 0:
       result = pkgs
     else:
+      result = @[]
       let pkgs2 = pkgs.filterIt(not it.allowFailure)
       for i in 0..<pkgs2.len:
         if i mod testamentData0.testamentNumBatch == testamentData0.testamentBatch:
           result.add pkgs2[i]
 
 proc makeSupTest(test, options: string, cat: Category, debugInfo = ""): TTest =
-  result.cat = cat
-  result.name = test
-  result.options = options
-  result.debugInfo = debugInfo
-  result.startTime = epochTime()
+  result = TTest(cat: cat, name: test, options: options, debugInfo: debugInfo,
+                startTime: epochTime())
 
 import std/private/gitutils
 
@@ -440,7 +440,7 @@ proc testNimblePackages(r: var TResults; cat: Category; packageFilter: string) =
       var test = makeSupTest(pkg.name, "", cat, "[$#/$#] " % [$i, $pkgs.len])
       let buildPath = packagesDir / pkg.name
       template tryCommand(cmd: string, workingDir2 = buildPath, reFailed = reInstallFailed, maxRetries = 1): string =
-        var outp: string
+        var outp: string = ""
         let ok = retryCall(maxRetry = maxRetries, backoffDuration = 10.0):
           var status: int
           (outp, status) = execCmdEx(cmd, workingDir = workingDir2)
@@ -583,7 +583,8 @@ proc isJoinableSpec(spec: TSpec): bool =
       result = false
 
 proc quoted(a: string): string =
-  # todo: consider moving to system.nim
+  # TODO: consider moving to system.nim
+  result = ""
   result.addQuoted(a)
 
 proc runJoinedTest(r: var TResults, cat: Category, testsDir: string, options: string) =
@@ -600,7 +601,7 @@ proc runJoinedTest(r: var TResults, cat: Category, testsDir: string, options: st
     if kind == pcDir and cat notin specialCategories:
       for file in walkDirRec(testsDir / cat):
         if isTestFile(file):
-          var spec: TSpec
+          var spec: TSpec = default(TSpec)
           try:
             spec = parseSpec(file)
           except ValueError:
@@ -621,7 +622,7 @@ proc runJoinedTest(r: var TResults, cat: Category, testsDir: string, options: st
     echo s
     return
 
-  var megatest: string
+  var megatest: string = ""
   # xxx (minor) put outputExceptedFile, outputGottenFile, megatestFile under here or `buildDir`
   var outDir = nimcacheDir(testsDir / "megatest", "", targetC)
   template toMarker(file, i): string =
@@ -735,7 +736,7 @@ proc processCategory(r: var TResults, cat: Category,
         runJoinedTest(r, cat, testsDir, options & " --mm:refc")
     else:
       var testsRun = 0
-      var files: seq[string]
+      var files: seq[string] = @[]
       for file in walkDirRec(testsDir &.? cat.string):
         if isTestFile(file): files.add file
       files.sort # give reproducible order

@@ -670,7 +670,7 @@ proc initOrderedSet*[A](initialSize = defaultInitialSize): OrderedSet[A] =
     var a = initOrderedSet[int]()
     a.incl(3)
     assert len(a) == 1
-
+  result = OrderedSet[A]()
   result.init(initialSize)
 
 proc toOrderedSet*[A](keys: openArray[A]): OrderedSet[A] =

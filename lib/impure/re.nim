@@ -466,7 +466,7 @@ template `=~` *(s: string, pattern: Regex): untyped =
     doAssert parse("   # comment ... ") == """("# comment ... ",)"""
   bind MaxSubpatterns
   when not declaredInScope(matches):
-    var matches {.inject.}: array[MaxSubpatterns, string]
+    var matches {.inject.}: array[MaxSubpatterns, string] = default(array[MaxSubpatterns, string])
   match(s, pattern, matches)
 
 # ------------------------- more string handling ------------------------------

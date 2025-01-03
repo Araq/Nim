@@ -30,3 +30,6 @@ block: # issue #7889
     bindmeQuote()
   if false:
     bindmeTemplate()
+
+block: # issue #14894
+  myTemplate()

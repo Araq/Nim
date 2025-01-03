@@ -11,7 +11,7 @@ when not defined(js):
 randomize(233)
 
 proc main() =
-  var occur: array[1000, int]
+  var occur: array[1000, int] = default(array[1000, int])
 
   for i in 0..100_000:
     let x = rand(high(occur))

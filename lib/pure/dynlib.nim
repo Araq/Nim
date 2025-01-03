@@ -90,6 +90,7 @@ proc loadLibPattern*(pattern: string, globalSymbols = false): LibHandle =
   ## pragma does. Returns nil if the library could not be loaded.
   ##
   ## .. warning:: this proc uses the GC and so cannot be used to load the GC.
+  result = default(LibHandle)
   var candidates = newSeq[string]()
   libCandidates(pattern, candidates)
   for c in candidates:

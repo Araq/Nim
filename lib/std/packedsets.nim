@@ -462,7 +462,7 @@ proc union*[A](s1, s2: PackedSet[A]): PackedSet[A] =
       c = union(a, b)
     assert c.len == 5
     assert c == [1, 2, 3, 4, 5].toPackedSet
-
+  result = default(PackedSet[A])
   result.assign(s1)
   incl(result, s2)
 
@@ -509,7 +509,7 @@ proc symmetricDifference*[A](s1, s2: PackedSet[A]): PackedSet[A] =
       c = symmetricDifference(a, b)
     assert c.len == 4
     assert c == [1, 2, 4, 5].toPackedSet
-
+  result = default(PackedSet[A])
   result.assign(s1)
   for item in s2.items:
     if containsOrIncl(result, item):

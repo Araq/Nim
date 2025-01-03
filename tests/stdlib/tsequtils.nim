@@ -275,7 +275,10 @@ block: # toSeq test
       numeric = @[1, 2, 3, 4, 5, 6, 7, 8, 9]
       oddNumbers = toSeq(filter(numeric) do (x: int) -> bool:
         if x mod 2 == 1:
-          result = true)
+          result = true
+        else:
+          result = false
+      )
     doAssert oddNumbers == @[1, 3, 5, 7, 9]
 
   block:

@@ -1,7 +1,7 @@
 discard """
   nimoutFull: true
   action: "reject"
-  cmd: "nim r --hint:Conf:off $file"
+  cmd: "nim r --hint:Conf:off --warnings:off $file"
   nimout: '''
 tdiagnostic_messages.nim(36, 6) Error: 'a' can have side effects
 > tdiagnostic_messages.nim(37, 30) Hint: 'a' calls `.sideEffect` 'callWithSideEffects'
