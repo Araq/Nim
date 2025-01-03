@@ -53,7 +53,7 @@
   - [``joyent_http_parser``](https://github.com/nim-lang/joyent_http_parser)
 
 - Proc [toCountTable](https://nim-lang.org/docs/tables.html#toCountTable,openArray[A])
-  now produces a `CountTable` with values correspoding to the number of occurrences
+  now produces a `CountTable` with values corresponding to the number of occurrences
   of the key in the input. It used to produce a table with all values set to `1`.
 
   Counting occurrences in a sequence used to be:
@@ -339,7 +339,7 @@ for i in a..b:
 
 - Fixed "ReraiseError when using try/except within finally block"
   ([#5871](https://github.com/nim-lang/Nim/issues/5871))
-- Fixed "Range type inference leads to counter-intuitive behvaiour"
+- Fixed "Range type inference leads to counter-intuitive behaviour"
   ([#5854](https://github.com/nim-lang/Nim/issues/5854))
 - Fixed "JSON % operator can fail in extern procs with dynamic types"
   ([#6385](https://github.com/nim-lang/Nim/issues/6385))
@@ -403,7 +403,7 @@ for i in a..b:
   ([#6589](https://github.com/nim-lang/Nim/issues/6589))
 - Fixed "Generated c code calls function twice"
   ([#6292](https://github.com/nim-lang/Nim/issues/6292))
-- Fixed "Range type inference leads to counter-intuitive behvaiour"
+- Fixed "Range type inference leads to counter-intuitive behaviour"
   ([#5854](https://github.com/nim-lang/Nim/issues/5854))
 - Fixed "New backward indexing is too limited"
   ([#6631](https://github.com/nim-lang/Nim/issues/6631))
