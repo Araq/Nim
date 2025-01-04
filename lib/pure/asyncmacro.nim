@@ -159,12 +159,29 @@ proc verifyReturnType(typeName: string, node: NimNode = nil) =
     error("Expected return type of 'Future' got '$1'" %
           typeName, node)
 
+proc isAsyncPrc0(n: NimNode): bool =
+  if n.kind == nnkBlockStmt and n[0].strVal == "asynctrack":
+    return true
+  if n.kind in RoutineNodes:
+    return false
+  for i in 0 .. n.len-1:
+    if isAsyncPrc0(n[i]):
+      return true
+  return false
+
+proc isAsyncPrc(n: NimNode): bool =
+  for i in 0 .. n.len-1:
+    if isAsyncPrc0(n[i]):
+      return true
+  return false
+
 macro withRaises[T](f: Future[T], body: untyped): untyped =
   #echo repr f.kind
   # XXX support more cases
   let prcSym = case f.kind
   of nnkSym:
     if f.getImpl.kind == nnkIdentDefs and f.getImpl[^1].kind == nnkCall:
+      #echo repr f.getImpl[^1][0]
       f.getImpl[^1][0]
     else:
       nil
@@ -173,7 +190,8 @@ macro withRaises[T](f: Future[T], body: untyped): untyped =
   else:
     nil
   #echo repr prcSym
-  if prcSym != nil:
+  #echo repr prcSym.getImpl
+  if prcSym != nil and isAsyncPrc(prcSym.getImpl):
     let raisesList = getRaisesList(prcSym)
     var raisesListTyp = newNimNode(nnkBracket)
     if raisesList.len > 0:
@@ -361,8 +379,10 @@ proc asyncSingleProc(prc: NimNode): NimNode =
 
   # based on the yglukhov's patch to chronos: https://github.com/status-im/nim-chronos/pull/47
   if procBody.kind != nnkEmpty:
+    let asynctrack = ident"asynctrack"
     body2.add quote do:
-      `outerProcBody`
+      block `asynctrack`:
+        `outerProcBody`
     result.body = body2
 
 macro async*(prc: untyped): untyped =
@@ -436,15 +456,15 @@ macro multisync*(prc: untyped): untyped =
   result.add(sync)
 
 macro toFutureEx*(prc: typed): untyped =
-  # XXX error instead of asserts
-  #echo repr getRaisesList(prc[0])
-  #assert prc.kind == nnkCall
+  template check(cond: untyped): untyped =
+    if not cond:
+      error("async proc call expected", prc)
+  check prc.kind == nnkCall
+  check prc[0].kind == nnkSym
+  check isAsyncPrc(prc[0].getImpl)
   let procImpl = getTypeImpl(prc[0])
-  #assert procImpl.kind == nnkProcTy
+  check procImpl.kind == nnkProcTy
   let retTyp = procImpl.params[0]
-  #assert retTyp.kind == nnkBracketExpr
-  #let fut = repr(retTyp[0])
-  #assert fut == "FutureUntracked", fut
   let baseTyp = retTyp[1]
   let raisesList = getRaisesList(prc[0])
   let exTyp = if raisesList.len == 0:

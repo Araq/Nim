@@ -45,7 +45,9 @@ block:
     discard
 
 block:
-  # XXX raises: []
+  # we cannot tell if fcb is an async proc
+  # or a closure that returns a user created newFuture()
+  # that can raise anything
   type FooBar = object
     fcb: proc(): Future[void] {.closure, gcsafe.}
 
@@ -76,18 +78,16 @@ block:
   doAssert not compiles(bad())
 
 block:
+  proc bar {.async.} =
+    err(false)
+
+  proc foo {.async.} =
+    await bar()
+
   template good =
-    proc bar {.async.} =
-      err(false)
-    proc foo {.async.} =
-      await bar()
     proc main {.async, raises: [MyError].} =
       await foo()
   template bad =
-    proc bar {.async.} =
-      err(false)
-    proc foo {.async.} =
-      await bar()
     proc main {.async, raises: [].} =
       await foo()
   doAssert compiles(good())
@@ -103,17 +103,43 @@ block:
   doAssert compiles(good())
   doAssert not compiles(bad())
 
-# XXX this should not compile;
-#     add Future.isInternal field?
-when false:
-  proc foo {.async, raises: [].} =
-    let f = newFuture[void]()
-    f.complete()
-    await f
-when false:
+block:
+  template good =
+    proc foo {.async, raises: [Exception].} =
+      await newFuture[void]()
+  template bad =
+    proc foo {.async, raises: [].} =
+      await newFuture[void]()
+  doAssert compiles(good())
+  doAssert not compiles(bad())
+
+block:
   proc fut: Future[void] =
     newFuture[void]()
-  proc main {.async, raises: [].} =
-    let f = fut()
-    f.complete()
-    await f
+
+  template good =
+    proc main {.async, raises: [Exception].} =
+      await fut()
+  template bad =
+    proc main {.async, raises: [].} =
+      await fut()
+  doAssert compiles(good())
+  doAssert not compiles(bad())
+
+block:
+  proc bar() {.async.} =
+    err(false)
+
+  # XXX We could check all returns are from async procs
+  #     and if so use the inferred proc raises
+  proc foo(): Future[void] =
+    bar()
+
+  template good =
+    proc main {.async, raises: [Exception].} =
+      await foo()
+  template bad =
+    proc main {.async, raises: [MyError].} =
+      await foo()
+  doAssert compiles(good())
+  doAssert not compiles(bad())
