@@ -409,8 +409,12 @@ proc semArrayIndex(c: PContext, n: PNode): PType =
       result = makeRangeWithStaticExpr(c, e.typ.n)
     elif e.kind in {nkIntLit..nkUInt64Lit}:
       if e.intVal < 0:
-        localError(c.config, n.info,
-          "Array length can't be negative, but was " & $e.intVal)
+        if e.kind in {nkIntLit..nkInt64Lit}:
+          localError(c.config, n.info,
+            "Array length can't be negative, but was " & $e.intVal)
+        else:
+          localError(c.config, n.info,
+            "Array length can't exceed its maximum value (9223372036854775807), but was " & $cast[BiggestUInt](e.intVal))
       result = makeRangeType(c, 0, e.intVal-1, n.info, e.typ)
     elif e.kind == nkSym and (e.typ.kind == tyStatic or e.typ.kind == tyTypeDesc):
       if e.typ.kind == tyStatic:
