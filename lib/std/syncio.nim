@@ -15,6 +15,8 @@ import std/formatfloat
 when defined(windows):
   import std/widestrs
 
+from system/ansi_c import c_memchr
+
 # ----------------- IO Part ------------------------------------------------
 from system/ansi_c import CFilePtr
 
@@ -395,9 +397,6 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
   ## `false` is returned `line` contains no new data.
   result = false
 
-  proc c_memchr(s: pointer, c: cint, n: csize_t): pointer {.
-    importc: "memchr", header: "<string.h>".}
-
   when defined(windows):
     proc readConsole(hConsoleInput: FileHandle, lpBuffer: pointer,
                      nNumberOfCharsToRead: int32,
@@ -485,7 +484,7 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
       checkErr(f)
       break
 
-    let m = c_memchr(addr line[pos], '\L'.ord, cast[csize_t](sp))
+    let m = c_memchr(addr line[pos], cint('\L'), cast[csize_t](sp))
     if m != nil:
       # \l found: Could be our own or the one by fgets, in any case, we're done
       var last = cast[int](m) - cast[int](addr line[0])

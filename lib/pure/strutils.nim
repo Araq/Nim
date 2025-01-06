@@ -1950,8 +1950,8 @@ func find*(a: SkipTable, s, sub: string, start: Natural = 0, last = -1): int {.
     inc skip, a[s[skip + subLast]]
 
 when not (defined(js) or defined(nimdoc) or defined(nimscript)):
-  func c_memchr(cstr: pointer, c: char, n: csize_t): pointer {.
-                importc: "memchr", header: "<string.h>".}
+  from system/ansi_c import c_memchr
+
   const hasCStringBuiltin = true
 else:
   const hasCStringBuiltin = false
@@ -1982,7 +1982,7 @@ func find*(s: string, sub: char, start: Natural = 0, last = -1): int {.rtl,
     when hasCStringBuiltin:
       let length = last-start+1
       if length > 0:
-        let found = c_memchr(s[start].unsafeAddr, sub, cast[csize_t](length))
+        let found = c_memchr(s[start].unsafeAddr, cint(sub), cast[csize_t](length))
         if not found.isNil:
           return cast[int](found) -% cast[int](s.cstring)
     else:
