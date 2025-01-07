@@ -485,8 +485,9 @@ proc passCopyToSink(n: PNode; c: var Con; s: var Scope): PNode =
         ("cannot move '$1', passing '$1' to a sink parameter introduces an implicit copy") % $n)
   else:
     if c.graph.config.selectedGC in {gcArc, gcOrc, gcAtomicArc}:
-      localError(c.graph.config, n.info, errInternal,
-                 "type contains managed memory: '$1' for '$2' " % [$nTyp, $n] )
+      if containsManagedMemory(nTyp):
+        localError(c.graph.config, n.info, errInternal,
+                   "type contains managed memory: '$1' for '$2' " % [$nTyp, $n] )
     if nTyp.skipTypes(abstractInst).kind in {tyOpenArray, tyVarargs}:
       localError(c.graph.config, n.info, "cannot create an implicit openArray copy to be passed to a sink parameter")
     result.add newTree(nkAsgn, tmp, p(n, c, s, normal))
