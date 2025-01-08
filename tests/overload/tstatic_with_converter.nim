@@ -15,7 +15,7 @@ cimported set1_imported(double x) {
  
 """}
  
-type vfloat{.importc: "cimported".} = object
+type vfloat{.importc: "cimported", nodecl.} = object
  
 proc set1(a: float): vfloat {.importc: "set1_imported".}
  
