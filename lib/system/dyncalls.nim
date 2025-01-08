@@ -113,13 +113,13 @@ elif defined(windows) or defined(dos):
   #
   when defined(cpp):
     type
-      THINSTANCE {.importc: "HINSTANCE".} = object
+      THINSTANCE {.importc: "HINSTANCE", nodecl.} = object
         x: pointer
     proc getProcAddress(lib: THINSTANCE, name: cstring): ProcAddr {.
         importcpp: "(void*)GetProcAddress(@)", header: "<windows.h>", stdcall.}
   else:
     type
-      THINSTANCE {.importc: "HINSTANCE".} = pointer
+      THINSTANCE {.importc: "HINSTANCE", nodecl.} = pointer
     proc getProcAddress(lib: THINSTANCE, name: cstring): ProcAddr {.
         importc: "GetProcAddress", header: "<windows.h>", stdcall.}
 
