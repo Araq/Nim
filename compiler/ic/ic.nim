@@ -538,7 +538,7 @@ proc toPackedNodeTopLevel*(n: PNode, encoder: var PackedEncoder; m: var PackedMo
   toPackedNodeIgnoreProcDefs(n, encoder, m)
   flush encoder, m
 
-proc toPackedGeneratedProcDef*(s: PSym, encoder: var PackedEncoder; m: var PackedModule) =
+proc toPackedGeneratedProcDef(s: PSym, encoder: var PackedEncoder; m: var PackedModule) =
   ## Generic procs and generated `=hook`'s need explicit top-level entries so
   ## that the code generator can work without having to special case these. These
   ## entries will also be useful for other tools and are the cleanest design
@@ -551,10 +551,15 @@ proc storeAttachedProcDef*(t: PType; op: TTypeAttachedOp; s: PSym,
                            encoder: var PackedEncoder; m: var PackedModule) =
   assert s.kind in routineKinds
   assert isActive(encoder)
+  if s.itemId.module == encoder.thisModule:
+    assert not encoder.symMarker.contains(s.itemId.item), "sym already written?"
+
   let tid = storeTypeLater(t, encoder, m)
   let sid = storeSymLater(s, encoder, m)
   m.attachedOps.add (tid, op, sid)
-  toPackedGeneratedProcDef(s, encoder, m)
+  when false:
+    # wrong idea!
+    toPackedGeneratedProcDef(s, encoder, m)
 
 proc storeInstantiation*(c: var PackedEncoder; m: var PackedModule; s: PSym; i: PInstantiation) =
   var t = newSeq[PackedItemId](i.concreteTypes.len)

@@ -364,13 +364,14 @@ proc setAttachedOp*(g: ModuleGraph; module: int; t: PType; op: TTypeAttachedOp; 
 proc setAttachedOpPartial*(g: ModuleGraph; module: int; t: PType; op: TTypeAttachedOp; value: PSym) =
   ## we also need to record this to the packed module.
   g.attachedOps[op][t.itemId] = LazySym(sym: value)
+  incl value.flags, sfForward
 
 proc completePartialOp*(g: ModuleGraph; module: int; t: PType; op: TTypeAttachedOp; value: PSym) =
+  excl value.flags, sfForward
   if g.config.symbolFiles != disabledSf:
     assert module < g.encoders.len
     assert isActive(g.encoders[module])
-    toPackedGeneratedProcDef(value, g.encoders[module], g.packed[module].fromDisk)
-    #storeAttachedProcDef(t, op, value, g.encoders[module], g.packed[module].fromDisk)
+    storeAttachedProcDef(t, op, value, g.encoders[module], g.packed[module].fromDisk)
 
 iterator getDispatchers*(g: ModuleGraph): PSym =
   for i in g.dispatchers.mitems:
