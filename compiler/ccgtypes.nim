@@ -235,7 +235,7 @@ proc isImportedType(t: PType): bool =
   result = t.sym != nil and sfImportc in t.sym.flags
 
 proc isNoDeclType(t: PType): bool =
-  result = t.sym != nil and {lfNoDecl, lfHeader} * t.sym.loc.flags = {}
+  result = t.sym != nil and {lfNoDecl, lfHeader} * t.sym.loc.flags != {}
 
 proc isImportedCppType(t: PType): bool =
   let x = t.skipTypes(irrelevantForBackend)
