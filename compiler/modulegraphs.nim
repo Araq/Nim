@@ -88,6 +88,7 @@ type
     suggestMode*: bool # whether we are in nimsuggest mode or not.
     invalidTransitiveClosure: bool
     interactive*: bool
+    withinSystem*: bool # in system.nim or a module imported by system.nim
     inclToMod*: Table[FileIndex, FileIndex] # mapping of include file to the
                                             # first module that included it
     importStack*: seq[FileIndex]  # The current import stack. Used for detecting recursive
@@ -273,6 +274,25 @@ proc someSym*(g: ModuleGraph; m: PSym; name: PIdent): PSym =
     result = interfaceSymbol(g.config, g.cache, g.packed, FileIndex(m.position), name, importHidden)
   else:
     result = strTableGet(g.ifaces[m.position].interfSelect(importHidden), name)
+
+proc someSymAmb*(g: ModuleGraph; m: PSym; name: PIdent; amb: var bool): PSym =
+  let importHidden = optImportHidden in m.options
+  if isCachedModule(g, m):
+    result = nil
+    for s in interfaceSymbols(g.config, g.cache, g.packed, FileIndex(m.position), name, importHidden):
+      if result == nil:
+        # set result to the first symbol
+        result = s
+      else:
+        # another symbol found
+        amb = true
+        break
+  else:
+    var ti: TIdentIter = default(TIdentIter)
+    result = initIdentIter(ti, g.ifaces[m.position].interfSelect(importHidden), name)
+    if result != nil and nextIdentIter(ti, g.ifaces[m.position].interfSelect(importHidden)) != nil:
+      # another symbol exists with same name
+      amb = true
 
 proc systemModuleSym*(g: ModuleGraph; name: PIdent): PSym =
   result = someSym(g, g.systemModule, name)

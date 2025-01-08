@@ -322,6 +322,14 @@ proc intersects(s1, s2: IntSet): bool =
     if s2.contains(a):
       return true
 
+proc hasPushOrPopPragma(n: DepN): bool =
+  # Checks if the tree node has some pragmas that do not
+  # play well with reordering, like the push/pop pragma
+  # no crossing for push/pop barrier
+  let a = n.pnode
+  result = a.kind == nkPragma and a[0].kind == nkIdent and
+      (a[0].ident.s == "push" or a[0].ident.s == "pop")
+
 proc buildGraph(n: PNode, deps: seq[(IntSet, IntSet)]): DepG =
   # Build a dependency graph
   result = newSeqOfCap[DepN](deps.len)
@@ -363,6 +371,13 @@ proc buildGraph(n: PNode, deps: seq[(IntSet, IntSet)]): DepG =
             for dep in deps[i][0]:
               if dep in declares:
                 ni.expls.add "one declares \"" & idNames[dep] & "\" and the other defines it"
+      elif hasPushOrPopPragma(nj):
+        # Every node that comes after a push/pop pragma must
+        # depend on it; vice versa
+        if j < i:
+          ni.kids.add nj
+        else:
+          nj.kids.add ni
       else:
         for d in declares:
           if uses.contains(d):
@@ -403,18 +418,7 @@ proc getStrongComponents(g: var DepG): seq[seq[DepN]] =
     if v.idx < 0:
       strongConnect(v, idx, s, result)
 
-proc hasForbiddenPragma(n: PNode): bool =
-  # Checks if the tree node has some pragmas that do not
-  # play well with reordering, like the push/pop pragma
-  result = false
-  for a in n:
-    if a.kind == nkPragma and a[0].kind == nkIdent and
-        a[0].ident.s == "push":
-      return true
-
 proc reorder*(graph: ModuleGraph, n: PNode, module: PSym): PNode =
-  if n.hasForbiddenPragma:
-    return n
   var includedFiles = initIntSet()
   let mpath = toFullPath(graph.config, module.fileIdx)
   let n = expandIncludes(graph, module, n, mpath,

@@ -1,3 +1,7 @@
+discard """
+  joinable: false
+"""
+
 {.experimental: "strictDefs".}
 
 proc bar(x: out string) =
@@ -53,3 +57,47 @@ proc foo() =
 
 static: foo()
 foo()
+
+proc foo2 =
+  when nimvm:
+    discard
+  else:
+    let x = 1
+  doAssert x == 1
+
+  when false:
+    discard
+  else:
+    let y = 2
+
+  doAssert y == 2
+
+  const e = 1
+  when e == 0:
+    discard
+  elif e == 1:
+    let z = 3
+  else:
+    discard
+
+  doAssert z == 3
+
+foo2()
+
+# bug #24472
+template bar1314(): bool =
+  let hello = true
+  hello
+
+template foo1314*(val: bool): bool =
+  when nimvm:
+    val
+  else:
+    val
+
+proc test() = # Doesn't fail when top level
+  # Original code is calling `unlikely` which has a `nimvm` branch
+  let s = foo1314(bar1314())
+  doAssert s
+
+test()

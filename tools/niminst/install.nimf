@@ -31,7 +31,7 @@ if [ $# -eq 1 ] ; then
     "/usr/bin")
       bindir=$1
       configdir="/etc/?proj"
-      libdir="/usr/lib/?proj"
+      libdir="/usr/lib/?proj/lib"
       docdir="/usr/share/?proj/doc"
       datadir="/usr/share/?proj/data"
       nimbleDir="/opt/nimble/pkgs/?c.nimblePkgName-?c.version"
@@ -39,7 +39,7 @@ if [ $# -eq 1 ] ; then
     "/usr/local/bin")
       bindir=$1
       configdir="/etc/?proj"
-      libdir="/usr/local/lib/?proj"
+      libdir="/usr/local/lib/?proj/lib"
       docdir="/usr/local/share/?proj/doc"
       datadir="/usr/local/share/?proj/data"
       nimbleDir="/opt/nimble/pkgs/?c.nimblePkgName-?c.version"

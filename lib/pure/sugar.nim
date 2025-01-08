@@ -203,7 +203,7 @@ proc freshIdentNodes(ast: NimNode): NimNode =
   # see also https://github.com/nim-lang/Nim/pull/8531#issuecomment-410436458
   proc inspect(node: NimNode): NimNode =
     case node.kind:
-    of nnkIdent, nnkSym:
+    of nnkIdent, nnkSym, nnkOpenSymChoice, nnkClosedSymChoice, nnkOpenSym:
       result = ident($node)
     of nnkEmpty, nnkLiterals:
       result = node
@@ -347,7 +347,7 @@ proc collectImpl(init, body: NimNode): NimNode {.since: (1, 1).} =
   if init != nil:
     expectKind init, {nnkCall, nnkIdent, nnkSym, nnkClosedSymChoice, nnkOpenSymChoice, nnkOpenSym}
     bracketExpr = newTree(nnkBracketExpr,
-      if init.kind in {nnkCall, nnkClosedSymChoice, nnkOpenSymChoice}:
+      if init.kind in {nnkCall, nnkClosedSymChoice, nnkOpenSymChoice, nnkOpenSym}:
         freshIdentNodes(init[0]) else: freshIdentNodes(init))
   else:
     bracketExpr = newTree(nnkBracketExpr)

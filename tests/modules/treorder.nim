@@ -8,6 +8,8 @@ defined
 
 {.experimental: "codeReordering".}
 
+{.push callconv: stdcall.}
+
 proc bar(x: T)
 
 proc foo() =
@@ -41,3 +43,5 @@ using
   my, omy: int
 
 goo(3, 4)
+
+{.pop.}

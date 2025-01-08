@@ -32,7 +32,7 @@ proc printKeyCodes*() {.importc: "linenoisePrintKeyCodes".}
 
 proc free*(s: cstring) {.importc: "free", header: "<stdlib.h>".}
 
-when defined(nimExperimentalLinenoiseExtra) and not defined(windows):
+when not defined(windows):
   # C interface
   type LinenoiseStatus = enum
     linenoiseStatus_ctrl_unknown
@@ -58,14 +58,14 @@ when defined(nimExperimentalLinenoiseExtra) and not defined(windows):
     ## line editing API that allows returning the line entered and an indicator
     ## of which control key was entered, allowing user to distinguish between
     ## for example ctrl-C vs ctrl-D.
-    runnableExamples("-d:nimExperimentalLinenoiseExtra -r:off"):
+    runnableExamples("-r:off"):
       var ret: ReadLineResult
       while true:
         readLineStatus("name: ", ret) # ctrl-D will exit, ctrl-C will go to next prompt
         if ret.line.len > 0: echo ret.line
         if ret.status == lnCtrlD: break
       echo "exiting"
-    var data: LinenoiseData
+    var data: LinenoiseData = default(LinenoiseData)
     let buf = linenoiseExtra(prompt, data.addr)
     result.line = $buf
     free(buf)

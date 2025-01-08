@@ -56,6 +56,7 @@ type
     reJoined,          # test is disabled because it was joined into the megatest
     reSuccess          # test was successful
     reInvalidSpec      # test had problems to parse the spec
+    reRetry            # test is being retried
 
   TTarget* = enum
     targetC = "c"
@@ -102,6 +103,7 @@ type
                       # but don't rely on much precision
     inlineErrors*: seq[InlineError] # line information to error message
     debugInfo*: string # debug info to give more context
+    retries*: int # number of retry attempts after the test fails
 
 proc getCmd*(s: TSpec): string =
   if s.cmd.len == 0:
@@ -297,6 +299,7 @@ proc extractSpec(filename: string; spec: var TSpec): string =
     result = ""
 
 proc parseTargets*(value: string): set[TTarget] =
+  result = default(set[TTarget])
   for v in value.normalize.splitWhitespace:
     case v
     of "c": result.incl(targetC)
@@ -306,7 +309,7 @@ proc parseTargets*(value: string): set[TTarget] =
     else: raise newException(ValueError, "invalid target: '$#'" % v)
 
 proc initSpec*(filename: string): TSpec =
-  result.file = filename
+  result = TSpec(file: filename)
 
 proc isCurrentBatch*(testamentData: TestamentData; filename: string): bool =
   if testamentData.testamentNumBatch != 0:
@@ -315,13 +318,12 @@ proc isCurrentBatch*(testamentData: TestamentData; filename: string): bool =
     true
 
 proc parseSpec*(filename: string): TSpec =
-  result.file = filename
-  result.filename = extractFilename(filename)
+  result = TSpec(file: filename, filename: extractFilename(filename))
   let specStr = extractSpec(filename, result)
   var ss = newStringStream(specStr)
-  var p: CfgParser
+  var p: CfgParser = default(CfgParser)
   open(p, ss, filename, 1)
-  var flags: HashSet[string]
+  var flags: HashSet[string] = initHashSet[string]()
   var nimoutFound = false
   while true:
     var e = next(p)
@@ -477,6 +479,8 @@ proc parseSpec*(filename: string): TSpec =
           result.timeout = parseFloat(e.value)
         except ValueError:
           result.parseErrors.addLine "cannot interpret as a float: ", e.value
+      of "retries":
+        discard parseInt(e.value, result.retries)
       of "targets", "target":
         try:
           result.targets.incl parseTargets(e.value)

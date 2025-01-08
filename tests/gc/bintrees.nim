@@ -1,3 +1,7 @@
+discard """
+  retries: 2
+"""
+
 # -*- nim -*-
 
 import os, strutils

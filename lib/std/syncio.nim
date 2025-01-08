@@ -15,6 +15,8 @@ import std/formatfloat
 when defined(windows):
   import std/widestrs
 
+from system/ansi_c import c_memchr
+
 # ----------------- IO Part ------------------------------------------------
 type
   CFile {.importc: "FILE", header: "<stdio.h>",
@@ -320,10 +322,25 @@ elif defined(windows):
 const
   BufSize = 4000
 
-proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+template closeIgnoreError(f: File) =
   ## Closes the file.
   if not f.isNil:
     discard c_fclose(f)
+
+
+when defined(nimPreviewCheckedClose):
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    ##
+    ## Raises an IO exception in case of an error.
+    if not f.isNil:
+      let x = c_fclose(f)
+      if x < 0:
+        checkErr(f)
+else:
+  proc close*(f: File) {.tags: [], gcsafe, sideEffect.} =
+    ## Closes the file.
+    closeIgnoreError(f)
 
 proc readChar*(f: File): char {.tags: [ReadIOEffect].} =
   ## Reads a single character from the stream `f`. Should not be used in
@@ -384,8 +401,7 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
   ## character(s) are not part of the returned string. Returns `false`
   ## if the end of the file has been reached, `true` otherwise. If
   ## `false` is returned `line` contains no new data.
-  proc c_memchr(s: pointer, c: cint, n: csize_t): pointer {.
-    importc: "memchr", header: "<string.h>".}
+  result = false
 
   when defined(windows):
     proc readConsole(hConsoleInput: FileHandle, lpBuffer: pointer,
@@ -474,7 +490,7 @@ proc readLine*(f: File, line: var string): bool {.tags: [ReadIOEffect],
       checkErr(f)
       break
 
-    let m = c_memchr(addr line[pos], '\L'.ord, cast[csize_t](sp))
+    let m = c_memchr(addr line[pos], cint('\L'), cast[csize_t](sp))
     if m != nil:
       # \l found: Could be our own or the one by fgets, in any case, we're done
       var last = cast[int](m) - cast[int](addr line[0])
@@ -708,12 +724,12 @@ proc open*(f: var File, filename: string,
       # be opened.
       var res {.noinit.}: Stat
       if c_fstat(getFileHandle(f2), res) >= 0'i32 and modeIsDir(res.st_mode):
-        close(f2)
+        closeIgnoreError(f2)
         return false
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f2), false):
-        close(f2)
+        closeIgnoreError(f2)
         return false
 
     result = true
@@ -722,6 +738,8 @@ proc open*(f: var File, filename: string,
       discard c_setvbuf(f, nil, IOFBF, cast[csize_t](bufSize))
     elif bufSize == 0:
       discard c_setvbuf(f, nil, IONBF, 0)
+  else:
+    result = false
 
 proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
   tags: [], benign.} =
@@ -736,9 +754,11 @@ proc reopen*(f: File, filename: string, mode: FileMode = fmRead): bool {.
     when not defined(nimInheritHandles) and declared(setInheritable) and
          NoInheritFlag.len == 0:
       if not setInheritable(getOsFileHandle(f), false):
-        close(f)
+        closeIgnoreError(f)
         return false
     result = true
+  else:
+    result = false
 
 proc open*(f: var File, filehandle: FileHandle,
            mode: FileMode = fmRead): bool {.tags: [], raises: [], benign.} =
@@ -763,6 +783,7 @@ proc open*(filename: string,
   ## could not be opened.
   ##
   ## The file handle associated with the resulting `File` is not inheritable.
+  result = default(File)
   if not open(result, filename, mode, bufSize):
     raise newException(IOError, "cannot open: " & filename)
 

@@ -366,6 +366,8 @@ else:
       result = symAddr(dll, name)
       if result.isNil and alternativeName.len > 0:
         result = symAddr(dll, alternativeName)
+    else:
+      result = nil
 
     # Attempt to load from current exe.
     if result.isNil:
@@ -402,6 +404,7 @@ else:
   proc SSL_library_init*(): cint {.discardable.} =
     ## Initialize SSL using OPENSSL_init_ssl for OpenSSL >= 1.1.0 otherwise
     ## SSL_library_init
+    result = cint(0)
     let newInitSym = sslSymNullable("OPENSSL_init_ssl")
     if not newInitSym.isNil:
       let newInitProc =
@@ -557,6 +560,7 @@ proc i2d_X509*(cert: PX509; o: ptr ptr uint8): cint {.cdecl,
 
 proc d2i_X509*(b: string): PX509 =
   ## decode DER/BER bytestring into X.509 certificate struct
+  result = default(PX509)
   var bb = b.cstring
   let i = cast[ptr ptr uint8](addr bb)
   let ret = d2i_X509(addr result, i, b.len.cint)
@@ -795,8 +799,8 @@ proc md5_File*(file: string): string {.raises: [IOError,Exception].} =
     sz = 512
   let f = open(file,fmRead)
   var
-    buf: array[sz,char]
-    ctx: MD5_CTX
+    buf: array[sz, char] = default(array[sz, char])
+    ctx: MD5_CTX = default(MD5_CTX)
 
   discard md5_Init(ctx)
   while (let bytes = f.readChars(buf); bytes > 0):
@@ -811,7 +815,7 @@ proc md5_Str*(str: string): string =
   ## Generate MD5 hash for a string. Result is a 32 character
   ## hex string with lowercase characters
   var
-    ctx: MD5_CTX
+    ctx: MD5_CTX = default(MD5_CTX)
     res: array[MD5_DIGEST_LENGTH,char]
     input = str.cstring
   discard md5_Init(ctx)

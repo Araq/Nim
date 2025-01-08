@@ -324,7 +324,7 @@ macro scanf*(input: string; pattern: static[string]; results: varargs[typed]): b
   template at(s: string; i: int): char = (if i < s.len: s[i] else: '\0')
   template matchError() =
     error("type mismatch between pattern '$" & pattern[p] & "' (position: " & $p &
-      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'")
+      ") and " & $getTypeInst(results[i]) & " var '" & repr(results[i]) & "'", results[i])
 
   var i = 0
   var p = 0
@@ -486,11 +486,11 @@ macro scanTuple*(input: untyped; pattern: static[string]; matcherTypes: varargs[
   var
     p = 0
     userMatches = 0
-    arguments: seq[NimNode]
+    arguments: seq[NimNode] = @[]
   result = newStmtList()
   template addVar(typ: string) =
     let varIdent = ident("temp" & $arguments.len)
-    result.add(newNimNode(nnkVarSection).add(newIdentDefs(varIdent, ident(typ), newEmptyNode())))
+    result.add(newVarStmt(varIdent, newCall(ident"default", ident(typ))))
     arguments.add(varIdent)
   while p < pattern.len:
     if pattern[p] == '$':
@@ -531,7 +531,7 @@ template hasNxt*(input: string; idx: int): bool = idx < input.len
 #template prepare*(input: string): int = 0
 template success*(x: int): bool = x != 0
 
-template nxt*(input: string; idx, step: int = 1) = inc(idx, step)
+template nxt*(input: string; idx: int; step: int = 1) = inc(idx, step)
 
 macro scanp*(input, idx: typed; pattern: varargs[untyped]): bool =
   ## See top level documentation of this module about how ``scanp`` works.

@@ -22,7 +22,7 @@ heyho
 Val1
 Val1
 '''
-matrix: "--hints:off --mm:orc; --hints:off --mm:refc"
+matrix: "--hints:off --warnings:off --mm:orc; --hints:off --warnings:off --mm:refc"
 """
 
 import macros

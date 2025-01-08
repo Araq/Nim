@@ -40,7 +40,7 @@ proc testThread() {.thread.} =
 
 proc test() =
   let serverFd = initIPv6Server("::1", port)
-  var t: Thread[void]
+  var t: Thread[void] = default(Thread[void])
   createThread(t, testThread)
 
   var done = false

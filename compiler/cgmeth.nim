@@ -55,7 +55,7 @@ proc methodCall*(n: PNode; conf: ConfigRef): PNode =
   # replace ordinary method by dispatcher method:
   let disp = getDispatcher(result[0].sym)
   if disp != nil:
-    result[0].typ = disp.typ
+    result[0].typ() = disp.typ
     result[0].sym = disp
     # change the arguments to up/downcasts to fit the dispatcher's parameters:
     for i in 1..<result.len:

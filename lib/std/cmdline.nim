@@ -51,7 +51,7 @@ proc parseCmdLine*(c: string): seq[string] {.
   ## `parseopt module <parseopt.html>`_.
   ##
   ## On Windows, it uses the `following parsing rules
-  ## <http://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_:
+  ## <https://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_:
   ##
   ## * Arguments are delimited by white space, which is either a space or a tab.
   ## * The caret character (^) is not recognized as an escape character or

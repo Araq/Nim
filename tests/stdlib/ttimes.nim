@@ -12,11 +12,13 @@ proc staticTz(hours, minutes, seconds: int = 0): Timezone {.noSideEffect.} =
   let offset = hours * 3600 + minutes * 60 + seconds
 
   proc zonedTimeFromAdjTime(adjTime: Time): ZonedTime =
+    result = default(ZonedTime)
     result.isDst = false
     result.utcOffset = offset
     result.time = adjTime + initDuration(seconds = offset)
 
   proc zonedTimeFromTime(time: Time): ZonedTime =
+    result = default(ZonedTime)
     result.isDst = false
     result.utcOffset = offset
     result.time = time

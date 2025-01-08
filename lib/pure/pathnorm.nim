@@ -25,6 +25,7 @@ proc hasNext*(it: PathIter; x: string): bool =
   it.i < x.len
 
 proc next*(it: var PathIter; x: string): (int, int) =
+  result = (0, 0)
   it.prev = it.i
   if not it.notFirst and x[it.i] in {DirSep, AltSep}:
     # absolute path:
@@ -71,7 +72,7 @@ proc addNormalizePath*(x: string; result: var string; state: var int;
 
   # state: 0th bit set if isAbsolute path. Other bits count
   # the number of path components.
-  var it: PathIter
+  var it: PathIter = default(PathIter)
   it.notFirst = (state shr 1) > 0
   if it.notFirst:
     while it.i < x.len and x[it.i] in {DirSep, AltSep}: inc it.i

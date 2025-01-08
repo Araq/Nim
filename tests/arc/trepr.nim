@@ -31,7 +31,7 @@ proc myproc2(t: MyType) =
   echo repr(x)
 
 proc myproc3(t: MyType) =
-  var x: TableRef[string, t]
+  var x: TableRef[string, t] = nil
   echo repr(x)
 
 

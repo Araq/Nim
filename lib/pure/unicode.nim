@@ -545,6 +545,8 @@ proc isLower*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   p = binarySearch(c, toUpperSinglets, len(toUpperSinglets) div 2, 2)
   if p >= 0 and c == toUpperSinglets[p]:
     return true
+  else:
+    return false
 
 proc isUpper*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   ## Returns true if ``c`` is a upper case rune.
@@ -565,6 +567,8 @@ proc isUpper*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   p = binarySearch(c, toLowerSinglets, len(toLowerSinglets) div 2, 2)
   if p >= 0 and c == toLowerSinglets[p]:
     return true
+  else:
+    return false
 
 proc isAlpha*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   ## Returns true if ``c`` is an *alpha* rune (i.e., a letter).
@@ -584,6 +588,8 @@ proc isAlpha*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   p = binarySearch(c, alphaSinglets, len(alphaSinglets), 1)
   if p >= 0 and c == alphaSinglets[p]:
     return true
+  else:
+    return false
 
 proc isTitle*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   ## Returns true if ``c`` is a Unicode titlecase code point.
@@ -608,6 +614,8 @@ proc isWhiteSpace*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   var p = binarySearch(c, spaceRanges, len(spaceRanges) div 2, 2)
   if p >= 0 and c >= spaceRanges[p] and c <= spaceRanges[p+1]:
     return true
+  else:
+    return false
 
 proc isCombining*(c: Rune): bool {.rtl, extern: "nuc$1".} =
   ## Returns true if ``c`` is a Unicode combining code unit.
@@ -898,7 +906,7 @@ proc graphemeLen*(s: openArray[char]; i: Natural): Natural =
     doAssert a.graphemeLen(1) == 2 ## ñ
     doAssert a.graphemeLen(2) == 1
     doAssert a.graphemeLen(4) == 2 ## ó
-
+  result = 0
   var j = i.int
   var r, r2: Rune
   if j < s.len:

@@ -192,6 +192,7 @@ proc listEpc(): SexpNode =
 
 proc findNode(n: PNode; trackPos: TLineInfo): PSym =
   #echo "checking node ", n.info
+  result = nil
   if n.kind == nkSym:
     if isTracked(n.info, trackPos, n.sym.name.s.len): return n.sym
   else:
@@ -203,6 +204,8 @@ proc symFromInfo(graph: ModuleGraph; trackPos: TLineInfo): PSym =
   let m = graph.getModule(trackPos.fileIndex)
   if m != nil and m.ast != nil:
     result = findNode(m.ast, trackPos)
+  else:
+    result = nil
 
 template benchmark(benchmarkName: untyped, code: untyped) =
   block:
@@ -411,7 +414,7 @@ proc replTcp(x: ThreadParams) {.thread.} =
     server.bindAddr(x.port, x.address)
     server.listen()
   var inp = ""
-  var stdoutSocket: Socket
+  var stdoutSocket: Socket = Socket()
   while true:
     accept(server, stdoutSocket)
 
@@ -445,7 +448,7 @@ proc replEpc(x: ThreadParams) {.thread.} =
   echo port
   stdout.flushFile()
 
-  var client: Socket
+  var client: Socket = Socket()
   # Wait for connection
   accept(server, client)
   while true:
@@ -849,6 +852,7 @@ func deduplicateSymInfoPair(xs: SuggestFileSymbolDatabase): SuggestFileSymbolDat
 
 proc findSymData(graph: ModuleGraph, trackPos: TLineInfo):
     ref SymInfoPair =
+  result = nil
   let db = graph.fileSymbols(trackPos.fileIndex).deduplicateSymInfoPair
   doAssert(db.fileIndex == trackPos.fileIndex)
   for i in db.lineInfo.low..db.lineInfo.high:
@@ -983,6 +987,7 @@ proc symbolEqual(left, right: PSym): bool =
   return left.info.exactEquals(right.info) and left.name == right.name
 
 proc findDef(n: PNode, line: uint16, col: int16): PNode =
+  result = nil
   if n.kind in {nkProcDef, nkIteratorDef, nkTemplateDef, nkMethodDef, nkMacroDef}:
     if n.info.line == line:
       return n
@@ -1003,6 +1008,8 @@ proc findByTLineInfo(trackPos: TLineInfo, infoPairs: SuggestFileSymbolDatabase):
         break
 
 proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
+  result = false
+
   proc checkSymbol(sym: PSym, info: TLineInfo): bool =
     result = (sym.owner.kind in {skModule, skType} or sym.kind in {skProc, skMethod, skIterator, skTemplate, skType})
 
@@ -1017,6 +1024,7 @@ proc outlineNode(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: Su
        return true
 
 proc handleIdentOrSym(graph: ModuleGraph, n: PNode, endInfo: TLineInfo, infoPairs: SuggestFileSymbolDatabase): bool =
+  result = false
   for child in n:
     if child.kind in {nkIdent, nkSym}:
       if graph.outlineNode(child, endInfo, infoPairs):
@@ -1067,7 +1075,7 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
 
   myLog fmt "cmd: {cmd}, file: {file}[{line}:{col}], dirtyFile: {dirtyfile}, tag: {tag}"
 
-  var fileIndex: FileIndex
+  var fileIndex: FileIndex = default(FileIndex)
 
   if not (cmd in {ideRecompile, ideGlobalSymbols}):
     fileIndex = fileInfoIdx(conf, file)
@@ -1197,7 +1205,7 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     if not s.isNil:
       # find first mention of the symbol in the file containing the definition.
       # It is either the definition or the declaration.
-      var first: SymInfoPair
+      var first: SymInfoPair = default(SymInfoPair)
       let db = graph.fileSymbols(s.sym.info.fileIndex).deduplicateSymInfoPair
       for i in db.lineInfo.low..db.lineInfo.high:
         if s.sym.symbolEqual(db.sym[i]):
@@ -1256,7 +1264,7 @@ proc executeNoHooksV3(cmd: IdeCmd, file: AbsoluteFile, dirtyfile: AbsoluteFile, 
     var typeHints = true
     var exceptionHints = false
     while i <= tag.high:
-      var token: string
+      var token: string = ""
       i += parseUntil(tag, token, seps, i)
       i += skipWhile(tag, seps, i)
       case token:

@@ -314,8 +314,7 @@ block: # bug #17383
   else:
     testRoundtrip(int.high): "9223372036854775807"
     testRoundtrip(uint.high): "18446744073709551615"
-  whenJsNoBigInt64: discard
-  do:
+  when hasWorkingInt64:
     testRoundtrip(int64.high): "9223372036854775807"
     testRoundtrip(uint64.high): "18446744073709551615"
 

@@ -158,6 +158,7 @@ proc getTempDir*(): string {.rtl, extern: "nos$1",
     const tempDir {.strdefine.}: string = tempDirDefault
     result = tempDir
   else:
+    result = ""
     when nimvm:
       getTempDirImpl(result)
     else:

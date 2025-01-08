@@ -22,6 +22,7 @@ type
   PRadixNodeLeaf = ref TRadixNodeLeaf
 
 proc search(r: PRadixNode, s: string): PRadixNode =
+  result = default(PRadixNode)
   var r = r
   var i = 0
   while r != nil:
@@ -55,7 +56,7 @@ proc contains*(r: PRadixNode, s: string): bool =
   return search(r, s) != nil
 
 proc testOrIncl*(r: var PRadixNode, s: string): bool =
-  nil
+  result = false
 
 proc incl*(r: var PRadixNode, s: string) = discard testOrIncl(r, s)
 

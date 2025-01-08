@@ -61,8 +61,7 @@ template main =
     doAssert -2147483648'i32 == int32.low
     when int.sizeof > 4:
       doAssert -9223372036854775808 == int.low
-    whenJsNoBigInt64: discard
-    do:
+    when hasWorkingInt64:
       doAssert -9223372036854775808 == int64.low
 
   block: # check when a minus (-) is an unary op

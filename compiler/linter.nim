@@ -12,7 +12,7 @@
 import std/strutils
 from std/sugar import dup
 
-import options, ast, msgs, idents, lineinfos, wordrecg, astmsgs, semdata, packages
+import options, ast, msgs, idents, lineinfos, wordrecg, astmsgs, semdata, packages, modulegraphs
 export packages
 
 const
@@ -97,7 +97,7 @@ template styleCheckDef*(ctx: PContext; info: TLineInfo; sym: PSym; k: TSymKind) 
   if optStyleCheck in ctx.config.options and # ignore if styleChecks are off
      {optStyleHint, optStyleError} * ctx.config.globalOptions != {} and # check only if hint/error is enabled
      hintName in ctx.config.notes and # ignore if name checks are not requested
-     ctx.config.belongsToProjectPackage(sym) and # ignore foreign packages
+     ctx.config.belongsToProjectPackageMaybeNil(getModule(ctx.graph, info.fileIndex)) and # ignore foreign packages
      optStyleUsages notin ctx.config.globalOptions and # ignore if requested to only check name usage
      sym.kind != skResult and # ignore `result`
      sym.kind != skTemp and # ignore temporary variables created by the compiler
@@ -138,7 +138,7 @@ template styleCheckUse*(ctx: PContext; info: TLineInfo; sym: PSym) =
   ## Check symbol uses match their definition's style.
   if {optStyleHint, optStyleError} * ctx.config.globalOptions != {} and # ignore if styleChecks are off
      hintName in ctx.config.notes and # ignore if name checks are not requested
-     ctx.config.belongsToProjectPackage(sym) and # ignore foreign packages
+     ctx.config.belongsToProjectPackageMaybeNil(getModule(ctx.graph, info.fileIndex)) and # ignore foreign packages
      sym.kind != skTemp and # ignore temporary variables created by the compiler
      sym.name.s[0] in Letters and # ignore operators TODO: what about unicode symbols???
      sfAnon notin sym.flags: # ignore temporary variables created by the compiler
@@ -154,5 +154,5 @@ template checkPragmaUse*(ctx: PContext; info: TLineInfo; w: TSpecialWord; pragma
   ## Note: This only applies to builtin pragmas, not user pragmas.
   if {optStyleHint, optStyleError} * ctx.config.globalOptions != {} and # ignore if styleChecks are off
      hintName in ctx.config.notes and # ignore if name checks are not requested
-     (sym != nil and ctx.config.belongsToProjectPackage(sym)): # ignore foreign packages
+     ctx.config.belongsToProjectPackageMaybeNil(getModule(ctx.graph, info.fileIndex)): # ignore foreign packages
     checkPragmaUseImpl(ctx.config, info, w, pragmaName)

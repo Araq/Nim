@@ -25,7 +25,7 @@ const
   useEffectSystem* = true
   useWriteTracking* = false
   hasFFI* = defined(nimHasLibFFI)
-  copyrightYear* = "2024"
+  copyrightYear* = "2025"
 
   nimEnableCovariance* = defined(nimEnableCovariance)
 
@@ -179,7 +179,6 @@ const
                  cmdCtags, cmdBuildindex}
 
 type
-  NimVer* = tuple[major: int, minor: int, patch: int]
   TStringSeq* = seq[string]
   TGCMode* = enum             # the selected GC
     gcUnselected = "unselected"
@@ -223,11 +222,14 @@ type
     strictEffects,
     unicodeOperators, # deadcode
     flexibleOptionalParams,
-    strictDefs,
+    strictDefs, # deadcode
     strictCaseObjects,
     inferGenericTypes,
-    genericsOpenSym, # remove nfDisabledOpenSym when this switch is default
+    openSym, # remove nfDisabledOpenSym when this is default
+    # alternative to above:
+    genericsOpenSym
     vtables
+    typeBoundOps
 
   LegacyFeature* = enum
     allowSemcheckedAstModification,
@@ -246,6 +248,8 @@ type
       ## Useful for libraries that rely on local passC
     jsNoLambdaLifting
       ## Old transformation for closures in JS backend
+    noStrictDefs
+      ## disable "strictdefs"
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest
@@ -381,6 +385,7 @@ type
     warnCounter*: int
     errorMax*: int
     maxLoopIterationsVM*: int ## VM: max iterations of all loops
+    maxCallDepthVM*: int ## VM: max call depth
     isVmTrace*: bool
     configVars*: StringTableRef
     symbols*: StringTableRef ## We need to use a StringTableRef here as defined
@@ -394,8 +399,7 @@ type
     outDir*: AbsoluteDir
     jsonBuildFile*: AbsoluteFile
     prefixDir*, libpath*, nimcacheDir*: AbsoluteDir
-    nimStdlibVersion*: NimVer
-    dllOverrides, moduleOverrides*, cfileSpecificOptions*: StringTableRef
+    dllOverrides*, moduleOverrides*, cfileSpecificOptions*: StringTableRef
     projectName*: string # holds a name like 'nim'
     projectPath*: AbsoluteDir # holds a path like /home/alice/projects/nim/compiler/
     projectFull*: AbsoluteFile # projectPath/projectName
@@ -407,7 +411,6 @@ type
     commandArgs*: seq[string] # any arguments after the main command
     commandLine*: string
     extraCmds*: seq[string] # for writeJsonBuildInstructions
-    keepComments*: bool # whether the parser needs to keep comments
     implicitImports*: seq[string] # modules that are to be implicitly imported
     implicitIncludes*: seq[string] # modules that are to be implicitly included
     docSeeSrcUrl*: string # if empty, no seeSrc will be generated. \
@@ -448,16 +451,6 @@ type
     clientProcessId*: int
 
 
-proc parseNimVersion*(a: string): NimVer =
-  # could be moved somewhere reusable
-  result = default(NimVer)
-  if a.len > 0:
-    let b = a.split(".")
-    assert b.len == 3, a
-    template fn(i) = result[i] = b[i].parseInt # could be optimized if needed
-    fn(0)
-    fn(1)
-    fn(2)
 
 proc assignIfDefault*[T](result: var T, val: T, def = default(T)) =
   ## if `result` was already assigned to a value (that wasn't `def`), this is a noop.
@@ -591,7 +584,6 @@ proc newConfigRef*(): ConfigRef =
     command: "", # the main command (e.g. cc, check, scan, etc)
     commandArgs: @[], # any arguments after the main command
     commandLine: "",
-    keepComments: true, # whether the parser needs to keep comments
     implicitImports: @[], # modules that are to be implicitly imported
     implicitIncludes: @[], # modules that are to be implicitly included
     docSeeSrcUrl: "",
@@ -609,6 +601,7 @@ proc newConfigRef*(): ConfigRef =
     arguments: "",
     suggestMaxResults: 10_000,
     maxLoopIterationsVM: 10_000_000,
+    maxCallDepthVM: 2_000,
     vmProfileData: newProfileData(),
     spellSuggestMax: spellSuggestSecretSauce,
     currentConfigDir: ""
@@ -631,12 +624,6 @@ proc newPartialConfigRef*(): ConfigRef =
 
 proc cppDefine*(c: ConfigRef; define: string) =
   c.cppDefines.incl define
-
-proc getStdlibVersion*(conf: ConfigRef): NimVer =
-  if conf.nimStdlibVersion == (0,0,0):
-    let s = conf.symbols.getOrDefault("nimVersion", "")
-    conf.nimStdlibVersion = s.parseNimVersion
-  result = conf.nimStdlibVersion
 
 proc isDefined*(conf: ConfigRef; symbol: string): bool =
   if conf.symbols.hasKey(symbol):

@@ -266,7 +266,7 @@ proc isAssignable*(owner: PSym, n: PNode): TAssignableResult =
     if skipTypes(n.typ, abstractPtrs-{tyTypeDesc}).kind in
         {tyOpenArray, tyTuple, tyObject}:
       result = isAssignable(owner, n[1])
-    elif compareTypes(n.typ, n[1].typ, dcEqIgnoreDistinct):
+    elif compareTypes(n.typ, n[1].typ, dcEqIgnoreDistinct, {IgnoreRangeShallow}):
       # types that are equal modulo distinction preserve l-value:
       result = isAssignable(owner, n[1])
   of nkHiddenDeref:

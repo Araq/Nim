@@ -1,3 +1,7 @@
+discard """
+  targets: "c js"
+"""
+
 # bug #21306
 type
   FutureState {.pure.} = enum

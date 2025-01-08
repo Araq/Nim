@@ -113,6 +113,7 @@ block:
     while start+result < input.len and input[start+result] in seps: inc result
 
   proc demangle(s: string; res: var string; start: int): int =
+    result = 0
     while result+start < s.len and s[result+start] in {'_', '@'}: inc result
     res = ""
     while result+start < s.len and s[result+start] > ' ' and s[result+start] != '_':

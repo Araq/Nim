@@ -1,5 +1,6 @@
 discard """
   joinable: false
+  retries: 2
 """
 
 import std/asyncdispatch

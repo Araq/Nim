@@ -142,7 +142,7 @@ proc quoteShellWindows*(s: string): string {.noSideEffect, rtl, extern: "nosp$1"
   ## Quote `s`, so it can be safely passed to Windows API.
   ##
   ## Based on Python's `subprocess.list2cmdline`.
-  ## See `this link <http://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_
+  ## See `this link <https://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_
   ## for more details.
   let needQuote = {' ', '\t'} in s or s.len == 0
   result = ""
@@ -287,7 +287,7 @@ proc getLastModificationTime*(file: string): times.Time {.rtl, extern: "nos$1", 
   ## * `getCreationTime proc`_
   ## * `fileNewer proc`_
   when defined(posix):
-    var res: Stat
+    var res: Stat = default(Stat)
     if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
     result = res.st_mtim.toTime
   else:
@@ -305,7 +305,7 @@ proc getLastAccessTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeir
   ## * `getCreationTime proc`_
   ## * `fileNewer proc`_
   when defined(posix):
-    var res: Stat
+    var res: Stat = default(Stat)
     if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
     result = res.st_atim.toTime
   else:
@@ -327,7 +327,7 @@ proc getCreationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdT
   ## * `getLastAccessTime proc`_
   ## * `fileNewer proc`_
   when defined(posix):
-    var res: Stat
+    var res: Stat = default(Stat)
     if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
     result = res.st_ctim.toTime
   else:
@@ -421,6 +421,7 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
   ## Returns the full (`absolute`:idx:) path of an existing file `filename`.
   ##
   ## Raises `OSError` in case of an error. Follows symlinks.
+  result = ""
   when defined(windows):
     var bufsize = MAX_PATH.int32
     var unused: WideCString = nil
@@ -452,7 +453,9 @@ proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
       result = $r
       c_free(cast[pointer](r))
 
-proc getCurrentCompilerExe*(): string {.compileTime.} = discard
+proc getCurrentCompilerExe*(): string {.compileTime.} =
+  result = ""
+  discard "implemented in the vmops"
   ## Returns the path of the currently running Nim compiler or nimble executable.
   ##
   ## Can be used to retrieve the currently executing
@@ -698,7 +701,7 @@ proc sleep*(milsecs: int) {.rtl, extern: "nos$1", tags: [TimeEffect], noWeirdTar
       return  # fixes #23732
     winlean.sleep(int32(milsecs))
   else:
-    var a, b: Timespec
+    var a, b: Timespec = default(Timespec)
     a.tv_sec = posix.Time(milsecs div 1000)
     a.tv_nsec = (milsecs mod 1000) * 1000 * 1000
     discard posix.nanosleep(a, b)
@@ -714,7 +717,7 @@ proc getFileSize*(file: string): BiggestInt {.rtl, extern: "nos$1",
     result = rdFileSize(a)
     findClose(resA)
   else:
-    var rawInfo: Stat
+    var rawInfo: Stat = default(Stat)
     if stat(file, rawInfo) < 0'i32:
       raiseOSError(osLastError(), file)
     rawInfo.st_size
@@ -838,6 +841,7 @@ proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
   ## * `getFileInfo(path, followSymlink) proc`_
 
   # Done: ID, Kind, Size, Permissions, Link Count
+  result = default(FileInfo)
   when defined(windows):
     var rawInfo: BY_HANDLE_FILE_INFORMATION
     # We have to use the super special '_get_osfhandle' call (wrapped above)
@@ -847,7 +851,7 @@ proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
       raiseOSError(osLastError(), $handle)
     rawToFormalFileInfo(rawInfo, "", result)
   else:
-    var rawInfo: Stat
+    var rawInfo: Stat = default(Stat)
     if fstat(handle, rawInfo) < 0'i32:
       raiseOSError(osLastError(), $handle)
     rawToFormalFileInfo(rawInfo, "", result)
@@ -881,6 +885,7 @@ proc getFileInfo*(path: string, followSymlink = true): FileInfo {.noWeirdTarget.
   ## See also:
   ## * `getFileInfo(handle) proc`_
   ## * `getFileInfo(file) proc`_
+  result = default(FileInfo)
   when defined(windows):
     var
       handle = openHandle(path, followSymlink)
@@ -892,7 +897,7 @@ proc getFileInfo*(path: string, followSymlink = true): FileInfo {.noWeirdTarget.
     rawToFormalFileInfo(rawInfo, path, result)
     discard closeHandle(handle)
   else:
-    var rawInfo: Stat
+    var rawInfo: Stat = default(Stat)
     if followSymlink:
       if stat(path, rawInfo) < 0'i32:
         raiseOSError(osLastError(), path)
@@ -908,8 +913,9 @@ proc sameFileContent*(path1, path2: string): bool {.rtl, extern: "nos$1",
   ##
   ## See also:
   ## * `sameFile proc`_
+  result = false
   var
-    a, b: File
+    a, b: File = default(File)
   if not open(a, path1): return false
   if not open(b, path2):
     close(a)

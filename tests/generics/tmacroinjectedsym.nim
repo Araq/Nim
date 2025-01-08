@@ -1,4 +1,4 @@
-{.experimental: "genericsOpenSym".}
+{.experimental: "openSym".}
 
 block: # issue #22605, normal call syntax
   const error = "bad"
@@ -172,3 +172,15 @@ block: # issue #23865
       return $error
     "ok"
   doAssert g(int) == "f"
+
+import sequtils
+
+block: # issue #12283
+  var b = 5
+  type Foo[T] = object
+    h, w: int
+  proc bar[T](foos: seq[Foo[T]]): T =
+    let w = foldl(foos, a + b.w, 0)
+    w
+  let foos = @[Foo[int](h: 3, w: 5), Foo[int](h: 4, w: 6)]
+  doAssert bar(foos) == 11

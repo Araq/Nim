@@ -385,6 +385,13 @@ proc computeSizeAlign(conf: ConfigRef; typ: PType) =
         accum.maxAlign = 1
         computeObjectOffsetsFoldFunction(conf, typ.n, true, accum)
       else:
+        if typ.baseClass == nil and lacksMTypeField(typ) and typ.n.len == 1 and
+            typ.n[0].kind == nkSym and
+            typ.n[0].sym.typ.skipTypes(abstractInst).kind == tyUncheckedArray:
+          # a dummy field is generated for an object with a single field
+          # with an UncheckedArray type
+          assert accum.offset == 0
+          accum.offset = 1
         computeObjectOffsetsFoldFunction(conf, typ.n, false, accum)
       let paddingAtEnd = int16(accum.finish())
       if typ.sym != nil and
@@ -470,7 +477,7 @@ template foldSizeOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if size >= 0:
     let res = newIntNode(nkIntLit, size)
     res.info = node.info
-    res.typ = node.typ
+    res.typ() = node.typ
     res
   else:
     fallback
@@ -484,7 +491,7 @@ template foldAlignOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if align >= 0:
     let res = newIntNode(nkIntLit, align)
     res.info = node.info
-    res.typ = node.typ
+    res.typ() = node.typ
     res
   else:
     fallback
@@ -512,7 +519,7 @@ template foldOffsetOf*(conf: ConfigRef; n: PNode; fallback: PNode): PNode =
   if offset >= 0:
     let tmp = newIntNode(nkIntLit, offset)
     tmp.info = node.info
-    tmp.typ = node.typ
+    tmp.typ() = node.typ
     tmp
   else:
     fallback

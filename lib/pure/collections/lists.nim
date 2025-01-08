@@ -115,7 +115,7 @@ proc initSinglyLinkedList*[T](): SinglyLinkedList[T] =
   runnableExamples:
     let a = initSinglyLinkedList[int]()
 
-  discard
+  result = default(SinglyLinkedList[T])
 
 proc initDoublyLinkedList*[T](): DoublyLinkedList[T] =
   ## Creates a new doubly linked list that is empty.
@@ -125,7 +125,7 @@ proc initDoublyLinkedList*[T](): DoublyLinkedList[T] =
   runnableExamples:
     let a = initDoublyLinkedList[int]()
 
-  discard
+  result = default(DoublyLinkedList[T])
 
 proc initSinglyLinkedRing*[T](): SinglyLinkedRing[T] =
   ## Creates a new singly linked ring that is empty.
@@ -135,7 +135,7 @@ proc initSinglyLinkedRing*[T](): SinglyLinkedRing[T] =
   runnableExamples:
     let a = initSinglyLinkedRing[int]()
 
-  discard
+  result = default(SinglyLinkedRing[T])
 
 proc initDoublyLinkedRing*[T](): DoublyLinkedRing[T] =
   ## Creates a new doubly linked ring that is empty.
@@ -145,7 +145,7 @@ proc initDoublyLinkedRing*[T](): DoublyLinkedRing[T] =
   runnableExamples:
     let a = initDoublyLinkedRing[int]()
 
-  discard
+  result = default(DoublyLinkedRing[T])
 
 proc newDoublyLinkedNode*[T](value: T): DoublyLinkedNode[T] =
   ## Creates a new doubly linked node with the given `value`.
@@ -319,6 +319,10 @@ proc find*[T](L: SomeLinkedCollection[T], value: T): SomeLinkedNode[T] =
     let a = [9, 8].toSinglyLinkedList
     assert a.find(9).value == 9
     assert a.find(1) == nil
+  when typeof(nodes(L)) is SinglyLinkedNode[T]:
+    result = SinglyLinkedNode[T](nil)
+  else:
+    result = DoublyLinkedNode[T](nil)
 
   for x in nodes(L):
     if x.value == value: return x

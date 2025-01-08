@@ -20,7 +20,7 @@ type
     mask* {.importc: "mask".}: uint32                  ## Watch mask.
     cookie* {.importc: "cookie".}: uint32              ## Cookie to synchronize two events.
     len* {.importc: "len".}: uint32                    ## Length (including NULs) of name.
-    name* {.importc: "name".}: char                    ## Name.
+    name* {.importc: "name".}: UncheckedArray[char]    ## Name.
 
 # Supported events suitable for MASK parameter of INOTIFY_ADD_WATCH.
 const

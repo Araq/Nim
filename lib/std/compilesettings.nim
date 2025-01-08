@@ -13,6 +13,9 @@
 # Note: Only add new enum values at the end to ensure binary compatibility with
 # other Nim compiler versions!
 
+when defined(nimPreviewSlimSystem):
+  import std/assertions
+
 type
   SingleValueSetting* {.pure.} = enum ## \
                       ## settings resulting in a single string value
@@ -54,6 +57,7 @@ proc querySetting*(setting: SingleValueSetting): string {.
   ##
   runnableExamples:
     const nimcache = querySetting(SingleValueSetting.nimcacheDir)
+  raiseAssert "implemented in the vmops"
 
 proc querySettingSeq*(setting: MultipleValueSetting): seq[string] {.
   compileTime, noSideEffect.} =
@@ -64,3 +68,4 @@ proc querySettingSeq*(setting: MultipleValueSetting): seq[string] {.
   ## * `compileOption <system.html#compileOption,string,string>`_ for enum options
   runnableExamples:
     const nimblePaths = querySettingSeq(MultipleValueSetting.nimblePaths)
+  raiseAssert "implemented in the vmops"

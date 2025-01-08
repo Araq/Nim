@@ -24,7 +24,7 @@ on the different supported platforms. It is not a definition of the Nim
 programming language (which is covered in the [manual](manual.html)).
 
 Nim is free software; it is licensed under the
-[MIT License](http://www.opensource.org/licenses/mit-license.php).
+[MIT License](https://www.opensource.org/licenses/mit-license.php).
 
 
 Compiler Usage

@@ -16,7 +16,7 @@ const
   paCode* = " --doc.plausibleAnalytics:nim-lang.org"
   # errormax: subsequent errors are probably consequences of 1st one; a simple
   # bug could cause unlimited number of errors otherwise, hard to debug in CI.
-  docDefines = "-d:nimExperimentalLinenoiseExtra"
+  docDefines = "-d:nimExperimentalLinenoiseExtra" # deadcode `nimExperimentalLinenoiseExtra` has been enabled
   nimArgs = "--errormax:3 --hint:Conf:off --hint:Path:off --hint:Processing:off --hint:XDeclaredButNotUsed:off --warning:UnusedImport:off -d:boot --putenv:nimversion=$# $#" % [system.NimVersion, docDefines]
   gitUrl = "https://github.com/nim-lang/Nim"
   docHtmlOutput = "doc/html"
@@ -37,8 +37,7 @@ proc exe*(f: string): string =
 proc findNimImpl*(): tuple[path: string, ok: bool] =
   if nimExe.len > 0: return (nimExe, true)
   let nim = "nim".exe
-  result.path = "bin" / nim
-  result.ok = true
+  result = ("bin" / nim, true)
   if fileExists(result.path): return
   for dir in split(getEnv("PATH"), PathSep):
     result.path = dir / nim
@@ -98,6 +97,7 @@ pkgs/atlas/doc/atlas.md
 """.splitWhitespace()
 
 proc getMd2html(): seq[string] =
+  result = @[]
   for a in walkDirRecFilter("doc"):
     let path = a.path
     if a.kind == pcFile and path.splitFile.ext == ".md" and path.lastPathPart notin
@@ -191,18 +191,19 @@ when (NimMajor, NimMinor) < (1, 1) or not declared(isRelativeTo):
 
 proc getDocList(): seq[string] =
   ##
-  var docIgnore: HashSet[string]
+  result = @[]
+  var docIgnore: HashSet[string] = initHashSet[string]()
   for a in withoutIndex: docIgnore.incl a
   for a in ignoredModules: docIgnore.incl a
 
   # don't ignore these even though in lib/system (not include files)
   const goodSystem = """
 lib/system/nimscript.nim
-lib/system/assertions.nim
 lib/system/iterators.nim
 lib/system/exceptions.nim
 lib/system/dollars.nim
 lib/system/ctypes.nim
+lib/system/repr_v2.nim
 """.splitWhitespace()
 
   proc follow(a: PathEntry): bool =
@@ -327,7 +328,7 @@ proc nim2pdf(src: string, dst: string, nimArgs: string) =
 
 proc buildPdfDoc*(args: string, destPath: string) =
   let args = nimArgs & " " & args
-  var pdfList: seq[string]
+  var pdfList: seq[string] = @[]
   createDir(destPath)
   if os.execShellCmd("xelatex -version") != 0:
     doAssert false, "xelatex not found" # or, raise an exception

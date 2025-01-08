@@ -115,7 +115,7 @@ proc add(dest: var ItemPre, str: string) = dest.add ItemFragment(isRst: false, s
 
 proc addRstFileIndex(d: PDoc, fileIndex: lineinfos.FileIndex): rstast.FileIndex =
   let invalid = rstast.FileIndex(-1)
-  result = d.nimToRstFid.getOrDefault(fileIndex, default = invalid)
+  result = d.nimToRstFid.getOrDefault(fileIndex, invalid)
   if result == invalid:
     let fname = toFullPath(d.conf, fileIndex)
     result = addFilename(d.sharedState, fname)
@@ -830,7 +830,7 @@ proc getName(n: PNode): string =
   of nkAccQuoted:
     result = "`"
     for i in 0..<n.len: result.add(getName(n[i]))
-    result = "`"
+    result.add('`')
   of nkOpenSymChoice, nkClosedSymChoice, nkOpenSym:
     result = getName(n[0])
   else:
@@ -1320,7 +1320,7 @@ proc documentEffect(cache: IdentCache; n, x: PNode, effectType: TSpecialWord, id
       if t.startsWith("ref "): t = substr(t, 4)
       effects[i] = newIdentNode(getIdent(cache, t), n.info)
       # set the type so that the following analysis doesn't screw up:
-      effects[i].typ = real[i].typ
+      effects[i].typ() = real[i].typ
 
     result = newTreeI(nkExprColonExpr, n.info,
       newIdentNode(getIdent(cache, $effectType), n.info), effects)

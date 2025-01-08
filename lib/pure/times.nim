@@ -215,27 +215,29 @@ when defined(nimPreviewSlimSystem):
 
 when defined(js):
   import std/jscore
+  import std/private/jsutils
 
-  # This is really bad, but overflow checks are broken badly for
-  # ints on the JS backend. See #6752.
-  {.push overflowChecks: off.}
-  proc `*`(a, b: int64): int64 =
-    system.`*`(a, b)
-  proc `*`(a, b: int): int =
-    system.`*`(a, b)
-  proc `+`(a, b: int64): int64 =
-    system.`+`(a, b)
-  proc `+`(a, b: int): int =
-    system.`+`(a, b)
-  proc `-`(a, b: int64): int64 =
-    system.`-`(a, b)
-  proc `-`(a, b: int): int =
-    system.`-`(a, b)
-  proc inc(a: var int, b: int) =
-    system.inc(a, b)
-  proc inc(a: var int64, b: int) =
-    system.inc(a, b)
-  {.pop.}
+  when jsNoBigInt64:
+    # This is really bad, but overflow checks are broken badly for
+    # ints on the JS backend. See #6752.
+    {.push overflowChecks: off.}
+    proc `*`(a, b: int64): int64 =
+      system.`*`(a, b)
+    proc `*`(a, b: int): int =
+      system.`*`(a, b)
+    proc `+`(a, b: int64): int64 =
+      system.`+`(a, b)
+    proc `+`(a, b: int): int =
+      system.`+`(a, b)
+    proc `-`(a, b: int64): int64 =
+      system.`-`(a, b)
+    proc `-`(a, b: int): int =
+      system.`-`(a, b)
+    proc inc(a: var int, b: int) =
+      system.inc(a, b)
+    proc inc(a: var int64, b: int) =
+      system.inc(a, b)
+    {.pop.}
 
 elif defined(posix):
   import std/posix
@@ -449,6 +451,7 @@ proc normalize[T: Duration|Time](seconds, nanoseconds: int64): T =
   ## Normalize a (seconds, nanoseconds) pair and return it as either
   ## a `Duration` or `Time`. A normalized `Duration|Time` has a
   ## positive nanosecond part in the range `NanosecondRange`.
+  result = default(T)
   result.seconds = seconds + convert(Nanoseconds, Seconds, nanoseconds)
   var nanosecond = nanoseconds mod convert(Seconds, Nanoseconds, 1)
   if nanosecond < 0:
@@ -484,7 +487,7 @@ proc toEpochDay(monthday: MonthdayRange, month: Month, year: int): int64 =
   ## Get the epoch day from a year/month/day date.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   assertValidDate monthday, month, year
   var (y, m, d) = (year, ord(month), monthday.int)
   if m <= 2:
@@ -501,7 +504,7 @@ proc fromEpochDay(epochday: int64):
   ## Get the year/month/day date from a epoch day.
   ## The epoch day is the number of days since 1970/01/01
   ## (it might be negative).
-  # Based on http://howardhinnant.github.io/date_algorithms.html
+  # Based on https://howardhinnant.github.io/date_algorithms.html
   var z = epochday
   z.inc 719468
   let era = (if z >= 0: z else: z - 146096) div 146097
@@ -911,8 +914,7 @@ proc abs*(a: Duration): Duration =
 
 proc initTime*(unix: int64, nanosecond: NanosecondRange): Time =
   ## Create a `Time <#Time>`_ from a unix timestamp and a nanosecond part.
-  result.seconds = unix
-  result.nanosecond = nanosecond
+  result = Time(seconds: unix, nanosecond: nanosecond)
 
 proc nanosecond*(time: Time): NanosecondRange =
   ## Get the fractional part of a `Time` as the number
@@ -971,7 +973,7 @@ proc toWinTime*(t: Time): int64 =
   result = t.seconds * rateDiff + epochDiff + t.nanosecond div 100
 
 proc getTimeImpl(typ: typedesc[Time]): Time =
-  discard "implemented in the vm"
+  raiseAssert "implemented in the vm"
 
 proc getTime*(): Time {.tags: [TimeEffect], benign.} =
   ## Gets the current time as a `Time` with up to nanosecond resolution.
@@ -1247,6 +1249,7 @@ proc zonedTimeFromAdjTime*(zone: Timezone, adjTime: Time): ZonedTime =
 proc `$`*(zone: Timezone): string =
   ## Returns the name of the timezone.
   if zone != nil: result = zone.name
+  else: result = ""
 
 proc `==`*(zone1, zone2: Timezone): bool =
   ## Two `Timezone`'s are considered equal if their name is equal.
@@ -1336,9 +1339,7 @@ else:
 
   proc localZonedTimeFromTime(time: Time): ZonedTime {.benign.} =
     let (offset, dst) = getLocalOffsetAndDst(time.seconds)
-    result.time = time
-    result.utcOffset = offset
-    result.isDst = dst
+    result = ZonedTime(time: time, utcOffset: offset, isDst: dst)
 
   proc localZonedTimeFromAdjTime(adjTime: Time): ZonedTime {.benign.} =
     var adjUnix = adjTime.seconds
@@ -1670,6 +1671,8 @@ proc parseInt(s: string, b: var int, start = 0, maxLen = int.high,
       return 0
     b = b * sign
     result = i - start
+  else:
+    result = 0
 
 iterator tokens(f: string): tuple[kind: FormatTokenKind, token: string] =
   var i = 0
@@ -1766,8 +1769,7 @@ proc initTimeFormat*(format: string): TimeFormat =
   runnableExamples:
     let f = initTimeFormat("yyyy-MM-dd")
     doAssert "2000-01-01" == "2000-01-01".parse(f).format(f)
-  result.formatStr = format
-  result.patterns = @[]
+  result = TimeFormat(formatStr: format, patterns: @[])
   for kind, token in format.tokens:
     case kind
     of tkLiteral:
@@ -2253,9 +2255,10 @@ proc parse*(input: string, f: TimeFormat, zone: Timezone = local(),
     let f = initTimeFormat("yyyy-MM-dd")
     let dt = dateTime(2000, mJan, 01, 00, 00, 00, 00, utc())
     doAssert dt == "2000-01-01".parse(f, utc())
+  result = default(DateTime)
   var inpIdx = 0 # Input index
   var patIdx = 0 # Pattern index
-  var parsed: ParsedTime
+  var parsed: ParsedTime = default(ParsedTime)
   while inpIdx <= input.high and patIdx <= f.patterns.high:
     let pattern = f.patterns[patIdx].FormatPattern
     case pattern
@@ -2350,9 +2353,9 @@ proc `$`*(time: Time): string {.tags: [], raises: [], benign.} =
 # TimeInterval
 #
 
-proc initTimeInterval*(nanoseconds, microseconds, milliseconds,
-                       seconds, minutes, hours,
-                       days, weeks, months, years: int = 0): TimeInterval =
+proc initTimeInterval*(nanoseconds = 0, microseconds = 0, milliseconds = 0,
+                       seconds = 0, minutes = 0, hours = 0,
+                       days = 0, weeks = 0, months = 0, years = 0): TimeInterval =
   ## Creates a new `TimeInterval <#TimeInterval>`_.
   ##
   ## This proc doesn't perform any normalization! For example,
@@ -2366,29 +2369,33 @@ proc initTimeInterval*(nanoseconds, microseconds, milliseconds,
     let dt = dateTime(2000, mJan, 01, 12, 00, 00, 00, utc())
     doAssert $(dt + day) == "2000-01-02T12:00:00Z"
     doAssert initTimeInterval(hours = 24) != initTimeInterval(days = 1)
-  result.nanoseconds = nanoseconds
-  result.microseconds = microseconds
-  result.milliseconds = milliseconds
-  result.seconds = seconds
-  result.minutes = minutes
-  result.hours = hours
-  result.days = days
-  result.weeks = weeks
-  result.months = months
-  result.years = years
+  result = TimeInterval(
+    nanoseconds: nanoseconds,
+    microseconds: microseconds,
+    milliseconds: milliseconds,
+    seconds: seconds,
+    minutes: minutes,
+    hours: hours,
+    days: days,
+    weeks: weeks,
+    months: months,
+    years: years
+  )
 
 proc `+`*(ti1, ti2: TimeInterval): TimeInterval =
   ## Adds two `TimeInterval` objects together.
-  result.nanoseconds = ti1.nanoseconds + ti2.nanoseconds
-  result.microseconds = ti1.microseconds + ti2.microseconds
-  result.milliseconds = ti1.milliseconds + ti2.milliseconds
-  result.seconds = ti1.seconds + ti2.seconds
-  result.minutes = ti1.minutes + ti2.minutes
-  result.hours = ti1.hours + ti2.hours
-  result.days = ti1.days + ti2.days
-  result.weeks = ti1.weeks + ti2.weeks
-  result.months = ti1.months + ti2.months
-  result.years = ti1.years + ti2.years
+  result = TimeInterval(
+    nanoseconds: ti1.nanoseconds + ti2.nanoseconds,
+    microseconds: ti1.microseconds + ti2.microseconds,
+    milliseconds: ti1.milliseconds + ti2.milliseconds,
+    seconds: ti1.seconds + ti2.seconds,
+    minutes: ti1.minutes + ti2.minutes,
+    hours: ti1.hours + ti2.hours,
+    days: ti1.days + ti2.days,
+    weeks: ti1.weeks + ti2.weeks,
+    months: ti1.months + ti2.months,
+    years: ti1.years + ti2.years
+  )
 
 proc `-`*(ti: TimeInterval): TimeInterval =
   ## Reverses a time interval
@@ -2455,6 +2462,7 @@ proc between*(startDt, endDt: DateTime): TimeInterval =
     doAssert between(a, b) == ti
     doAssert between(a, b) == -between(b, a)
 
+  result = default(TimeInterval)
   if startDt.timezone != endDt.timezone:
     return between(startDt.utc, endDt.utc)
   elif endDt < startDt:
@@ -2554,7 +2562,7 @@ proc toParts*(ti: TimeInterval): TimeIntervalParts =
     var tp = toParts(initTimeInterval(years = 1, nanoseconds = 123))
     doAssert tp[Years] == 1
     doAssert tp[Nanoseconds] == 123
-
+  result = default(TimeIntervalParts)
   var index = 0
   for name, value in fieldPairs(ti):
     result[index.TimeUnit()] = value
@@ -2840,7 +2848,7 @@ when not defined(js):
     when defined(posix) and not defined(osx) and declared(CLOCK_THREAD_CPUTIME_ID):
       # 'clocksPerSec' is a compile-time constant, possibly a
       # rather awful one, so use clock_gettime instead
-      var ts: Timespec
+      var ts: Timespec = default(Timespec)
       discard clock_gettime(CLOCK_THREAD_CPUTIME_ID, ts)
       result = toFloat(ts.tv_sec.int) +
         toFloat(ts.tv_nsec.int) / 1_000_000_000

@@ -59,7 +59,7 @@ type
     tyOwned, tyUnused1, tyUnused2,
     tyVarargsHidden,
     tyUncheckedArray,
-    tyProxyHidden,
+    tyErrorHidden,
     tyBuiltInTypeClassHidden,
     tyUserTypeClassHidden,
     tyUserTypeClassInstHidden,

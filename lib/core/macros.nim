@@ -315,7 +315,7 @@ proc symBodyHash*(s: NimNode): string {.noSideEffect.} =
   ## and owning module, but also implementation body. All procs/variables used in
   ## the implementation of this symbol are hashed recursively as well, including
   ## magics from system module.
-  discard
+  raiseAssert "implemented in the vmops"
 
 proc getTypeImpl*(n: typedesc): NimNode {.magic: "NGetType", noSideEffect.}
   ## Version of `getTypeImpl` which takes a `typedesc`.
@@ -1249,7 +1249,7 @@ proc `name=`*(someProc: NimNode; val: NimNode) =
   else: someProc[0] = val
 
 proc params*(someProc: NimNode): NimNode =
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[0]
   else:
     someProc.expectRoutine
@@ -1257,7 +1257,7 @@ proc params*(someProc: NimNode): NimNode =
 
 proc `params=`* (someProc: NimNode; params: NimNode) =
   expectKind(params, nnkFormalParams)
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[0] = params
   else:
     someProc.expectRoutine
@@ -1266,7 +1266,7 @@ proc `params=`* (someProc: NimNode; params: NimNode) =
 proc pragma*(someProc: NimNode): NimNode =
   ## Get the pragma of a proc type.
   ## These will be expanded.
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     result = someProc[1]
   else:
     someProc.expectRoutine
@@ -1274,7 +1274,7 @@ proc pragma*(someProc: NimNode): NimNode =
 proc `pragma=`*(someProc: NimNode; val: NimNode) =
   ## Set the pragma of a proc type.
   expectKind(val, {nnkEmpty, nnkPragma})
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[1] = val
   else:
     someProc.expectRoutine
@@ -1362,7 +1362,7 @@ template findChild*(n: NimNode; cond: untyped): NimNode {.dirty.} =
   ##                          it.basename.ident == ident"foo")
   ##   ```
   block:
-    var res: NimNode
+    var res: NimNode = nil
     for it in n.children:
       if cond:
         res = it
@@ -1430,6 +1430,7 @@ proc expectIdent*(n: NimNode, name: string) {.since: (1,1).} =
 
 proc hasArgOfName*(params: NimNode; name: string): bool =
   ## Search `nnkFormalParams` for an argument.
+  result = false
   expectKind(params, nnkFormalParams)
   for i in 1..<params.len:
     for j in 0..<params[i].len-2:
@@ -1497,6 +1498,7 @@ proc extractTypeImpl(n: NimNode): NimNode =
   else: error("Invalid node to retrieve type implementation of: " & $n.kind)
 
 proc customPragmaNode(n: NimNode): NimNode =
+  result = nil
   expectKind(n, {nnkSym, nnkDotExpr, nnkBracketExpr, nnkTypeOfExpr, nnkType, nnkCheckedFieldExpr})
   let
     typ = n.getTypeInst()
@@ -1652,7 +1654,7 @@ macro unpackVarargs*(callee: untyped; args: varargs[untyped]): untyped =
   for i in 0 ..< args.len:
     result.add args[i]
 
-proc getProjectPath*(): string = discard
+proc getProjectPath*(): string = raiseAssert "implemented in the vmops"
   ## Returns the path to the currently compiling project.
   ##
   ## This is not to be confused with `system.currentSourcePath <system.html#currentSourcePath.t>`_
@@ -1695,6 +1697,7 @@ proc getOffset*(arg: NimNode): int {.magic: "NSizeOf", noSideEffect.} =
 
 proc isExported*(n: NimNode): bool {.noSideEffect.} =
   ## Returns whether the symbol is exported or not.
+  raiseAssert "implemented in the vmops"
 
 proc extractDocCommentsAndRunnables*(n: NimNode): NimNode =
   ## returns a `nnkStmtList` containing the top-level doc comments and

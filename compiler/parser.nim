@@ -1401,7 +1401,7 @@ proc primary(p: var Parser, mode: PrimaryMode): PNode =
     result = primarySuffix(p, result, baseInd, mode)
 
 proc binaryNot(p: var Parser; a: PNode): PNode =
-  if p.tok.tokType == tkNot:
+  if p.tok.tokType == tkNot and p.tok.indent < 0:
     let notOpr = newIdentNodeP(p.tok.ident, p)
     getTok(p)
     optInd(p, notOpr)

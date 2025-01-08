@@ -125,7 +125,7 @@ proc main(moveZeroesOut: static bool) =
     doAssert data.extract.id == 12
 
   block:
-    var x: seq[Isolated[JsonNode]]
+    var x: seq[Isolated[JsonNode]] = @[]
     x.add isolate(newJString("1234"))
 
     doAssert $x == """@[(value: "1234")]"""

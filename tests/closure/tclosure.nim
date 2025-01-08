@@ -502,3 +502,53 @@ block: # bug #22297
   let s = f
   doAssert s() == 12
   doAssert s() == 14
+
+# bug #19984
+import std/[sets]
+
+block:
+  type
+    i8 = int8
+    seq8 = seq[int8]
+    Cell    = seq8
+    NODE    = tuple[d_in:int8,Strong:bool,link:Cell]
+    PATH    = seq[NODE]
+
+  var
+    max_level : int
+
+  var
+    Seen:HashSet[NODE]
+    path:PATH
+
+  iterator Loop_next(strong_link:bool, d_in:int8, node:Cell, head:int8, 
+                Seen:var HashSet[NODE], path: var PATH, level:int ) : PATH {.closure.} = 
+
+    if level > max_level :
+      return
+    let GNode= len(node) > 1   # without this line, the code compiles
+    
+    var
+      rt, ct, st : seq8
+      column_type : bool
+
+  #[ with this code commented out the compiler error does not occurs ]#
+      
+    st= filter(st, proc(x:int8) : bool = x notin node)
+    if column_type :
+      rt= @[]
+      ct= filter(ct, proc(x:int8) : bool = x notin node)
+    else :  # row type
+      rt= filter(rt, proc(x:int8) : bool = x notin node)
+      ct= @[]
+
+  #[]#
+  iterator Nice_Loop( ) : PATH {.closure.} =
+    for cell in 0i8..80i8 :
+      let head= cell
+
+      for pt in  Loop_next(true,0.i8,@[cell], head,Seen,path,0) :
+        yield pt
+
+  for P in  Nice_Loop() :
+    continue

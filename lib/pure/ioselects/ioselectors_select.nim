@@ -314,7 +314,7 @@ proc selectInto*[T](s: Selector[T], timeout: int,
 
   if timeout != -1:
     when defined(genode) or defined(freertos) or defined(zephyr) or defined(nuttx):
-      tv.tv_sec = Time(timeout div 1_000)
+      tv.tv_sec = posix.Time(timeout div 1_000)
     else:
       tv.tv_sec = timeout.int32 div 1_000
     tv.tv_usec = (timeout.int32 %% 1_000) * 1_000

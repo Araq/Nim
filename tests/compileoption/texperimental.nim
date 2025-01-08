@@ -16,5 +16,5 @@ static:
   doAssert compileOption("experimental", "strictDefs")
   doAssert compileOption("experimental", "strictCaseObjects")
   doAssert compileOption("experimental", "inferGenericTypes")
-  doAssert compileOption("experimental", "genericsOpenSym")
+  doAssert compileOption("experimental", "openSym")
   doAssert compileOption("experimental", "vtables")

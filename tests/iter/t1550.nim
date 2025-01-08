@@ -1,3 +1,7 @@
+discard """
+  targets: "c js"
+"""
+
 type
   A[T] = iterator(x: T): T {.gcsafe, closure.}
 

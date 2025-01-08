@@ -1,4 +1,4 @@
-{.experimental: "genericsOpenSym".}
+{.experimental: "openSym".}
 
 import mopensymimport1
 

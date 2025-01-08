@@ -629,7 +629,7 @@ proc warningDeprecated*(conf: ConfigRef, info: TLineInfo = gCmdLineInfo, msg = "
   message(conf, info, warnDeprecated, msg)
 
 proc internalErrorImpl(conf: ConfigRef; info: TLineInfo, errMsg: string, info2: InstantiationInfo) =
-  if conf.cmd == cmdIdeTools and conf.structuredErrorHook.isNil: return
+  if conf.cmd in {cmdIdeTools, cmdCheck} and conf.structuredErrorHook.isNil: return
   writeContext(conf, info)
   liMessage(conf, info, errInternal, errMsg, doAbort, info2)
 

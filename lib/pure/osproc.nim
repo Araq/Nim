@@ -157,7 +157,7 @@ proc close*(p: Process) {.rtl, extern: "nosp$1", raises: [IOError, OSError], tag
   ##
   ## .. warning:: If the process has not finished executing, this will forcibly
   ##   terminate the process. Doing so may result in zombie processes and
-  ##   `pty leaks <http://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
+  ##   `pty leaks <https://stackoverflow.com/questions/27021641/how-to-fix-request-failed-on-channel-0>`_.
 
 proc suspend*(p: Process) {.rtl, extern: "nosp$1", tags: [].}
   ## Suspends the process `p`.
@@ -351,7 +351,7 @@ proc execProcesses*(cmds: openArray[string],
   ##
   ## The highest (absolute) return value of all processes is returned.
   ## Runs `beforeRunEvent` before running each command.
-
+  result = 0
   assert n > 0
   if n > 1:
     var i = 0
@@ -506,6 +506,7 @@ proc readLines*(p: Process): (seq[string], int) {.since: (1, 3),
   ##       for line in lines: echo line
   ##     p.close
   ##   ```
+  result = (@[], 0)
   for line in p.lines: result[0].add(line)
   result[1] = p.peekExitCode
 
@@ -740,7 +741,8 @@ when defined(windows) and not defined(useNimRtl):
       if poInteractive in result.options: close(result)
       const errInvalidParameter = 87.int
       const errFileNotFound = 2.int
-      if lastError.int in {errInvalidParameter, errFileNotFound}:
+      case lastError.int
+      of errInvalidParameter, errFileNotFound:
         raiseOSError(lastError,
               "Requested command not found: '" & command & "'. OS error:")
       else:
@@ -960,7 +962,7 @@ elif not defined(useNimRtl):
       options: set[ProcessOption] = {poStdErrToStdOut}):
     owned Process =
     var
-      pStdin, pStdout, pStderr: array[0..1, cint]
+      pStdin, pStdout, pStderr: array[0..1, cint] = default(array[0..1, cint])
     new(result)
     result.options = options
     result.exitFlag = true
@@ -970,7 +972,7 @@ elif not defined(useNimRtl):
          pipe(pStderr) != 0'i32:
         raiseOSError(osLastError())
 
-    var data: StartProcessData
+    var data: StartProcessData = default(StartProcessData)
     var sysArgsRaw: seq[string]
     if poEvalCommand in options:
       const useShPath {.strdefine.} =
@@ -1120,17 +1122,16 @@ elif not defined(useNimRtl):
       discard close(data.pErrorPipe[writeIdx])
       if pid < 0: raiseOSError(osLastError())
 
-      var error: cint
+      var error: cint = cint(0)
       let sizeRead = read(data.pErrorPipe[readIdx], addr error, sizeof(error))
       if sizeRead == sizeof(error):
-        raiseOSError(osLastError(),
+        raiseOSError(OSErrorCode(error),
                       "Could not find command: '" & $data.sysCommand & "'. OS error: " & $strerror(error))
 
       return pid
 
     {.push stacktrace: off, profiler: off.}
-    proc startProcessFail(data: ptr StartProcessData) =
-      var error: cint = errno
+    proc startProcessFail(data: ptr StartProcessData, error: cint = errno) =
       discard write(data.pErrorPipe[writeIdx], addr error, sizeof(error))
       exitnow(1)
 
@@ -1167,7 +1168,11 @@ elif not defined(useNimRtl):
       if (poUsePath in data.options):
         when defined(uClibc) or defined(linux) or defined(haiku):
           # uClibc environment (OpenWrt included) doesn't have the full execvpe
-          let exe = findExe(data.sysCommand)
+          var exe: string = ""
+          try:
+            exe = findExe(data.sysCommand)
+          except OSError as e:
+            startProcessFail(data, e.errorCode)
           discard execve(exe.cstring, data.sysArgs, data.sysEnv)
         else:
           # MacOSX doesn't have execvpe, so we need workaround.
@@ -1219,6 +1224,7 @@ elif not defined(useNimRtl):
       elif ret == 0:
         return true # Can't establish status. Assume running.
       else:
+        result = false
         raiseOSError(osLastError())
 
   proc terminate(p: Process) =
@@ -1364,7 +1370,7 @@ elif not defined(useNimRtl):
         # Backwards compatibility with previous verison to
         # handle cases where timeout == -1, but extend
         # to handle cases where timeout < 0
-        var status: cint
+        var status: cint = cint(0)
         if waitpid(p.id, status, 0) < 0:
           raiseOSError(osLastError())
         p.exitFlag = true
@@ -1378,7 +1384,7 @@ elif not defined(useNimRtl):
         var delay = initDuration(microseconds = 50)
         
         while true:
-          var status: cint
+          var status: cint = cint(0)
           let pid = waitpid(p.id, status, WNOHANG)
           if p.id == pid :
             p.exitFlag = true
@@ -1403,8 +1409,8 @@ elif not defined(useNimRtl):
                 ns = ticks mod max
                 secs = ticks div max
               var 
-                waitSpec: TimeSpec
-                unused: Timespec
+                waitSpec: TimeSpec = default(TimeSpec)
+                unused: Timespec = default(Timespec)
               waitSpec.tv_sec = posix.Time(secs)
               waitSpec.tv_nsec = clong ns 
               discard posix.clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, waitSpec, unused)
@@ -1428,7 +1434,7 @@ elif not defined(useNimRtl):
 
   proc createStream(handle: var FileHandle,
                     fileMode: FileMode): owned FileStream =
-    var f: File
+    var f: File = default(File)
     if not open(f, handle, fileMode): raiseOSError(osLastError())
     return newFileStream(f)
 
@@ -1490,11 +1496,9 @@ elif not defined(useNimRtl):
     setLen(s, L)
 
   proc select(readfds: var seq[Process], timeout = 500): int =
-    var tv: Timeval
-    tv.tv_sec = posix.Time(0)
-    tv.tv_usec = Suseconds(timeout * 1000)
+    var tv: Timeval = Timeval(tv_sec: posix.Time(0), tv_usec: Suseconds(timeout * 1000))
 
-    var rd: TFdSet
+    var rd: TFdSet = default(TFdSet)
     var m = 0
     createFdSet((rd), readfds, m)
 
@@ -1506,7 +1510,7 @@ elif not defined(useNimRtl):
     pruneProcessSet(readfds, (rd))
 
   proc hasData*(p: Process): bool =
-    var rd: TFdSet
+    var rd: TFdSet = default(TFdSet)
 
     FD_ZERO(rd)
     let m = max(0, int(p.outHandle))

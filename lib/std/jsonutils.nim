@@ -16,7 +16,7 @@ runnableExamples:
   assert 0.0.toJson.kind == JFloat
   assert Inf.toJson.kind == JString
 
-import std/[json, strutils, tables, sets, strtabs, options, strformat]
+import std/[json, strutils, tables, sets, strtabs, options]
 
 #[
 Future directions:
@@ -112,7 +112,7 @@ macro initCaseObject(T: typedesc, fun: untyped): untyped =
   else: raiseAssert $t.kind # xxx `nnkPtrTy` could be handled too
   doAssert t2.kind == nnkRecList
   result = newTree(nnkObjConstr)
-  result.add sym
+  result.add T
   for ti in t2:
     if ti.kind == nnkRecCase:
       let key = ti[0][0]
@@ -186,7 +186,7 @@ proc discKeyMatch[T](obj: T, json: JsonNode, key: static string): bool =
   if not json.hasKey key:
     return true
   let field = accessField(obj, key)
-  var jsonVal: typeof(field)
+  var jsonVal: typeof(field) = default(typeof(field))
   fromJson(jsonVal, json[key])
   if jsonVal != field:
     return false
@@ -205,6 +205,8 @@ proc discKeysMatch[T](obj: T, json: JsonNode, keys: static seq[string]): bool =
   result = true
   discKeysMatchBodyGen(obj, json, keys)
 
+proc jsonTo*(b: JsonNode, T: typedesc, opt = Joptions()): T
+
 proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
   ## inplace version of `jsonTo`
   #[
@@ -218,7 +220,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
     case b.kind
     of JInt: a = T(b.getBiggestInt())
     of JString: a = parseEnum[T](b.getStr())
-    else: checkJson false, fmt"Expecting int/string for {$T} got {b.pretty()}"
+    else: checkJson false, "Expecting int/string for " & $T & " got " & b.pretty()
   elif T is uint|uint64: a = T(to(b, uint64))
   elif T is Ordinal: a = cast[T](to(b, int))
   elif T is pointer: a = cast[pointer](to(b, int))
@@ -228,7 +230,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
     case b.kind
     of JNull: a = nil
     of JString: a = b.str
-    else: checkJson false, fmt"Expecting null/string for {$T} got {b.pretty()}"
+    else: checkJson false, "Expecting null/string for " & $T & " got " & b.pretty()
   elif T is JsonNode: a = b
   elif T is ref | ptr:
     if b.kind == JNull: a = nil
@@ -236,7 +238,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
       a = T()
       fromJson(a[], b, opt)
   elif T is array:
-    checkJson a.len == b.len, fmt"Json array size doesn't match for {$T}"
+    checkJson a.len == b.len, "Json array size doesn't match for " & $T
     var i = 0
     for ai in mitems(a):
       fromJson(ai, b[i], opt)
@@ -282,7 +284,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
         for val in fields(a):
           tupleSize.inc
 
-      checkJson b.len == tupleSize, fmt"Json doesn't match expected length of {tupleSize}, got {b.pretty()}"
+      checkJson b.len == tupleSize, "Json doesn't match expected length of " & $tupleSize & ", got " & b.pretty()
       var i = 0
       for val in fields(a):
         fromJson(val, b[i], opt)
@@ -293,6 +295,7 @@ proc fromJson*[T](a: var T, b: JsonNode, opt = Joptions()) =
 
 proc jsonTo*(b: JsonNode, T: typedesc, opt = Joptions()): T =
   ## reverse of `toJson`
+  result = default(T)
   fromJson(result, b, opt)
 
 proc toJson*[T](a: T, opt = initToJsonOptions()): JsonNode =

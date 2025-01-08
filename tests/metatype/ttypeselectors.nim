@@ -98,16 +98,3 @@ var c: Bar[32]
 echo sizeof(a)
 echo sizeof(b)
 echo sizeof(c)
-
-# This is the same example but using a proc instead of a macro
-# Instead of type mismatch for macro, proc just failed with internal error: getTypeDescAux(tyNone)
-# https://github.com/nim-lang/Nim/issues/7231
-
-proc getBase2*(bits: static[int]): typedesc =
-  if bits == 128:
-    result = newTree(nnkBracketExpr, ident("MpUintBase"), ident("uint64"))
-  else:
-    result = newTree(nnkBracketExpr, ident("MpUintBase"), ident("uint32"))
-
-type
-  MpUint2*[bits: static[int]] = getbase2(bits)

@@ -3,7 +3,7 @@ discard """
   matrix: "--hint:processing"
   nimout: '''
 compile start
-..
+...
 warn_module.nim(6, 6) Hint: 'test' is declared but not used [XDeclaredButNotUsed]
 compile end
 '''

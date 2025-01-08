@@ -33,9 +33,9 @@ proc main() =
 
     proc fun(a: Bar): auto = a.b2
 
-    var a: Foo
+    var a: Foo = nil
 
-    var x6: ptr Bar
+    var x6: ptr Bar = nil
     when nimvm: discard # pending https://github.com/timotheecour/Nim/issues/568
     else:
       x6 = create(Bar)
@@ -107,7 +107,7 @@ proc main() =
         d2: D
     proc identity[T](a: T): T = a
     proc identity2[T](a: T, ignore: int): T = a
-    var a: A
+    var a: A = default(A)
     doAssert ?.a.b.c.d.e.f == 0
     doAssert ?.a.b.c.d.e.d2.d3[].d3.e.d2.e.f == 0
     doAssert ?.a.b.c.d.d3[].e.f == 0
@@ -174,7 +174,7 @@ proc main() =
     doAssert ?.identity(d) == nil
     doAssert ?.identity(d[]) == default(typeof(d[]))
     doAssert ?.identity(d[]).i4 == 0
-    var a: A
+    var a: A = default(A)
     doAssert ?.identity(a) == default(A)
     doAssert ?.identity(a.a0) == 0
     doAssert ?.identity(a.d) == nil
@@ -195,7 +195,7 @@ proc main() =
           b1: float
 
     block:
-      var a: A
+      var a: A = default(A)
       doAssert ?.a.a0.a1[0].a2.addr == nil
       a = A(a2: 3)
       doAssert ?.a.a0.a1[0].a2.addr == nil
