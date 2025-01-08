@@ -234,6 +234,9 @@ proc mapReturnType(conf: ConfigRef; typ: PType): TCTypeKind =
 proc isImportedType(t: PType): bool =
   result = t.sym != nil and sfImportc in t.sym.flags
 
+proc isNoDeclType(t: PType): bool =
+  result = t.sym != nil and lfNoDecl in t.sym.loc.flags
+
 proc isImportedCppType(t: PType): bool =
   let x = t.skipTypes(irrelevantForBackend)
   result = (t.sym != nil and sfInfixCall in t.sym.flags) or
@@ -390,7 +393,7 @@ proc getTypeForward(m: BModule; typ: PType; sig: SigHash): Rope =
   of tySequence, tyTuple, tyObject:
     result = getTypeName(m, typ, sig)
     m.forwTypeCache[sig] = result
-    if not isImportedType(concrete):
+    if not isNoDeclType(concrete):
       addForwardStructFormat(m, structOrUnion(typ), result)
     else:
       pushType(m, concrete)
@@ -1043,14 +1046,14 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       if result == "":
         result = getTypeName(m, origTyp, sig)
         m.forwTypeCache[sig] = result
-        if not isImportedType(t):
+        if not isNoDeclType(t):
           addForwardStructFormat(m, structOrUnion(t), result)
         assert m.forwTypeCache[sig] == result
       m.typeCache[sig] = result # always call for sideeffects:
       if not incompleteType(t):
         let recdesc = if t.kind != tyTuple: getRecordDesc(m, t, result, check)
                       else: getTupleDesc(m, t, result, check)
-        if not isImportedType(t):
+        if not isImportedType(t) and not isNoDeclType(t):
           m.s[cfsTypes].add(recdesc)
         elif tfIncompleteStruct notin t.flags:
           discard # addAbiCheck(m, t, result) # already handled elsewhere
