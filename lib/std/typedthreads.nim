@@ -150,7 +150,7 @@ else:
     nimThreadProcWrapperBody(closure)
 {.pop.}
 
-proc running*[TArg](t: Thread[TArg]): bool {.inline.} =
+proc running*[TArg](t: var Thread[TArg]): bool {.inline.} =
   ## Returns true if `t` is running.
   let dataFn = t.dataFn.load()
   result = dataFn != nil
