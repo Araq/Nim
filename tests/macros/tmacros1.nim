@@ -21,7 +21,7 @@ macro outterMacro*(n, blck: untyped): untyped =
       "(the_name_you_want)): statements.")
   result = newNimNode(NimNodeKind.nnkStmtList)
   var ass : NimNode = newNimNode(nnkAsgn)
-  ass.add(newIdentNode(n[1].ident))
+  ass.add(n[1])
   ass.add(newStrLitNode(innerProc(4)))
   result.add(ass)
 

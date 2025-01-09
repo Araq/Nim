@@ -117,7 +117,6 @@ type
     ntyCompositeTypeClass, ntyInferred, ntyAnd, ntyOr, ntyNot,
     ntyAnything, ntyStatic, ntyFromExpr, ntyOptDeprecated, ntyVoid
 
-  TNimTypeKinds* {.deprecated.} = set[NimTypeKind]
   NimSymKind* = enum
     nskUnknown, nskConditional, nskDynLib, nskParam,
     nskGenericParam, nskTemp, nskModule, nskType, nskVar, nskLet,
@@ -127,23 +126,9 @@ type
     nskEnumField, nskForVar, nskLabel,
     nskStub
 
-  TNimSymKinds* {.deprecated.} = set[NimSymKind]
-
 const
   nnkMutableTy* {.deprecated.} = nnkOutTy
   nnkSharedTy* {.deprecated.} = nnkSinkAsgn
-
-type
-  NimIdent* {.deprecated.} = object of RootObj
-    ## Represents a Nim identifier in the AST. **Note**: This is only
-    ## rarely useful, for identifier construction from a string
-    ## use `ident"abc"`.
-
-  NimSymObj = object # hidden
-  NimSym* {.deprecated.} = ref NimSymObj
-    ## Represents a Nim *symbol* in the compiler; a *symbol* is a looked-up
-    ## *ident*.
-
 
 const
   nnkLiterals* = {nnkCharLit..nnkNilLit}
@@ -152,25 +137,9 @@ const
                    nnkCallStrLit, nnkHiddenCallConv}
   nnkPragmaCallKinds = {nnkExprColonExpr, nnkCall, nnkCallStrLit}
 
-{.push warnings: off.}
-
-proc toNimIdent*(s: string): NimIdent {.magic: "StrToIdent", noSideEffect, deprecated:
-  "Deprecated since version 0.18.0: Use 'ident' or 'newIdentNode' instead.".}
-  ## Constructs an identifier from the string `s`.
-
-proc `==`*(a, b: NimIdent): bool {.magic: "EqIdent", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Use '==' on 'NimNode' instead.".}
-  ## Compares two Nim identifiers.
-
 proc `==`*(a, b: NimNode): bool {.magic: "EqNimrodNode", noSideEffect.}
   ## Compare two Nim nodes. Return true if nodes are structurally
   ## equivalent. This means two independently created nodes can be equal.
-
-proc `==`*(a, b: NimSym): bool {.magic: "EqNimrodNode", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Use '==(NimNode, NimNode)' instead.".}
-  ## Compares two Nim symbols.
-
-{.pop.}
 
 proc sameType*(a, b: NimNode): bool {.magic: "SameNodeType", noSideEffect.} =
   ## Compares two Nim nodes' types. Return true if the types are the same,
@@ -252,25 +221,6 @@ proc strVal*(n: NimNode): string  {.magic: "NStrVal", noSideEffect.}
   ## See also:
   ## * `strVal= proc<#strVal=,NimNode,string>`_ for setting the string value.
 
-{.push warnings: off.} # silence `deprecated`
-
-proc ident*(n: NimNode): NimIdent {.magic: "NIdent", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; All functionality is defined on 'NimNode'.".}
-
-proc symbol*(n: NimNode): NimSym {.magic: "NSymbol", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; All functionality is defined on 'NimNode'.".}
-
-proc getImpl*(s: NimSym): NimNode {.magic: "GetImpl", noSideEffect, deprecated: "use `getImpl: NimNode -> NimNode` instead".}
-
-proc `$`*(i: NimIdent): string {.magic: "NStrVal", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Use 'strVal' instead.".}
-  ## Converts a Nim identifier to a string.
-
-proc `$`*(s: NimSym): string {.magic: "NStrVal", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Use 'strVal' instead.".}
-  ## Converts a Nim symbol to a string.
-
-{.pop.}
 
 when (NimMajor, NimMinor, NimPatch) >= (1, 3, 5) or defined(nimSymImplTransform):
   proc getImplTransformed*(symbol: NimNode): NimNode {.magic: "GetImplTransf", noSideEffect.}
@@ -373,15 +323,6 @@ proc getTypeImpl*(n: typedesc): NimNode {.magic: "NGetType", noSideEffect.}
 proc `intVal=`*(n: NimNode, val: BiggestInt) {.magic: "NSetIntVal", noSideEffect.}
 proc `floatVal=`*(n: NimNode, val: BiggestFloat) {.magic: "NSetFloatVal", noSideEffect.}
 
-{.push warnings: off.}
-
-proc `symbol=`*(n: NimNode, val: NimSym) {.magic: "NSetSymbol", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Generate a new 'NimNode' with 'genSym' instead.".}
-
-proc `ident=`*(n: NimNode, val: NimIdent) {.magic: "NSetIdent", noSideEffect, deprecated:
-  "Deprecated since version 0.18.1; Generate a new 'NimNode' with 'ident(string)' instead.".}
-
-{.pop.}
 
 proc `strVal=`*(n: NimNode, val: string) {.magic: "NSetStrVal", noSideEffect.}
   ## Sets the string value of a string literal or comment.
@@ -464,14 +405,6 @@ proc newFloatLitNode*(f: BiggestFloat): NimNode =
   result = newNimNode(nnkFloatLit)
   result.floatVal = f
 
-{.push warnings: off.}
-
-proc newIdentNode*(i: NimIdent): NimNode {.deprecated: "use ident(string)".} =
-  ## Creates an identifier node from `i`.
-  result = newNimNode(nnkIdent)
-  result.ident = i
-
-{.pop.}
 
 proc newIdentNode*(i: string): NimNode {.magic: "StrToIdent", noSideEffect.}
   ## Creates an identifier node from `i`. It is simply an alias for
@@ -722,17 +655,6 @@ proc newCall*(theProc: NimNode, args: varargs[NimNode]): NimNode =
   result.add(theProc)
   result.add(args)
 
-{.push warnings: off.}
-
-proc newCall*(theProc: NimIdent, args: varargs[NimNode]): NimNode {.deprecated:
-  "Deprecated since v0.18.1; use 'newCall(string, ...)' or 'newCall(NimNode, ...)' instead".} =
-  ## Produces a new call node. `theProc` is the proc that is called with
-  ## the arguments `args[0..]`.
-  result = newNimNode(nnkCall)
-  result.add(newIdentNode(theProc))
-  result.add(args)
-
-{.pop.}
 
 proc newCall*(theProc: string,
               args: varargs[NimNode]): NimNode =
