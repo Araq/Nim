@@ -1,6 +1,6 @@
 discard """
   targets: "c cpp"
-  matrix: "--gc:refc; --gc:arc"
+  matrix: "--mm:refc; --mm:arc"
 """
 
 # bug #7308
@@ -41,3 +41,8 @@ block: # bug #11797
     proc foo3(): int32 = 2
     foo(proc(): cint = foo1())
     foo(proc(): int32 = foo3())
+
+
+block: # bug #24604
+  type MyType {.importc, incompleteStruct.} = object
+  var v {.exportc.}: ptr MyType

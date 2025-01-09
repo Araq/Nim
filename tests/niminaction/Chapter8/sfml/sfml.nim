@@ -1,11 +1,11 @@
 {.passL: "-lsfml-graphics -lsfml-system -lsfml-window".}
 
 type
-  VideoMode* {.importcpp: "sf::VideoMode".} = object
-  RenderWindowObj {.importcpp: "sf::RenderWindow".} = object
+  VideoMode* {.importcpp: "sf::VideoMode", nodecl.} = object
+  RenderWindowObj {.importcpp: "sf::RenderWindow", nodecl.} = object
   RenderWindow* = ptr RenderWindowObj
-  Color* {.importcpp: "sf::Color".} = object
-  Event* {.importcpp: "sf::Event".} = object
+  Color* {.importcpp: "sf::Color", nodecl.} = object
+  Event* {.importcpp: "sf::Event", nodecl.} = object
 
 {.push cdecl, header: "<SFML/Graphics.hpp>".}
 

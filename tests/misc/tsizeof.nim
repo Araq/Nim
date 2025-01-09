@@ -488,7 +488,7 @@ typedef struct{
 """.}
 
 type
-  Foo {.importc.} = object
+  Foo {.importc, nodecl.} = object
 
   Bar = object
     b: byte
@@ -549,7 +549,7 @@ doAssert alignof(MyCustomAlignObject) == 32
 ##########################################
 
 type
-  imported_double {.importc: "double".} = object
+  imported_double {.importc: "double", nodecl.} = object
 
   Pod = object
     v* : imported_double
