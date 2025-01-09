@@ -10,7 +10,7 @@
 ## Types and operations for atomic operations and lockless algorithms.
 ##
 ## Unstable API.
-## 
+##
 ## By default, C++ uses C11 atomic primitives. To use C++ `std::atomic`,
 ## `-d:nimUseCppAtomics` can be defined.
 
@@ -59,7 +59,7 @@ when (defined(cpp) and defined(nimUseCppAtomics)) or defined(nimdoc):
   {.push, header: "<atomic>".}
 
   type
-    MemoryOrder* {.importcpp: "std::memory_order".} = enum
+    MemoryOrder* {.importcpp: "std::memory_order", size: sizeof(cint).} = enum
       ## Specifies how non-atomic operations can be reordered around atomic
       ## operations.
 
@@ -286,7 +286,7 @@ else:
         x
 
     type
-      MemoryOrder* {.importc: "memory_order".maybeWrapStd.} = enum
+      MemoryOrder* {.importc: "memory_order".maybeWrapStd, size: sizeof(cint).} = enum
         moRelaxed
         moConsume
         moAcquire

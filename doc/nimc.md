@@ -555,9 +555,8 @@ Define                   Effect
 `ssl`                    Enables OpenSSL support for the sockets module.
 `memProfiler`            Enables memory profiling for the native GC.
 `uClibc`                 Use uClibc instead of libc. (Relevant for Unix-like OSes)
-`checkAbi`               When using types from C headers, add checks that compare
+`noCheckAbi`             When using types from C headers, disable checks that compare
                          what's in the Nim file with what's in the C header.
-                         This may become enabled by default in the future.
 `tempDir`                This symbol takes a string as its value, like
                          `--define:tempDir:/some/temp/path`:option: to override
                          the temporary directory returned by `os.getTempDir()`.

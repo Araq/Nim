@@ -289,7 +289,7 @@ proc cacheGetType(tab: TypeCache; sig: SigHash): Rope =
   result = tab.getOrDefault(sig)
 
 proc addAbiCheck(m: BModule; t: PType, name: Rope) =
-  if isDefined(m.config, "checkAbi") and (let size = getSize(m.config, t); size != szUnknownSize):
+  if not isDefined(m.config, "noCheckAbi") and (let size = getSize(m.config, t); size != szUnknownSize):
     var msg = "backend & Nim disagree on size for: "
     msg.addTypeHeader(m.config, t)
     var msg2 = ""
