@@ -1,0 +1,81 @@
+nimTitle	parsesql	parsesql.html	module std/parsesql		0
+nim	SqlLexer	parsesql.html#SqlLexer	object SqlLexer		50
+nim	nkNone	parsesql.html#nkNone	SqlNodeKind.nkNone		471
+nim	nkIdent	parsesql.html#nkIdent	SqlNodeKind.nkIdent		471
+nim	nkQuotedIdent	parsesql.html#nkQuotedIdent	SqlNodeKind.nkQuotedIdent		471
+nim	nkStringLit	parsesql.html#nkStringLit	SqlNodeKind.nkStringLit		471
+nim	nkBitStringLit	parsesql.html#nkBitStringLit	SqlNodeKind.nkBitStringLit		471
+nim	nkHexStringLit	parsesql.html#nkHexStringLit	SqlNodeKind.nkHexStringLit		471
+nim	nkIntegerLit	parsesql.html#nkIntegerLit	SqlNodeKind.nkIntegerLit		471
+nim	nkNumericLit	parsesql.html#nkNumericLit	SqlNodeKind.nkNumericLit		471
+nim	nkPrimaryKey	parsesql.html#nkPrimaryKey	SqlNodeKind.nkPrimaryKey		471
+nim	nkForeignKey	parsesql.html#nkForeignKey	SqlNodeKind.nkForeignKey		471
+nim	nkNotNull	parsesql.html#nkNotNull	SqlNodeKind.nkNotNull		471
+nim	nkNull	parsesql.html#nkNull	SqlNodeKind.nkNull		471
+nim	nkStmtList	parsesql.html#nkStmtList	SqlNodeKind.nkStmtList		471
+nim	nkDot	parsesql.html#nkDot	SqlNodeKind.nkDot		471
+nim	nkDotDot	parsesql.html#nkDotDot	SqlNodeKind.nkDotDot		471
+nim	nkPrefix	parsesql.html#nkPrefix	SqlNodeKind.nkPrefix		471
+nim	nkInfix	parsesql.html#nkInfix	SqlNodeKind.nkInfix		471
+nim	nkCall	parsesql.html#nkCall	SqlNodeKind.nkCall		471
+nim	nkPrGroup	parsesql.html#nkPrGroup	SqlNodeKind.nkPrGroup		471
+nim	nkColumnReference	parsesql.html#nkColumnReference	SqlNodeKind.nkColumnReference		471
+nim	nkReferences	parsesql.html#nkReferences	SqlNodeKind.nkReferences		471
+nim	nkDefault	parsesql.html#nkDefault	SqlNodeKind.nkDefault		471
+nim	nkCheck	parsesql.html#nkCheck	SqlNodeKind.nkCheck		471
+nim	nkConstraint	parsesql.html#nkConstraint	SqlNodeKind.nkConstraint		471
+nim	nkUnique	parsesql.html#nkUnique	SqlNodeKind.nkUnique		471
+nim	nkIdentity	parsesql.html#nkIdentity	SqlNodeKind.nkIdentity		471
+nim	nkColumnDef	parsesql.html#nkColumnDef	SqlNodeKind.nkColumnDef		471
+nim	nkInsert	parsesql.html#nkInsert	SqlNodeKind.nkInsert		471
+nim	nkUpdate	parsesql.html#nkUpdate	SqlNodeKind.nkUpdate		471
+nim	nkDelete	parsesql.html#nkDelete	SqlNodeKind.nkDelete		471
+nim	nkSelect	parsesql.html#nkSelect	SqlNodeKind.nkSelect		471
+nim	nkSelectDistinct	parsesql.html#nkSelectDistinct	SqlNodeKind.nkSelectDistinct		471
+nim	nkSelectColumns	parsesql.html#nkSelectColumns	SqlNodeKind.nkSelectColumns		471
+nim	nkSelectPair	parsesql.html#nkSelectPair	SqlNodeKind.nkSelectPair		471
+nim	nkAsgn	parsesql.html#nkAsgn	SqlNodeKind.nkAsgn		471
+nim	nkFrom	parsesql.html#nkFrom	SqlNodeKind.nkFrom		471
+nim	nkFromItemPair	parsesql.html#nkFromItemPair	SqlNodeKind.nkFromItemPair		471
+nim	nkJoin	parsesql.html#nkJoin	SqlNodeKind.nkJoin		471
+nim	nkNaturalJoin	parsesql.html#nkNaturalJoin	SqlNodeKind.nkNaturalJoin		471
+nim	nkUsing	parsesql.html#nkUsing	SqlNodeKind.nkUsing		471
+nim	nkGroup	parsesql.html#nkGroup	SqlNodeKind.nkGroup		471
+nim	nkLimit	parsesql.html#nkLimit	SqlNodeKind.nkLimit		471
+nim	nkOffset	parsesql.html#nkOffset	SqlNodeKind.nkOffset		471
+nim	nkHaving	parsesql.html#nkHaving	SqlNodeKind.nkHaving		471
+nim	nkOrder	parsesql.html#nkOrder	SqlNodeKind.nkOrder		471
+nim	nkDesc	parsesql.html#nkDesc	SqlNodeKind.nkDesc		471
+nim	nkUnion	parsesql.html#nkUnion	SqlNodeKind.nkUnion		471
+nim	nkIntersect	parsesql.html#nkIntersect	SqlNodeKind.nkIntersect		471
+nim	nkExcept	parsesql.html#nkExcept	SqlNodeKind.nkExcept		471
+nim	nkColumnList	parsesql.html#nkColumnList	SqlNodeKind.nkColumnList		471
+nim	nkValueList	parsesql.html#nkValueList	SqlNodeKind.nkValueList		471
+nim	nkWhere	parsesql.html#nkWhere	SqlNodeKind.nkWhere		471
+nim	nkCreateTable	parsesql.html#nkCreateTable	SqlNodeKind.nkCreateTable		471
+nim	nkCreateTableIfNotExists	parsesql.html#nkCreateTableIfNotExists	SqlNodeKind.nkCreateTableIfNotExists		471
+nim	nkCreateType	parsesql.html#nkCreateType	SqlNodeKind.nkCreateType		471
+nim	nkCreateTypeIfNotExists	parsesql.html#nkCreateTypeIfNotExists	SqlNodeKind.nkCreateTypeIfNotExists		471
+nim	nkCreateIndex	parsesql.html#nkCreateIndex	SqlNodeKind.nkCreateIndex		471
+nim	nkCreateIndexIfNotExists	parsesql.html#nkCreateIndexIfNotExists	SqlNodeKind.nkCreateIndexIfNotExists		471
+nim	nkEnumDef	parsesql.html#nkEnumDef	SqlNodeKind.nkEnumDef		471
+nim	SqlNodeKind	parsesql.html#SqlNodeKind	enum SqlNodeKind		471
+nim	SqlParseError	parsesql.html#SqlParseError	object SqlParseError		540
+nim	SqlNode	parsesql.html#SqlNode	type SqlNode		541
+nim	SqlNodeObj	parsesql.html#SqlNodeObj	object SqlNodeObj		542
+nim	SqlParser	parsesql.html#SqlParser	object SqlParser		550
+nim	newNode	parsesql.html#newNode,SqlNodeKind	proc newNode(k: SqlNodeKind): SqlNode		554
+nim	newNode	parsesql.html#newNode,SqlNodeKind,string	proc newNode(k: SqlNodeKind; s: string): SqlNode		564
+nim	newNode	parsesql.html#newNode,SqlNodeKind,seq[SqlNode]	proc newNode(k: SqlNodeKind; sons: seq[SqlNode]): SqlNode		568
+nim	len	parsesql.html#len,SqlNode	proc len(n: SqlNode): int		572
+nim	`[]`	parsesql.html#[],SqlNode,int	proc `[]`(n: SqlNode; i: int): SqlNode		578
+nim	`[]`	parsesql.html#[],SqlNode,BackwardsIndex	proc `[]`(n: SqlNode; i: BackwardsIndex): SqlNode		579
+nim	add	parsesql.html#add,SqlNode,SqlNode	proc add(father, n: SqlNode)		581
+nim	renderSql	parsesql.html#renderSql,SqlNode	proc renderSql(n: SqlNode; upperCase = false): string		1533
+nim	`$`	parsesql.html#$,SqlNode	proc `$`(n: SqlNode): string		1539
+nim	treeRepr	parsesql.html#treeRepr,SqlNode	proc treeRepr(s: SqlNode): string		1555
+nim	parseSql	parsesql.html#parseSql,Stream,string	proc parseSql(input: Stream; filename: string; considerTypeParams = false): SqlNode		1573
+nim	parseSql	parsesql.html#parseSql,string,string	proc parseSql(input: string; filename = ""; considerTypeParams = false): SqlNode		1584
+nimgrp	parsesql	parsesql.html#parseSql-procs-all	proc		1573
+nimgrp	[]	parsesql.html#[]-procs-all	proc		578
+nimgrp	newnode	parsesql.html#newNode-procs-all	proc		554

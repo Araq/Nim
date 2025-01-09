@@ -1,0 +1,25 @@
+nimTitle	jsonutils	jsonutils.html	module std/jsonutils		0
+nim	Joptions	jsonutils.html#Joptions	object Joptions		44
+nim	joptEnumOrd	jsonutils.html#joptEnumOrd	EnumMode.joptEnumOrd		53
+nim	joptEnumSymbol	jsonutils.html#joptEnumSymbol	EnumMode.joptEnumSymbol		53
+nim	joptEnumString	jsonutils.html#joptEnumString	EnumMode.joptEnumString		53
+nim	EnumMode	jsonutils.html#EnumMode	enum EnumMode		53
+nim	joptJsonNodeAsRef	jsonutils.html#joptJsonNodeAsRef	JsonNodeMode.joptJsonNodeAsRef		57
+nim	joptJsonNodeAsCopy	jsonutils.html#joptJsonNodeAsCopy	JsonNodeMode.joptJsonNodeAsCopy		57
+nim	joptJsonNodeAsObject	jsonutils.html#joptJsonNodeAsObject	JsonNodeMode.joptJsonNodeAsObject		57
+nim	JsonNodeMode	jsonutils.html#JsonNodeMode	enum JsonNodeMode		57
+nim	ToJsonOptions	jsonutils.html#ToJsonOptions	object ToJsonOptions		61
+nim	initToJsonOptions	jsonutils.html#initToJsonOptions	proc initToJsonOptions(): ToJsonOptions		66
+nim	fromJson	jsonutils.html#fromJson,T,JsonNode	proc fromJson[T](a: var T; b: JsonNode; opt = Joptions())		183
+nim	jsonTo	jsonutils.html#jsonTo,JsonNode,typedesc	proc jsonTo(b: JsonNode; T: typedesc; opt = Joptions()): T:type		208
+nim	toJson	jsonutils.html#toJson,T	proc toJson[T](a: T; opt = initToJsonOptions()): JsonNode		301
+nim	fromJsonHook	jsonutils.html#fromJsonHook,,JsonNode	proc fromJsonHook[K: string | cstring; V](t: var (Table[K, V] | OrderedTable[K, V]);\n                                     jsonNode: JsonNode; opt = Joptions())		351
+nim	toJsonHook	jsonutils.html#toJsonHook	proc toJsonHook[K: string | cstring; V](t: (Table[K, V] | OrderedTable[K, V]);\n                                   opt = initToJsonOptions()): JsonNode		372
+nim	fromJsonHook	jsonutils.html#fromJsonHook,SomeSet[A],JsonNode	proc fromJsonHook[A](s: var SomeSet[A]; jsonNode: JsonNode; opt = Joptions())		393
+nim	toJsonHook	jsonutils.html#toJsonHook,SomeSet[A]	proc toJsonHook[A](s: SomeSet[A]; opt = initToJsonOptions()): JsonNode		413
+nim	fromJsonHook	jsonutils.html#fromJsonHook,Option[T],JsonNode	proc fromJsonHook[T](self: var Option[T]; jsonNode: JsonNode; opt = Joptions())		427
+nim	toJsonHook	jsonutils.html#toJsonHook,Option[T]	proc toJsonHook[T](self: Option[T]; opt = initToJsonOptions()): JsonNode		445
+nim	fromJsonHook	jsonutils.html#fromJsonHook,StringTableRef,JsonNode	proc fromJsonHook(a: var StringTableRef; b: JsonNode)		462
+nim	toJsonHook	jsonutils.html#toJsonHook,StringTableRef	proc toJsonHook(a: StringTableRef): JsonNode		480
+nimgrp	tojsonhook	jsonutils.html#toJsonHook-procs-all	proc		372
+nimgrp	fromjsonhook	jsonutils.html#fromJsonHook-procs-all	proc		351

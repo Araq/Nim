@@ -1,0 +1,120 @@
+nimTitle	unicode	unicode.html	module std/unicode		0
+nim	Rune	unicode.html#Rune	type Rune		37
+nim	runeLen	unicode.html#runeLen,openArray[char]	proc runeLen(s: openArray[char]): int		45
+nim	runeLenAt	unicode.html#runeLenAt,openArray[char],Natural	proc runeLenAt(s: openArray[char]; i: Natural): int		64
+nim	fastRuneAt	unicode.html#fastRuneAt.t,,int,untyped	template fastRuneAt(s: openArray[char] or string; i: int; result: untyped; doInc = true)		84
+nim	runeAt	unicode.html#runeAt,openArray[char],Natural	proc runeAt(s: openArray[char]; i: Natural): Rune		162
+nim	validateUtf8	unicode.html#validateUtf8,openArray[char]	proc validateUtf8(s: openArray[char]): int		176
+nim	fastToUTF8Copy	unicode.html#fastToUTF8Copy.t,Rune,string,int	template fastToUTF8Copy(c: Rune; s: var string; pos: int; doInc = true)		207
+nim	toUTF8	unicode.html#toUTF8,Rune	proc toUTF8(c: Rune): string		264
+nim	add	unicode.html#add,string,Rune	proc add(s: var string; c: Rune)		279
+nim	`$`	unicode.html#$,Rune	proc `$`(rune: Rune): string		290
+nim	`$`	unicode.html#$,seq[Rune]	proc `$`(runes: seq[Rune]): string		298
+nim	runeOffset	unicode.html#runeOffset,openArray[char],Natural,Natural	proc runeOffset(s: openArray[char]; pos: Natural; start: Natural = 0): int		313
+nim	runeReverseOffset	unicode.html#runeReverseOffset,openArray[char],Positive	proc runeReverseOffset(s: openArray[char]; rev: Positive): (int, int)		340
+nim	runeAtPos	unicode.html#runeAtPos,openArray[char],int	proc runeAtPos(s: openArray[char]; pos: int): Rune		368
+nim	runeStrAtPos	unicode.html#runeStrAtPos,openArray[char],Natural	proc runeStrAtPos(s: openArray[char]; pos: Natural): string		381
+nim	runeSubStr	unicode.html#runeSubStr,openArray[char],int,int	proc runeSubStr(s: openArray[char]; pos: int; len: int = int.high): string		395
+nim	`<=%`	unicode.html#<=%,Rune,Rune	proc `<=%`(a, b: Rune): bool		442
+nim	`<%`	unicode.html#<%,Rune,Rune	proc `<%`(a, b: Rune): bool		451
+nim	`==`	unicode.html#==,Rune,Rune	proc `==`(a, b: Rune): bool		460
+nim	toLower	unicode.html#toLower,Rune	proc toLower(c: Rune): Rune		482
+nim	toUpper	unicode.html#toUpper,Rune	proc toUpper(c: Rune): Rune		500
+nim	toTitle	unicode.html#toTitle,Rune	proc toTitle(c: Rune): Rune		518
+nim	isLower	unicode.html#isLower,Rune	proc isLower(c: Rune): bool		531
+nim	isUpper	unicode.html#isUpper,Rune	proc isUpper(c: Rune): bool		551
+nim	isAlpha	unicode.html#isAlpha,Rune	proc isAlpha(c: Rune): bool		573
+nim	isTitle	unicode.html#isTitle,Rune	proc isTitle(c: Rune): bool		594
+nim	isWhiteSpace	unicode.html#isWhiteSpace,Rune	proc isWhiteSpace(c: Rune): bool		605
+nim	isCombining	unicode.html#isCombining,Rune	proc isCombining(c: Rune): bool		620
+nim	isAlpha	unicode.html#isAlpha,openArray[char]	proc isAlpha(s: openArray[char]): bool		647
+nim	isSpace	unicode.html#isSpace,openArray[char]	proc isSpace(s: openArray[char]): bool		655
+nim	toUpper	unicode.html#toUpper,openArray[char]	proc toUpper(s: openArray[char]): string		676
+nim	toLower	unicode.html#toLower,openArray[char]	proc toLower(s: openArray[char]): string		683
+nim	swapCase	unicode.html#swapCase,openArray[char]	proc swapCase(s: openArray[char]): string		690
+nim	capitalize	unicode.html#capitalize,openArray[char]	proc capitalize(s: openArray[char]): string		712
+nim	translate	unicode.html#translate,openArray[char],proc(string)	proc translate(s: openArray[char]; replacements: proc (key: string): string): string		729
+nim	title	unicode.html#title,openArray[char]	proc title(s: openArray[char]): string		782
+nim	runes	unicode.html#runes.i,openArray[char]	iterator runes(s: openArray[char]): Rune		808
+nim	utf8	unicode.html#utf8.i,openArray[char]	iterator utf8(s: openArray[char]): string		817
+nim	toRunes	unicode.html#toRunes,openArray[char]	proc toRunes(s: openArray[char]): seq[Rune]		831
+nim	cmpRunesIgnoreCase	unicode.html#cmpRunesIgnoreCase,openArray[char],openArray[char]	proc cmpRunesIgnoreCase(a, b: openArray[char]): int		844
+nim	reversed	unicode.html#reversed,openArray[char]	proc reversed(s: openArray[char]): string		866
+nim	graphemeLen	unicode.html#graphemeLen,openArray[char],Natural	proc graphemeLen(s: openArray[char]; i: Natural): Natural		901
+nim	lastRune	unicode.html#lastRune,openArray[char],int	proc lastRune(s: openArray[char]; last: int): (Rune, int)		920
+nim	size	unicode.html#size,Rune	proc size(r: Rune): int		932
+nim	split	unicode.html#split.i,openArray[char],openArray[Rune],int	iterator split(s: openArray[char]; seps: openArray[Rune] = unicodeSpaces;\n      maxsplit: int = -1): string		977
+nim	splitWhitespace	unicode.html#splitWhitespace.i,openArray[char]	iterator splitWhitespace(s: openArray[char]): string		1003
+nim	splitWhitespace	unicode.html#splitWhitespace,openArray[char]	proc splitWhitespace(s: openArray[char]): seq[string]		1011
+nim	split	unicode.html#split.i,openArray[char],Rune,int	iterator split(s: openArray[char]; sep: Rune; maxsplit: int = -1): string		1017
+nim	split	unicode.html#split,openArray[char],openArray[Rune],int	proc split(s: openArray[char]; seps: openArray[Rune] = unicodeSpaces;\n      maxsplit: int = -1): seq[string]		1028
+nim	split	unicode.html#split,openArray[char],Rune,int	proc split(s: openArray[char]; sep: Rune; maxsplit: int = -1): seq[string]		1034
+nim	strip	unicode.html#strip,openArray[char],openArray[Rune]	proc strip(s: openArray[char]; leading = true; trailing = true;\n      runes: openArray[Rune] = unicodeSpaces): string		1040
+nim	repeat	unicode.html#repeat,Rune,Natural	proc repeat(c: Rune; count: Natural): string		1097
+nim	align	unicode.html#align,openArray[char],Natural	proc align(s: openArray[char]; count: Natural; padding = ' '.Rune): string		1111
+nim	alignLeft	unicode.html#alignLeft,openArray[char],Natural	proc alignLeft(s: openArray[char]; count: Natural; padding = ' '.Rune): string		1138
+nim	runeLen	unicode.html#runeLen,string	proc runeLen(s: string): int		1165
+nim	runeLenAt	unicode.html#runeLenAt,string,Natural	proc runeLenAt(s: string; i: Natural): int		1173
+nim	runeAt	unicode.html#runeAt,string,Natural	proc runeAt(s: string; i: Natural): Rune		1184
+nim	validateUtf8	unicode.html#validateUtf8,string	proc validateUtf8(s: string): int		1198
+nim	runeOffset	unicode.html#runeOffset,string,Natural,Natural	proc runeOffset(s: string; pos: Natural; start: Natural = 0): int		1208
+nim	runeReverseOffset	unicode.html#runeReverseOffset,string,Positive	proc runeReverseOffset(s: string; rev: Positive): (int, int)		1226
+nim	runeAtPos	unicode.html#runeAtPos,string,int	proc runeAtPos(s: string; pos: int): Rune		1243
+nim	runeStrAtPos	unicode.html#runeStrAtPos,string,Natural	proc runeStrAtPos(s: string; pos: Natural): string		1256
+nim	runeSubStr	unicode.html#runeSubStr,string,int,int	proc runeSubStr(s: string; pos: int; len: int = int.high): string		1270
+nim	isAlpha	unicode.html#isAlpha,string	proc isAlpha(s: string): bool		1288
+nim	isSpace	unicode.html#isSpace,string	proc isSpace(s: string): bool		1295
+nim	toUpper	unicode.html#toUpper,string	proc toUpper(s: string): string		1303
+nim	toLower	unicode.html#toLower,string	proc toLower(s: string): string		1309
+nim	swapCase	unicode.html#swapCase,string	proc swapCase(s: string): string		1315
+nim	capitalize	unicode.html#capitalize,string	proc capitalize(s: string): string		1324
+nim	translate	unicode.html#translate,string,proc(string)	proc translate(s: string; replacements: proc (key: string): string): string		1331
+nim	title	unicode.html#title,string	proc title(s: string): string		1347
+nim	runes	unicode.html#runes.i,string	iterator runes(s: string): Rune		1357
+nim	utf8	unicode.html#utf8.i,string	iterator utf8(s: string): string		1362
+nim	toRunes	unicode.html#toRunes,string	proc toRunes(s: string): seq[Rune]		1373
+nim	cmpRunesIgnoreCase	unicode.html#cmpRunesIgnoreCase,string,string	proc cmpRunesIgnoreCase(a, b: string): int		1383
+nim	reversed	unicode.html#reversed,string	proc reversed(s: string): string		1391
+nim	graphemeLen	unicode.html#graphemeLen,string,Natural	proc graphemeLen(s: string; i: Natural): Natural		1402
+nim	lastRune	unicode.html#lastRune,string,int	proc lastRune(s: string; last: int): (Rune, int)		1412
+nim	split	unicode.html#split.i,string,openArray[Rune],int	iterator split(s: string; seps: openArray[Rune] = unicodeSpaces; maxsplit: int = -1): string		1417
+nim	splitWhitespace	unicode.html#splitWhitespace.i,string	iterator splitWhitespace(s: string): string		1443
+nim	splitWhitespace	unicode.html#splitWhitespace,string	proc splitWhitespace(s: string): seq[string]		1448
+nim	split	unicode.html#split.i,string,Rune,int	iterator split(s: string; sep: Rune; maxsplit: int = -1): string		1453
+nim	split	unicode.html#split,string,openArray[Rune],int	proc split(s: string; seps: openArray[Rune] = unicodeSpaces; maxsplit: int = -1): seq[\n    string]		1464
+nim	split	unicode.html#split,string,Rune,int	proc split(s: string; sep: Rune; maxsplit: int = -1): seq[string]		1470
+nim	strip	unicode.html#strip,string,openArray[Rune]	proc strip(s: string; leading = true; trailing = true;\n      runes: openArray[Rune] = unicodeSpaces): string		1475
+nim	align	unicode.html#align,string,Natural	proc align(s: string; count: Natural; padding = ' '.Rune): string		1491
+nim	alignLeft	unicode.html#alignLeft,string,Natural	proc alignLeft(s: string; count: Natural; padding = ' '.Rune): string		1508
+nimgrp	isspace	unicode.html#isSpace-procs-all	proc		655
+nimgrp	splitwhitespace	unicode.html#splitWhitespace-procs-all	proc		1011
+nimgrp	validateutf8	unicode.html#validateUtf8-procs-all	proc		176
+nimgrp	$	unicode.html#$-procs-all	proc		290
+nimgrp	runeatpos	unicode.html#runeAtPos-procs-all	proc		368
+nimgrp	capitalize	unicode.html#capitalize-procs-all	proc		712
+nimgrp	runereverseoffset	unicode.html#runeReverseOffset-procs-all	proc		340
+nimgrp	runesubstr	unicode.html#runeSubStr-procs-all	proc		395
+nimgrp	lastrune	unicode.html#lastRune-procs-all	proc		920
+nimgrp	swapcase	unicode.html#swapCase-procs-all	proc		690
+nimgrp	title	unicode.html#title-procs-all	proc		782
+nimgrp	cmprunesignorecase	unicode.html#cmpRunesIgnoreCase-procs-all	proc		844
+nimgrp	reversed	unicode.html#reversed-procs-all	proc		866
+nimgrp	isalpha	unicode.html#isAlpha-procs-all	proc		573
+nimgrp	strip	unicode.html#strip-procs-all	proc		1040
+nimgrp	runestratpos	unicode.html#runeStrAtPos-procs-all	proc		381
+nimgrp	runelenat	unicode.html#runeLenAt-procs-all	proc		64
+nimgrp	runeoffset	unicode.html#runeOffset-procs-all	proc		313
+nimgrp	align	unicode.html#align-procs-all	proc		1111
+nimgrp	split	unicode.html#split-procs-all	proc		1028
+nimgrp	torunes	unicode.html#toRunes-procs-all	proc		831
+nimgrp	runelen	unicode.html#runeLen-procs-all	proc		45
+nimgrp	translate	unicode.html#translate-procs-all	proc		729
+nimgrp	alignleft	unicode.html#alignLeft-procs-all	proc		1138
+nimgrp	tolower	unicode.html#toLower-procs-all	proc		482
+nimgrp	graphemelen	unicode.html#graphemeLen-procs-all	proc		901
+nimgrp	toupper	unicode.html#toUpper-procs-all	proc		500
+nimgrp	runeat	unicode.html#runeAt-procs-all	proc		162
+nimgrp	splitwhitespace	unicode.html#splitWhitespace-iterators-all	iterator		1003
+nimgrp	split	unicode.html#split-iterators-all	iterator		977
+nimgrp	runes	unicode.html#runes-iterators-all	iterator		808
+nimgrp	utf8	unicode.html#utf8-iterators-all	iterator		817

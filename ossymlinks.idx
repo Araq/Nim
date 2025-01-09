@@ -1,0 +1,3 @@
+nimTitle	ossymlinks	ossymlinks.html	module std/private/ossymlinks		0
+nim	createSymlink	ossymlinks.html#createSymlink,string,string	proc createSymlink(src, dest: string)		36
+nim	expandSymlink	ossymlinks.html#expandSymlink,string	proc expandSymlink(symlinkPath: string): string		59

@@ -1,0 +1,3 @@
+nimTitle	pushpoppragmas	pushpoppragmas.html	module pushpoppragmas		0
+nim	processPushBackendOption	pushpoppragmas.html#processPushBackendOption,ConfigRef,seq[],TOptions,PNode,int	proc processPushBackendOption(config: ConfigRef;\n                         optionsStack: var seq[(TOptions, TNoteKinds)];\n                         options: var TOptions; n: PNode; start: int)		34
+nim	processPopBackendOption	pushpoppragmas.html#processPopBackendOption.t,ConfigRef,seq[],TOptions	template processPopBackendOption(config: ConfigRef;\n                        optionsStack: var seq[(TOptions, TNoteKinds)];\n                        options: var TOptions)		53

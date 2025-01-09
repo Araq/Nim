@@ -1,0 +1,20 @@
+nimTitle	ropes	ropes.html	module ropes		0
+nim	FormatStr	ropes.html#FormatStr	type FormatStr		18
+nim	Rope	ropes.html#Rope	type Rope		22
+nim	newRopeAppender	ropes.html#newRopeAppender,int	proc newRopeAppender(cap = 80): string		24
+nim	freeze	ropes.html#freeze,Rope	proc freeze(r: Rope)		27
+nim	resetRopeCache	ropes.html#resetRopeCache	proc resetRopeCache()		29
+nim	rope	ropes.html#rope.t,string	template rope(s: string): string		31
+nim	rope	ropes.html#rope,BiggestInt	proc rope(i: BiggestInt): Rope		33
+nim	rope	ropes.html#rope,BiggestFloat	proc rope(f: BiggestFloat): Rope		37
+nim	writeRope	ropes.html#writeRope,File,Rope	proc writeRope(f: File; r: Rope)		41
+nim	writeRope	ropes.html#writeRope,Rope,AbsoluteFile	proc writeRope(head: Rope; filename: AbsoluteFile): bool		45
+nim	prepend	ropes.html#prepend,Rope,string	proc prepend(a: var Rope; b: string)		54
+nim	runtimeFormat	ropes.html#runtimeFormat,FormatStr,openArray[Rope]	proc runtimeFormat(frmt: FormatStr; args: openArray[Rope]): Rope		56
+nim	`%`	ropes.html#%,static[FormatStr],openArray[Rope]	proc `%`(frmt: static[FormatStr]; args: openArray[Rope]): Rope		109
+nim	addf	ropes.html#addf.t,Rope,FormatStr,openArray[Rope]	template addf(c: var Rope; frmt: FormatStr; args: openArray[Rope])		112
+nim	equalsFile	ropes.html#equalsFile,Rope,File	proc equalsFile(s: Rope; f: File): bool		119
+nim	equalsFile	ropes.html#equalsFile,Rope,AbsoluteFile	proc equalsFile(r: Rope; filename: AbsoluteFile): bool		151
+nimgrp	rope	ropes.html#rope-procs-all	proc		33
+nimgrp	writerope	ropes.html#writeRope-procs-all	proc		41
+nimgrp	equalsfile	ropes.html#equalsFile-procs-all	proc		119

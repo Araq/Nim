@@ -1,0 +1,31 @@
+nimTitle	strtabs	strtabs.html	module std/strtabs		0
+nim	modeCaseSensitive	strtabs.html#modeCaseSensitive	StringTableMode.modeCaseSensitive		69
+nim	modeCaseInsensitive	strtabs.html#modeCaseInsensitive	StringTableMode.modeCaseInsensitive		69
+nim	modeStyleInsensitive	strtabs.html#modeStyleInsensitive	StringTableMode.modeStyleInsensitive		69
+nim	StringTableMode	strtabs.html#StringTableMode	enum StringTableMode		69
+nim	StringTableObj	strtabs.html#StringTableObj	object StringTableObj		75
+nim	StringTableRef	strtabs.html#StringTableRef	type StringTableRef		80
+nim	useEnvironment	strtabs.html#useEnvironment	FormatFlag.useEnvironment		82
+nim	useEmpty	strtabs.html#useEmpty	FormatFlag.useEmpty		82
+nim	useKey	strtabs.html#useKey	FormatFlag.useKey		82
+nim	FormatFlag	strtabs.html#FormatFlag	enum FormatFlag		82
+nim	mode	strtabs.html#mode,StringTableRef	proc mode(t: StringTableRef): StringTableMode		96
+nim	pairs	strtabs.html#pairs.i,StringTableRef	iterator pairs(t: StringTableRef): tuple[key, value: string]		98
+nim	keys	strtabs.html#keys.i,StringTableRef	iterator keys(t: StringTableRef): string		104
+nim	values	strtabs.html#values.i,StringTableRef	iterator values(t: StringTableRef): string		110
+nim	len	strtabs.html#len,StringTableRef	proc len(t: StringTableRef): int		151
+nim	`[]`	strtabs.html#[],StringTableRef,string	proc `[]`(t: StringTableRef; key: string): var string		155
+nim	getOrDefault	strtabs.html#getOrDefault,StringTableRef,string,string	proc getOrDefault(t: StringTableRef; key: string; default: string = ""): string		176
+nim	hasKey	strtabs.html#hasKey,StringTableRef,string	proc hasKey(t: StringTableRef; key: string): bool		200
+nim	contains	strtabs.html#contains,StringTableRef,string	proc contains(t: StringTableRef; key: string): bool		213
+nim	`[]=`	strtabs.html#[]=,StringTableRef,string,string	proc `[]=`(t: StringTableRef; key, val: string)		237
+nim	newStringTable	strtabs.html#newStringTable,StringTableMode	proc newStringTable(mode: StringTableMode): owned(StringTableRef)		257
+nim	newStringTable	strtabs.html#newStringTable,varargs[string],StringTableMode	proc newStringTable(keyValuePairs: varargs[string]; mode: StringTableMode): owned(\n    StringTableRef)		266
+nim	newStringTable	strtabs.html#newStringTable,varargs[tuple[string,string]],StringTableMode	proc newStringTable(keyValuePairs: varargs[tuple[key, val: string]];\n               mode: StringTableMode = modeCaseSensitive): owned(StringTableRef)		283
+nim	clear	strtabs.html#clear,StringTableRef,StringTableMode	proc clear(s: StringTableRef; mode: StringTableMode)		313
+nim	clear	strtabs.html#clear,StringTableRef	proc clear(s: StringTableRef)		331
+nim	del	strtabs.html#del,StringTableRef,string	proc del(t: StringTableRef; key: string)		335
+nim	`$`	strtabs.html#$,StringTableRef	proc `$`(t: StringTableRef): string		376
+nim	`%`	strtabs.html#%,string,StringTableRef,set[FormatFlag]	proc `%`(f: string; t: StringTableRef; flags: set[FormatFlag] = {}): string		390
+nimgrp	newstringtable	strtabs.html#newStringTable-procs-all	proc		257
+nimgrp	clear	strtabs.html#clear-procs-all	proc		313

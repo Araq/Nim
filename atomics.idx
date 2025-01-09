@@ -1,0 +1,26 @@
+nimTitle	atomics	atomics.html	module std/atomics		0
+nim	MemoryOrder	atomics.html#MemoryOrder	enum MemoryOrder		62
+nim	Atomic	atomics.html#Atomic	object Atomic		94
+nim	AtomicFlag	atomics.html#AtomicFlag	object AtomicFlag		98
+nim	load	atomics.html#load,Atomic[T],MemoryOrder	proc load[T](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T		103
+nim	store	atomics.html#store,Atomic[T],T,MemoryOrder	proc store[T](location: var Atomic[T]; desired: T;\n         order: MemoryOrder = moSequentiallyConsistent)		106
+nim	exchange	atomics.html#exchange,Atomic[T],T,MemoryOrder	proc exchange[T](location: var Atomic[T]; desired: T;\n            order: MemoryOrder = moSequentiallyConsistent): T		110
+nim	compareExchange	atomics.html#compareExchange,Atomic[T],T,T,MemoryOrder	proc compareExchange[T](location: var Atomic[T]; expected: var T; desired: T;\n                   order: MemoryOrder = moSequentiallyConsistent): bool		114
+nim	compareExchange	atomics.html#compareExchange,Atomic[T],T,T,MemoryOrder,MemoryOrder	proc compareExchange[T](location: var Atomic[T]; expected: var T; desired: T;\n                   success, failure: MemoryOrder): bool		119
+nim	compareExchangeWeak	atomics.html#compareExchangeWeak,Atomic[T],T,T,MemoryOrder	proc compareExchangeWeak[T](location: var Atomic[T]; expected: var T; desired: T;\n                       order: MemoryOrder = moSequentiallyConsistent): bool		123
+nim	compareExchangeWeak	atomics.html#compareExchangeWeak,Atomic[T],T,T,MemoryOrder,MemoryOrder	proc compareExchangeWeak[T](location: var Atomic[T]; expected: var T; desired: T;\n                       success, failure: MemoryOrder): bool		126
+nim	fetchAdd	atomics.html#fetchAdd,Atomic[T: SomeInteger],T,MemoryOrder	proc fetchAdd[T: SomeInteger](location: var Atomic[T]; value: T;\n                         order: MemoryOrder = moSequentiallyConsistent): T		132
+nim	fetchSub	atomics.html#fetchSub,Atomic[T: SomeInteger],T,MemoryOrder	proc fetchSub[T: SomeInteger](location: var Atomic[T]; value: T;\n                         order: MemoryOrder = moSequentiallyConsistent): T		136
+nim	fetchAnd	atomics.html#fetchAnd,Atomic[T: SomeInteger],T,MemoryOrder	proc fetchAnd[T: SomeInteger](location: var Atomic[T]; value: T;\n                         order: MemoryOrder = moSequentiallyConsistent): T		140
+nim	fetchOr	atomics.html#fetchOr,Atomic[T: SomeInteger],T,MemoryOrder	proc fetchOr[T: SomeInteger](location: var Atomic[T]; value: T;\n                        order: MemoryOrder = moSequentiallyConsistent): T		144
+nim	fetchXor	atomics.html#fetchXor,Atomic[T: SomeInteger],T,MemoryOrder	proc fetchXor[T: SomeInteger](location: var Atomic[T]; value: T;\n                         order: MemoryOrder = moSequentiallyConsistent): T		148
+nim	testAndSet	atomics.html#testAndSet,AtomicFlag,MemoryOrder	proc testAndSet(location: var AtomicFlag;\n           order: MemoryOrder = moSequentiallyConsistent): bool		154
+nim	clear	atomics.html#clear,AtomicFlag,MemoryOrder	proc clear(location: var AtomicFlag; order: MemoryOrder = moSequentiallyConsistent)		157
+nim	fence	atomics.html#fence,MemoryOrder	proc fence(order: MemoryOrder)		160
+nim	signalFence	atomics.html#signalFence,MemoryOrder	proc signalFence(order: MemoryOrder)		163
+nim	atomicInc	atomics.html#atomicInc,Atomic[T: SomeInteger],T	proc atomicInc[T: SomeInteger](location: var Atomic[T]; value: T = 1)		419
+nim	atomicDec	atomics.html#atomicDec,Atomic[T: SomeInteger],T	proc atomicDec[T: SomeInteger](location: var Atomic[T]; value: T = 1)		423
+nim	`+=`	atomics.html#+=,Atomic[T: SomeInteger],T	proc `+=`[T: SomeInteger](location: var Atomic[T]; value: T)		427
+nim	`-=`	atomics.html#-=,Atomic[T: SomeInteger],T	proc `-=`[T: SomeInteger](location: var Atomic[T]; value: T)		431
+nimgrp	compareexchange	atomics.html#compareExchange-procs-all	proc		114
+nimgrp	compareexchangeweak	atomics.html#compareExchangeWeak-procs-all	proc		123

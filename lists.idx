@@ -1,0 +1,74 @@
+nimTitle	lists	lists.html	module std/lists		0
+nim	DoublyLinkedNodeObj	lists.html#DoublyLinkedNodeObj	object DoublyLinkedNodeObj		66
+nim	DoublyLinkedNode	lists.html#DoublyLinkedNode	type DoublyLinkedNode		73
+nim	SinglyLinkedNodeObj	lists.html#SinglyLinkedNodeObj	object SinglyLinkedNodeObj		75
+nim	SinglyLinkedNode	lists.html#SinglyLinkedNode	type SinglyLinkedNode		81
+nim	SinglyLinkedList	lists.html#SinglyLinkedList	object SinglyLinkedList		83
+nim	DoublyLinkedList	lists.html#DoublyLinkedList	object DoublyLinkedList		88
+nim	SinglyLinkedRing	lists.html#SinglyLinkedRing	object SinglyLinkedRing		93
+nim	DoublyLinkedRing	lists.html#DoublyLinkedRing	object DoublyLinkedRing		98
+nim	SomeLinkedList	lists.html#SomeLinkedList	type SomeLinkedList		102
+nim	SomeLinkedRing	lists.html#SomeLinkedRing	type SomeLinkedRing		104
+nim	SomeLinkedCollection	lists.html#SomeLinkedCollection	type SomeLinkedCollection		106
+nim	SomeLinkedNode	lists.html#SomeLinkedNode	type SomeLinkedNode		108
+nim	initSinglyLinkedList	lists.html#initSinglyLinkedList	proc initSinglyLinkedList[T](): SinglyLinkedList[T]		110
+nim	initDoublyLinkedList	lists.html#initDoublyLinkedList	proc initDoublyLinkedList[T](): DoublyLinkedList[T]		120
+nim	initSinglyLinkedRing	lists.html#initSinglyLinkedRing	proc initSinglyLinkedRing[T](): SinglyLinkedRing[T]		130
+nim	initDoublyLinkedRing	lists.html#initDoublyLinkedRing	proc initDoublyLinkedRing[T](): DoublyLinkedRing[T]		140
+nim	newDoublyLinkedNode	lists.html#newDoublyLinkedNode,T	proc newDoublyLinkedNode[T](value: T): DoublyLinkedNode[T]		150
+nim	newSinglyLinkedNode	lists.html#newSinglyLinkedNode,T	proc newSinglyLinkedNode[T](value: T): SinglyLinkedNode[T]		159
+nim	items	lists.html#items.i,SomeLinkedList[T]	iterator items[T](L: SomeLinkedList[T]): T		182
+nim	items	lists.html#items.i,SomeLinkedRing[T]	iterator items[T](L: SomeLinkedRing[T]): T		198
+nim	mitems	lists.html#mitems.i,SomeLinkedList[T]	iterator mitems[T](L: var SomeLinkedList[T]): var T		214
+nim	mitems	lists.html#mitems.i,SomeLinkedRing[T]	iterator mitems[T](L: var SomeLinkedRing[T]): var T		231
+nim	nodes	lists.html#nodes.i,SomeLinkedList[T]	iterator nodes[T](L: SomeLinkedList[T]): SomeLinkedNode[T]		248
+nim	nodes	lists.html#nodes.i,SomeLinkedRing[T]	iterator nodes[T](L: SomeLinkedRing[T]): SomeLinkedNode[T]		273
+nim	`$`	lists.html#$,SomeLinkedCollection[T]	proc `$`[T](L: SomeLinkedCollection[T]): string		300
+nim	find	lists.html#find,SomeLinkedCollection[T],T	proc find[T](L: SomeLinkedCollection[T]; value: T): SomeLinkedNode[T]		312
+nim	contains	lists.html#contains,SomeLinkedCollection[T],T	proc contains[T](L: SomeLinkedCollection[T]; value: T): bool		330
+nim	prepend	lists.html#prepend,T,T	proc prepend[T: SomeLinkedList](a: var T; b: T)		346
+nim	prependMoved	lists.html#prependMoved,T,T	proc prependMoved[T: SomeLinkedList](a, b: var T)		366
+nim	add	lists.html#add,SinglyLinkedList[T],SinglyLinkedNode[T]	proc add[T](L: var SinglyLinkedList[T]; n: SinglyLinkedNode[T])		393
+nim	add	lists.html#add,SinglyLinkedList[T],T	proc add[T](L: var SinglyLinkedList[T]; value: T)		414
+nim	prepend	lists.html#prepend,SinglyLinkedList[T],SinglyLinkedNode[T]	proc prepend[T](L: var SinglyLinkedList[T]; n: SinglyLinkedNode[T])		430
+nim	prepend	lists.html#prepend,SinglyLinkedList[T],T	proc prepend[T](L: var SinglyLinkedList[T]; value: T)		449
+nim	copy	lists.html#copy,SinglyLinkedList[T]	proc copy[T](a: SinglyLinkedList[T]): SinglyLinkedList[T]		466
+nim	addMoved	lists.html#addMoved,SinglyLinkedList[T],SinglyLinkedList[T]	proc addMoved[T](a, b: var SinglyLinkedList[T])		490
+nim	add	lists.html#add,DoublyLinkedList[T],DoublyLinkedNode[T]	proc add[T](L: var DoublyLinkedList[T]; n: DoublyLinkedNode[T])		523
+nim	add	lists.html#add,DoublyLinkedList[T],T	proc add[T](L: var DoublyLinkedList[T]; value: T)		547
+nim	prepend	lists.html#prepend,DoublyLinkedList[T],DoublyLinkedNode[T]	proc prepend[T](L: var DoublyLinkedList[T]; n: DoublyLinkedNode[T])		566
+nim	prepend	lists.html#prepend,DoublyLinkedList[T],T	proc prepend[T](L: var DoublyLinkedList[T]; value: T)		590
+nim	copy	lists.html#copy,DoublyLinkedList[T]	proc copy[T](a: DoublyLinkedList[T]): DoublyLinkedList[T]		609
+nim	addMoved	lists.html#addMoved,DoublyLinkedList[T],DoublyLinkedList[T]	proc addMoved[T](a, b: var DoublyLinkedList[T])		633
+nim	add	lists.html#add,T,T	proc add[T: SomeLinkedList](a: var T; b: T)		668
+nim	remove	lists.html#remove,SinglyLinkedList[T],SinglyLinkedNode[T]	proc remove[T](L: var SinglyLinkedList[T]; n: SinglyLinkedNode[T]): bool		688
+nim	remove	lists.html#remove,DoublyLinkedList[T],DoublyLinkedNode[T]	proc remove[T](L: var DoublyLinkedList[T]; n: DoublyLinkedNode[T])		726
+nim	add	lists.html#add,SinglyLinkedRing[T],SinglyLinkedNode[T]	proc add[T](L: var SinglyLinkedRing[T]; n: SinglyLinkedNode[T])		755
+nim	add	lists.html#add,SinglyLinkedRing[T],T	proc add[T](L: var SinglyLinkedRing[T]; value: T)		778
+nim	prepend	lists.html#prepend,SinglyLinkedRing[T],SinglyLinkedNode[T]	proc prepend[T](L: var SinglyLinkedRing[T]; n: SinglyLinkedNode[T])		795
+nim	prepend	lists.html#prepend,SinglyLinkedRing[T],T	proc prepend[T](L: var SinglyLinkedRing[T]; value: T)		818
+nim	add	lists.html#add,DoublyLinkedRing[T],DoublyLinkedNode[T]	proc add[T](L: var DoublyLinkedRing[T]; n: DoublyLinkedNode[T])		837
+nim	add	lists.html#add,DoublyLinkedRing[T],T	proc add[T](L: var DoublyLinkedRing[T]; value: T)		863
+nim	prepend	lists.html#prepend,DoublyLinkedRing[T],DoublyLinkedNode[T]	proc prepend[T](L: var DoublyLinkedRing[T]; n: DoublyLinkedNode[T])		882
+nim	prepend	lists.html#prepend,DoublyLinkedRing[T],T	proc prepend[T](L: var DoublyLinkedRing[T]; value: T)		908
+nim	remove	lists.html#remove,DoublyLinkedRing[T],DoublyLinkedNode[T]	proc remove[T](L: var DoublyLinkedRing[T]; n: DoublyLinkedNode[T])		927
+nim	append	lists.html#append,,	proc append[T](a: var (SinglyLinkedList[T] | SinglyLinkedRing[T]);\n          b: SinglyLinkedList[T] | SinglyLinkedNode[T] | T)		949
+nim	append	lists.html#append,,_2	proc append[T](a: var (DoublyLinkedList[T] | DoublyLinkedRing[T]);\n          b: DoublyLinkedList[T] | DoublyLinkedNode[T] | T)		959
+nim	appendMoved	lists.html#appendMoved,T,T	proc appendMoved[T: SomeLinkedList](a, b: var T)		969
+nim	toSinglyLinkedList	lists.html#toSinglyLinkedList,openArray[T]	proc toSinglyLinkedList[T](elems: openArray[T]): SinglyLinkedList[T]		977
+nim	toSinglyLinkedRing	lists.html#toSinglyLinkedRing,openArray[T]	proc toSinglyLinkedRing[T](elems: openArray[T]): SinglyLinkedRing[T]		988
+nim	toDoublyLinkedList	lists.html#toDoublyLinkedList,openArray[T]	proc toDoublyLinkedList[T](elems: openArray[T]): DoublyLinkedList[T]		999
+nim	toDoublyLinkedRing	lists.html#toDoublyLinkedRing,openArray[T]	proc toDoublyLinkedRing[T](elems: openArray[T]): DoublyLinkedRing[T]		1010
+heading	Basic Usage	lists.html#basic-usage	 Basic Usage		0
+heading	Lists	lists.html#basic-usage-lists	  Lists		0
+heading	Rings	lists.html#basic-usage-rings	  Rings		0
+heading	See also	lists.html#see-also	 See also		0
+nimgrp	remove	lists.html#remove-procs-all	proc		688
+nimgrp	copy	lists.html#copy-procs-all	proc		466
+nimgrp	prepend	lists.html#prepend-procs-all	proc		346
+nimgrp	add	lists.html#add-procs-all	proc		393
+nimgrp	addmoved	lists.html#addMoved-procs-all	proc		490
+nimgrp	append	lists.html#append-procs-all	proc		949
+nimgrp	items	lists.html#items-iterators-all	iterator		182
+nimgrp	mitems	lists.html#mitems-iterators-all	iterator		214
+nimgrp	nodes	lists.html#nodes-iterators-all	iterator		248

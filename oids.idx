@@ -1,0 +1,9 @@
+nimTitle	oids	oids.html	module std/oids		0
+nim	Oid	oids.html#Oid	object Oid		24
+nim	`==`	oids.html#==,Oid,Oid	proc `==`(oid1: Oid; oid2: Oid): bool		29
+nim	hash	oids.html#hash,Oid	proc hash(oid: Oid): Hash		34
+nim	hexbyte	oids.html#hexbyte,char	proc hexbyte(hex: char): int		42
+nim	parseOid	oids.html#parseOid,cstring	proc parseOid(str: cstring): Oid		45
+nim	`$`	oids.html#$,Oid	proc `$`(oid: Oid): string		54
+nim	genOid	oids.html#genOid	proc genOid(): Oid		87
+nim	generatedTime	oids.html#generatedTime,Oid	proc generatedTime(oid: Oid): Time		96

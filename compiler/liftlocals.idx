@@ -1,0 +1,2 @@
+nimTitle	liftlocals	liftlocals.html	module liftlocals		0
+nim	liftLocalsIfRequested	liftlocals.html#liftLocalsIfRequested,PSym,PNode,IdentCache,ConfigRef,IdGenerator	proc liftLocalsIfRequested(prc: PSym; n: PNode; cache: IdentCache; conf: ConfigRef;\n                      idgen: IdGenerator): PNode		60

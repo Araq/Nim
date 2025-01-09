@@ -1,0 +1,2 @@
+nimTitle	ssl_certs	ssl_certs.html	module std/ssl_certs		0
+nim	scanSSLCertificates	ssl_certs.html#scanSSLCertificates.i	iterator scanSSLCertificates(useEnvVars = false): string		95

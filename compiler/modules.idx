@@ -1,0 +1,10 @@
+nimTitle	modules	modules.html	module modules		0
+nim	resetSystemArtifacts	modules.html#resetSystemArtifacts,ModuleGraph	proc resetSystemArtifacts(g: ModuleGraph)		20
+nim	partialInitModule	modules.html#partialInitModule,PSym,ModuleGraph,FileIndex,AbsoluteFile	proc partialInitModule(result: PSym; graph: ModuleGraph; fileIdx: FileIndex;\n                  filename: AbsoluteFile)		26
+nim	newModule	modules.html#newModule,ModuleGraph,FileIndex	proc newModule(graph: ModuleGraph; fileIdx: FileIndex): PSym		31
+nim	includeModule	modules.html#includeModule,ModuleGraph,PSym,FileIndex	proc includeModule(graph: ModuleGraph; s: PSym; fileIdx: FileIndex): PNode		44
+nim	wantMainModule	modules.html#wantMainModule,ConfigRef	proc wantMainModule(conf: ConfigRef)		51
+nim	makeModule	modules.html#makeModule,ModuleGraph,AbsoluteFile	proc makeModule(graph: ModuleGraph; filename: AbsoluteFile): PSym		56
+nim	makeModule	modules.html#makeModule,ModuleGraph,string	proc makeModule(graph: ModuleGraph; filename: string): PSym		60
+nim	makeStdinModule	modules.html#makeStdinModule,ModuleGraph	proc makeStdinModule(graph: ModuleGraph): PSym		63
+nimgrp	makemodule	modules.html#makeModule-procs-all	proc		56

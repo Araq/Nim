@@ -1,0 +1,3 @@
+nimTitle	schubfach	schubfach.html	module std/private/schubfach		0
+nim	float32ToChars	schubfach.html#float32ToChars,openArray[char],float32	proc float32ToChars(buffer: var openArray[char]; v: float32;\n               forceTrailingDotZero = false): int		403
+heading	ToChars	schubfach.html#tochars	 ToChars		0

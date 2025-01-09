@@ -1,0 +1,33 @@
+nimTitle	reservedmem	reservedmem.html	module std/reservedmem		0
+nim	distance	reservedmem.html#distance.t,pointer,pointer	template distance(lhs, rhs: pointer): int		26
+nim	shift	reservedmem.html#shift.t,pointer,int	template shift(p: pointer; distance: int): pointer		29
+nim	MemAccessFlags	reservedmem.html#MemAccessFlags	type MemAccessFlags		33
+nim	ReservedMem	reservedmem.html#ReservedMem	object ReservedMem		35
+nim	ReservedMemSeq	reservedmem.html#ReservedMemSeq	object ReservedMemSeq		43
+nim	memExec	reservedmem.html#memExec	let memExec		77
+nim	memExecRead	reservedmem.html#memExecRead	let memExecRead		78
+nim	memExecReadWrite	reservedmem.html#memExecReadWrite	let memExecReadWrite		79
+nim	memRead	reservedmem.html#memRead	let memRead		80
+nim	memReadWrite	reservedmem.html#memReadWrite	let memReadWrite		81
+nim	init	reservedmem.html#init,typeReservedMem,Natural,Natural,int	proc init(T: type ReservedMem; maxLen: Natural; initLen: Natural = 0;\n     initCommitLen = initLen; memStart = pointer(nil);\n     accessFlags = memReadWrite; maxCommittedAndUnusedPages = 3): ReservedMem		105
+nim	len	reservedmem.html#len,ReservedMem	proc len(m: ReservedMem): int		138
+nim	commitedLen	reservedmem.html#commitedLen,ReservedMem	proc commitedLen(m: ReservedMem): int		141
+nim	maxLen	reservedmem.html#maxLen,ReservedMem	proc maxLen(m: ReservedMem): int		144
+nim	setLen	reservedmem.html#setLen,ReservedMem,int	proc setLen(m: var ReservedMem; newLen: int)		147
+nim	init	reservedmem.html#init,typeReservedMemSeq,Natural,Natural,Natural,int	proc init(SeqType: type ReservedMemSeq; maxLen: Natural; initLen: Natural = 0;\n     initCommitLen: Natural = 0; memStart = pointer(nil);\n     accessFlags = memReadWrite; maxCommittedAndUnusedPages = 3): SeqType:type		175
+nim	`[]`	reservedmem.html#[],ReservedMemSeq[T],Natural	proc `[]`[T](s: ReservedMemSeq[T]; pos: Natural): lent T		190
+nim	`[]`	reservedmem.html#[],ReservedMemSeq[T],Natural_2	proc `[]`[T](s: var ReservedMemSeq[T]; pos: Natural): var T		195
+nim	`[]`	reservedmem.html#[],ReservedMemSeq[T],BackwardsIndex	proc `[]`[T](s: ReservedMemSeq[T]; rpos: BackwardsIndex): lent T		200
+nim	`[]`	reservedmem.html#[],ReservedMemSeq[T],BackwardsIndex_2	proc `[]`[T](s: var ReservedMemSeq[T]; rpos: BackwardsIndex): var T		203
+nim	len	reservedmem.html#len,ReservedMemSeq[T]	proc len[T](s: ReservedMemSeq[T]): int		206
+nim	setLen	reservedmem.html#setLen,ReservedMemSeq[T],int	proc setLen[T](s: var ReservedMemSeq[T]; newLen: int)		209
+nim	add	reservedmem.html#add,ReservedMemSeq[T],T	proc add[T](s: var ReservedMemSeq[T]; val: T)		213
+nim	pop	reservedmem.html#pop,ReservedMemSeq[T]	proc pop[T](s: var ReservedMemSeq[T]): T		218
+nim	commitedLen	reservedmem.html#commitedLen,ReservedMemSeq[T]	proc commitedLen[T](s: ReservedMemSeq[T]): int		224
+nim	maxLen	reservedmem.html#maxLen,ReservedMemSeq[T]	proc maxLen[T](s: ReservedMemSeq[T]): int		227
+nimgrp	commitedlen	reservedmem.html#commitedLen-procs-all	proc		141
+nimgrp	init	reservedmem.html#init-procs-all	proc		105
+nimgrp	maxlen	reservedmem.html#maxLen-procs-all	proc		144
+nimgrp	[]	reservedmem.html#[]-procs-all	proc		190
+nimgrp	setlen	reservedmem.html#setLen-procs-all	proc		147
+nimgrp	len	reservedmem.html#len-procs-all	proc		138

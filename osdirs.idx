@@ -1,0 +1,19 @@
+nimTitle	osdirs	osdirs.html	module std/private/osdirs		0
+nim	walkPattern	osdirs.html#walkPattern.i,string	iterator walkPattern(pattern: string): string		98
+nim	walkFiles	osdirs.html#walkFiles.i,string	iterator walkFiles(pattern: string): string		118
+nim	walkDirs	osdirs.html#walkDirs.i,string	iterator walkDirs(pattern: string): string		136
+nim	walkDir	osdirs.html#walkDir.i,string	iterator walkDir(dir: string; relative = false; checkDir = false; skipSpecial = false): tuple[\n    kind: PathComponent, path: string]		159
+nim	walkDirRec	osdirs.html#walkDirRec.i,string	iterator walkDirRec(dir: string; yieldFilter = {pcFile}; followFilter = {pcDir};\n           relative = false; checkDir = false; skipSpecial = false): string		273
+nim	removeDir	osdirs.html#removeDir,string	proc removeDir(dir: string; checkDir = false)		339
+nim	existsOrCreateDir	osdirs.html#existsOrCreateDir,string	proc existsOrCreateDir(dir: string): bool		405
+nim	createDir	osdirs.html#createDir,string	proc createDir(dir: string)		424
+nim	copyDir	osdirs.html#copyDir,string,string	proc copyDir(source, dest: string; skipSpecial = false)		449
+nim	copyDirWithPermissions	osdirs.html#copyDirWithPermissions,string,string	proc copyDirWithPermissions(source, dest: string; ignorePermissionErrors = true;\n                       skipSpecial = false)		487
+nim	moveDir	osdirs.html#moveDir,string,string	proc moveDir(source, dest: string)		537
+nim	setCurrentDir	osdirs.html#setCurrentDir,string	proc setCurrentDir(newDir: string)		557
+idx	current working directory	osdirs.html#current-working-directory_1	Module osdirs		0
+idx	directory	osdirs.html#directory_1	Module osdirs		0
+idx	directory	osdirs.html#directory_2	Module osdirs		0
+idx	glob	osdirs.html#glob_1	Module osdirs		0
+idx	glob	osdirs.html#glob_2	Module osdirs		0
+idx	glob	osdirs.html#glob_3	Module osdirs		0

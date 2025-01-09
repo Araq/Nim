@@ -1,0 +1,69 @@
+nimTitle	nativesockets	nativesockets.html	module std/nativesockets		0
+nim	Port	nativesockets.html#Port	type Port		60
+nim	AF_UNSPEC	nativesockets.html#AF_UNSPEC	Domain.AF_UNSPEC		62
+nim	AF_UNIX	nativesockets.html#AF_UNIX	Domain.AF_UNIX		62
+nim	AF_INET	nativesockets.html#AF_INET	Domain.AF_INET		62
+nim	AF_INET6	nativesockets.html#AF_INET6	Domain.AF_INET6		62
+nim	Domain	nativesockets.html#Domain	enum Domain		62
+nim	SOCK_STREAM	nativesockets.html#SOCK_STREAM	SockType.SOCK_STREAM		72
+nim	SOCK_DGRAM	nativesockets.html#SOCK_DGRAM	SockType.SOCK_DGRAM		72
+nim	SOCK_RAW	nativesockets.html#SOCK_RAW	SockType.SOCK_RAW		72
+nim	SOCK_SEQPACKET	nativesockets.html#SOCK_SEQPACKET	SockType.SOCK_SEQPACKET		72
+nim	SockType	nativesockets.html#SockType	enum SockType		72
+nim	IPPROTO_TCP	nativesockets.html#IPPROTO_TCP	Protocol.IPPROTO_TCP		78
+nim	IPPROTO_UDP	nativesockets.html#IPPROTO_UDP	Protocol.IPPROTO_UDP		78
+nim	IPPROTO_IP	nativesockets.html#IPPROTO_IP	Protocol.IPPROTO_IP		78
+nim	IPPROTO_IPV6	nativesockets.html#IPPROTO_IPV6	Protocol.IPPROTO_IPV6		78
+nim	IPPROTO_RAW	nativesockets.html#IPPROTO_RAW	Protocol.IPPROTO_RAW		78
+nim	IPPROTO_ICMP	nativesockets.html#IPPROTO_ICMP	Protocol.IPPROTO_ICMP		78
+nim	IPPROTO_ICMPV6	nativesockets.html#IPPROTO_ICMPV6	Protocol.IPPROTO_ICMPV6		78
+nim	Protocol	nativesockets.html#Protocol	enum Protocol		78
+nim	Servent	nativesockets.html#Servent	object Servent		87
+nim	Hostent	nativesockets.html#Hostent	object Hostent		93
+nim	IPPROTO_NONE	nativesockets.html#IPPROTO_NONE	const IPPROTO_NONE		100
+nim	osInvalidSocket	nativesockets.html#osInvalidSocket	let osInvalidSocket		104
+nim	IOCPARM_MASK	nativesockets.html#IOCPARM_MASK	const IOCPARM_MASK		107
+nim	IOC_IN	nativesockets.html#IOC_IN	const IOC_IN		108
+nim	FIONBIO	nativesockets.html#FIONBIO	const FIONBIO		109
+nim	ioctlsocket	nativesockets.html#ioctlsocket,SocketHandle,clong,ptr.clong	proc ioctlsocket(s: SocketHandle; cmd: clong; argptr: ptr clong): cint		114
+nim	`==`	nativesockets.html#==,Port,Port	proc `==`(a, b: Port): bool		124
+nim	`$`	nativesockets.html#$,Port	proc `$`(p: Port): string		127
+nim	toInt	nativesockets.html#toInt,Domain	proc toInt(domain: Domain): cint		130
+nim	toInt	nativesockets.html#toInt,SockType	proc toInt(typ: SockType): cint		133
+nim	toInt	nativesockets.html#toInt,Protocol	proc toInt(p: Protocol): cint		136
+nim	toKnownDomain	nativesockets.html#toKnownDomain,cint	proc toKnownDomain(family: cint): Option[Domain]		177
+nim	toSockType	nativesockets.html#toSockType,Protocol	proc toSockType(protocol: Protocol): SockType		205
+nim	getProtoByName	nativesockets.html#getProtoByName,string	proc getProtoByName(name: string): int		214
+nim	close	nativesockets.html#close,SocketHandle	proc close(socket: SocketHandle)		226
+nim	setInheritable	nativesockets.html#setInheritable,SocketHandle,bool	proc setInheritable(s: SocketHandle; inheritable: bool): bool		236
+nim	createNativeSocket	nativesockets.html#createNativeSocket,cint,cint,cint,bool	proc createNativeSocket(domain: cint; sockType: cint; protocol: cint;\n                   inheritable: bool = defined(nimInheritHandles)): SocketHandle		244
+nim	createNativeSocket	nativesockets.html#createNativeSocket,Domain,SockType,Protocol,bool	proc createNativeSocket(domain: Domain = AF_INET; sockType: SockType = SOCK_STREAM;\n                   protocol: Protocol = IPPROTO_TCP;\n                   inheritable: bool = defined(nimInheritHandles)): SocketHandle		264
+nim	bindAddr	nativesockets.html#bindAddr,SocketHandle,ptr.SockAddr,SockLen	proc bindAddr(socket: SocketHandle; name: ptr SockAddr; namelen: SockLen): cint		274
+nim	listen	nativesockets.html#listen,SocketHandle	proc listen(socket: SocketHandle; backlog = SOMAXCONN): cint		278
+nim	getAddrInfo	nativesockets.html#getAddrInfo,string,Port,Domain,SockType,Protocol	proc getAddrInfo(address: string; port: Port; domain: Domain = AF_INET;\n            sockType: SockType = SOCK_STREAM; protocol: Protocol = IPPROTO_TCP): ptr AddrInfo		288
+nim	ntohl	nativesockets.html#ntohl,uint32	proc ntohl(x: uint32): uint32		316
+nim	ntohs	nativesockets.html#ntohs,uint16	proc ntohs(x: uint16): uint16		326
+nim	htonl	nativesockets.html#htonl.t,uint32	template htonl(x: uint32): untyped		333
+nim	htons	nativesockets.html#htons.t,uint16	template htons(x: uint16): untyped		339
+nim	getSockDomain	nativesockets.html#getSockDomain,SocketHandle	proc getSockDomain(socket: SocketHandle): Domain		345
+nim	getServByName	nativesockets.html#getServByName,string,string	proc getServByName(name, proto: string): Servent		359
+nim	getServByPort	nativesockets.html#getServByPort,Port,string	proc getServByPort(port: Port; proto: string): Servent		377
+nim	getHostByAddr	nativesockets.html#getHostByAddr,string	proc getHostByAddr(ip: string): Hostent		395
+nim	getHostByName	nativesockets.html#getHostByName,string	proc getHostByName(name: string): Hostent		468
+nim	getHostname	nativesockets.html#getHostname	proc getHostname(): string		499
+nim	getAddrString	nativesockets.html#getAddrString,ptr.SockAddr	proc getAddrString(sockAddr: ptr SockAddr): string		515
+nim	getAddrString	nativesockets.html#getAddrString,ptr.SockAddr,string	proc getAddrString(sockAddr: ptr SockAddr; strAddress: var string)		541
+nim	getSockName	nativesockets.html#getSockName,SocketHandle	proc getSockName(socket: SocketHandle): Port		583
+nim	getLocalAddr	nativesockets.html#getLocalAddr,SocketHandle,Domain	proc getLocalAddr(socket: SocketHandle; domain: Domain): (string, Port)		598
+nim	getPeerAddr	nativesockets.html#getPeerAddr,SocketHandle,Domain	proc getPeerAddr(socket: SocketHandle; domain: Domain): (string, Port)		636
+nim	getSockOptInt	nativesockets.html#getSockOptInt,SocketHandle,int,int	proc getSockOptInt(socket: SocketHandle; level, optname: int): int		746
+nim	setSockOptInt	nativesockets.html#setSockOptInt,SocketHandle,int,int,int	proc setSockOptInt(socket: SocketHandle; level, optname, optval: int)		756
+nim	setBlocking	nativesockets.html#setBlocking,SocketHandle,bool	proc setBlocking(s: SocketHandle; blocking: bool)		764
+nim	selectRead	nativesockets.html#selectRead,seq[SocketHandle],int	proc selectRead(readfds: var seq[SocketHandle]; timeout = 500): int		810
+nim	selectWrite	nativesockets.html#selectWrite,seq[SocketHandle],int	proc selectWrite(writefds: var seq[SocketHandle]; timeout = 500): int		831
+nim	accept	nativesockets.html#accept,SocketHandle	proc accept(fd: SocketHandle; inheritable = defined(nimInheritHandles)): (\n    SocketHandle, string)		853
+idx	getpeername	nativesockets.html#getpeername_1	Module nativesockets		0
+idx	getsockname	nativesockets.html#getsockname_1	Module nativesockets		0
+nimgrp	createnativesocket	nativesockets.html#createNativeSocket-procs-all	proc		244
+nimgrp	toint	nativesockets.html#toInt-procs-all	proc		130
+nimgrp	getaddrstring	nativesockets.html#getAddrString-procs-all	proc		515

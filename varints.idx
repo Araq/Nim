@@ -1,0 +1,6 @@
+nimTitle	varints	varints.html	module std/varints		0
+nim	maxVarIntLen	varints.html#maxVarIntLen	const maxVarIntLen		16
+nim	readVu64	varints.html#readVu64,openArray[byte],uint64	proc readVu64(z: openArray[byte]; pResult: var uint64): int		18
+nim	writeVu64	varints.html#writeVu64,openArray[byte],uint64	proc writeVu64(z: var openArray[byte]; x: uint64): int		57
+nim	encodeZigzag	varints.html#encodeZigzag,int64	proc encodeZigzag(x: int64): uint64		110
+nim	decodeZigzag	varints.html#decodeZigzag,uint64	proc decodeZigzag(x: uint64): int64		114

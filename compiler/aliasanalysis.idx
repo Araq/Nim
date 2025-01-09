@@ -1,0 +1,10 @@
+nimTitle	aliasanalysis	aliasanalysis.html	module aliasanalysis		0
+nim	PathKinds0	aliasanalysis.html#PathKinds0	const PathKinds0		7
+nim	PathKinds1	aliasanalysis.html#PathKinds1	const PathKinds1		11
+nim	skipConvDfa	aliasanalysis.html#skipConvDfa,PNode	proc skipConvDfa(n: PNode): PNode		13
+nim	isAnalysableFieldAccess	aliasanalysis.html#isAnalysableFieldAccess,PNode,PSym	proc isAnalysableFieldAccess(orig: PNode; owner: PSym): bool		23
+nim	yes	aliasanalysis.html#yes	AliasKind.yes		56
+nim	no	aliasanalysis.html#no	AliasKind.no		56
+nim	maybe	aliasanalysis.html#maybe	AliasKind.maybe		56
+nim	AliasKind	aliasanalysis.html#AliasKind	enum AliasKind		56
+nim	aliases	aliasanalysis.html#aliases,PNode,PNode	proc aliases(obj, field: PNode): AliasKind		59

@@ -1,0 +1,7 @@
+nimTitle	sourcemap	sourcemap.html	module sourcemap		0
+nim	SourceMap	sourcemap.html#SourceMap	object SourceMap		25
+nim	encode	sourcemap.html#encode,seq[int]	proc encode(values: seq[int]): string		63
+nim	tokenize	sourcemap.html#tokenize.i,string	iterator tokenize(line: string): (int, string)		95
+nim	parse	sourcemap.html#parse,string	proc parse(source: string): SourceInfo		126
+nim	toSourceMap	sourcemap.html#toSourceMap,SourceInfo,string	proc toSourceMap(info: SourceInfo; file: string): SourceMap		160
+nim	genSourceMap	sourcemap.html#genSourceMap,string,string	proc genSourceMap(source: string; outFile: string): SourceMap		203

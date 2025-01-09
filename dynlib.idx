@@ -1,0 +1,13 @@
+nimTitle	dynlib	dynlib.html	module std/dynlib		0
+nim	LibHandle	dynlib.html#LibHandle	type LibHandle		49
+nim	loadLib	dynlib.html#loadLib,string	proc loadLib(path: string; globalSymbols = false): LibHandle		51
+nim	loadLib	dynlib.html#loadLib	proc loadLib(): LibHandle		55
+nim	unloadLib	dynlib.html#unloadLib,LibHandle	proc unloadLib(lib: LibHandle)		59
+nim	raiseInvalidLibrary	dynlib.html#raiseInvalidLibrary,cstring	proc raiseInvalidLibrary(name: cstring)		62
+nim	symAddr	dynlib.html#symAddr,LibHandle,cstring	proc symAddr(lib: LibHandle; name: cstring): pointer		66
+nim	checkedSymAddr	dynlib.html#checkedSymAddr,LibHandle,cstring	proc checkedSymAddr(lib: LibHandle; name: cstring): pointer		70
+nim	libCandidates	dynlib.html#libCandidates,string,seq[string]	proc libCandidates(s: string; dest: var seq[string])		76
+nim	loadLibPattern	dynlib.html#loadLibPattern,string	proc loadLibPattern(pattern: string; globalSymbols = false): LibHandle		88
+heading	Examples	dynlib.html#examples	 Examples		0
+heading	Loading a simple C function	dynlib.html#examples-loading-a-simple-c-function	  Loading a simple C function		0
+nimgrp	loadlib	dynlib.html#loadLib-procs-all	proc		51

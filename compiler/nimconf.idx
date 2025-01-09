@@ -1,0 +1,5 @@
+nimTitle	nimconf	nimconf.html	module nimconf		0
+nim	readConfigFile	nimconf.html#readConfigFile,AbsoluteFile,IdentCache,ConfigRef	proc readConfigFile(filename: AbsoluteFile; cache: IdentCache; config: ConfigRef): bool		217
+nim	getUserConfigPath	nimconf.html#getUserConfigPath,RelativeFile	proc getUserConfigPath(filename: RelativeFile): AbsoluteFile		236
+nim	getSystemConfigPath	nimconf.html#getSystemConfigPath,ConfigRef,RelativeFile	proc getSystemConfigPath(conf: ConfigRef; filename: RelativeFile): AbsoluteFile		239
+nim	loadConfigs	nimconf.html#loadConfigs,RelativeFile,IdentCache,ConfigRef,IdGenerator	proc loadConfigs(cfg: RelativeFile; cache: IdentCache; conf: ConfigRef;\n            idgen: IdGenerator)		248

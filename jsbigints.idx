@@ -1,0 +1,43 @@
+nimTitle	jsbigints	jsbigints.html	module std/jsbigints		0
+nim	JsBigInt	jsbigints.html#JsBigInt	type JsBigInt		10
+nim	big	jsbigints.html#big,SomeInteger	proc big(integer: SomeInteger): JsBigInt		12
+nim	`'big`	jsbigints.html#'big,cstring	proc `'big`(num: cstring): JsBigInt		19
+nim	big	jsbigints.html#big,cstring	proc big(integer: cstring): JsBigInt		33
+nim	toCstring	jsbigints.html#toCstring,JsBigInt,	proc toCstring(this: JsBigInt; radix: 2 .. 36): cstring		37
+nim	toCstring	jsbigints.html#toCstring,JsBigInt	proc toCstring(this: JsBigInt): cstring		44
+nim	`$`	jsbigints.html#$,JsBigInt	proc `$`(this: JsBigInt): string		48
+nim	wrapToInt	jsbigints.html#wrapToInt,JsBigInt,Natural	proc wrapToInt(this: JsBigInt; bits: Natural): JsBigInt		53
+nim	wrapToUint	jsbigints.html#wrapToUint,JsBigInt,Natural	proc wrapToUint(this: JsBigInt; bits: Natural): JsBigInt		60
+nim	toNumber	jsbigints.html#toNumber,JsBigInt	proc toNumber(this: JsBigInt): int		67
+nim	`+`	jsbigints.html#+,JsBigInt,JsBigInt	proc `+`(x, y: JsBigInt): JsBigInt		72
+nim	`-`	jsbigints.html#-,JsBigInt,JsBigInt	proc `-`(x, y: JsBigInt): JsBigInt		76
+nim	`*`	jsbigints.html#*,JsBigInt,JsBigInt	proc `*`(x, y: JsBigInt): JsBigInt		80
+nim	`div`	jsbigints.html#div,JsBigInt,JsBigInt	proc `div`(x, y: JsBigInt): JsBigInt		84
+nim	`mod`	jsbigints.html#mod,JsBigInt,JsBigInt	proc `mod`(x, y: JsBigInt): JsBigInt		92
+nim	`<`	jsbigints.html#<,JsBigInt,JsBigInt	proc `<`(x, y: JsBigInt): bool		100
+nim	`<=`	jsbigints.html#<=,JsBigInt,JsBigInt	proc `<=`(x, y: JsBigInt): bool		104
+nim	`==`	jsbigints.html#==,JsBigInt,JsBigInt	proc `==`(x, y: JsBigInt): bool		108
+nim	`**`	jsbigints.html#**,JsBigInt,JsBigInt	proc `**`(x, y: JsBigInt): JsBigInt		112
+nim	`and`	jsbigints.html#and,JsBigInt,JsBigInt	proc `and`(x, y: JsBigInt): JsBigInt		124
+nim	`or`	jsbigints.html#or,JsBigInt,JsBigInt	proc `or`(x, y: JsBigInt): JsBigInt		128
+nim	`xor`	jsbigints.html#xor,JsBigInt,JsBigInt	proc `xor`(x, y: JsBigInt): JsBigInt		132
+nim	`shl`	jsbigints.html#shl,JsBigInt,JsBigInt	proc `shl`(a, b: JsBigInt): JsBigInt		136
+nim	`shr`	jsbigints.html#shr,JsBigInt,JsBigInt	proc `shr`(a, b: JsBigInt): JsBigInt		140
+nim	`-`	jsbigints.html#-,JsBigInt	proc `-`(this: JsBigInt): JsBigInt		144
+nim	inc	jsbigints.html#inc,JsBigInt	proc inc(this: var JsBigInt)		148
+nim	dec	jsbigints.html#dec,JsBigInt	proc dec(this: var JsBigInt)		154
+nim	inc	jsbigints.html#inc,JsBigInt,JsBigInt	proc inc(this: var JsBigInt; amount: JsBigInt)		160
+nim	dec	jsbigints.html#dec,JsBigInt,JsBigInt	proc dec(this: var JsBigInt; amount: JsBigInt)		166
+nim	`+=`	jsbigints.html#+=,JsBigInt,JsBigInt	proc `+=`(x: var JsBigInt; y: JsBigInt)		172
+nim	`-=`	jsbigints.html#-=,JsBigInt,JsBigInt	proc `-=`(x: var JsBigInt; y: JsBigInt)		178
+nim	`*=`	jsbigints.html#*=,JsBigInt,JsBigInt	proc `*=`(x: var JsBigInt; y: JsBigInt)		184
+nim	`/=`	jsbigints.html#/=,JsBigInt,JsBigInt	proc `/=`(x: var JsBigInt; y: JsBigInt)		190
+nim	`+`	jsbigints.html#+,JsBigInt	proc `+`(_: JsBigInt): JsBigInt		197
+nim	low	jsbigints.html#low,typedesc[JsBigInt]	proc low(_: typedesc[JsBigInt]): JsBigInt		201
+nim	high	jsbigints.html#high,typedesc[JsBigInt]	proc high(_: typedesc[JsBigInt]): JsBigInt		204
+nimgrp	+	jsbigints.html#+-procs-all	proc		72
+nimgrp	-	jsbigints.html#--procs-all	proc		76
+nimgrp	big	jsbigints.html#big-procs-all	proc		12
+nimgrp	dec	jsbigints.html#dec-procs-all	proc		154
+nimgrp	inc	jsbigints.html#inc-procs-all	proc		148
+nimgrp	tocstring	jsbigints.html#toCstring-procs-all	proc		37

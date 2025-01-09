@@ -1,0 +1,10 @@
+nimTitle	transf	transf.html	module transf		0
+nim	useCache	transf.html#useCache	TransformFlag.useCache		33
+nim	keepOpenArrayConversions	transf.html#keepOpenArrayConversions	TransformFlag.keepOpenArrayConversions		33
+nim	force	transf.html#force	TransformFlag.force		33
+nim	TransformFlag	transf.html#TransformFlag	enum TransformFlag		33
+nim	TransformFlags	transf.html#TransformFlags	type TransformFlags		35
+nim	transformBody	transf.html#transformBody,ModuleGraph,IdGenerator,PSym,TransformFlags	proc transformBody(g: ModuleGraph; idgen: IdGenerator; prc: PSym;\n              flags: TransformFlags): PNode		37
+nim	commonOptimizations	transf.html#commonOptimizations,ModuleGraph,IdGenerator,PSym,PNode	proc commonOptimizations(g: ModuleGraph; idgen: IdGenerator; c: PSym; n: PNode): PNode		984
+nim	transformStmt	transf.html#transformStmt,ModuleGraph,IdGenerator,PSym,PNode,TransformFlags	proc transformStmt(g: ModuleGraph; idgen: IdGenerator; module: PSym; n: PNode;\n              flags: TransformFlags = {}): PNode		1264
+nim	transformExpr	transf.html#transformExpr,ModuleGraph,IdGenerator,PSym,PNode,TransformFlags	proc transformExpr(g: ModuleGraph; idgen: IdGenerator; module: PSym; n: PNode;\n              flags: TransformFlags = {}): PNode		1274

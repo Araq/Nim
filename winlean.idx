@@ -1,0 +1,375 @@
+nimTitle	winlean	winlean.html	module std/winlean		0
+nim	WinChar	winlean.html#WinChar	type WinChar		24
+nim	Handle	winlean.html#Handle	type Handle		28
+nim	LONG	winlean.html#LONG	type LONG		29
+nim	ULONG	winlean.html#ULONG	type ULONG		30
+nim	PULONG	winlean.html#PULONG	type PULONG		31
+nim	WINBOOL	winlean.html#WINBOOL	type WINBOOL		32
+nim	PBOOL	winlean.html#PBOOL	type PBOOL		35
+nim	DWORD	winlean.html#DWORD	type DWORD		36
+nim	PDWORD	winlean.html#PDWORD	type PDWORD		37
+nim	LPINT	winlean.html#LPINT	type LPINT		38
+nim	ULONG_PTR	winlean.html#ULONG_PTR	type ULONG_PTR		39
+nim	PULONG_PTR	winlean.html#PULONG_PTR	type PULONG_PTR		40
+nim	HDC	winlean.html#HDC	type HDC		41
+nim	HGLRC	winlean.html#HGLRC	type HGLRC		42
+nim	BYTE	winlean.html#BYTE	type BYTE		43
+nim	SECURITY_ATTRIBUTES	winlean.html#SECURITY_ATTRIBUTES	object SECURITY_ATTRIBUTES		45
+nim	STARTUPINFO	winlean.html#STARTUPINFO	object STARTUPINFO		50
+nim	PROCESS_INFORMATION	winlean.html#PROCESS_INFORMATION	object PROCESS_INFORMATION		70
+nim	FILETIME	winlean.html#FILETIME	object FILETIME		76
+nim	BY_HANDLE_FILE_INFORMATION	winlean.html#BY_HANDLE_FILE_INFORMATION	object BY_HANDLE_FILE_INFORMATION		80
+nim	OSVERSIONINFO	winlean.html#OSVERSIONINFO	object OSVERSIONINFO		92
+nim	Protoent	winlean.html#Protoent	object Protoent		100
+nim	STARTF_USESHOWWINDOW	winlean.html#STARTF_USESHOWWINDOW	const STARTF_USESHOWWINDOW		107
+nim	STARTF_USESTDHANDLES	winlean.html#STARTF_USESTDHANDLES	const STARTF_USESTDHANDLES		108
+nim	HIGH_PRIORITY_CLASS	winlean.html#HIGH_PRIORITY_CLASS	const HIGH_PRIORITY_CLASS		109
+nim	IDLE_PRIORITY_CLASS	winlean.html#IDLE_PRIORITY_CLASS	const IDLE_PRIORITY_CLASS		110
+nim	NORMAL_PRIORITY_CLASS	winlean.html#NORMAL_PRIORITY_CLASS	const NORMAL_PRIORITY_CLASS		111
+nim	REALTIME_PRIORITY_CLASS	winlean.html#REALTIME_PRIORITY_CLASS	const REALTIME_PRIORITY_CLASS		112
+nim	WAIT_OBJECT_0	winlean.html#WAIT_OBJECT_0	const WAIT_OBJECT_0		113
+nim	WAIT_TIMEOUT	winlean.html#WAIT_TIMEOUT	const WAIT_TIMEOUT		114
+nim	WAIT_FAILED	winlean.html#WAIT_FAILED	const WAIT_FAILED		115
+nim	INFINITE	winlean.html#INFINITE	const INFINITE		116
+nim	STILL_ACTIVE	winlean.html#STILL_ACTIVE	const STILL_ACTIVE		117
+nim	STD_INPUT_HANDLE	winlean.html#STD_INPUT_HANDLE	const STD_INPUT_HANDLE		119
+nim	STD_OUTPUT_HANDLE	winlean.html#STD_OUTPUT_HANDLE	const STD_OUTPUT_HANDLE		120
+nim	STD_ERROR_HANDLE	winlean.html#STD_ERROR_HANDLE	const STD_ERROR_HANDLE		121
+nim	DETACHED_PROCESS	winlean.html#DETACHED_PROCESS	const DETACHED_PROCESS		123
+nim	SW_SHOWNORMAL	winlean.html#SW_SHOWNORMAL	const SW_SHOWNORMAL		125
+nim	INVALID_HANDLE_VALUE	winlean.html#INVALID_HANDLE_VALUE	const INVALID_HANDLE_VALUE		126
+nim	CREATE_UNICODE_ENVIRONMENT	winlean.html#CREATE_UNICODE_ENVIRONMENT	const CREATE_UNICODE_ENVIRONMENT		128
+nim	PIPE_ACCESS_DUPLEX	winlean.html#PIPE_ACCESS_DUPLEX	const PIPE_ACCESS_DUPLEX		130
+nim	PIPE_ACCESS_INBOUND	winlean.html#PIPE_ACCESS_INBOUND	const PIPE_ACCESS_INBOUND		131
+nim	PIPE_ACCESS_OUTBOUND	winlean.html#PIPE_ACCESS_OUTBOUND	const PIPE_ACCESS_OUTBOUND		132
+nim	PIPE_NOWAIT	winlean.html#PIPE_NOWAIT	const PIPE_NOWAIT		133
+nim	SYNCHRONIZE	winlean.html#SYNCHRONIZE	const SYNCHRONIZE		134
+nim	CREATE_NO_WINDOW	winlean.html#CREATE_NO_WINDOW	const CREATE_NO_WINDOW		136
+nim	HANDLE_FLAG_INHERIT	winlean.html#HANDLE_FLAG_INHERIT	const HANDLE_FLAG_INHERIT		138
+nim	isSuccess	winlean.html#isSuccess,WINBOOL	proc isSuccess(a: WINBOOL): bool		140
+nim	getVersionExW	winlean.html#getVersionExW,ptr.OSVERSIONINFO	proc getVersionExW(lpVersionInfo: ptr OSVERSIONINFO): WINBOOL		144
+nim	getVersionExA	winlean.html#getVersionExA,ptr.OSVERSIONINFO	proc getVersionExA(lpVersionInfo: ptr OSVERSIONINFO): WINBOOL		146
+nim	getVersion	winlean.html#getVersion	proc getVersion(): DWORD		149
+nim	closeHandle	winlean.html#closeHandle,Handle	proc closeHandle(hObject: Handle): WINBOOL		151
+nim	readFile	winlean.html#readFile,Handle,pointer,int32,ptr.int32,pointer	proc readFile(hFile: Handle; buffer: pointer; nNumberOfBytesToRead: int32;\n         lpNumberOfBytesRead: ptr int32; lpOverlapped: pointer): WINBOOL		154
+nim	writeFile	winlean.html#writeFile,Handle,pointer,int32,ptr.int32,pointer	proc writeFile(hFile: Handle; buffer: pointer; nNumberOfBytesToWrite: int32;\n          lpNumberOfBytesWritten: ptr int32; lpOverlapped: pointer): WINBOOL		158
+nim	createPipe	winlean.html#createPipe,Handle,Handle,SECURITY_ATTRIBUTES,int32	proc createPipe(hReadPipe, hWritePipe: var Handle;\n           lpPipeAttributes: var SECURITY_ATTRIBUTES; nSize: int32): WINBOOL		163
+nim	createNamedPipe	winlean.html#createNamedPipe,WideCString,int32,int32,int32,int32,int32,int32,ptr.SECURITY_ATTRIBUTES	proc createNamedPipe(lpName: WideCString; dwOpenMode, dwPipeMode, nMaxInstances,\n                                     nOutBufferSize, nInBufferSize,\n                                     nDefaultTimeOut: int32;\n                lpSecurityAttributes: ptr SECURITY_ATTRIBUTES): Handle		168
+nim	peekNamedPipe	winlean.html#peekNamedPipe,Handle,pointer,int32,ptr.int32,ptr.int32,ptr.int32	proc peekNamedPipe(hNamedPipe: Handle; lpBuffer: pointer = nil;\n              nBufferSize: int32 = 0; lpBytesRead: ptr int32 = nil;\n              lpTotalBytesAvail: ptr int32 = nil;\n              lpBytesLeftThisMessage: ptr int32 = nil): bool		174
+nim	createProcessW	winlean.html#createProcessW,WideCString,WideCString,ptr.SECURITY_ATTRIBUTES,ptr.SECURITY_ATTRIBUTES,WINBOOL,int32,WideCString,WideCString,STARTUPINFO,PROCESS_INFORMATION	proc createProcessW(lpApplicationName, lpCommandLine: WideCString;\n               lpProcessAttributes: ptr SECURITY_ATTRIBUTES;\n               lpThreadAttributes: ptr SECURITY_ATTRIBUTES;\n               bInheritHandles: WINBOOL; dwCreationFlags: int32;\n               lpEnvironment, lpCurrentDirectory: WideCString;\n               lpStartupInfo: var STARTUPINFO;\n               lpProcessInformation: var PROCESS_INFORMATION): WINBOOL		181
+nim	suspendThread	winlean.html#suspendThread,Handle	proc suspendThread(hThread: Handle): int32		190
+nim	resumeThread	winlean.html#resumeThread,Handle	proc resumeThread(hThread: Handle): int32		192
+nim	waitForSingleObject	winlean.html#waitForSingleObject,Handle,int32	proc waitForSingleObject(hHandle: Handle; dwMilliseconds: int32): int32		195
+nim	terminateProcess	winlean.html#terminateProcess,Handle,int	proc terminateProcess(hProcess: Handle; uExitCode: int): WINBOOL		198
+nim	getExitCodeProcess	winlean.html#getExitCodeProcess,Handle,int32	proc getExitCodeProcess(hProcess: Handle; lpExitCode: var int32): WINBOOL		201
+nim	getStdHandle	winlean.html#getStdHandle,int32	proc getStdHandle(nStdHandle: int32): Handle		204
+nim	setStdHandle	winlean.html#setStdHandle,int32,Handle	proc setStdHandle(nStdHandle: int32; hHandle: Handle): WINBOOL		206
+nim	flushFileBuffers	winlean.html#flushFileBuffers,Handle	proc flushFileBuffers(hFile: Handle): WINBOOL		208
+nim	getLastError	winlean.html#getLastError	proc getLastError(): int32		211
+nim	setLastError	winlean.html#setLastError,int32	proc setLastError(error: int32)		214
+nim	formatMessageW	winlean.html#formatMessageW,int32,pointer,int32,int32,pointer,int32,pointer	proc formatMessageW(dwFlags: int32; lpSource: pointer;\n               dwMessageId, dwLanguageId: int32; lpBuffer: pointer;\n               nSize: int32; arguments: pointer): int32		217
+nim	localFree	winlean.html#localFree,pointer	proc localFree(p: pointer)		223
+nim	getCurrentDirectoryW	winlean.html#getCurrentDirectoryW,int32,WideCString	proc getCurrentDirectoryW(nBufferLength: int32; lpBuffer: WideCString): int32		226
+nim	setCurrentDirectoryW	winlean.html#setCurrentDirectoryW,WideCString	proc setCurrentDirectoryW(lpPathName: WideCString): int32		229
+nim	createDirectoryW	winlean.html#createDirectoryW,WideCString,pointer	proc createDirectoryW(pathName: WideCString; security: pointer = nil): int32		231
+nim	removeDirectoryW	winlean.html#removeDirectoryW,WideCString	proc removeDirectoryW(lpPathName: WideCString): int32		233
+nim	setEnvironmentVariableW	winlean.html#setEnvironmentVariableW,WideCString,WideCString	proc setEnvironmentVariableW(lpName, lpValue: WideCString): int32		235
+nim	getModuleFileNameW	winlean.html#getModuleFileNameW,Handle,WideCString,int32	proc getModuleFileNameW(handle: Handle; buf: WideCString; size: int32): int32		238
+nim	createSymbolicLinkW	winlean.html#createSymbolicLinkW,WideCString,WideCString,DWORD	proc createSymbolicLinkW(lpSymlinkFileName, lpTargetFileName: WideCString;\n                    flags: DWORD): int32		242
+nim	createHardLinkW	winlean.html#createHardLinkW,WideCString,WideCString,pointer	proc createHardLinkW(lpFileName, lpExistingFileName: WideCString;\n                security: pointer = nil): int32		245
+nim	FILE_ATTRIBUTE_READONLY	winlean.html#FILE_ATTRIBUTE_READONLY	const FILE_ATTRIBUTE_READONLY		250
+nim	FILE_ATTRIBUTE_HIDDEN	winlean.html#FILE_ATTRIBUTE_HIDDEN	const FILE_ATTRIBUTE_HIDDEN		251
+nim	FILE_ATTRIBUTE_SYSTEM	winlean.html#FILE_ATTRIBUTE_SYSTEM	const FILE_ATTRIBUTE_SYSTEM		252
+nim	FILE_ATTRIBUTE_DIRECTORY	winlean.html#FILE_ATTRIBUTE_DIRECTORY	const FILE_ATTRIBUTE_DIRECTORY		253
+nim	FILE_ATTRIBUTE_ARCHIVE	winlean.html#FILE_ATTRIBUTE_ARCHIVE	const FILE_ATTRIBUTE_ARCHIVE		254
+nim	FILE_ATTRIBUTE_DEVICE	winlean.html#FILE_ATTRIBUTE_DEVICE	const FILE_ATTRIBUTE_DEVICE		255
+nim	FILE_ATTRIBUTE_NORMAL	winlean.html#FILE_ATTRIBUTE_NORMAL	const FILE_ATTRIBUTE_NORMAL		256
+nim	FILE_ATTRIBUTE_TEMPORARY	winlean.html#FILE_ATTRIBUTE_TEMPORARY	const FILE_ATTRIBUTE_TEMPORARY		257
+nim	FILE_ATTRIBUTE_SPARSE_FILE	winlean.html#FILE_ATTRIBUTE_SPARSE_FILE	const FILE_ATTRIBUTE_SPARSE_FILE		258
+nim	FILE_ATTRIBUTE_REPARSE_POINT	winlean.html#FILE_ATTRIBUTE_REPARSE_POINT	const FILE_ATTRIBUTE_REPARSE_POINT		259
+nim	FILE_ATTRIBUTE_COMPRESSED	winlean.html#FILE_ATTRIBUTE_COMPRESSED	const FILE_ATTRIBUTE_COMPRESSED		260
+nim	FILE_ATTRIBUTE_OFFLINE	winlean.html#FILE_ATTRIBUTE_OFFLINE	const FILE_ATTRIBUTE_OFFLINE		261
+nim	FILE_ATTRIBUTE_NOT_CONTENT_INDEXED	winlean.html#FILE_ATTRIBUTE_NOT_CONTENT_INDEXED	const FILE_ATTRIBUTE_NOT_CONTENT_INDEXED		262
+nim	FILE_FLAG_FIRST_PIPE_INSTANCE	winlean.html#FILE_FLAG_FIRST_PIPE_INSTANCE	const FILE_FLAG_FIRST_PIPE_INSTANCE		264
+nim	FILE_FLAG_OPEN_NO_RECALL	winlean.html#FILE_FLAG_OPEN_NO_RECALL	const FILE_FLAG_OPEN_NO_RECALL		265
+nim	FILE_FLAG_OPEN_REPARSE_POINT	winlean.html#FILE_FLAG_OPEN_REPARSE_POINT	const FILE_FLAG_OPEN_REPARSE_POINT		266
+nim	FILE_FLAG_POSIX_SEMANTICS	winlean.html#FILE_FLAG_POSIX_SEMANTICS	const FILE_FLAG_POSIX_SEMANTICS		267
+nim	FILE_FLAG_BACKUP_SEMANTICS	winlean.html#FILE_FLAG_BACKUP_SEMANTICS	const FILE_FLAG_BACKUP_SEMANTICS		268
+nim	FILE_FLAG_DELETE_ON_CLOSE	winlean.html#FILE_FLAG_DELETE_ON_CLOSE	const FILE_FLAG_DELETE_ON_CLOSE		269
+nim	FILE_FLAG_SEQUENTIAL_SCAN	winlean.html#FILE_FLAG_SEQUENTIAL_SCAN	const FILE_FLAG_SEQUENTIAL_SCAN		270
+nim	FILE_FLAG_RANDOM_ACCESS	winlean.html#FILE_FLAG_RANDOM_ACCESS	const FILE_FLAG_RANDOM_ACCESS		271
+nim	FILE_FLAG_NO_BUFFERING	winlean.html#FILE_FLAG_NO_BUFFERING	const FILE_FLAG_NO_BUFFERING		272
+nim	FILE_FLAG_OVERLAPPED	winlean.html#FILE_FLAG_OVERLAPPED	const FILE_FLAG_OVERLAPPED		273
+nim	FILE_FLAG_WRITE_THROUGH	winlean.html#FILE_FLAG_WRITE_THROUGH	const FILE_FLAG_WRITE_THROUGH		274
+nim	MAX_PATH	winlean.html#MAX_PATH	const MAX_PATH		276
+nim	MOVEFILE_COPY_ALLOWED	winlean.html#MOVEFILE_COPY_ALLOWED	const MOVEFILE_COPY_ALLOWED		278
+nim	MOVEFILE_CREATE_HARDLINK	winlean.html#MOVEFILE_CREATE_HARDLINK	const MOVEFILE_CREATE_HARDLINK		279
+nim	MOVEFILE_DELAY_UNTIL_REBOOT	winlean.html#MOVEFILE_DELAY_UNTIL_REBOOT	const MOVEFILE_DELAY_UNTIL_REBOOT		280
+nim	MOVEFILE_FAIL_IF_NOT_TRACKABLE	winlean.html#MOVEFILE_FAIL_IF_NOT_TRACKABLE	const MOVEFILE_FAIL_IF_NOT_TRACKABLE		281
+nim	MOVEFILE_REPLACE_EXISTING	winlean.html#MOVEFILE_REPLACE_EXISTING	const MOVEFILE_REPLACE_EXISTING		282
+nim	MOVEFILE_WRITE_THROUGH	winlean.html#MOVEFILE_WRITE_THROUGH	const MOVEFILE_WRITE_THROUGH		283
+nim	WIN32_FIND_DATA	winlean.html#WIN32_FIND_DATA	object WIN32_FIND_DATA		286
+nim	findFirstFileW	winlean.html#findFirstFileW,WideCString,WIN32_FIND_DATA	proc findFirstFileW(lpFileName: WideCString; lpFindFileData: var WIN32_FIND_DATA): Handle		298
+nim	findNextFileW	winlean.html#findNextFileW,Handle,WIN32_FIND_DATA	proc findNextFileW(hFindFile: Handle; lpFindFileData: var WIN32_FIND_DATA): int32		301
+nim	findClose	winlean.html#findClose,Handle	proc findClose(hFindFile: Handle)		305
+nim	getFullPathNameW	winlean.html#getFullPathNameW,WideCString,int32,WideCString,WideCString	proc getFullPathNameW(lpFileName: WideCString; nBufferLength: int32;\n                 lpBuffer: WideCString; lpFilePart: var WideCString): int32		308
+nim	getFileAttributesW	winlean.html#getFileAttributesW,WideCString	proc getFileAttributesW(lpFileName: WideCString): int32		313
+nim	setFileAttributesW	winlean.html#setFileAttributesW,WideCString,int32	proc setFileAttributesW(lpFileName: WideCString; dwFileAttributes: int32): WINBOOL		316
+nim	copyFileW	winlean.html#copyFileW,WideCString,WideCString,WINBOOL	proc copyFileW(lpExistingFileName, lpNewFileName: WideCString; bFailIfExists: WINBOOL): WINBOOL		320
+nim	moveFileW	winlean.html#moveFileW,WideCString,WideCString	proc moveFileW(lpExistingFileName, lpNewFileName: WideCString): WINBOOL		324
+nim	moveFileExW	winlean.html#moveFileExW,WideCString,WideCString,DWORD	proc moveFileExW(lpExistingFileName, lpNewFileName: WideCString; flags: DWORD): WINBOOL		326
+nim	getEnvironmentStringsW	winlean.html#getEnvironmentStringsW	proc getEnvironmentStringsW(): WideCString		330
+nim	freeEnvironmentStringsW	winlean.html#freeEnvironmentStringsW,WideCString	proc freeEnvironmentStringsW(para1: WideCString): int32		332
+nim	getCommandLineW	winlean.html#getCommandLineW	proc getCommandLineW(): WideCString		335
+nim	rdFileTime	winlean.html#rdFileTime,FILETIME	proc rdFileTime(f: FILETIME): int64		338
+nim	rdFileSize	winlean.html#rdFileSize,WIN32_FIND_DATA	proc rdFileSize(f: WIN32_FIND_DATA): int64		341
+nim	getSystemTimeAsFileTime	winlean.html#getSystemTimeAsFileTime,FILETIME	proc getSystemTimeAsFileTime(lpSystemTimeAsFileTime: var FILETIME)		344
+nim	sleep	winlean.html#sleep,int32	proc sleep(dwMilliseconds: int32)		347
+nim	shellExecuteW	winlean.html#shellExecuteW,Handle,WideCString,WideCString,WideCString,WideCString,int32	proc shellExecuteW(hwnd: Handle;\n              lpOperation, lpFile, lpParameters, lpDirectory: WideCString;\n              nShowCmd: int32): Handle		350
+nim	getFileInformationByHandle	winlean.html#getFileInformationByHandle,Handle,ptr.BY_HANDLE_FILE_INFORMATION	proc getFileInformationByHandle(hFile: Handle;\n                           lpFileInformation: ptr BY_HANDLE_FILE_INFORMATION): WINBOOL		355
+nim	WSADESCRIPTION_LEN	winlean.html#WSADESCRIPTION_LEN	const WSADESCRIPTION_LEN		360
+nim	WSASYS_STATUS_LEN	winlean.html#WSASYS_STATUS_LEN	const WSASYS_STATUS_LEN		361
+nim	FD_SETSIZE	winlean.html#FD_SETSIZE	const FD_SETSIZE		362
+nim	MSG_PEEK	winlean.html#MSG_PEEK	const MSG_PEEK		363
+nim	INADDR_ANY	winlean.html#INADDR_ANY	const INADDR_ANY		365
+nim	INADDR_LOOPBACK	winlean.html#INADDR_LOOPBACK	const INADDR_LOOPBACK		366
+nim	INADDR_BROADCAST	winlean.html#INADDR_BROADCAST	const INADDR_BROADCAST		367
+nim	INADDR_NONE	winlean.html#INADDR_NONE	const INADDR_NONE		368
+nim	wsaGetLastError	winlean.html#wsaGetLastError	proc wsaGetLastError(): cint		372
+nim	SocketHandle	winlean.html#SocketHandle	type SocketHandle		375
+nim	WSAData	winlean.html#WSAData	object WSAData		378
+nim	SockAddr	winlean.html#SockAddr	object SockAddr		385
+nim	InAddr	winlean.html#InAddr	object InAddr		391
+nim	Sockaddr_in	winlean.html#Sockaddr_in	object Sockaddr_in		395
+nim	In6_addr	winlean.html#In6_addr	object In6_addr		401
+nim	Sockaddr_in6	winlean.html#Sockaddr_in6	object Sockaddr_in6		405
+nim	Sockaddr_storage	winlean.html#Sockaddr_storage	object Sockaddr_storage		413
+nim	Servent	winlean.html#Servent	object Servent		419
+nim	Hostent	winlean.html#Hostent	object Hostent		429
+nim	TFdSet	winlean.html#TFdSet	object TFdSet		436
+nim	AddrInfo	winlean.html#AddrInfo	object AddrInfo		440
+nim	SockLen	winlean.html#SockLen	type SockLen		450
+nim	Timeval	winlean.html#Timeval	object Timeval		453
+nim	SOMAXCONN	winlean.html#SOMAXCONN	var SOMAXCONN		457
+nim	INVALID_SOCKET	winlean.html#INVALID_SOCKET	var INVALID_SOCKET		458
+nim	SOL_SOCKET	winlean.html#SOL_SOCKET	var SOL_SOCKET		459
+nim	SO_DEBUG	winlean.html#SO_DEBUG	var SO_DEBUG		460
+nim	SO_ACCEPTCONN	winlean.html#SO_ACCEPTCONN	var SO_ACCEPTCONN		461
+nim	SO_REUSEADDR	winlean.html#SO_REUSEADDR	var SO_REUSEADDR		462
+nim	SO_REUSEPORT	winlean.html#SO_REUSEPORT	var SO_REUSEPORT		463
+nim	SO_KEEPALIVE	winlean.html#SO_KEEPALIVE	var SO_KEEPALIVE		465
+nim	SO_DONTROUTE	winlean.html#SO_DONTROUTE	var SO_DONTROUTE		466
+nim	SO_BROADCAST	winlean.html#SO_BROADCAST	var SO_BROADCAST		467
+nim	SO_USELOOPBACK	winlean.html#SO_USELOOPBACK	var SO_USELOOPBACK		468
+nim	SO_LINGER	winlean.html#SO_LINGER	var SO_LINGER		469
+nim	SO_OOBINLINE	winlean.html#SO_OOBINLINE	var SO_OOBINLINE		470
+nim	SO_DONTLINGER	winlean.html#SO_DONTLINGER	var SO_DONTLINGER		472
+nim	SO_EXCLUSIVEADDRUSE	winlean.html#SO_EXCLUSIVEADDRUSE	var SO_EXCLUSIVEADDRUSE		473
+nim	SO_ERROR	winlean.html#SO_ERROR	var SO_ERROR		474
+nim	TCP_NODELAY	winlean.html#TCP_NODELAY	var TCP_NODELAY		475
+nim	`==`	winlean.html#==,SocketHandle,SocketHandle	proc `==`(x, y: SocketHandle): bool		477
+nim	getservbyname	winlean.html#getservbyname,cstring,cstring	proc getservbyname(name, proto: cstring): ptr Servent		479
+nim	getservbyport	winlean.html#getservbyport,cint,cstring	proc getservbyport(port: cint; proto: cstring): ptr Servent		482
+nim	gethostbyaddr	winlean.html#gethostbyaddr,ptr.InAddr,cuint,cint	proc gethostbyaddr(ip: ptr InAddr; len: cuint; theType: cint): ptr Hostent		485
+nim	gethostbyname	winlean.html#gethostbyname,cstring	proc gethostbyname(name: cstring): ptr Hostent		488
+nim	gethostname	winlean.html#gethostname,cstring,cint	proc gethostname(hostname: cstring; len: cint): cint		491
+nim	getprotobyname	winlean.html#getprotobyname,cstring	proc getprotobyname(name: cstring): ptr Protoent		494
+nim	getprotobynumber	winlean.html#getprotobynumber,cint	proc getprotobynumber(proto: cint): ptr Protoent		498
+nim	socket	winlean.html#socket,cint,cint,cint	proc socket(af, typ, protocol: cint): SocketHandle		502
+nim	closesocket	winlean.html#closesocket,SocketHandle	proc closesocket(s: SocketHandle): cint		505
+nim	accept	winlean.html#accept,SocketHandle,ptr.SockAddr,ptr.SockLen	proc accept(s: SocketHandle; a: ptr SockAddr; addrlen: ptr SockLen): SocketHandle		508
+nim	bindSocket	winlean.html#bindSocket,SocketHandle,ptr.SockAddr,SockLen	proc bindSocket(s: SocketHandle; name: ptr SockAddr; namelen: SockLen): cint		510
+nim	connect	winlean.html#connect,SocketHandle,ptr.SockAddr,SockLen	proc connect(s: SocketHandle; name: ptr SockAddr; namelen: SockLen): cint		512
+nim	getsockname	winlean.html#getsockname,SocketHandle,ptr.SockAddr,ptr.SockLen	proc getsockname(s: SocketHandle; name: ptr SockAddr; namelen: ptr SockLen): cint		514
+nim	getpeername	winlean.html#getpeername,SocketHandle,ptr.SockAddr,ptr.SockLen	proc getpeername(s: SocketHandle; name: ptr SockAddr; namelen: ptr SockLen): cint		517
+nim	getsockopt	winlean.html#getsockopt,SocketHandle,cint,cint,pointer,ptr.SockLen	proc getsockopt(s: SocketHandle; level, optname: cint; optval: pointer;\n           optlen: ptr SockLen): cint		520
+nim	setsockopt	winlean.html#setsockopt,SocketHandle,cint,cint,pointer,SockLen	proc setsockopt(s: SocketHandle; level, optname: cint; optval: pointer;\n           optlen: SockLen): cint		523
+nim	listen	winlean.html#listen,SocketHandle,cint	proc listen(s: SocketHandle; backlog: cint): cint		527
+nim	recv	winlean.html#recv,SocketHandle,pointer,cint,cint	proc recv(s: SocketHandle; buf: pointer; len, flags: cint): cint		529
+nim	recvfrom	winlean.html#recvfrom,SocketHandle,cstring,cint,cint,ptr.SockAddr,ptr.SockLen	proc recvfrom(s: SocketHandle; buf: cstring; len, flags: cint; fromm: ptr SockAddr;\n         fromlen: ptr SockLen): cint		531
+nim	select	winlean.html#select,cint,ptr.TFdSet,ptr.TFdSet,ptr.TFdSet,ptr.Timeval	proc select(nfds: cint; readfds, writefds, exceptfds: ptr TFdSet;\n       timeout: ptr Timeval): cint		534
+nim	send	winlean.html#send,SocketHandle,pointer,cint,cint	proc send(s: SocketHandle; buf: pointer; len, flags: cint): cint		537
+nim	sendto	winlean.html#sendto,SocketHandle,pointer,cint,cint,ptr.SockAddr,SockLen	proc sendto(s: SocketHandle; buf: pointer; len, flags: cint; to: ptr SockAddr;\n       tolen: SockLen): cint		539
+nim	shutdown	winlean.html#shutdown,SocketHandle,cint	proc shutdown(s: SocketHandle; how: cint): cint		543
+nim	getnameinfo	winlean.html#getnameinfo,ptr.SockAddr,SockLen,cstring,SockLen,cstring,SockLen,cint	proc getnameinfo(a1: ptr SockAddr; a2: SockLen; a3: cstring; a4: SockLen;\n            a5: cstring; a6: SockLen; a7: cint): cint		546
+nim	inet_addr	winlean.html#inet_addr,cstring	proc inet_addr(cp: cstring): uint32		551
+nim	FD_ISSET	winlean.html#FD_ISSET,SocketHandle,TFdSet	proc FD_ISSET(socket: SocketHandle; set: var TFdSet): cint		557
+nim	FD_SET	winlean.html#FD_SET,SocketHandle,TFdSet	proc FD_SET(socket: SocketHandle; s: var TFdSet)		560
+nim	FD_ZERO	winlean.html#FD_ZERO,TFdSet	proc FD_ZERO(s: var TFdSet)		565
+nim	wsaStartup	winlean.html#wsaStartup,int16,ptr.WSAData	proc wsaStartup(wVersionRequired: int16; WSData: ptr WSAData): cint		568
+nim	getaddrinfo	winlean.html#getaddrinfo,cstring,cstring,ptr.AddrInfo,ptr.AddrInfo	proc getaddrinfo(nodename, servname: cstring; hints: ptr AddrInfo;\n            res: var ptr AddrInfo): cint		571
+nim	freeAddrInfo	winlean.html#freeAddrInfo,ptr.AddrInfo	proc freeAddrInfo(ai: ptr AddrInfo)		575
+nim	inet_ntoa	winlean.html#inet_ntoa,InAddr	proc inet_ntoa(i: InAddr): cstring		578
+nim	MAXIMUM_WAIT_OBJECTS	winlean.html#MAXIMUM_WAIT_OBJECTS	const MAXIMUM_WAIT_OBJECTS		582
+nim	WOHandleArray	winlean.html#WOHandleArray	type WOHandleArray		585
+nim	PWOHandleArray	winlean.html#PWOHandleArray	type PWOHandleArray		586
+nim	waitForMultipleObjects	winlean.html#waitForMultipleObjects,DWORD,PWOHandleArray,WINBOOL,DWORD	proc waitForMultipleObjects(nCount: DWORD; lpHandles: PWOHandleArray;\n                       bWaitAll: WINBOOL; dwMilliseconds: DWORD): DWORD		588
+nim	GENERIC_READ	winlean.html#GENERIC_READ	const GENERIC_READ		596
+nim	GENERIC_WRITE	winlean.html#GENERIC_WRITE	const GENERIC_WRITE		597
+nim	GENERIC_ALL	winlean.html#GENERIC_ALL	const GENERIC_ALL		598
+nim	FILE_SHARE_READ	winlean.html#FILE_SHARE_READ	const FILE_SHARE_READ		599
+nim	FILE_SHARE_DELETE	winlean.html#FILE_SHARE_DELETE	const FILE_SHARE_DELETE		600
+nim	FILE_SHARE_WRITE	winlean.html#FILE_SHARE_WRITE	const FILE_SHARE_WRITE		601
+nim	CREATE_ALWAYS	winlean.html#CREATE_ALWAYS	const CREATE_ALWAYS		603
+nim	CREATE_NEW	winlean.html#CREATE_NEW	const CREATE_NEW		604
+nim	OPEN_EXISTING	winlean.html#OPEN_EXISTING	const OPEN_EXISTING		605
+nim	OPEN_ALWAYS	winlean.html#OPEN_ALWAYS	const OPEN_ALWAYS		606
+nim	FILE_BEGIN	winlean.html#FILE_BEGIN	const FILE_BEGIN		607
+nim	INVALID_SET_FILE_POINTER	winlean.html#INVALID_SET_FILE_POINTER	const INVALID_SET_FILE_POINTER		608
+nim	NO_ERROR	winlean.html#NO_ERROR	const NO_ERROR		609
+nim	PAGE_NOACCESS	winlean.html#PAGE_NOACCESS	const PAGE_NOACCESS		610
+nim	PAGE_EXECUTE	winlean.html#PAGE_EXECUTE	const PAGE_EXECUTE		611
+nim	PAGE_EXECUTE_READ	winlean.html#PAGE_EXECUTE_READ	const PAGE_EXECUTE_READ		612
+nim	PAGE_EXECUTE_READWRITE	winlean.html#PAGE_EXECUTE_READWRITE	const PAGE_EXECUTE_READWRITE		613
+nim	PAGE_READONLY	winlean.html#PAGE_READONLY	const PAGE_READONLY		614
+nim	PAGE_READWRITE	winlean.html#PAGE_READWRITE	const PAGE_READWRITE		615
+nim	FILE_MAP_READ	winlean.html#FILE_MAP_READ	const FILE_MAP_READ		616
+nim	FILE_MAP_WRITE	winlean.html#FILE_MAP_WRITE	const FILE_MAP_WRITE		617
+nim	INVALID_FILE_SIZE	winlean.html#INVALID_FILE_SIZE	const INVALID_FILE_SIZE		618
+nim	DUPLICATE_SAME_ACCESS	winlean.html#DUPLICATE_SAME_ACCESS	const DUPLICATE_SAME_ACCESS		620
+nim	FILE_READ_DATA	winlean.html#FILE_READ_DATA	const FILE_READ_DATA		621
+nim	FILE_WRITE_DATA	winlean.html#FILE_WRITE_DATA	const FILE_WRITE_DATA		622
+nim	ERROR_FILE_NOT_FOUND	winlean.html#ERROR_FILE_NOT_FOUND	const ERROR_FILE_NOT_FOUND		626
+nim	ERROR_PATH_NOT_FOUND	winlean.html#ERROR_PATH_NOT_FOUND	const ERROR_PATH_NOT_FOUND		627
+nim	ERROR_ACCESS_DENIED	winlean.html#ERROR_ACCESS_DENIED	const ERROR_ACCESS_DENIED		628
+nim	ERROR_NO_MORE_FILES	winlean.html#ERROR_NO_MORE_FILES	const ERROR_NO_MORE_FILES		629
+nim	ERROR_LOCK_VIOLATION	winlean.html#ERROR_LOCK_VIOLATION	const ERROR_LOCK_VIOLATION		630
+nim	ERROR_HANDLE_EOF	winlean.html#ERROR_HANDLE_EOF	const ERROR_HANDLE_EOF		631
+nim	ERROR_FILE_EXISTS	winlean.html#ERROR_FILE_EXISTS	const ERROR_FILE_EXISTS		632
+nim	ERROR_BAD_ARGUMENTS	winlean.html#ERROR_BAD_ARGUMENTS	const ERROR_BAD_ARGUMENTS		633
+nim	duplicateHandle	winlean.html#duplicateHandle,Handle,Handle,Handle,ptr.Handle,DWORD,WINBOOL,DWORD	proc duplicateHandle(hSourceProcessHandle: Handle; hSourceHandle: Handle;\n                hTargetProcessHandle: Handle; lpTargetHandle: ptr Handle;\n                dwDesiredAccess: DWORD; bInheritHandle: WINBOOL;\n                dwOptions: DWORD): WINBOOL		635
+nim	getHandleInformation	winlean.html#getHandleInformation,Handle,ptr.DWORD	proc getHandleInformation(hObject: Handle; lpdwFlags: ptr DWORD): WINBOOL		642
+nim	setHandleInformation	winlean.html#setHandleInformation,Handle,DWORD,DWORD	proc setHandleInformation(hObject: Handle; dwMask: DWORD; dwFlags: DWORD): WINBOOL		645
+nim	getCurrentProcess	winlean.html#getCurrentProcess	proc getCurrentProcess(): Handle		649
+nim	createFileW	winlean.html#createFileW,WideCString,DWORD,DWORD,pointer,DWORD,DWORD,Handle	proc createFileW(lpFileName: WideCString; dwDesiredAccess, dwShareMode: DWORD;\n            lpSecurityAttributes: pointer;\n            dwCreationDisposition, dwFlagsAndAttributes: DWORD;\n            hTemplateFile: Handle): Handle		652
+nim	deleteFileW	winlean.html#deleteFileW,WideCString	proc deleteFileW(pathName: WideCString): int32		657
+nim	createFileA	winlean.html#createFileA,cstring,DWORD,DWORD,pointer,DWORD,DWORD,Handle	proc createFileA(lpFileName: cstring; dwDesiredAccess, dwShareMode: DWORD;\n            lpSecurityAttributes: pointer;\n            dwCreationDisposition, dwFlagsAndAttributes: DWORD;\n            hTemplateFile: Handle): Handle		659
+nim	deleteFileA	winlean.html#deleteFileA,cstring	proc deleteFileA(pathName: cstring): int32		664
+nim	setEndOfFile	winlean.html#setEndOfFile,Handle	proc setEndOfFile(hFile: Handle): WINBOOL		667
+nim	setFilePointer	winlean.html#setFilePointer,Handle,LONG,ptr.LONG,DWORD	proc setFilePointer(hFile: Handle; lDistanceToMove: LONG;\n               lpDistanceToMoveHigh: ptr LONG; dwMoveMethod: DWORD): DWORD		670
+nim	getFileSize	winlean.html#getFileSize,Handle,ptr.DWORD	proc getFileSize(hFile: Handle; lpFileSizeHigh: ptr DWORD): DWORD		675
+nim	WinSizeT	winlean.html#WinSizeT	type WinSizeT		683
+nim	mapViewOfFileEx	winlean.html#mapViewOfFileEx,Handle,DWORD,DWORD,DWORD,WinSizeT,pointer	proc mapViewOfFileEx(hFileMappingObject: Handle; dwDesiredAccess: DWORD;\n                dwFileOffsetHigh, dwFileOffsetLow: DWORD;\n                dwNumberOfBytesToMap: WinSizeT; lpBaseAddress: pointer): pointer		685
+nim	createFileMappingW	winlean.html#createFileMappingW,Handle,pointer,DWORD,DWORD,DWORD,pointer	proc createFileMappingW(hFile: Handle; lpFileMappingAttributes: pointer;\n                   flProtect, dwMaximumSizeHigh: DWORD; dwMaximumSizeLow: DWORD;\n                   lpName: pointer): Handle		691
+nim	unmapViewOfFile	winlean.html#unmapViewOfFile,pointer	proc unmapViewOfFile(lpBaseAddress: pointer): WINBOOL		698
+nim	flushViewOfFile	winlean.html#flushViewOfFile,pointer,DWORD	proc flushViewOfFile(lpBaseAddress: pointer; dwNumberOfBytesToFlush: DWORD): WINBOOL		701
+nim	OVERLAPPED	winlean.html#OVERLAPPED	object OVERLAPPED		705
+nim	POVERLAPPED	winlean.html#POVERLAPPED	type POVERLAPPED		712
+nim	POVERLAPPED_COMPLETION_ROUTINE	winlean.html#POVERLAPPED_COMPLETION_ROUTINE	type POVERLAPPED_COMPLETION_ROUTINE		714
+nim	GUID	winlean.html#GUID	object GUID		717
+nim	ERROR_IO_PENDING	winlean.html#ERROR_IO_PENDING	const ERROR_IO_PENDING		724
+nim	WSAECONNABORTED	winlean.html#WSAECONNABORTED	const WSAECONNABORTED		725
+nim	WSAEADDRINUSE	winlean.html#WSAEADDRINUSE	const WSAEADDRINUSE		726
+nim	WSAECONNRESET	winlean.html#WSAECONNRESET	const WSAECONNRESET		727
+nim	WSAEDISCON	winlean.html#WSAEDISCON	const WSAEDISCON		728
+nim	WSAENETRESET	winlean.html#WSAENETRESET	const WSAENETRESET		729
+nim	WSAETIMEDOUT	winlean.html#WSAETIMEDOUT	const WSAETIMEDOUT		730
+nim	WSANOTINITIALISED	winlean.html#WSANOTINITIALISED	const WSANOTINITIALISED		731
+nim	WSAENOTSOCK	winlean.html#WSAENOTSOCK	const WSAENOTSOCK		732
+nim	WSAEINPROGRESS	winlean.html#WSAEINPROGRESS	const WSAEINPROGRESS		733
+nim	WSAEINTR	winlean.html#WSAEINTR	const WSAEINTR		734
+nim	WSAEWOULDBLOCK	winlean.html#WSAEWOULDBLOCK	const WSAEWOULDBLOCK		735
+nim	WSAESHUTDOWN	winlean.html#WSAESHUTDOWN	const WSAESHUTDOWN		736
+nim	ERROR_NETNAME_DELETED	winlean.html#ERROR_NETNAME_DELETED	const ERROR_NETNAME_DELETED		737
+nim	STATUS_PENDING	winlean.html#STATUS_PENDING	const STATUS_PENDING		738
+nim	createIoCompletionPort	winlean.html#createIoCompletionPort,Handle,Handle,ULONG_PTR,DWORD	proc createIoCompletionPort(FileHandle: Handle; ExistingCompletionPort: Handle;\n                       CompletionKey: ULONG_PTR;\n                       NumberOfConcurrentThreads: DWORD): Handle		740
+nim	getQueuedCompletionStatus	winlean.html#getQueuedCompletionStatus,Handle,PDWORD,PULONG_PTR,ptr.POVERLAPPED,DWORD	proc getQueuedCompletionStatus(CompletionPort: Handle;\n                          lpNumberOfBytesTransferred: PDWORD;\n                          lpCompletionKey: PULONG_PTR;\n                          lpOverlapped: ptr POVERLAPPED; dwMilliseconds: DWORD): WINBOOL		745
+nim	getOverlappedResult	winlean.html#getOverlappedResult,Handle,POVERLAPPED,DWORD,WINBOOL	proc getOverlappedResult(hFile: Handle; lpOverlapped: POVERLAPPED;\n                    lpNumberOfBytesTransferred: var DWORD; bWait: WINBOOL): WINBOOL		751
+nim	hasOverlappedIoCompleted	winlean.html#hasOverlappedIoCompleted.t	template hasOverlappedIoCompleted(lpOverlapped): bool		758
+nim	IOC_OUT	winlean.html#IOC_OUT	const IOC_OUT		762
+nim	IOC_IN	winlean.html#IOC_IN	const IOC_IN		763
+nim	IOC_WS2	winlean.html#IOC_WS2	const IOC_WS2		764
+nim	IOC_INOUT	winlean.html#IOC_INOUT	const IOC_INOUT		765
+nim	WSAIORW	winlean.html#WSAIORW.t,,	template WSAIORW(x, y): untyped		767
+nim	SIO_GET_EXTENSION_FUNCTION_POINTER	winlean.html#SIO_GET_EXTENSION_FUNCTION_POINTER	const SIO_GET_EXTENSION_FUNCTION_POINTER		770
+nim	SO_UPDATE_ACCEPT_CONTEXT	winlean.html#SO_UPDATE_ACCEPT_CONTEXT	const SO_UPDATE_ACCEPT_CONTEXT		771
+nim	AI_V4MAPPED	winlean.html#AI_V4MAPPED	const AI_V4MAPPED		772
+nim	AF_UNSPEC	winlean.html#AF_UNSPEC	const AF_UNSPEC		773
+nim	AF_INET	winlean.html#AF_INET	const AF_INET		774
+nim	AF_INET6	winlean.html#AF_INET6	const AF_INET6		775
+nim	WSAID_CONNECTEX	winlean.html#WSAID_CONNECTEX	var WSAID_CONNECTEX		778
+nim	WSAID_ACCEPTEX	winlean.html#WSAID_ACCEPTEX	var WSAID_ACCEPTEX		780
+nim	WSAID_GETACCEPTEXSOCKADDRS	winlean.html#WSAID_GETACCEPTEXSOCKADDRS	var WSAID_GETACCEPTEXSOCKADDRS		782
+nim	WSAIoctl	winlean.html#WSAIoctl,SocketHandle,DWORD,pointer,DWORD,pointer,DWORD,PDWORD,POVERLAPPED,POVERLAPPED_COMPLETION_ROUTINE	proc WSAIoctl(s: SocketHandle; dwIoControlCode: DWORD; lpvInBuffer: pointer;\n         cbInBuffer: DWORD; lpvOutBuffer: pointer; cbOutBuffer: DWORD;\n         lpcbBytesReturned: PDWORD; lpOverlapped: POVERLAPPED;\n         lpCompletionRoutine: POVERLAPPED_COMPLETION_ROUTINE): cint		785
+nim	TWSABuf	winlean.html#TWSABuf	object TWSABuf		792
+nim	WSARecv	winlean.html#WSARecv,SocketHandle,ptr.TWSABuf,DWORD,PDWORD,PDWORD,POVERLAPPED,POVERLAPPED_COMPLETION_ROUTINE	proc WSARecv(s: SocketHandle; buf: ptr TWSABuf; bufCount: DWORD;\n        bytesReceived, flags: PDWORD; lpOverlapped: POVERLAPPED;\n        completionProc: POVERLAPPED_COMPLETION_ROUTINE): cint		796
+nim	WSARecvFrom	winlean.html#WSARecvFrom,SocketHandle,ptr.TWSABuf,DWORD,PDWORD,PDWORD,ptr.SockAddr,ptr.cint,POVERLAPPED,POVERLAPPED_COMPLETION_ROUTINE	proc WSARecvFrom(s: SocketHandle; buf: ptr TWSABuf; bufCount: DWORD;\n            bytesReceived: PDWORD; flags: PDWORD; name: ptr SockAddr;\n            namelen: ptr cint; lpOverlapped: POVERLAPPED;\n            completionProc: POVERLAPPED_COMPLETION_ROUTINE): cint		801
+nim	WSASend	winlean.html#WSASend,SocketHandle,ptr.TWSABuf,DWORD,PDWORD,DWORD,POVERLAPPED,POVERLAPPED_COMPLETION_ROUTINE	proc WSASend(s: SocketHandle; buf: ptr TWSABuf; bufCount: DWORD; bytesSent: PDWORD;\n        flags: DWORD; lpOverlapped: POVERLAPPED;\n        completionProc: POVERLAPPED_COMPLETION_ROUTINE): cint		807
+nim	WSASendTo	winlean.html#WSASendTo,SocketHandle,ptr.TWSABuf,DWORD,PDWORD,DWORD,ptr.SockAddr,cint,POVERLAPPED,POVERLAPPED_COMPLETION_ROUTINE	proc WSASendTo(s: SocketHandle; buf: ptr TWSABuf; bufCount: DWORD; bytesSent: PDWORD;\n          flags: DWORD; name: ptr SockAddr; namelen: cint;\n          lpOverlapped: POVERLAPPED;\n          completionProc: POVERLAPPED_COMPLETION_ROUTINE): cint		812
+nim	get_osfhandle	winlean.html#get_osfhandle,FileHandle	proc get_osfhandle(fd: FileHandle): Handle		818
+nim	getSystemTimes	winlean.html#getSystemTimes,FILETIME,FILETIME,FILETIME	proc getSystemTimes(lpIdleTime, lpKernelTime, lpUserTime: var FILETIME): WINBOOL		821
+nim	getProcessTimes	winlean.html#getProcessTimes,Handle,FILETIME,FILETIME,FILETIME,FILETIME	proc getProcessTimes(hProcess: Handle; lpCreationTime, lpExitTime, lpKernelTime,\n                                  lpUserTime: var FILETIME): WINBOOL		825
+nim	getSystemTimePreciseAsFileTime	winlean.html#getSystemTimePreciseAsFileTime,FILETIME	proc getSystemTimePreciseAsFileTime(lpSystemTimeAsFileTime: var FILETIME)		829
+nim	inet_ntop	winlean.html#inet_ntop,cint,pointer,cstring,int32	proc inet_ntop(family: cint; paddr: pointer; pStringBuffer: cstring;\n          stringBufSize: int32): cstring		869
+nim	WSAPROC_ACCEPTEX	winlean.html#WSAPROC_ACCEPTEX	type WSAPROC_ACCEPTEX		884
+nim	WSAPROC_CONNECTEX	winlean.html#WSAPROC_CONNECTEX	type WSAPROC_CONNECTEX		893
+nim	WSAPROC_GETACCEPTEXSOCKADDRS	winlean.html#WSAPROC_GETACCEPTEXSOCKADDRS	type WSAPROC_GETACCEPTEXSOCKADDRS		899
+nim	WT_EXECUTEDEFAULT	winlean.html#WT_EXECUTEDEFAULT	const WT_EXECUTEDEFAULT		910
+nim	WT_EXECUTEINIOTHREAD	winlean.html#WT_EXECUTEINIOTHREAD	const WT_EXECUTEINIOTHREAD		911
+nim	WT_EXECUTEINUITHREAD	winlean.html#WT_EXECUTEINUITHREAD	const WT_EXECUTEINUITHREAD		912
+nim	WT_EXECUTEINWAITTHREAD	winlean.html#WT_EXECUTEINWAITTHREAD	const WT_EXECUTEINWAITTHREAD		913
+nim	WT_EXECUTEONLYONCE	winlean.html#WT_EXECUTEONLYONCE	const WT_EXECUTEONLYONCE		914
+nim	WT_EXECUTELONGFUNCTION	winlean.html#WT_EXECUTELONGFUNCTION	const WT_EXECUTELONGFUNCTION		915
+nim	WT_EXECUTEINTIMERTHREAD	winlean.html#WT_EXECUTEINTIMERTHREAD	const WT_EXECUTEINTIMERTHREAD		916
+nim	WT_EXECUTEINPERSISTENTIOTHREAD	winlean.html#WT_EXECUTEINPERSISTENTIOTHREAD	const WT_EXECUTEINPERSISTENTIOTHREAD		917
+nim	WT_EXECUTEINPERSISTENTTHREAD	winlean.html#WT_EXECUTEINPERSISTENTTHREAD	const WT_EXECUTEINPERSISTENTTHREAD		918
+nim	WT_TRANSFER_IMPERSONATION	winlean.html#WT_TRANSFER_IMPERSONATION	const WT_TRANSFER_IMPERSONATION		919
+nim	PROCESS_TERMINATE	winlean.html#PROCESS_TERMINATE	const PROCESS_TERMINATE		920
+nim	PROCESS_CREATE_THREAD	winlean.html#PROCESS_CREATE_THREAD	const PROCESS_CREATE_THREAD		921
+nim	PROCESS_SET_SESSIONID	winlean.html#PROCESS_SET_SESSIONID	const PROCESS_SET_SESSIONID		922
+nim	PROCESS_VM_OPERATION	winlean.html#PROCESS_VM_OPERATION	const PROCESS_VM_OPERATION		923
+nim	PROCESS_VM_READ	winlean.html#PROCESS_VM_READ	const PROCESS_VM_READ		924
+nim	PROCESS_VM_WRITE	winlean.html#PROCESS_VM_WRITE	const PROCESS_VM_WRITE		925
+nim	PROCESS_DUP_HANDLE	winlean.html#PROCESS_DUP_HANDLE	const PROCESS_DUP_HANDLE		926
+nim	PROCESS_CREATE_PROCESS	winlean.html#PROCESS_CREATE_PROCESS	const PROCESS_CREATE_PROCESS		927
+nim	PROCESS_SET_QUOTA	winlean.html#PROCESS_SET_QUOTA	const PROCESS_SET_QUOTA		928
+nim	PROCESS_SET_INFORMATION	winlean.html#PROCESS_SET_INFORMATION	const PROCESS_SET_INFORMATION		929
+nim	PROCESS_QUERY_INFORMATION	winlean.html#PROCESS_QUERY_INFORMATION	const PROCESS_QUERY_INFORMATION		930
+nim	PROCESS_SUSPEND_RESUME	winlean.html#PROCESS_SUSPEND_RESUME	const PROCESS_SUSPEND_RESUME		931
+nim	PROCESS_QUERY_LIMITED_INFORMATION	winlean.html#PROCESS_QUERY_LIMITED_INFORMATION	const PROCESS_QUERY_LIMITED_INFORMATION		932
+nim	PROCESS_SET_LIMITED_INFORMATION	winlean.html#PROCESS_SET_LIMITED_INFORMATION	const PROCESS_SET_LIMITED_INFORMATION		933
+nim	WAITORTIMERCALLBACK	winlean.html#WAITORTIMERCALLBACK	type WAITORTIMERCALLBACK		935
+nim	postQueuedCompletionStatus	winlean.html#postQueuedCompletionStatus,Handle,DWORD,ULONG_PTR,pointer	proc postQueuedCompletionStatus(CompletionPort: Handle;\n                           dwNumberOfBytesTransferred: DWORD;\n                           dwCompletionKey: ULONG_PTR; lpOverlapped: pointer): bool		937
+nim	registerWaitForSingleObject	winlean.html#registerWaitForSingleObject,ptr.Handle,Handle,WAITORTIMERCALLBACK,pointer,ULONG,ULONG	proc registerWaitForSingleObject(phNewWaitObject: ptr Handle; hObject: Handle;\n                            Callback: WAITORTIMERCALLBACK; Context: pointer;\n                            dwMilliseconds: ULONG; dwFlags: ULONG): bool		943
+nim	unregisterWait	winlean.html#unregisterWait,Handle	proc unregisterWait(WaitHandle: Handle): DWORD		950
+nim	openProcess	winlean.html#openProcess,DWORD,WINBOOL,DWORD	proc openProcess(dwDesiredAccess: DWORD; bInheritHandle: WINBOOL; dwProcessId: DWORD): Handle		953
+nim	createEvent	winlean.html#createEvent,ptr.SECURITY_ATTRIBUTES,DWORD,DWORD,ptr.Utf16Char	proc createEvent(lpEventAttributes: ptr SECURITY_ATTRIBUTES; bManualReset: DWORD;\n            bInitialState: DWORD; lpName: ptr Utf16Char): Handle		957
+nim	setEvent	winlean.html#setEvent,Handle	proc setEvent(hEvent: Handle): cint		962
+nim	FD_READ	winlean.html#FD_READ	const FD_READ		966
+nim	FD_WRITE	winlean.html#FD_WRITE	const FD_WRITE		967
+nim	FD_OOB	winlean.html#FD_OOB	const FD_OOB		968
+nim	FD_ACCEPT	winlean.html#FD_ACCEPT	const FD_ACCEPT		969
+nim	FD_CONNECT	winlean.html#FD_CONNECT	const FD_CONNECT		970
+nim	FD_CLOSE	winlean.html#FD_CLOSE	const FD_CLOSE		971
+nim	FD_QQS	winlean.html#FD_QQS	const FD_QQS		972
+nim	FD_GROUP_QQS	winlean.html#FD_GROUP_QQS	const FD_GROUP_QQS		973
+nim	FD_ROUTING_INTERFACE_CHANGE	winlean.html#FD_ROUTING_INTERFACE_CHANGE	const FD_ROUTING_INTERFACE_CHANGE		974
+nim	FD_ADDRESS_LIST_CHANGE	winlean.html#FD_ADDRESS_LIST_CHANGE	const FD_ADDRESS_LIST_CHANGE		975
+nim	FD_ALL_EVENTS	winlean.html#FD_ALL_EVENTS	const FD_ALL_EVENTS		976
+nim	wsaEventSelect	winlean.html#wsaEventSelect,SocketHandle,Handle,clong	proc wsaEventSelect(s: SocketHandle; hEventObject: Handle; lNetworkEvents: clong): cint		978
+nim	wsaCreateEvent	winlean.html#wsaCreateEvent	proc wsaCreateEvent(): Handle		982
+nim	wsaCloseEvent	winlean.html#wsaCloseEvent,Handle	proc wsaCloseEvent(hEvent: Handle): bool		985
+nim	wsaResetEvent	winlean.html#wsaResetEvent,Handle	proc wsaResetEvent(hEvent: Handle): bool		988
+nim	KEY_EVENT_RECORD	winlean.html#KEY_EVENT_RECORD	object KEY_EVENT_RECORD		992
+nim	readConsoleInput	winlean.html#readConsoleInput,Handle,pointer,cint,ptr.cint	proc readConsoleInput(hConsoleInput: Handle; lpBuffer: pointer; nLength: cint;\n                 lpNumberOfEventsRead: ptr cint): cint		1001
+nim	LPFIBER_START_ROUTINE	winlean.html#LPFIBER_START_ROUTINE	type LPFIBER_START_ROUTINE		1006
+nim	FIBER_FLAG_FLOAT_SWITCH	winlean.html#FIBER_FLAG_FLOAT_SWITCH	const FIBER_FLAG_FLOAT_SWITCH		1009
+nim	CreateFiber	winlean.html#CreateFiber,int,LPFIBER_START_ROUTINE,pointer	proc CreateFiber(stackSize: int; fn: LPFIBER_START_ROUTINE; param: pointer): pointer		1011
+nim	CreateFiberEx	winlean.html#CreateFiberEx,int,int,int32,LPFIBER_START_ROUTINE,pointer	proc CreateFiberEx(stkCommit: int; stkReserve: int; flags: int32;\n              fn: LPFIBER_START_ROUTINE; param: pointer): pointer		1012
+nim	ConvertThreadToFiber	winlean.html#ConvertThreadToFiber,pointer	proc ConvertThreadToFiber(param: pointer): pointer		1013
+nim	ConvertThreadToFiberEx	winlean.html#ConvertThreadToFiberEx,pointer,int32	proc ConvertThreadToFiberEx(param: pointer; flags: int32): pointer		1014
+nim	DeleteFiber	winlean.html#DeleteFiber,pointer	proc DeleteFiber(fiber: pointer)		1015
+nim	SwitchToFiber	winlean.html#SwitchToFiber,pointer	proc SwitchToFiber(fiber: pointer)		1016
+nim	GetCurrentFiber	winlean.html#GetCurrentFiber	proc GetCurrentFiber(): pointer		1017
+nim	toFILETIME	winlean.html#toFILETIME,int64	proc toFILETIME(t: int64): FILETIME		1019
+nim	LPFILETIME	winlean.html#LPFILETIME	type LPFILETIME		1024
+nim	setFileTime	winlean.html#setFileTime,Handle,LPFILETIME,LPFILETIME,LPFILETIME	proc setFileTime(hFile: Handle; lpCreationTime: LPFILETIME;\n            lpLastAccessTime: LPFILETIME; lpLastWriteTime: LPFILETIME): WINBOOL		1026
+nim	SID_IDENTIFIER_AUTHORITY	winlean.html#SID_IDENTIFIER_AUTHORITY	object SID_IDENTIFIER_AUTHORITY		1032
+nim	SID	winlean.html#SID	object SID		1035
+nim	PSID	winlean.html#PSID	type PSID		1040
+nim	SECURITY_NT_AUTHORITY	winlean.html#SECURITY_NT_AUTHORITY	const SECURITY_NT_AUTHORITY		1045
+nim	SECURITY_BUILTIN_DOMAIN_RID	winlean.html#SECURITY_BUILTIN_DOMAIN_RID	const SECURITY_BUILTIN_DOMAIN_RID		1046
+nim	DOMAIN_ALIAS_RID_ADMINS	winlean.html#DOMAIN_ALIAS_RID_ADMINS	const DOMAIN_ALIAS_RID_ADMINS		1047
+nim	allocateAndInitializeSid	winlean.html#allocateAndInitializeSid,ptr.SID_IDENTIFIER_AUTHORITY,BYTE,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,ptr.PSID	proc allocateAndInitializeSid(pIdentifierAuthority: ptr SID_IDENTIFIER_AUTHORITY;\n                         nSubAuthorityCount: BYTE; nSubAuthority0: DWORD;\n                         nSubAuthority1: DWORD; nSubAuthority2: DWORD;\n                         nSubAuthority3: DWORD; nSubAuthority4: DWORD;\n                         nSubAuthority5: DWORD; nSubAuthority6: DWORD;\n                         nSubAuthority7: DWORD; pSid: ptr PSID): WINBOOL		1049
+nim	checkTokenMembership	winlean.html#checkTokenMembership,Handle,PSID,PBOOL	proc checkTokenMembership(tokenHandle: Handle; sidToCheck: PSID; isMember: PBOOL): WINBOOL		1061
+nim	freeSid	winlean.html#freeSid,PSID	proc freeSid(pSid: PSID): PSID		1064

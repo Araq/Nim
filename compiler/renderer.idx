@@ -1,0 +1,28 @@
+nimTitle	renderer	renderer.html	module renderer		0
+nim	renderNone	renderer.html#renderNone	TRenderFlag.renderNone		25
+nim	renderNoBody	renderer.html#renderNoBody	TRenderFlag.renderNoBody		25
+nim	renderNoComments	renderer.html#renderNoComments	TRenderFlag.renderNoComments		25
+nim	renderDocComments	renderer.html#renderDocComments	TRenderFlag.renderDocComments		25
+nim	renderNoPragmas	renderer.html#renderNoPragmas	TRenderFlag.renderNoPragmas		25
+nim	renderIds	renderer.html#renderIds	TRenderFlag.renderIds		25
+nim	renderNoProcDefs	renderer.html#renderNoProcDefs	TRenderFlag.renderNoProcDefs		25
+nim	renderSyms	renderer.html#renderSyms	TRenderFlag.renderSyms		25
+nim	renderRunnableExamples	renderer.html#renderRunnableExamples	TRenderFlag.renderRunnableExamples		25
+nim	renderIr	renderer.html#renderIr	TRenderFlag.renderIr		25
+nim	renderNonExportedFields	renderer.html#renderNonExportedFields	TRenderFlag.renderNonExportedFields		25
+nim	renderExpandUsing	renderer.html#renderExpandUsing	TRenderFlag.renderExpandUsing		25
+nim	renderNoPostfix	renderer.html#renderNoPostfix	TRenderFlag.renderNoPostfix		25
+nim	TRenderFlag	renderer.html#TRenderFlag	enum TRenderFlag		25
+nim	TRenderFlags	renderer.html#TRenderFlags	type TRenderFlags		30
+nim	TRenderTok	renderer.html#TRenderTok	object TRenderTok		31
+nim	TRenderTokSeq	renderer.html#TRenderTokSeq	type TRenderTokSeq		40
+nim	TSrcGen	renderer.html#TSrcGen	object TSrcGen		41
+nim	renderTree	renderer.html#renderTree,PNode,TRenderFlags	proc renderTree(n: PNode; renderFlags: TRenderFlags = {}): string		63
+nim	isKeyword	renderer.html#isKeyword,PIdent	proc isKeyword(i: PIdent): bool		77
+nim	renderDefinitionName	renderer.html#renderDefinitionName,PSym	proc renderDefinitionName(s: PSym; noQuotes = false): string		94
+nim	bracketKind	renderer.html#bracketKind,TSrcGen,PNode	proc bracketKind(g: TSrcGen; n: PNode): BracketKind		1002
+nim	`$`	renderer.html#$,PNode	proc `$`(n: PNode): string		1842
+nim	renderModule	renderer.html#renderModule,PNode,string,TRenderFlags,ConfigRef	proc renderModule(n: PNode; outfile: string; renderFlags: TRenderFlags = {};\n             fid = FileIndex(-1); conf: ConfigRef = nil)		1844
+nim	initTokRender	renderer.html#initTokRender,PNode,TRenderFlags	proc initTokRender(n: PNode; renderFlags: TRenderFlags = {}): TSrcGen		1866
+nim	getNextTok	renderer.html#getNextTok,TSrcGen,TokType,string	proc getNextTok(r: var TSrcGen; kind: var TokType; literal: var string)		1870
+nim	getTokSym	renderer.html#getTokSym,TSrcGen	proc getTokSym(r: TSrcGen): PSym		1880

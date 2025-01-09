@@ -1,0 +1,21 @@
+nimTitle	typeallowed	typeallowed.html	module typeallowed		0
+nim	taField	typeallowed.html#taField	TTypeAllowedFlag.taField		20
+nim	taHeap	typeallowed.html#taHeap	TTypeAllowedFlag.taHeap		20
+nim	taConcept	typeallowed.html#taConcept	TTypeAllowedFlag.taConcept		20
+nim	taIsOpenArray	typeallowed.html#taIsOpenArray	TTypeAllowedFlag.taIsOpenArray		20
+nim	taNoUntyped	typeallowed.html#taNoUntyped	TTypeAllowedFlag.taNoUntyped		20
+nim	taIsTemplateOrMacro	typeallowed.html#taIsTemplateOrMacro	TTypeAllowedFlag.taIsTemplateOrMacro		20
+nim	taProcContextIsNotMacro	typeallowed.html#taProcContextIsNotMacro	TTypeAllowedFlag.taProcContextIsNotMacro		20
+nim	taIsCastable	typeallowed.html#taIsCastable	TTypeAllowedFlag.taIsCastable		20
+nim	taIsDefaultField	typeallowed.html#taIsDefaultField	TTypeAllowedFlag.taIsDefaultField		20
+nim	taVoid	typeallowed.html#taVoid	TTypeAllowedFlag.taVoid		20
+nim	TTypeAllowedFlag	typeallowed.html#TTypeAllowedFlag	enum TTypeAllowedFlag		20
+nim	TTypeAllowedFlags	typeallowed.html#TTypeAllowedFlags	type TTypeAllowedFlags		32
+nim	typeAllowed	typeallowed.html#typeAllowed,PType,TSymKind,PContext,TTypeAllowedFlags	proc typeAllowed(t: PType; kind: TSymKind; c: PContext; flags: TTypeAllowedFlags = {}): PType		213
+nim	noView	typeallowed.html#noView	ViewTypeKind.noView		220
+nim	immutableView	typeallowed.html#immutableView	ViewTypeKind.immutableView		220
+nim	mutableView	typeallowed.html#mutableView	ViewTypeKind.mutableView		220
+nim	ViewTypeKind	typeallowed.html#ViewTypeKind	enum ViewTypeKind		220
+nim	classifyViewType	typeallowed.html#classifyViewType,PType	proc classifyViewType(t: PType): ViewTypeKind		275
+nim	directViewType	typeallowed.html#directViewType,PType	proc directViewType(t: PType): ViewTypeKind		279
+nim	requiresInit	typeallowed.html#requiresInit,PType	proc requiresInit(t: PType): bool		291

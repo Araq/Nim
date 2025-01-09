@@ -1,0 +1,33 @@
+nimTitle	ospaths2	ospaths2.html	module std/private/ospaths2		0
+nim	normalizePathEnd	ospaths2.html#normalizePathEnd,string	proc normalizePathEnd(path: var string; trailingSep = false)		48
+nim	normalizePathEnd	ospaths2.html#normalizePathEnd,string_2	proc normalizePathEnd(path: string; trailingSep = false): string		71
+nim	joinPath	ospaths2.html#joinPath,string,string	proc joinPath(head, tail: string): string		92
+nim	joinPath	ospaths2.html#joinPath,varargs[string]	proc joinPath(parts: varargs[string]): string		136
+nim	`/`	ospaths2.html#/,string,string	proc `/`(head, tail: string): string		162
+nim	splitPath	ospaths2.html#splitPath,string	proc splitPath(path: string): tuple[head, tail: string]		185
+nim	isAbsolute	ospaths2.html#isAbsolute,string	proc isAbsolute(path: string): bool		234
+nim	relativePath	ospaths2.html#relativePath,string,string	proc relativePath(path, base: string; sep = DirSep): string		293
+nim	isRelativeTo	ospaths2.html#isRelativeTo,string,string	proc isRelativeTo(path: string; base: string): bool		383
+nim	parentDir	ospaths2.html#parentDir,string	proc parentDir(path: string): string		402
+nim	tailDir	ospaths2.html#tailDir,string	proc tailDir(path: string): string		447
+nim	isRootDir	ospaths2.html#isRootDir,string	proc isRootDir(path: string): bool		476
+nim	parentDirs	ospaths2.html#parentDirs.i,string	iterator parentDirs(path: string; fromRoot = false; inclusive = true): string		492
+nim	`/../`	ospaths2.html#/../,string,string	proc `/../`(head, tail: string): string		546
+nim	searchExtPos	ospaths2.html#searchExtPos,string	proc searchExtPos(path: string): int		572
+nim	splitFile	ospaths2.html#splitFile,string	proc splitFile(path: string): tuple[dir, name, ext: string]		610
+nim	extractFilename	ospaths2.html#extractFilename,string	proc extractFilename(path: string): string		669
+nim	lastPathPart	ospaths2.html#lastPathPart,string	proc lastPathPart(path: string): string		691
+nim	changeFileExt	ospaths2.html#changeFileExt,string,string	proc changeFileExt(filename, ext: string): string		709
+nim	addFileExt	ospaths2.html#addFileExt,string,string	proc addFileExt(filename, ext: string): string		735
+nim	cmpPaths	ospaths2.html#cmpPaths,string,string	proc cmpPaths(pathA, pathB: string): int		759
+nim	unixToNativePath	ospaths2.html#unixToNativePath,string,string	proc unixToNativePath(path: string; drive = ""): string		786
+nim	getCurrentDir	ospaths2.html#getCurrentDir	proc getCurrentDir(): string		844
+nim	absolutePath	ospaths2.html#absolutePath,string	proc absolutePath(path: string; root = getCurrentDir()): string		892
+nim	normalizePath	ospaths2.html#normalizePath,string	proc normalizePath(path: var string)		913
+nim	normalizedPath	ospaths2.html#normalizedPath,string	proc normalizedPath(path: string): string		964
+nim	normalizeExe	ospaths2.html#normalizeExe,string	proc normalizeExe(file: var string)		975
+nim	sameFile	ospaths2.html#sameFile,string,string	proc sameFile(path1, path2: string): bool		987
+idx	baseName	ospaths2.html#basename_1	Module ospaths2		0
+idx	current working directory	ospaths2.html#current-working-directory_1	Module ospaths2		0
+nimgrp	normalizepathend	ospaths2.html#normalizePathEnd-procs-all	proc		48
+nimgrp	joinpath	ospaths2.html#joinPath-procs-all	proc		92

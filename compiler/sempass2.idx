@@ -1,0 +1,7 @@
+nimTitle	sempass2	sempass2.html	module sempass2		0
+nim	checkForSink	sempass2.html#checkForSink,ConfigRef,IdGenerator,PSym,PNode	proc checkForSink(config: ConfigRef; idgen: IdGenerator; owner: PSym; arg: PNode)		10
+nim	getEbase	sempass2.html#getEbase,ModuleGraph,TLineInfo	proc getEbase(g: ModuleGraph; info: TLineInfo): PType		420
+nim	checkMethodEffects	sempass2.html#checkMethodEffects,ModuleGraph,PSym,PSym	proc checkMethodEffects(g: ModuleGraph; disp, branch: PSym)		1534
+nim	setEffectsForProcType	sempass2.html#setEffectsForProcType,ModuleGraph,PType,PNode,PSym	proc setEffectsForProcType(g: ModuleGraph; t: PType; n: PNode; s: PSym = nil)		1560
+nim	trackProc	sempass2.html#trackProc,PContext,PSym,PNode	proc trackProc(c: PContext; s: PSym; body: PNode)		1626
+nim	trackStmt	sempass2.html#trackStmt,PContext,PSym,PNode,bool	proc trackStmt(c: PContext; module: PSym; n: PNode; isTopLevel: bool)		1749

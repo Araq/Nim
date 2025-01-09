@@ -1,0 +1,6 @@
+nimTitle	hotcodereloading	hotcodereloading.html	module std/hotcodereloading		0
+nim	beforeCodeReload	hotcodereloading.html#beforeCodeReload.t,untyped	template beforeCodeReload(body: untyped)		37
+nim	afterCodeReload	hotcodereloading.html#afterCodeReload.t,untyped	template afterCodeReload(body: untyped)		38
+nim	hasModuleChanged	hotcodereloading.html#hasModuleChanged.t,typed	template hasModuleChanged(module: typed): bool		39
+nim	hasAnyModuleChanged	hotcodereloading.html#hasAnyModuleChanged	proc hasAnyModuleChanged(): bool		40
+nim	performCodeReload	hotcodereloading.html#performCodeReload.t	template performCodeReload()		41

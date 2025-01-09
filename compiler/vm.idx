@@ -1,0 +1,33 @@
+nimTitle	vm	vm.html	module vm		0
+nim	setResult	vm.html#setResult,VmArgs,BiggestInt	proc setResult(a: VmArgs; v: BiggestInt)		19
+nim	setResult	vm.html#setResult,VmArgs,BiggestFloat	proc setResult(a: VmArgs; v: BiggestFloat)		20
+nim	setResult	vm.html#setResult,VmArgs,bool	proc setResult(a: VmArgs; v: bool)		21
+nim	setResult	vm.html#setResult,VmArgs,string	proc setResult(a: VmArgs; v: string)		25
+nim	setResult	vm.html#setResult,VmArgs,PNode	proc setResult(a: VmArgs; n: PNode)		30
+nim	setResult	vm.html#setResult,VmArgs,AbsoluteDir	proc setResult(a: VmArgs; v: AbsoluteDir)		34
+nim	setResult	vm.html#setResult,VmArgs,seq[string]	proc setResult(a: VmArgs; v: seq[string])		36
+nim	setResult	vm.html#setResult,VmArgs,	proc setResult(a: VmArgs; v: (BiggestInt, BiggestInt))		42
+nim	numArgs	vm.html#numArgs,VmArgs	proc numArgs(a: VmArgs): int		58
+nim	getInt	vm.html#getInt,VmArgs,Natural	proc getInt(a: VmArgs; i: Natural): BiggestInt		61
+nim	getBool	vm.html#getBool,VmArgs,Natural	proc getBool(a: VmArgs; i: Natural): bool		62
+nim	getFloat	vm.html#getFloat,VmArgs,Natural	proc getFloat(a: VmArgs; i: Natural): BiggestFloat		63
+nim	getNode	vm.html#getNode,VmArgs,Natural	proc getNode(a: VmArgs; i: Natural): PNode		64
+nim	getString	vm.html#getString,VmArgs,Natural	proc getString(a: VmArgs; i: Natural): string		65
+nim	getVar	vm.html#getVar,VmArgs,Natural	proc getVar(a: VmArgs; i: Natural): PNode		66
+nim	getNodeAddr	vm.html#getNodeAddr,VmArgs,Natural	proc getNodeAddr(a: VmArgs; i: Natural): PNode		74
+nim	execProc	vm.html#execProc,PCtx,PSym,openArray[PNode]	proc execProc(c: PCtx; sym: PSym; args: openArray[PNode]): PNode		2323
+nim	evalStmt	vm.html#evalStmt,PCtx,PNode	proc evalStmt(c: PCtx; n: PNode)		2357
+nim	evalExpr	vm.html#evalExpr,PCtx,PNode	proc evalExpr(c: PCtx; n: PNode): PNode		2368
+nim	getGlobalValue	vm.html#getGlobalValue,PCtx,PSym	proc getGlobalValue(c: PCtx; s: PSym): PNode		2380
+nim	setGlobalValue	vm.html#setGlobalValue,PCtx,PSym,PNode	proc setGlobalValue(c: PCtx; s: PSym; val: PNode)		2384
+nim	registerAdditionalOps	vm.html#registerAdditionalOps,PCtx	proc registerAdditionalOps(c: PCtx)		191
+nim	setupGlobalCtx	vm.html#setupGlobalCtx,PSym,ModuleGraph,IdGenerator	proc setupGlobalCtx(module: PSym; graph: ModuleGraph; idgen: IdGenerator)		2391
+nim	setupEvalGen	vm.html#setupEvalGen,ModuleGraph,PSym,IdGenerator	proc setupEvalGen(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		2398
+nim	interpreterCode	vm.html#interpreterCode,PPassContext,PNode	proc interpreterCode(c: PPassContext; n: PNode): PNode		2407
+nim	evalConstExpr	vm.html#evalConstExpr,PSym,IdGenerator,ModuleGraph,PNode	proc evalConstExpr(module: PSym; idgen: IdGenerator; g: ModuleGraph; e: PNode): PNode		2443
+nim	evalStaticExpr	vm.html#evalStaticExpr,PSym,IdGenerator,ModuleGraph,PNode,PSym	proc evalStaticExpr(module: PSym; idgen: IdGenerator; g: ModuleGraph; e: PNode;\n               prc: PSym): PNode		2446
+nim	evalStaticStmt	vm.html#evalStaticStmt,PSym,IdGenerator,ModuleGraph,PNode,PSym	proc evalStaticStmt(module: PSym; idgen: IdGenerator; g: ModuleGraph; e: PNode;\n               prc: PSym)		2449
+nim	setupCompileTimeVar	vm.html#setupCompileTimeVar,PSym,IdGenerator,ModuleGraph,PNode	proc setupCompileTimeVar(module: PSym; idgen: IdGenerator; g: ModuleGraph; n: PNode)		2452
+nim	genericParamsInMacroCall	vm.html#genericParamsInMacroCall.i,PSym,PNode	iterator genericParamsInMacroCall(macroSym: PSym; call: PNode): (PSym, PNode)		2492
+nim	evalMacroCall	vm.html#evalMacroCall,PSym,IdGenerator,ModuleGraph,ref.int,PNode,PNode,PSym	proc evalMacroCall(module: PSym; idgen: IdGenerator; g: ModuleGraph;\n              templInstCounter: ref int; n, nOrig: PNode; sym: PSym): PNode		2503
+nimgrp	setresult	vm.html#setResult-procs-all	proc		19

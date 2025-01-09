@@ -1,0 +1,27 @@
+markupTitle	Nim IDE Integration Guide	idetools.html	Nim IDE Integration Guide		0
+heading	Idetools invocation	idetools.html#idetools-invocation	 Idetools invocation		0
+heading	Specifying the location of the query	idetools.html#idetools-invocation-specifying-the-location-of-the-query	  Specifying the location of the query		0
+heading	Definitions	idetools.html#idetools-invocation-definitions	  Definitions		0
+heading	Suggestions	idetools.html#idetools-invocation-suggestions	  Suggestions		0
+heading	Invocation context	idetools.html#idetools-invocation-invocation-context	  Invocation context		0
+heading	Symbol usages	idetools.html#idetools-invocation-symbol-usages	  Symbol usages		0
+heading	Expression evaluation	idetools.html#idetools-invocation-expression-evaluation	  Expression evaluation		0
+heading	Compiler as a service (CAAS)	idetools.html#compiler-as-a-service-caas	 Compiler as a service (CAAS)		0
+heading	Parsing idetools output	idetools.html#parsing-idetools-output	 Parsing idetools output		0
+heading	skConst	idetools.html#parsing-idetools-output-skconst	  skConst		0
+heading	skEnumField	idetools.html#parsing-idetools-output-skenumfield	  skEnumField		0
+heading	skForVar	idetools.html#parsing-idetools-output-skforvar	  skForVar		0
+heading	skIterator, skClosureIterator	idetools.html#parsing-idetools-output-skiterator-skclosureiterator	  skIterator, skClosureIterator		0
+heading	skLabel	idetools.html#parsing-idetools-output-sklabel	  skLabel		0
+heading	skLet	idetools.html#parsing-idetools-output-sklet	  skLet		0
+heading	skMacro	idetools.html#parsing-idetools-output-skmacro	  skMacro		0
+heading	skMethod	idetools.html#parsing-idetools-output-skmethod	  skMethod		0
+heading	skParam	idetools.html#parsing-idetools-output-skparam	  skParam		0
+heading	skProc	idetools.html#parsing-idetools-output-skproc	  skProc		0
+heading	skResult	idetools.html#parsing-idetools-output-skresult	  skResult		0
+heading	skTemplate	idetools.html#parsing-idetools-output-sktemplate	  skTemplate		0
+heading	skType	idetools.html#parsing-idetools-output-sktype	  skType		0
+heading	skVar	idetools.html#parsing-idetools-output-skvar	  skVar		0
+heading	Test suite	idetools.html#test-suite	 Test suite		0
+heading	Running the test suite	idetools.html#test-suite-running-the-test-suite	  Running the test suite		0
+heading	Test case file format	idetools.html#test-suite-test-case-file-format	  Test case file format		0

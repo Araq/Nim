@@ -1,0 +1,46 @@
+nimTitle	logging	logging.html	module std/logging		0
+nim	lvlAll	logging.html#lvlAll	Level.lvlAll		157
+nim	lvlDebug	logging.html#lvlDebug	Level.lvlDebug		157
+nim	lvlInfo	logging.html#lvlInfo	Level.lvlInfo		157
+nim	lvlNotice	logging.html#lvlNotice	Level.lvlNotice		157
+nim	lvlWarn	logging.html#lvlWarn	Level.lvlWarn		157
+nim	lvlError	logging.html#lvlError	Level.lvlError		157
+nim	lvlFatal	logging.html#lvlFatal	Level.lvlFatal		157
+nim	lvlNone	logging.html#lvlNone	Level.lvlNone		157
+nim	Level	logging.html#Level	enum Level		157
+nim	LevelNames	logging.html#LevelNames	const LevelNames		193
+nim	defaultFmtStr	logging.html#defaultFmtStr	const defaultFmtStr		197
+nim	verboseFmtStr	logging.html#verboseFmtStr	const verboseFmtStr		198
+nim	Logger	logging.html#Logger	type Logger		218
+nim	ConsoleLogger	logging.html#ConsoleLogger	type ConsoleLogger		234
+nim	FileLogger	logging.html#FileLogger	type FileLogger		249
+nim	RollingFileLogger	logging.html#RollingFileLogger	type RollingFileLogger		264
+nim	substituteLog	logging.html#substituteLog,string,Level,varargs[string,]	proc substituteLog(frmt: string; level: Level; args: varargs[string, `$`]): string		287
+nim	log	logging.html#log.e,Logger,Level,varargs[string,]	method log(logger: Logger; level: Level; args: varargs[string, `$`])		342
+nim	log	logging.html#log.e,ConsoleLogger,Level,varargs[string,]	method log(logger: ConsoleLogger; level: Level; args: varargs[string, `$`])		358
+nim	newConsoleLogger	logging.html#newConsoleLogger	proc newConsoleLogger(levelThreshold = lvlAll; fmtStr = defaultFmtStr;\n                 useStderr = false; flushThreshold = defaultFlushThreshold): ConsoleLogger		405
+nim	log	logging.html#log.e,FileLogger,Level,varargs[string,]	method log(logger: FileLogger; level: Level; args: varargs[string, `$`])		435
+nim	defaultFilename	logging.html#defaultFilename	proc defaultFilename(): string		469
+nim	newFileLogger	logging.html#newFileLogger,File	proc newFileLogger(file: File; levelThreshold = lvlAll; fmtStr = defaultFmtStr;\n              flushThreshold = defaultFlushThreshold): FileLogger		476
+nim	newFileLogger	logging.html#newFileLogger,FileMode,int	proc newFileLogger(filename = defaultFilename(); mode: FileMode = fmAppend;\n              levelThreshold = lvlAll; fmtStr = defaultFmtStr;\n              bufSize: int = -1; flushThreshold = defaultFlushThreshold): FileLogger		507
+nim	newRollingFileLogger	logging.html#newRollingFileLogger,FileMode,Positive,int	proc newRollingFileLogger(filename = defaultFilename(); mode: FileMode = fmReadWrite;\n                     levelThreshold = lvlAll; fmtStr = defaultFmtStr;\n                     maxLines: Positive = 1000; bufSize: int = -1;\n                     flushThreshold = defaultFlushThreshold): RollingFileLogger		565
+nim	log	logging.html#log.e,RollingFileLogger,Level,varargs[string,]	method log(logger: RollingFileLogger; level: Level; args: varargs[string, `$`])		623
+nim	log	logging.html#log.t,Level,varargs[string,]	template log(level: Level; args: varargs[string, `$`])		673
+nim	debug	logging.html#debug.t,varargs[string,]	template debug(args: varargs[string, `$`])		703
+nim	info	logging.html#info.t,varargs[string,]	template info(args: varargs[string, `$`])		725
+nim	notice	logging.html#notice.t,varargs[string,]	template notice(args: varargs[string, `$`])		747
+nim	warn	logging.html#warn.t,varargs[string,]	template warn(args: varargs[string, `$`])		769
+nim	error	logging.html#error.t,varargs[string,]	template error(args: varargs[string, `$`])		790
+nim	fatal	logging.html#fatal.t,varargs[string,]	template fatal(args: varargs[string, `$`])		813
+nim	addHandler	logging.html#addHandler,Logger	proc addHandler(handler: Logger)		835
+nim	removeHandler	logging.html#removeHandler,Logger	proc removeHandler(handler: Logger)		851
+nim	getHandlers	logging.html#getHandlers	proc getHandlers(): seq[Logger]		861
+nim	setLogFilter	logging.html#setLogFilter,Level	proc setLogFilter(lvl: Level)		868
+nim	getLogFilter	logging.html#getLogFilter	proc getLogFilter(): Level		887
+heading	Basic usage	logging.html#basic-usage	 Basic usage		0
+heading	Handlers	logging.html#basic-usage-handlers	  Handlers		0
+heading	Format strings	logging.html#basic-usage-format-strings	  Format strings		0
+heading	Notes when using multiple threads	logging.html#basic-usage-notes-when-using-multiple-threads	  Notes when using multiple threads		0
+heading	See also	logging.html#see-also	 See also		0
+nimgrp	newfilelogger	logging.html#newFileLogger-procs-all	proc		476
+nimgrp	log	logging.html#log-methods-all	method		342

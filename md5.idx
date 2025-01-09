@@ -1,0 +1,13 @@
+nimTitle	md5	md5.html	module src/checksums/md5		0
+nim	MD5Digest	md5.html#MD5Digest	type MD5Digest		35
+nim	MD5Context	md5.html#MD5Context	object MD5Context		38
+nim	md5Init	md5.html#md5Init,MD5Context	proc md5Init(c: var MD5Context)		209
+nim	md5Update	md5.html#md5Update,MD5Context,openArray[uint8]	proc md5Update(c: var MD5Context; input: openArray[uint8])		210
+nim	md5Final	md5.html#md5Final,MD5Context,MD5Digest	proc md5Final(c: var MD5Context; digest: var MD5Digest)		212
+nim	md5Update	md5.html#md5Update,MD5Context,cstring,int	proc md5Update(c: var MD5Context; input: cstring; len: int)		214
+nim	toMD5	md5.html#toMD5,string	proc toMD5(s: string): MD5Digest		223
+nim	`$`	md5.html#$,MD5Digest	proc `$`(d: MD5Digest): string		238
+nim	getMD5	md5.html#getMD5,string	proc getMD5(s: string): string		246
+nim	`==`	md5.html#==,MD5Digest,MD5Digest	proc `==`(D1, D2: MD5Digest): bool		262
+nimgrp	md5update	md5.html#md5Update-procs-all	proc		210
+heading	See also	md5.html#see-also	 See also		0

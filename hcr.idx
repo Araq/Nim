@@ -1,0 +1,12 @@
+markupTitle	Hot code reloading	hcr.html	Hot code reloading		0
+idx	hotCodeReloading	hcr.html#hotcodereloading_1	Hot code reloading		0
+heading	Basic workflow	hcr.html#basic-workflow	 Basic workflow		0
+heading	Reloading API	hcr.html#reloading-api	 Reloading API		0
+idx	beforeCodeReload	hcr.html#beforecodereload_1	Reloading API		0
+idx	afterCodeReload	hcr.html#aftercodereload_1	Reloading API		0
+idx	hasModuleChanged()	hcr.html#hasmodulechanged_1	Reloading API		0
+idx	performCodeReload()	hcr.html#performcodereload_1	Reloading API		0
+idx	hasAnyModuleChanged()	hcr.html#hasanymodulechanged_1	Reloading API		0
+idx	hotcodereloading	hcr.html#hotcodereloading_2	Reloading API		0
+heading	Native code targets	hcr.html#native-code-targets	 Native code targets		0
+heading	JavaScript target	hcr.html#javascript-target	 JavaScript target		0

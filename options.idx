@@ -1,0 +1,26 @@
+nimTitle	options	options.html	module std/options		0
+nim	Option	options.html#Option	object Option		91
+nim	UnpackDefect	options.html#UnpackDefect	object UnpackDefect		101
+nim	UnpackError	options.html#UnpackError	type UnpackError		102
+nim	option	options.html#option,sinkT	proc option[T](val: sink T): Option[T]		104
+nim	some	options.html#some,sinkT	proc some[T](val: sink T): Option[T]		125
+nim	none	options.html#none,typedesc	proc none(T: typedesc): Option[T]		144
+nim	none	options.html#none	proc none[T](): Option[T]		157
+nim	isSome	options.html#isSome,Option[T]	proc isSome[T](self: Option[T]): bool		161
+nim	isNone	options.html#isNone,Option[T]	proc isNone[T](self: Option[T]): bool		176
+nim	get	options.html#get,Option[T]	proc get[T](self: Option[T]): lent T		191
+nim	get	options.html#get,Option[T],T	proc get[T](self: Option[T]; otherwise: T): T		206
+nim	get	options.html#get,Option[T]_2	proc get[T](self: var Option[T]): var T		218
+nim	map	options.html#map,Option[T],proc(T)	proc map[T](self: Option[T]; callback: proc (input: T))		234
+nim	map	options.html#map,Option[T],proc(T)_2	proc map[T, R](self: Option[T]; callback: proc (input: T): R): Option[R]		253
+nim	flatten	options.html#flatten,Option[Option[T]]	proc flatten[T](self: Option[Option[T]]): Option[T]		275
+nim	flatMap	options.html#flatMap,Option[T],proc(T)	proc flatMap[T, R](self: Option[T]; callback: proc (input: T): Option[R]): Option[R]		289
+nim	filter	options.html#filter,Option[T],proc(T)	proc filter[T](self: Option[T]; callback: proc (input: T): bool): Option[T]		315
+nim	`==`	options.html#==,Option[T],Option[T]	proc `==`[T](a, b: Option[T]): bool		336
+nim	`$`	options.html#$,Option[T]	proc `$`[T](self: Option[T]): string		355
+nim	unsafeGet	options.html#unsafeGet,Option[T]	proc unsafeGet[T](self: Option[T]): lent T		374
+heading	Basic usage	options.html#basic-usage	 Basic usage		0
+heading	Pattern matching	options.html#pattern-matching	 Pattern matching		0
+nimgrp	none	options.html#none-procs-all	proc		144
+nimgrp	map	options.html#map-procs-all	proc		234
+nimgrp	get	options.html#get-procs-all	proc		191

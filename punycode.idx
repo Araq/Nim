@@ -1,0 +1,6 @@
+nimTitle	punycode	punycode.html	module src/punycode		0
+nim	PunyError	punycode.html#PunyError	object PunyError		31
+nim	encode	punycode.html#encode,string,string	proc encode(prefix, s: string): string		63
+nim	encode	punycode.html#encode,string	proc encode(s: string): string		119
+nim	decode	punycode.html#decode,string	proc decode(encoded: string): string		123
+nimgrp	encode	punycode.html#encode-procs-all	proc		63

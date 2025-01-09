@@ -1,0 +1,5 @@
+nimTitle	jsgen	jsgen.html	module jsgen		0
+nim	config	jsgen.html#config.t,PProc	template config(p: PProc): ConfigRef		118
+nim	processJSCodeGen	jsgen.html#processJSCodeGen,PPassContext,PNode	proc processJSCodeGen(b: PPassContext; n: PNode): PNode		3139
+nim	finalJSCodeGen	jsgen.html#finalJSCodeGen,ModuleGraph,PPassContext,PNode	proc finalJSCodeGen(graph: ModuleGraph; b: PPassContext; n: PNode): PNode		3169
+nim	setupJSgen	jsgen.html#setupJSgen,ModuleGraph,PSym,IdGenerator	proc setupJSgen(graph: ModuleGraph; s: PSym; idgen: IdGenerator): PPassContext		3204

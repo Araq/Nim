@@ -1,0 +1,64 @@
+nimTitle	db_sqlite	db_sqlite.html	module src/db_connector/db_sqlite		0
+nim	DbConn	db_sqlite.html#DbConn	type DbConn		183
+nim	Row	db_sqlite.html#Row	type Row		184
+nim	InstantRow	db_sqlite.html#InstantRow	type InstantRow		186
+nim	SqlPrepared	db_sqlite.html#SqlPrepared	type SqlPrepared		188
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,int32	proc bindParam(ps: SqlPrepared; paramIdx: int; val: int32)		190
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,int64	proc bindParam(ps: SqlPrepared; paramIdx: int; val: int64)		191
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,int	proc bindParam(ps: SqlPrepared; paramIdx: int; val: int)		192
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,float64	proc bindParam(ps: SqlPrepared; paramIdx: int; val: float64)		193
+nim	bindNull	db_sqlite.html#bindNull,SqlPrepared,int	proc bindNull(ps: SqlPrepared; paramIdx: int)		194
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,string	proc bindParam(ps: SqlPrepared; paramIdx: int; val: string; copy = true)		195
+nim	bindParam	db_sqlite.html#bindParam,SqlPrepared,int,openArray[byte]	proc bindParam(ps: SqlPrepared; paramIdx: int; val: openArray[byte]; copy = true)		196
+nim	dbError	db_sqlite.html#dbError,DbConn	proc dbError(db: DbConn)		198
+nim	dbQuote	db_sqlite.html#dbQuote,string	proc dbQuote(s: string): string		213
+nim	prepare	db_sqlite.html#prepare,DbConn,string	proc prepare(db: DbConn; q: string): SqlPrepared		229
+nim	tryExec	db_sqlite.html#tryExec,DbConn,SqlQuery,varargs[string,]	proc tryExec(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): bool		235
+nim	tryExec	db_sqlite.html#tryExec,DbConn,SqlPrepared	proc tryExec(db: DbConn; stmtName: SqlPrepared): bool		258
+nim	exec	db_sqlite.html#exec,DbConn,SqlQuery,varargs[string,]	proc exec(db: DbConn; query: SqlQuery; args: varargs[string, `$`])		267
+nim	bindParams	db_sqlite.html#bindParams.m,SqlPrepared,varargs[untyped]	macro bindParams(ps: SqlPrepared; params: varargs[untyped]): untyped		287
+nim	exec	db_sqlite.html#exec.t,DbConn,SqlPrepared,varargs[typed]	template exec(db: DbConn; stmtName: SqlPrepared; args: varargs[typed]): untyped		301
+nim	fastRows	db_sqlite.html#fastRows.i,DbConn,SqlQuery,varargs[string,]	iterator fastRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		337
+nim	fastRows	db_sqlite.html#fastRows.i,DbConn,SqlPrepared	iterator fastRows(db: DbConn; stmtName: SqlPrepared): Row		378
+nim	instantRows	db_sqlite.html#instantRows.i,DbConn,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): InstantRow		390
+nim	instantRows	db_sqlite.html#instantRows.i,DbConn,SqlPrepared	iterator instantRows(db: DbConn; stmtName: SqlPrepared): InstantRow		430
+nim	instantRows	db_sqlite.html#instantRows.i,DbConn,DbColumns,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; columns: var DbColumns; query: SqlQuery;\n            args: varargs[string, `$`]): InstantRow		461
+nim	`[]`	db_sqlite.html#[],InstantRow,int32	proc `[]`(row: InstantRow; col: int32): string		499
+nim	unsafeColumnAt	db_sqlite.html#unsafeColumnAt,InstantRow,int32	proc unsafeColumnAt(row: InstantRow; index: int32): cstring		507
+nim	len	db_sqlite.html#len,InstantRow	proc len(row: InstantRow): int32		515
+nim	getRow	db_sqlite.html#getRow,DbConn,SqlQuery,varargs[string,]	proc getRow(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		523
+nim	getAllRows	db_sqlite.html#getAllRows,DbConn,SqlQuery,varargs[string,]	proc getAllRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): seq[Row]		559
+nim	getAllRows	db_sqlite.html#getAllRows,DbConn,SqlPrepared	proc getAllRows(db: DbConn; stmtName: SqlPrepared): seq[Row]		581
+nim	rows	db_sqlite.html#rows.i,DbConn,SqlQuery,varargs[string,]	iterator rows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		587
+nim	rows	db_sqlite.html#rows.i,DbConn,SqlPrepared	iterator rows(db: DbConn; stmtName: SqlPrepared): Row		614
+nim	getValue	db_sqlite.html#getValue,DbConn,SqlQuery,varargs[string,]	proc getValue(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): string		618
+nim	getValue	db_sqlite.html#getValue,DbConn,SqlPrepared	proc getValue(db: DbConn; stmtName: SqlPrepared): string		658
+nim	tryInsertID	db_sqlite.html#tryInsertID,DbConn,SqlQuery,varargs[string,]	proc tryInsertID(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		675
+nim	insertID	db_sqlite.html#insertID,DbConn,SqlQuery,varargs[string,]	proc insertID(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		703
+nim	tryInsert	db_sqlite.html#tryInsert,DbConn,SqlQuery,string,varargs[string,]	proc tryInsert(db: DbConn; query: SqlQuery; pkName: string;\n          args: varargs[string, `$`]): int64		732
+nim	insert	db_sqlite.html#insert,DbConn,SqlQuery,string,varargs[string,]	proc insert(db: DbConn; query: SqlQuery; pkName: string; args: varargs[string, `$`]): int64		738
+nim	execAffectedRows	db_sqlite.html#execAffectedRows,DbConn,SqlQuery,varargs[string,]	proc execAffectedRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		745
+nim	execAffectedRows	db_sqlite.html#execAffectedRows,DbConn,SqlPrepared	proc execAffectedRows(db: DbConn; stmtName: SqlPrepared): int64		769
+nim	close	db_sqlite.html#close,DbConn	proc close(db: DbConn)		774
+nim	open	db_sqlite.html#open,string,string,string,string	proc open(connection, user, password, database: string): DbConn		784
+nim	setEncoding	db_sqlite.html#setEncoding,DbConn,string	proc setEncoding(connection: DbConn; encoding: string): bool		807
+nim	finalize	db_sqlite.html#finalize,SqlPrepared	proc finalize(sqlPrepared: SqlPrepared)		819
+nim	dbBindParamError	db_sqlite.html#dbBindParamError.t,int,varargs[untyped]	template dbBindParamError(paramIdx: int; val: varargs[untyped])		822
+nimgrp	getallrows	db_sqlite.html#getAllRows-procs-all	proc		559
+nimgrp	getvalue	db_sqlite.html#getValue-procs-all	proc		618
+nimgrp	execaffectedrows	db_sqlite.html#execAffectedRows-procs-all	proc		745
+nimgrp	bindparam	db_sqlite.html#bindParam-procs-all	proc		190
+nimgrp	tryexec	db_sqlite.html#tryExec-procs-all	proc		235
+nimgrp	fastrows	db_sqlite.html#fastRows-iterators-all	iterator		337
+nimgrp	rows	db_sqlite.html#rows-iterators-all	iterator		587
+nimgrp	instantrows	db_sqlite.html#instantRows-iterators-all	iterator		390
+idx	SQLite	db_sqlite.html#sqlite_1	Module db_sqlite		0
+heading	Basic usage	db_sqlite.html#basic-usage	 Basic usage		0
+heading	Parameter substitution	db_sqlite.html#basic-usage-parameter-substitution	  Parameter substitution		0
+heading	Opening a connection to a database	db_sqlite.html#basic-usage-opening-a-connection-to-a-database	  Opening a connection to a database		0
+heading	Creating a table	db_sqlite.html#basic-usage-creating-a-table	  Creating a table		0
+heading	Inserting data	db_sqlite.html#basic-usage-inserting-data	  Inserting data		0
+heading	Larger example	db_sqlite.html#basic-usage-larger-example	  Larger example		0
+heading	Storing binary data example	db_sqlite.html#basic-usage-storing-binary-data-example	  Storing binary data example		0
+heading	Note	db_sqlite.html#note	 Note		0
+heading	See also	db_sqlite.html#see-also	 See also		0

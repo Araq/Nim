@@ -1,0 +1,19 @@
+markupTitle	Nim Backend Integration	backends.html	Nim Backend Integration		0
+heading	Introduction	backends.html#introduction	 Introduction		0
+heading	Backends	backends.html#backends	 Backends		0
+heading	The C like targets	backends.html#backends-the-c-like-targets	  The C like targets		0
+heading	The JavaScript target	backends.html#backends-the-javascript-target	  The JavaScript target		0
+idx	JavaScript	backends.html#javascript_1	The JavaScript target		0
+idx	nodejs	backends.html#nodejs_1	The JavaScript target		0
+heading	Interfacing	backends.html#interfacing	 Interfacing		0
+heading	Nim code calling the backend	backends.html#interfacing-nim-code-calling-the-backend	  Nim code calling the backend		0
+heading	C invocation example	backends.html#nim-code-calling-the-backend-c-invocation-example	   C invocation example		0
+heading	JavaScript invocation example	backends.html#nim-code-calling-the-backend-javascript-invocation-example	   JavaScript invocation example		0
+heading	Backend code calling Nim	backends.html#interfacing-backend-code-calling-nim	  Backend code calling Nim		0
+heading	Nim invocation example from C	backends.html#backend-code-calling-nim-nim-invocation-example-from-c	   Nim invocation example from C		0
+heading	Nim invocation example from JavaScript	backends.html#backend-code-calling-nim-nim-invocation-example-from-javascript	   Nim invocation example from JavaScript		0
+heading	Nimcache naming logic	backends.html#interfacing-nimcache-naming-logic	  Nimcache naming logic		0
+idx	nimcache	backends.html#nimcache_1	Nimcache naming logic		0
+heading	Memory management	backends.html#memory-management	 Memory management		0
+heading	Strings and C strings	backends.html#memory-management-strings-and-c-strings	  Strings and C strings		0
+heading	Custom data types	backends.html#memory-management-custom-data-types	  Custom data types		0

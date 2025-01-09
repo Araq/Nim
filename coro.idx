@@ -1,0 +1,8 @@
+nimTitle	coro	coro.html	module std/coro		0
+nim	nimGC_setStackBottom	coro.html#nimGC_setStackBottom,pointer	proc nimGC_setStackBottom(theStackBottom: pointer)		42
+nim	CoroutineRef	coro.html#CoroutineRef	type CoroutineRef		166
+nim	suspend	coro.html#suspend,float	proc suspend(sleepTime: float = 0.0)		235
+nim	start	coro.html#start,proc),int	proc start(c: proc (); stacksize: int = defaultStackSize): CoroutineRef		270
+nim	run	coro.html#run	proc run()		298
+nim	alive	coro.html#alive,CoroutineRef	proc alive(c: CoroutineRef): bool		339
+nim	wait	coro.html#wait,CoroutineRef,float	proc wait(c: CoroutineRef; interval = 0.01)		342

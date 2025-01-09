@@ -1,0 +1,12 @@
+nimTitle	asyncjs	asyncjs.html	module std/asyncjs		0
+nim	Future	asyncjs.html#Future	type Future		75
+nim	PromiseJs	asyncjs.html#PromiseJs	type PromiseJs		79
+nim	async	asyncjs.html#async.m,untyped	macro async(arg: untyped): untyped		159
+nim	newPromise	asyncjs.html#newPromise,proc(proc(T))	proc newPromise[T](handler: proc (resolve: proc (response: T))): Future[T]		169
+nim	newPromise	asyncjs.html#newPromise,proc(proc))	proc newPromise(handler: proc (resolve: proc ())): Future[void]		173
+nim	Error	asyncjs.html#Error	type Error		195
+nim	OnReject	asyncjs.html#OnReject	type OnReject		200
+nim	then	asyncjs.html#then,Future[T],proc,OnReject	proc then[T](future: Future[T]; onSuccess: proc; onReject: OnReject = nil): auto		202
+nim	catch	asyncjs.html#catch,Future[T],OnReject	proc catch[T](future: Future[T]; onReject: OnReject): Future[void]		249
+heading	JavaScript compatibility	asyncjs.html#javascript-compatibility	 JavaScript compatibility		0
+nimgrp	newpromise	asyncjs.html#newPromise-procs-all	proc		169

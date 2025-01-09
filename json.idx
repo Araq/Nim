@@ -1,0 +1,100 @@
+nimTitle	json	json.html	module std/json		0
+nim	JNull	json.html#JNull	JsonNodeKind.JNull		185
+nim	JBool	json.html#JBool	JsonNodeKind.JBool		185
+nim	JInt	json.html#JInt	JsonNodeKind.JInt		185
+nim	JFloat	json.html#JFloat	JsonNodeKind.JFloat		185
+nim	JString	json.html#JString	JsonNodeKind.JString		185
+nim	JObject	json.html#JObject	JsonNodeKind.JObject		185
+nim	JArray	json.html#JArray	JsonNodeKind.JArray		185
+nim	JsonNodeKind	json.html#JsonNodeKind	enum JsonNodeKind		185
+nim	JsonNode	json.html#JsonNode	type JsonNode		194
+nim	JsonNodeObj	json.html#JsonNodeObj	object JsonNodeObj		195
+nim	newJString	json.html#newJString,string	proc newJString(s: string): JsonNode		216
+nim	newJInt	json.html#newJInt,BiggestInt	proc newJInt(n: BiggestInt): JsonNode		227
+nim	newJFloat	json.html#newJFloat,float	proc newJFloat(n: float): JsonNode		231
+nim	newJBool	json.html#newJBool,bool	proc newJBool(b: bool): JsonNode		235
+nim	newJNull	json.html#newJNull	proc newJNull(): JsonNode		239
+nim	newJObject	json.html#newJObject	proc newJObject(): JsonNode		243
+nim	newJArray	json.html#newJArray	proc newJArray(): JsonNode		247
+nim	getStr	json.html#getStr,JsonNode,string	proc getStr(n: JsonNode; default: string = ""): string		251
+nim	getInt	json.html#getInt,JsonNode,int	proc getInt(n: JsonNode; default: int = 0): int		258
+nim	getBiggestInt	json.html#getBiggestInt,JsonNode,BiggestInt	proc getBiggestInt(n: JsonNode; default: BiggestInt = 0): BiggestInt		265
+nim	getFloat	json.html#getFloat,JsonNode,float	proc getFloat(n: JsonNode; default: float = 0.0): float		272
+nim	getBool	json.html#getBool,JsonNode,bool	proc getBool(n: JsonNode; default: bool = false): bool		282
+nim	getFields	json.html#getFields,JsonNode	proc getFields(n: JsonNode; default = initOrderedTable[string, JsonNode](2)): OrderedTable[\n    string, JsonNode]		289
+nim	getElems	json.html#getElems,JsonNode,seq[JsonNode]	proc getElems(n: JsonNode; default: seq[JsonNode] = @[]): seq[JsonNode]		298
+nim	add	json.html#add,JsonNode,JsonNode	proc add(father, child: JsonNode)		305
+nim	add	json.html#add,JsonNode,string,JsonNode	proc add(obj: JsonNode; key: string; val: JsonNode)		310
+nim	`%`	json.html#%,string	proc `%`(s: string): JsonNode		315
+nim	`%`	json.html#%,uint	proc `%`(n: uint): JsonNode		319
+nim	`%`	json.html#%,int	proc `%`(n: int): JsonNode		326
+nim	`%`	json.html#%,BiggestUInt	proc `%`(n: BiggestUInt): JsonNode		330
+nim	`%`	json.html#%,BiggestInt	proc `%`(n: BiggestInt): JsonNode		337
+nim	`%`	json.html#%,float	proc `%`(n: float): JsonNode		341
+nim	`%`	json.html#%,bool	proc `%`(b: bool): JsonNode		354
+nim	`%`	json.html#%,openArray[tuple[string,JsonNode]]	proc `%`(keyVals: openArray[tuple[key: string, val: JsonNode]]): JsonNode		358
+nim	`%`	json.html#%.t,JsonNode	template `%`(j: JsonNode): JsonNode		364
+nim	`%`	json.html#%,openArray[T]	proc `%`[T](elements: openArray[T]): JsonNode		366
+nim	`%`	json.html#%	proc `%`[T](table: Table[string, T] | OrderedTable[string, T]): JsonNode		371
+nim	`%`	json.html#%,Option[T]	proc `%`[T](opt: Option[T]): JsonNode		376
+nim	`[]=`	json.html#[]=,JsonNode,string,JsonNode	proc `[]=`(obj: JsonNode; key: string; val: JsonNode)		394
+nim	`%`	json.html#%,T	proc `%`[T: object](o: T): JsonNode		399
+nim	`%`	json.html#%,ref.	proc `%`(o: ref object): JsonNode		404
+nim	`%`	json.html#%_2	proc `%`(o: enum): JsonNode		411
+nim	`%*`	json.html#%*.m,untyped	macro `%*`(x: untyped): untyped		442
+nim	`==`	json.html#==,JsonNode,JsonNode	proc `==`(a, b: JsonNode): bool		447
+nim	hash	json.html#hash,OrderedTable[string,JsonNode]	proc hash(n: OrderedTable[string, JsonNode]): Hash		483
+nim	hash	json.html#hash,JsonNode	proc hash(n: JsonNode): Hash		485
+nim	len	json.html#len,JsonNode	proc len(n: JsonNode): int		509
+nim	`[]`	json.html#[],JsonNode,string	proc `[]`(node: JsonNode; name: string): JsonNode		518
+nim	`[]`	json.html#[],JsonNode,int	proc `[]`(node: JsonNode; index: int): JsonNode		527
+nim	`[]`	json.html#[],JsonNode,BackwardsIndex	proc `[]`(node: JsonNode; index: BackwardsIndex): JsonNode		535
+nim	`[]`	json.html#[],JsonNode,HSlice[U,V]	proc `[]`[U, V](a: JsonNode; x: HSlice[U, V]): JsonNode		548
+nim	hasKey	json.html#hasKey,JsonNode,string	proc hasKey(node: JsonNode; key: string): bool		566
+nim	contains	json.html#contains,JsonNode,string	proc contains(node: JsonNode; key: string): bool		571
+nim	contains	json.html#contains,JsonNode,JsonNode	proc contains(node: JsonNode; val: JsonNode): bool		576
+nim	`{}`	json.html#{},JsonNode,varargs[string]	proc `{}`(node: JsonNode; keys: varargs[string]): JsonNode		581
+nim	`{}`	json.html#{},JsonNode,varargs[int]	proc `{}`(node: JsonNode; index: varargs[int]): JsonNode		599
+nim	getOrDefault	json.html#getOrDefault,JsonNode,string	proc getOrDefault(node: JsonNode; key: string): JsonNode		609
+nim	`{}`	json.html#{},JsonNode,string	proc `{}`(node: JsonNode; key: string): JsonNode		617
+nim	`{}=`	json.html#{}=,JsonNode,varargs[string],JsonNode	proc `{}=`(node: JsonNode; keys: varargs[string]; value: JsonNode)		622
+nim	delete	json.html#delete,JsonNode,string	proc delete(obj: JsonNode; key: string)		632
+nim	copy	json.html#copy,JsonNode	proc copy(p: JsonNode): JsonNode		639
+nim	escapeJsonUnquoted	json.html#escapeJsonUnquoted,string,string	proc escapeJsonUnquoted(s: string; result: var string)		674
+nim	escapeJsonUnquoted	json.html#escapeJsonUnquoted,string	proc escapeJsonUnquoted(s: string): string		691
+nim	escapeJson	json.html#escapeJson,string,string	proc escapeJson(s: string; result: var string)		696
+nim	escapeJson	json.html#escapeJson,string	proc escapeJson(s: string): string		703
+nim	toUgly	json.html#toUgly,string,JsonNode	proc toUgly(result: var string; node: JsonNode)		708
+nim	pretty	json.html#pretty,JsonNode,int	proc pretty(node: JsonNode; indent = 2): string		805
+nim	`$`	json.html#$,JsonNode	proc `$`(node: JsonNode): string		827
+nim	items	json.html#items.i,JsonNode	iterator items(node: JsonNode): JsonNode		832
+nim	mitems	json.html#mitems.i,JsonNode	iterator mitems(node: var JsonNode): var JsonNode		838
+nim	pairs	json.html#pairs.i,JsonNode	iterator pairs(node: JsonNode): tuple[key: string, val: JsonNode]		845
+nim	keys	json.html#keys.i,JsonNode	iterator keys(node: JsonNode): string		851
+nim	mpairs	json.html#mpairs.i,JsonNode	iterator mpairs(node: var JsonNode): tuple[key: string, val: var JsonNode]		857
+nim	parseJsonFragments	json.html#parseJsonFragments.i,Stream,string	iterator parseJsonFragments(s: Stream; filename: string = ""; rawIntegers = false;\n                   rawFloats = false): JsonNode		932
+nim	parseJson	json.html#parseJson,Stream,string	proc parseJson(s: Stream; filename: string = ""; rawIntegers = false;\n          rawFloats = false): JsonNode		952
+nim	parseJson	json.html#parseJson,string	proc parseJson(buffer: string; rawIntegers = false; rawFloats = false): JsonNode		1043
+nim	parseFile	json.html#parseFile,string	proc parseFile(filename: string): JsonNode		1052
+nim	isRefSkipDistinct	json.html#isRefSkipDistinct.m,typed	macro isRefSkipDistinct(arg: typed): untyped		1074
+nim	to	json.html#to,JsonNode,typedesc[T]	proc to[T](node: JsonNode; t: typedesc[T]): T		1334
+idx	JSON	json.html#json_1	Module json		0
+heading	See also	json.html#see-also	 See also		0
+heading	Overview	json.html#overview	 Overview		0
+heading	Parsing JSON	json.html#overview-parsing-json	  Parsing JSON		0
+heading	Reading values	json.html#overview-reading-values	  Reading values		0
+heading	Handling optional keys	json.html#overview-handling-optional-keys	  Handling optional keys		0
+heading	Using default values	json.html#overview-using-default-values	  Using default values		0
+heading	Unmarshalling	json.html#overview-unmarshalling	  Unmarshalling		0
+heading	Creating JSON	json.html#creating-json	 Creating JSON		0
+idx	Unmarshals	json.html#unmarshals_1	Creating JSON		0
+idx	autovivification	json.html#autovivification_1	Creating JSON		0
+nimgrp	parsejson	json.html#parseJson-procs-all	proc		952
+nimgrp	escapejsonunquoted	json.html#escapeJsonUnquoted-procs-all	proc		674
+nimgrp	contains	json.html#contains-procs-all	proc		571
+nimgrp	%	json.html#%-procs-all	proc		315
+nimgrp	escapejson	json.html#escapeJson-procs-all	proc		696
+nimgrp	[]	json.html#[]-procs-all	proc		518
+nimgrp	add	json.html#add-procs-all	proc		305
+nimgrp	{}	json.html#{}-procs-all	proc		581
+nimgrp	hash	json.html#hash-procs-all	proc		483

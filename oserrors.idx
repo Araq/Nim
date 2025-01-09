@@ -1,0 +1,8 @@
+nimTitle	oserrors	oserrors.html	module std/oserrors		0
+nim	OSErrorCode	oserrors.html#OSErrorCode	type OSErrorCode		14
+nim	`==`	oserrors.html#==,OSErrorCode,OSErrorCode	proc `==`(err1, err2: OSErrorCode): bool		27
+nim	`$`	oserrors.html#$,OSErrorCode	proc `$`(err: OSErrorCode): string		28
+nim	osErrorMsg	oserrors.html#osErrorMsg,OSErrorCode	proc osErrorMsg(errorCode: OSErrorCode): string		30
+nim	newOSError	oserrors.html#newOSError,OSErrorCode,string	proc newOSError(errorCode: OSErrorCode; additionalInfo = ""): owned(ref OSError)		61
+nim	raiseOSError	oserrors.html#raiseOSError,OSErrorCode,string	proc raiseOSError(errorCode: OSErrorCode; additionalInfo = "")		87
+nim	osLastError	oserrors.html#osLastError	proc osLastError(): OSErrorCode		95

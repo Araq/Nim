@@ -1,0 +1,8 @@
+nimTitle	cmdlinehelper	cmdlinehelper.html	module cmdlinehelper		0
+nim	prependCurDir	cmdlinehelper.html#prependCurDir,AbsoluteFile	proc prependCurDir(f: AbsoluteFile): AbsoluteFile		18
+nim	addCmdPrefix	cmdlinehelper.html#addCmdPrefix,string,CmdLineKind	proc addCmdPrefix(result: var string; kind: CmdLineKind)		25
+nim	NimProg	cmdlinehelper.html#NimProg	type NimProg		33
+nim	initDefinesProg	cmdlinehelper.html#initDefinesProg,NimProg,ConfigRef,string	proc initDefinesProg(self: NimProg; conf: ConfigRef; name: string)		38
+nim	processCmdLineAndProjectPath	cmdlinehelper.html#processCmdLineAndProjectPath,NimProg,ConfigRef	proc processCmdLineAndProjectPath(self: NimProg; conf: ConfigRef)		42
+nim	loadConfigsAndProcessCmdLine	cmdlinehelper.html#loadConfigsAndProcessCmdLine,NimProg,IdentCache,ConfigRef,ModuleGraph	proc loadConfigsAndProcessCmdLine(self: NimProg; cache: IdentCache; conf: ConfigRef;\n                             graph: ModuleGraph): bool		53
+nim	loadConfigsAndRunMainCommand	cmdlinehelper.html#loadConfigsAndRunMainCommand,NimProg,IdentCache,ConfigRef,ModuleGraph	proc loadConfigsAndRunMainCommand(self: NimProg; cache: IdentCache; conf: ConfigRef;\n                             graph: ModuleGraph): bool		83

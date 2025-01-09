@@ -1,0 +1,6 @@
+nimTitle	gitutils	gitutils.html	module std/private/gitutils		0
+nim	commitHead	gitutils.html#commitHead	const commitHead		12
+nim	retryCall	gitutils.html#retryCall.t,int,float,untyped	template retryCall(maxRetry = 3; backoffDuration = 1.0; call: untyped): bool		14
+nim	isGitRepo	gitutils.html#isGitRepo,string	proc isGitRepo(dir: string): bool		34
+nim	diffFiles	gitutils.html#diffFiles,string,string	proc diffFiles(path1, path2: string): tuple[output: string, same: bool]		38
+nim	diffStrings	gitutils.html#diffStrings,string,string	proc diffStrings(a, b: string): tuple[output: string, same: bool]		50

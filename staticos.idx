@@ -1,0 +1,3 @@
+nimTitle	staticos	staticos.html	module std/staticos		0
+nim	staticFileExists	staticos.html#staticFileExists,string	proc staticFileExists(filename: string): bool		7
+nim	staticDirExists	staticos.html#staticDirExists,string	proc staticDirExists(dir: string): bool		13
