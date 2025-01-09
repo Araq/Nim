@@ -197,7 +197,7 @@ proc interestingVar(s: PSym): bool {.inline.} =
     s.typ.kind notin {tyStatic, tyTypeDesc}
 
 proc illegalCapture(s: PSym): bool {.inline.} =
-  result = classifyViewType(s.typ) != noView or s.kind == skResult
+  result = (s.kind == skResult and s.typ.kind != tyRef) or classifyViewType(s.typ) != noView
 
 proc isInnerProc(s: PSym): bool =
   if s.kind in {skProc, skFunc, skMethod, skConverter, skIterator} and s.magic == mNone:
