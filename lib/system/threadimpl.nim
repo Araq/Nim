@@ -1,3 +1,5 @@
+import std/atomics
+
 var
   nimThreadDestructionHandlers* {.rtlThreadVar.}: seq[proc () {.closure, gcsafe, raises: [].}]
 when not defined(boehmgc) and not hasSharedHeap and not defined(gogc) and not defined(gcRegions):
@@ -50,10 +52,11 @@ when defined(boehmgc):
     boehmGC_register_my_thread(sb)
     try:
       let thrd = cast[ptr Thread[TArg]](thrd)
+      let dataFn = thrd.dataFn.load()
       when TArg is void:
-        thrd.dataFn()
+        dataFn()
       else:
-        thrd.dataFn(thrd.data)
+        dataFn(thrd.data)
     except:
       threadTrouble()
     finally:
@@ -62,15 +65,16 @@ when defined(boehmgc):
 else:
   proc threadProcWrapDispatch[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
     try:
+      let dataFn = thrd.dataFn.load()
       when TArg is void:
-        thrd.dataFn()
+        dataFn()
       else:
         when defined(nimV2):
-          thrd.dataFn(thrd.data)
+          dataFn(thrd.data)
         else:
           var x: TArg = default(TArg)
           deepCopy(x, thrd.data)
-          thrd.dataFn(x)
+          dataFn(x)
     except:
       threadTrouble()
     finally:
@@ -107,5 +111,5 @@ template nimThreadProcWrapperBody*(closure: untyped): untyped =
 
   # mark as not running anymore:
   thrd.core = nil
-  thrd.dataFn = nil
+  thrd.dataFn.store(nil)
   deallocThreadStorage(cast[pointer](core))
