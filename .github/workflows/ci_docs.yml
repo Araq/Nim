@@ -41,7 +41,7 @@ jobs:
         target: [linux, windows, osx]
         include:
           - target: linux
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - target: windows
             os: windows-2019
           - target: osx
