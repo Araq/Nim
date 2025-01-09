@@ -3,6 +3,9 @@
 
 ## Changes affecting backward compatibility
 
+
+- Non-var destructors become the default. Use `-d:nimLegacyVarDestructor` to emulate old behaviors.
+
 - `-d:nimPreviewFloatRoundtrip` becomes the default. `system.addFloat` and `system.$` now can produce string representations of
 floating point numbers that are minimal in size and possess round-trip and correct
 rounding guarantees (via the
@@ -12,12 +15,14 @@ rounding guarantees (via the
   avoid conflicts with `system.default`, so named argument usage for this
   parameter like `getOrDefault(..., default = ...)` will have to be changed.
 
+
 - With `-d:nimPreviewCheckedClose`, the `close` function in the `std/syncio` module now raises an IO exception in case of an error.
 
 - Unknown warnings and hints now gives warnings `warnUnknownNotes` instead of
 errors.
 
 - With `-d:nimPreviewAsmSemSymbol`, backticked symbols are type checked in the `asm/emit` statements.
+
 
 ## Standard library additions and changes
 
