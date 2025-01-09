@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         cpu: [amd64]
     name: '${{ matrix.os }}'
     runs-on: ${{ matrix.os }}
@@ -21,10 +21,10 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 'Install node.js 20.x'
+      - name: 'Install node.js'
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ''
 
       - name: 'Install dependencies (Linux amd64)'
         if: runner.os == 'Linux' && matrix.cpu == 'amd64'
@@ -34,17 +34,6 @@ jobs:
             sudo apt-fast install --no-install-recommends -yq \
               libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev \
               valgrind libc6-dbg libblas-dev xorg-dev
-      - name: 'Install dependencies (macOS)'
-        if: runner.os == 'macOS'
-        run: brew install boehmgc make sfml gtk+3
-      - name: 'Install dependencies (Windows)'
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          set -e
-          . ci/funs.sh
-          nimInternalInstallDepsWindows
-          echo_run echo "${{ github.workspace }}/dist/mingw64/bin" >> "${GITHUB_PATH}"
 
       - name: 'Add build binaries to PATH'
         shell: bash
