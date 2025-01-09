@@ -36,7 +36,8 @@ proc instFieldLoopBody(c: TFieldInstCtx, n: PNode, forLoop: PNode): PNode =
   of nkIdent, nkSym:
     result = n
     let ident = considerQuotedIdent(c.c, n)
-    if c.replaceByFieldName:
+    if c.replaceByFieldName and
+        ident.id != ord(wUnderscore):
       if ident.id == considerQuotedIdent(c.c, forLoop[0]).id:
         let fieldName = if c.tupleType.isNil: c.field.name.s
                         elif c.tupleType.n.isNil: "Field" & $c.tupleIndex
@@ -45,7 +46,8 @@ proc instFieldLoopBody(c: TFieldInstCtx, n: PNode, forLoop: PNode): PNode =
         return
     # other fields:
     for i in ord(c.replaceByFieldName)..<forLoop.len-2:
-      if ident.id == considerQuotedIdent(c.c, forLoop[i]).id:
+      if ident.id == considerQuotedIdent(c.c, forLoop[i]).id and
+            ident.id != ord(wUnderscore):
         var call = forLoop[^2]
         var tupl = call[i+1-ord(c.replaceByFieldName)]
         if c.field.isNil:
