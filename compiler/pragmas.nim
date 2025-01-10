@@ -12,7 +12,8 @@
 import
   condsyms, ast, astalgo, idents, semdata, msgs, renderer,
   wordrecg, ropes, options, extccomp, magicsys, trees,
-  types, lookups, lineinfos, pathutils, linter, modulepaths
+  types, lookups, lineinfos, pathutils, linter, modulepaths,
+  cbuilderbase
 
 from sigmatch import trySuggestPragmas
 
@@ -156,12 +157,12 @@ proc pragmaEnsures(c: PContext, n: PNode) =
 proc setExternName(c: PContext; s: PSym, extname: string, info: TLineInfo) =
   # special cases to improve performance:
   if extname == "$1":
-    s.loc.snippet = rope(s.name.s)
+    s.loc.snippet = cSymbol(s.name.s)
   elif '$' notin extname:
-    s.loc.snippet = rope(extname)
+    s.loc.snippet = cSymbol(extname)
   else:
     try:
-      s.loc.snippet = rope(extname % s.name.s)
+      s.loc.snippet = cSymbol(extname % s.name.s)
     except ValueError:
       localError(c.config, info, "invalid extern name: '" & extname & "'. (Forgot to escape '$'?)")
   when hasFFI:
@@ -1018,7 +1019,7 @@ proc singlePragma(c: PContext, sym: PSym, n: PNode, i: var int,
         incl(sym.loc.flags, lfHeader)
         incl(sym.loc.flags, lfNoDecl)
         # implies nodecl, because otherwise header would not make sense
-        if sym.loc.snippet == "": sym.loc.snippet = rope(sym.name.s)
+        if sym.loc.snippet == "": sym.loc.snippet = cSymbol(sym.name.s)
       of wNoSideEffect:
         noVal(c, it)
         if sym != nil:
@@ -1380,7 +1381,7 @@ proc implicitPragmas*(c: PContext, sym: PSym, info: TLineInfo,
         sfImportc in sym.flags and lib != nil:
       incl(sym.loc.flags, lfDynamicLib)
       addToLib(lib, sym)
-      if sym.loc.snippet == "": sym.loc.snippet = rope(sym.name.s)
+      if sym.loc.snippet == "": sym.loc.snippet = cSymbol(sym.name.s)
 
 proc hasPragma*(n: PNode, pragma: TSpecialWord): bool =
   if n == nil: return false

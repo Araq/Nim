@@ -621,12 +621,17 @@ proc genComputedGoto(p: BProc; n: PNode) =
   var id = p.labels+1
   inc p.labels, arraySize+1
   let tmp = "TMP$1_" % [id.rope]
-  p.s(cpsStmts).addArrayVarWithInitializer(kind = Global,
+  p.s(cpsStmts).addArrayVarWithInitializer(p.module,
+      kind = Global,
       name = tmp,
       elementType = CPointer,
       len = arraySize):
     var labelsInit: StructInitializer
-    p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray):
+    when buildNifc:
+      let arrTyp = getArrayType(p.module, CPointer, arraySize)
+    else:
+      let arrTyp = ""
+    p.s(cpsStmts).addStructInitializer(labelsInit, kind = siArray, typ = arrTyp):
       for i in 1..arraySize:
         p.s(cpsStmts).addField(labelsInit, ""):
           p.s(cpsStmts).add(cLabelAddr("TMP" & $(id+i) & "_"))
@@ -767,16 +772,21 @@ proc genParForStmt(p: BProc, t: PNode) =
       stepNode = call[3]
       p.s(cpsStmts).addCPragma("omp " & call[4].getStr)
 
+    let iTyp = getTypeDesc(p.module, forLoopVar.loc.t)
+    var step: TLoc = default(TLoc)
     p.breakIdx = startBlockWith(p):
       if stepNode == nil:
         initForRange(p.s(cpsStmts), forLoopVar.loc.rdLoc, rangeA.rdLoc, rangeB.rdLoc, true)
       else:
-        var step: TLoc = initLocExpr(p, stepNode)
+        step = initLocExpr(p, stepNode)
         initForStep(p.s(cpsStmts), forLoopVar.loc.rdLoc, rangeA.rdLoc, rangeB.rdLoc, step.rdLoc, true)
     p.blocks[p.breakIdx].isLoop = true
     genStmts(p, t[2])
     endBlockWith(p):
-      finishFor(p.s(cpsStmts))
+      if stepNode == nil:
+        finishForRange(p.s(cpsStmts), forLoopVar.loc.rdLoc, iTyp)
+      else:
+        finishForStep(p.s(cpsStmts), forLoopVar.loc.rdLoc, step.rdLoc, iTyp)
 
   dec(p.withinLoop)
 
@@ -804,7 +814,7 @@ proc raiseExit(p: BProc) =
   assert p.config.exc == excGoto
   if nimErrorFlagDisabled notin p.flags:
     p.flags.incl nimErrorFlagAccessed
-    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref("nimErr_"))):
+    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref(cSymbol("nimErr_")))):
       if p.nestedTryStmts.len == 0:
         p.flags.incl beforeRetNeeded
         # easy case, simply goto 'ret':
@@ -816,7 +826,7 @@ proc raiseExitCleanup(p: BProc, destroy: string) =
   assert p.config.exc == excGoto
   if nimErrorFlagDisabled notin p.flags:
     p.flags.incl nimErrorFlagAccessed
-    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref("nimErr_"))):
+    p.s(cpsStmts).addSingleIfStmt(cUnlikely(cDeref(cSymbol("nimErr_")))):
       p.s(cpsStmts).addStmt():
         p.s(cpsStmts).add(destroy)
       if p.nestedTryStmts.len == 0:
@@ -1036,25 +1046,26 @@ proc ifSwitchSplitPoint(p: BProc, n: PNode): int =
         result = i
 
 proc genCaseRange(p: BProc, branch: PNode, info: var SwitchCaseBuilder) =
-  for j in 0..<branch.len-1:
-    if branch[j].kind == nkRange:
-      if hasSwitchRange in CC[p.config.cCompiler].props:
-        var litA = newBuilder("")
-        var litB = newBuilder("")
-        genLiteral(p, branch[j][0], litA)
-        genLiteral(p, branch[j][1], litB)
-        p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
-      else:
-        var v = copyNode(branch[j][0])
-        while v.intVal <= branch[j][1].intVal:
+  p.s(cpsStmts).addCaseRanges(info):
+    for j in 0..<branch.len-1:
+      if branch[j].kind == nkRange:
+        if hasSwitchRange in CC[p.config.cCompiler].props:
           var litA = newBuilder("")
-          genLiteral(p, v, litA)
-          p.s(cpsStmts).addCase(info, extract(litA))
-          inc(v.intVal)
-    else:
-      var litA = newBuilder("")
-      genLiteral(p, branch[j], litA)
-      p.s(cpsStmts).addCase(info, extract(litA))
+          var litB = newBuilder("")
+          genLiteral(p, branch[j][0], litA, noCast = buildNifc)
+          genLiteral(p, branch[j][1], litB, noCast = buildNifc)
+          p.s(cpsStmts).addCaseRange(info, extract(litA), extract(litB))
+        else:
+          var v = copyNode(branch[j][0])
+          while v.intVal <= branch[j][1].intVal:
+            var litA = newBuilder("")
+            genLiteral(p, v, litA, noCast = buildNifc)
+            p.s(cpsStmts).addCase(info, extract(litA))
+            inc(v.intVal)
+      else:
+        var litA = newBuilder("")
+        genLiteral(p, branch[j], litA, noCast = buildNifc)
+        p.s(cpsStmts).addCase(info, extract(litA))
 
 proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
   # analyse 'case' statement:
@@ -1097,10 +1108,10 @@ proc genOrdinalCase(p: BProc, n: PNode, d: var TLoc) =
       if not hasDefault:
         if hasBuiltinUnreachable in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__builtin_unreachable")
+            p.s(cpsStmts).addCallStmt(cSymbol("__builtin_unreachable"))
         elif hasAssume in CC[p.config.cCompiler].props:
           p.s(cpsStmts).addSwitchElse():
-            p.s(cpsStmts).addCallStmt("__assume", cIntValue(0))
+            p.s(cpsStmts).addCallStmt(cSymbol("__assume"), cIntValue(0))
   if lend != "": fixLabel(p, lend)
 
 proc genCase(p: BProc, t: PNode, d: var TLoc) =
@@ -1133,11 +1144,11 @@ proc genRestoreFrameAfterException(p: BProc) =
     if hasCurFramePointer notin p.flags:
       p.flags.incl hasCurFramePointer
       p.procSec(cpsLocals).add('\t')
-      p.procSec(cpsLocals).addVar(kind = Local, name = "_nimCurFrame", typ = ptrType("TFrame"))
+      p.procSec(cpsLocals).addVar(kind = Local, name = cSymbol("_nimCurFrame"), typ = ptrType(getTFrame(p.module)))
       p.procSec(cpsInit).add('\t')
-      p.procSec(cpsInit).addAssignmentWithValue("_nimCurFrame"):
+      p.procSec(cpsInit).addAssignmentWithValue(cSymbol("_nimCurFrame")):
         p.procSec(cpsInit).addCall(cgsymValue(p.module, "getFrame"))
-    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "setFrame"), "_nimCurFrame")
+    p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "setFrame"), cSymbol("_nimCurFrame"))
 
 proc genTryCpp(p: BProc, t: PNode, d: var TLoc) =
   #[ code to generate:
@@ -1454,7 +1465,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
     startBlockWith(p):
       isIf = true
       ifStmt = initIfStmt(p.s(cpsStmts))
-      initElifBranch(p.s(cpsStmts), ifStmt, cUnlikely(cDeref("nimErr_")))
+      initElifBranch(p.s(cpsStmts), ifStmt, cUnlikely(cDeref(cSymbol("nimErr_"))))
   else:
     startBlockWith(p):
       scope = initScope(p.s(cpsStmts))
@@ -1483,7 +1494,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
           isScope = true
           innerScope = initScope(p.s(cpsStmts))
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       expr(p, t[i][0], d)
     else:
       if not innerIsIf:
@@ -1518,7 +1529,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       startBlockWith(p):
         initElifBranch(p.s(cpsStmts), innerIfStmt, orExpr)
       # we handled the exception, remember this:
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       expr(p, t[i][^1], d)
 
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "popCurrentException"))
@@ -1549,9 +1560,10 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       genStmts(p, t[i][0])
     else:
       # pretend we did handle the error for the safe execution of the 'finally' section:
-      p.procSec(cpsLocals).addVar(kind = Local, name = "oldNimErrFin" & $lab & "_", typ = NimBool)
-      p.s(cpsStmts).addAssignment("oldNimErrFin" & $lab & "_", cDeref("nimErr_"))
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), NimFalse)
+      let name = cSymbol("oldNimErrFin" & $lab & "_")
+      p.procSec(cpsLocals).addVar(kind = Local, name = name, typ = NimBool)
+      p.s(cpsStmts).addAssignment(name, cDeref(cSymbol("nimErr_")))
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), NimFalse)
       genStmts(p, t[i][0])
       # this is correct for all these cases:
       # 1. finally is run during ordinary control flow
@@ -1559,7 +1571,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       #    error back to nil.
       # 3. finally is run for exception handling code without any 'except'
       #    handler present or only handlers that did not match.
-      p.s(cpsStmts).addAssignment(cDeref("nimErr_"), "oldNimErrFin" & $lab & "_")
+      p.s(cpsStmts).addAssignment(cDeref(cSymbol("nimErr_")), name)
     endSimpleBlock(p, finallyScope)
   raiseExit(p)
   if hasExcept: inc p.withinTryWithExcept
@@ -1611,20 +1623,20 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
     p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "pushSafePoint"), cAddr(safePoint))
     if isDefined(p.config, "nimStdSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
     elif isDefined(p.config, "nimSigSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("sigsetjmp", dotField(safePoint, "context"), cIntValue(0))
+        p.s(cpsStmts).addCall(cSymbol("sigsetjmp"), dotField(safePoint, "context"), cIntValue(0))
     elif isDefined(p.config, "nimBuiltinSetjmp"):
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("__builtin_setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("__builtin_setjmp"), dotField(safePoint, "context"))
     elif isDefined(p.config, "nimRawSetjmp"):
       if isDefined(p.config, "mswindows"):
         if isDefined(p.config, "vcc") or isDefined(p.config, "clangcl"):
           # For the vcc compiler, use `setjmp()` with one argument.
           # See https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setjmp?view=msvc-170
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+            p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
         else:
           # The Windows `_setjmp()` takes two arguments, with the second being an
           # undocumented buffer used by the SEH mechanism for stack unwinding.
@@ -1633,13 +1645,13 @@ proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
           # it to NULL.
           # More details: https://github.com/status-im/nimbus-eth2/issues/3121
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("_setjmp", dotField(safePoint, "context"), cIntValue(0))
+            p.s(cpsStmts).addCall(cSymbol("_setjmp"), dotField(safePoint, "context"), cIntValue(0))
       else:
           p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-            p.s(cpsStmts).addCall("_setjmp", dotField(safePoint, "context"))
+            p.s(cpsStmts).addCall(cSymbol("_setjmp"), dotField(safePoint, "context"))
     else:
       p.s(cpsStmts).addFieldAssignmentWithValue(safePoint, "status"):
-        p.s(cpsStmts).addCall("setjmp", dotField(safePoint, "context"))
+        p.s(cpsStmts).addCall(cSymbol("setjmp"), dotField(safePoint, "context"))
     nonQuirkyIf = initIfStmt(p.s(cpsStmts))
     initElifBranch(p.s(cpsStmts), nonQuirkyIf, removeSinglePar(
       cOp(Equal, dotField(safePoint, "status"), cIntValue(0))))

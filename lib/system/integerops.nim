@@ -20,15 +20,48 @@ proc raiseDivByZero {.compilerproc, noinline.} =
 {.pragma: nimbaseH, importc, nodecl, noSideEffect, compilerproc.}
 
 when not defined(nimEmulateOverflowChecks):
-  # take the #define from nimbase.h
+  when not defined(nimOverflowBuiltinNoNimbase):
+    # take the #define from nimbase.h
 
-  proc nimAddInt(a, b: int, res: ptr int): bool {.nimbaseH.}
-  proc nimSubInt(a, b: int, res: ptr int): bool {.nimbaseH.}
-  proc nimMulInt(a, b: int, res: ptr int): bool {.nimbaseH.}
+    proc nimAddInt(a, b: int, res: ptr int): bool {.nimbaseH.}
+    proc nimSubInt(a, b: int, res: ptr int): bool {.nimbaseH.}
+    proc nimMulInt(a, b: int, res: ptr int): bool {.nimbaseH.}
 
-  proc nimAddInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
-  proc nimSubInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
-  proc nimMulInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
+    proc nimAddInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
+    proc nimSubInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
+    proc nimMulInt64(a, b: int64; res: ptr int64): bool {.nimbaseH.}
+  else:
+    proc builtin_saddll_overflow(a, b: int64; res: ptr int64): bool {.importc: "__builtin_saddll_overflow".}
+    proc builtin_ssubll_overflow(a, b: int64; res: ptr int64): bool {.importc: "__builtin_ssubll_overflow".}
+    proc builtin_smulll_overflow(a, b: int64; res: ptr int64): bool {.importc: "__builtin_smulll_overflow".}
+
+    when sizeof(int) == 4:
+      when defined(arm) and (defined(gcc) or defined(llvm_gcc) or defined(clang)):
+        proc builtin_saddl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_sadd_overflow".}
+        proc builtin_ssubl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_ssub_overflow".}
+        proc builtin_smull_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_smul_overflow".}
+      else:
+        proc builtin_saddl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_saddl_overflow".}
+        proc builtin_ssubl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_ssubl_overflow".}
+        proc builtin_smull_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_smull_overflow".}
+    else:
+      proc builtin_saddl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_saddll_overflow".}
+      proc builtin_ssubl_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_ssubll_overflow".}
+      proc builtin_smull_overflow(a, b: int; res: ptr int): bool {.importc: "__builtin_smulll_overflow".}
+
+    proc nimAddInt(a, b: int, res: ptr int): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_saddl_overflow(a, b, res)
+    proc nimSubInt(a, b: int, res: ptr int): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_ssubl_overflow(a, b, res)
+    proc nimMulInt(a, b: int, res: ptr int): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_smull_overflow(a, b, res)
+
+    proc nimAddInt64(a, b: int64; res: ptr int64): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_saddll_overflow(a, b, cast[ptr clonglong](res))
+    proc nimSubInt64(a, b: int64; res: ptr int64): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_ssubll_overflow(a, b, cast[ptr clonglong](res))
+    proc nimMulInt64(a, b: int64; res: ptr int64): bool {.inline, compilerproc, noSideEffect.} =
+      builtin_smulll_overflow(a, b, cast[ptr clonglong](res))
 
 # unary minus and 'abs' not required here anymore and are directly handled
 # in the code generator.

@@ -147,7 +147,10 @@ proc commandCompileToC(graph: ModuleGraph) =
     if graph.backend != nil:
       cgenWriteModules(graph.backend, conf)
   if conf.cmd != cmdTcc and graph.backend != nil:
-    extccomp.callCCompiler(conf)
+    when defined(nimCompileToNifc):
+      extccomp.callNifc(conf)
+    else:
+      extccomp.callCCompiler(conf)
     # for now we do not support writing out a .json file with the build instructions when HCR is on
     if not conf.hcrOn:
       extccomp.writeJsonBuildInstructions(conf, graph.cachedFiles)

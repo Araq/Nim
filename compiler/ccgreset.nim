@@ -61,7 +61,7 @@ proc specializeResetT(p: BProc, accessor: Rope, typ: PType) =
   of tyArray:
     let arraySize = lengthOrd(p.config, typ.indexType)
     var i: TLoc = getTemp(p, getSysType(p.module.g.graph, unknownLineInfo, tyInt))
-    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize)):
+    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize), NimInt):
       specializeResetT(p, subscript(accessor, i.snippet), typ.elementType)
   of tyObject:
     var x = typ.baseClass

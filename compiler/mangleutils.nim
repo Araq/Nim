@@ -1,5 +1,5 @@
 import std/strutils
-import ast, modulegraphs
+import ast, modulegraphs, cbuilderbase
 
 proc mangle*(name: string): string =
   result = newStringOfCap(name.len)
@@ -49,11 +49,22 @@ proc mangle*(name: string): string =
     result.add "_"
 
 proc mangleParamExt*(s: PSym): string =
-  result = "_p"
-  result.addInt s.position
+  when buildNifc:
+    result = "."
+    result.addInt s.position
+    result.add ".p"
+  else:
+    result = "_p"
+    result.addInt s.position
 
 proc mangleProcNameExt*(graph: ModuleGraph, s: PSym): string =
-  result = "__"
-  result.add graph.ifaces[s.itemId.module].uniqueName
-  result.add "_u"
-  result.addInt s.itemId.item # s.disamb #
+  when buildNifc:
+    result = "."
+    result.addInt s.itemId.item # s.disamb #
+    result.add "."
+    result.add graph.ifaces[s.itemId.module].uniqueName
+  else:
+    result = "__"
+    result.add graph.ifaces[s.itemId.module].uniqueName
+    result.add "_u"
+    result.addInt s.itemId.item # s.disamb #
