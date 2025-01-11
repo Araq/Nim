@@ -2764,18 +2764,31 @@ template isVarargsUntyped(x): untyped =
 template isVarargsTyped(x): untyped =
   x.kind == tyVarargs and x[0].kind == tyTyped
 
-proc findFirstArgBlock(m: var TCandidate, n: PNode): int =
+proc findFirstTailArg(m: var TCandidate, n: PNode): int =
   # see https://github.com/nim-lang/RFCs/issues/405
   result = int.high
-  for a2 in countdown(n.len-1, 0):
-    # checking `nfBlockArg in n[a2].flags` wouldn't work inside templates
-    if n[a2].kind != nkStmtList: break
-    let formalLast = m.callee.n[m.callee.n.len - (n.len - a2)]
+  var arg = n.len - 1
+  template checkArg() =
+    # get last i'th arg of m.callee.n
+    let formalLast = m.callee.n[m.callee.len - (n.len - arg)]
     # parameter has to occupy space (no default value, not void or varargs)
     if formalLast.kind == nkSym and formalLast.sym.ast == nil and
         formalLast.sym.typ.kind notin {tyVoid, tyVarargs}:
-      result = a2
-    else: break
+      result = arg
+    else:
+      return
+  if n[arg].kind in routineDefs + {nkVarSection, nkLetSection, nkConstSection, nkTypeDef}:
+    # definition that supports macro pragma, consider tail arg
+    # proc types and non-`do` lambdas excluded
+    checkArg()
+    dec arg
+  const postExprBlocks = {nkStmtList,
+    nkOfBranch, nkElifBranch, nkElse,
+    nkExceptBranch, nkFinally, nkDo}
+  while arg >= 0 and n[arg].kind in postExprBlocks:
+    # parameter has to occupy space (no default value, not void or varargs)
+    checkArg()
+    dec arg
 
 proc matchesAux(c: PContext, n, nOrig: PNode, m: var TCandidate, marker: var IntSet) =
 
@@ -2817,7 +2830,7 @@ proc matchesAux(c: PContext, n, nOrig: PNode, m: var TCandidate, marker: var Int
     formalLen = m.callee.n.len
     formal = if formalLen > 1: m.callee.n[1].sym else: nil # current routine parameter
     container: PNode = nil # constructed container
-  let firstArgBlock = findFirstArgBlock(m, n)
+  let firstTailArg = findFirstTailArg(m, n)
   while a < n.len:
     c.openShadowScope
 
@@ -2919,8 +2932,21 @@ proc matchesAux(c: PContext, n, nOrig: PNode, m: var TCandidate, marker: var Int
         if m.callee.n[f].kind != nkSym:
           internalError(c.config, n[a].info, "matches")
           noMatch()
-        if flexibleOptionalParams in c.features and a >= firstArgBlock:
+        if flexibleOptionalParams in c.features and a >= firstTailArg:
+          # this is a post-expr block, matched to the tail of the routine params
+          let prevPos = f
           f = max(f, m.callee.n.len - (n.len - a))
+          if f > prevPos:
+            # check that every previous required parameter is given
+            # fail the match early if not, to prevent semchecking for untyped args 
+            for i in prevPos ..< f:
+              let prevFormal = m.callee.n[i].sym
+              if prevFormal.ast == nil and prevFormal.typ.kind notin {tyVoid, tyVarargs}:
+                # param is required but wasn't given
+                m.state = csNoMatch
+                m.firstMismatch.kind = kMissingParam
+                m.firstMismatch.formal = prevFormal
+                noMatch()
         formal = m.callee.n[f].sym
         m.firstMismatch.kind = kTypeMismatch
         if containsOrIncl(marker, formal.position) and container.isNil:
