@@ -217,7 +217,7 @@ when hostOS == "windows":
     ## Entry point is the proc `tp`.
     ## `param` is passed to `tp`. `TArg` can be `void` if you
     ## don't need to pass any data to the thread.
-    t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    t.core.store cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data.store param
     t.dataFn.store tp
@@ -242,7 +242,7 @@ elif defined(genode):
   proc createThread*[TArg](t: var Thread[TArg],
                            tp: proc (arg: TArg) {.thread, nimcall.},
                            param: TArg) =
-    t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    t.core.store cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data.store param
     t.dataFn.store tp
