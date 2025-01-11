@@ -1,4 +1,5 @@
 include system/inclrtl
+import std/atomics
 
 const hasSharedHeap* = defined(boehmgc) or defined(gogc) # don't share heaps; every thread has its own
 
@@ -163,13 +164,13 @@ const hasAllocStack* = defined(zephyr) # maybe freertos too?
 
 type
   Thread*[TArg] = object
-    core*: PGcThread
+    core*: Atomic[PGcThread]
     sys*: SysThread
     when TArg is void:
-      dataFn*: proc () {.nimcall, gcsafe.}
+      dataFn*: Atomic[proc () {.nimcall, gcsafe.}]
     else:
-      dataFn*: proc (m: TArg) {.nimcall, gcsafe.}
-      data*: TArg
+      dataFn*: Atomic[proc (m: TArg) {.nimcall, gcsafe.}]
+      data*: Atomic[TArg]
     when hasAllocStack:
       rawStack*: pointer
 
