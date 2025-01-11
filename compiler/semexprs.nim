@@ -2929,7 +2929,10 @@ proc semTupleFieldsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType
       # hasEmpty/nil check is to not break existing code like
       # `const foo = [(1, {}), (2, {false})]`,
       # `const foo = if true: (0, nil) else: (1, new(int))`
-      n[i][1] = fitNode(c, expectedElemType, n[i][1], n[i][1].info)
+      let conversion = indexTypesMatch(c, expectedElemType, n[i][1].typ, n[i][1])
+      # ignore matching error, full tuple will be matched later which may call converter, see #24609
+      if conversion != nil:
+        n[i][1] = conversion
 
     if n[i][1].typ.kind == tyTypeDesc:
       localError(c.config, n[i][1].info, "typedesc not allowed as tuple field.")
