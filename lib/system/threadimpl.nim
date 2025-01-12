@@ -99,18 +99,17 @@ proc threadProcWrapStackFrame[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
     threadProcWrapDispatch(thrd)
 
 template nimThreadProcWrapperBody*(closure: untyped): untyped =
-  var thr = cast[Atomic[ptr Thread[TArg]]](closure)
-  var thrd = thr.load()
-  var core = thrd.core
-  when declared(globalsSlot): threadVarSetValue(globalsSlot, core.load())
+  var thrd = cast[ptr Thread[TArg]](closure)
+  var core = thrd.core.load()
+  when declared(globalsSlot): threadVarSetValue(globalsSlot, thrd.core.load())
   threadProcWrapStackFrame(thrd)
   # Since an unhandled exception terminates the whole process (!), there is
-  # no need for a ``try finally`` here, nor would it be correct: The current
-  # exception is tried to be re-raised by the code-gen after the ``finally``!
+  # no need for a `try finally` here, nor would it be correct: The current
+  # exception is tried to be re-raised by the code-gen after the `finally`!
   # However this is doomed to fail, because we already unmapped every heap
   # page!
 
   # mark as not running anymore:
   thrd.core.store nil
   thrd.dataFn.store nil
-  deallocThreadStorage(cast[pointer](core))
+  deallocThreadStorage(core)
