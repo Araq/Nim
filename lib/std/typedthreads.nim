@@ -270,7 +270,10 @@ else:
 
     when TArg isnot void: t.data.store param
     t.dataFn.store tp
-    when hasSharedHeap: t.core.stackSize = ThreadStackSize
+    when hasSharedHeap: 
+      var stackSize: PGcThread = t.core.load()
+      stacksize.stackSize = ThreadStackSize
+      t.core.store stacksize
     var a {.noinit.}: Pthread_attr
     doAssert pthread_attr_init(a) == 0
     when hasAllocStack:

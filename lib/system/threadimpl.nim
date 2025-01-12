@@ -56,7 +56,7 @@ when defined(boehmgc):
       when TArg is void:
         dataFn()
       else:
-        dataFn(thrd.data)
+        dataFn(thrd.data.load())
     except:
       threadTrouble()
     finally:
@@ -102,7 +102,7 @@ template nimThreadProcWrapperBody*(closure: untyped): untyped =
   var thr = cast[Atomic[ptr Thread[TArg]]](closure)
   var thrd = thr.load()
   var core = thrd.core
-  when declared(globalsSlot): threadVarSetValue(globalsSlot, thrd.core)
+  when declared(globalsSlot): threadVarSetValue(globalsSlot, core.load())
   threadProcWrapStackFrame(thrd)
   # Since an unhandled exception terminates the whole process (!), there is
   # no need for a ``try finally`` here, nor would it be correct: The current
