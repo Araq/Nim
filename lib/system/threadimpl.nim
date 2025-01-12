@@ -1,3 +1,5 @@
+import std/atomics
+
 var
   nimThreadDestructionHandlers* {.rtlThreadVar.}: seq[proc () {.closure, gcsafe, raises: [].}]
 when not defined(boehmgc) and not hasSharedHeap and not defined(gogc) and not defined(gcRegions):
@@ -50,10 +52,11 @@ when defined(boehmgc):
     boehmGC_register_my_thread(sb)
     try:
       let thrd = cast[ptr Thread[TArg]](thrd)
+      let dataFn = thrd.dataFn.load()
       when TArg is void:
-        thrd.dataFn()
+        dataFn()
       else:
-        thrd.dataFn(thrd.data)
+        dataFn(thrd.data.load())
     except:
       threadTrouble()
     finally:
@@ -62,15 +65,16 @@ when defined(boehmgc):
 else:
   proc threadProcWrapDispatch[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
     try:
+      let dataFn = thrd.dataFn.load()
       when TArg is void:
-        thrd.dataFn()
+        dataFn()
       else:
         when defined(nimV2):
-          thrd.dataFn(thrd.data)
+          dataFn(thrd.data.load())
         else:
           var x: TArg = default(TArg)
-          deepCopy(x, thrd.data)
-          thrd.dataFn(x)
+          deepCopy(x, thrd.data.load())
+          dataFn(x)
     except:
       threadTrouble()
     finally:
@@ -95,9 +99,10 @@ proc threadProcWrapStackFrame[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
     threadProcWrapDispatch(thrd)
 
 template nimThreadProcWrapperBody*(closure: untyped): untyped =
-  var thrd = cast[ptr Thread[TArg]](closure)
+  var thr = cast[Atomic[ptr Thread[TArg]]](closure)
+  var thrd = thr.load()
   var core = thrd.core
-  when declared(globalsSlot): threadVarSetValue(globalsSlot, thrd.core)
+  when declared(globalsSlot): threadVarSetValue(globalsSlot, core.load())
   threadProcWrapStackFrame(thrd)
   # Since an unhandled exception terminates the whole process (!), there is
   # no need for a ``try finally`` here, nor would it be correct: The current
@@ -106,6 +111,6 @@ template nimThreadProcWrapperBody*(closure: untyped): untyped =
   # page!
 
   # mark as not running anymore:
-  thrd.core = nil
-  thrd.dataFn = nil
+  thrd.core.store nil
+  thrd.dataFn.store nil
   deallocThreadStorage(cast[pointer](core))
