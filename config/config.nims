@@ -22,3 +22,4 @@ when defined(nimStrictMode):
 
 switch("define", "nimVersion:" & NimVersion) # deadcode
 switch("experimental", "strictDefs")
+switch("experimental", "flexibleOptionalParams")
