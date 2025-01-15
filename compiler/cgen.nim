@@ -288,19 +288,21 @@ proc genPostprocessDir(field1, field2, field3: string): string =
 
 proc genCLineDir(r: var Builder, fileIdx: FileIndex, line: int; conf: ConfigRef) =
   assert line >= 0
-  if optLineDir in conf.options and line > 0:
-    if fileIdx == InvalidFileIdx:
-      r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
-    else:
-      r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
+  when not buildNifc:
+    if optLineDir in conf.options and line > 0:
+      if fileIdx == InvalidFileIdx:
+        r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
+      else:
+        r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
 
 proc genCLineDir(r: var Builder, fileIdx: FileIndex, line: int; p: BProc; info: TLineInfo; lastFileIndex: FileIndex) =
   assert line >= 0
-  if optLineDir in p.config.options and line > 0:
-    if fileIdx == InvalidFileIdx:
-      r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
-    else:
-      r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
+  when not buildNifc:
+    if optLineDir in p.config.options and line > 0:
+      if fileIdx == InvalidFileIdx:
+        r.add(rope("\n#line " & $line & " \"generated_not_to_break_here\"\n"))
+      else:
+        r.add(rope("\n#line " & $line & " FX_" & $fileIdx.int32 & "\n"))
 
 proc genCLineDir(r: var Builder, info: TLineInfo; conf: ConfigRef) =
   if optLineDir in conf.options:
@@ -326,7 +328,7 @@ proc genLineDir(p: BProc, t: PNode) =
   let line = t.info.safeLineNm
 
   if optEmbedOrigSrc in p.config.globalOptions:
-    p.s(cpsStmts).add("//" & sourceLine(p.config, t.info) & "\L")
+    p.s(cpsStmts).addLineComment(sourceLine(p.config, t.info))
   let lastFileIndex = p.lastLineInfo.fileIndex
   let freshLine = freshLineInfo(p, t.info)
   if freshLine:
@@ -379,7 +381,11 @@ proc lenExpr(p: BProc; a: TLoc): Rope =
     result = dotField(rdLoc(a), "len")
   else:
     let ra = rdLoc(a)
-    result = cIfExpr(ra, lenField(p, ra), cIntValue(0))
+    let len = getTempName(p.module)
+    p.s(cpsLocals).addVar(name = len, typ = NimInt, initializer = cIntValue(0))
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, ra, NimNil)):
+      p.s(cpsStmts).addAssignment(len, lenField(p, ra))
+    result = len
 
 proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
   if optSeqDestructors in p.config.globalOptions:
@@ -390,7 +396,7 @@ proc dataFieldAccessor(p: BProc, sym: Rope): Rope =
 proc dataField(p: BProc, val: Rope): Rope {.inline.} =
   result = derefField(dataFieldAccessor(p, val), "data")
 
-proc genProcPrototype(m: BModule, sym: PSym)
+proc genProcPrototype(m: BModule, sym: PSym, thisModule: bool = true)
 
 include ccgliterals
 include ccgtypes
@@ -403,23 +409,28 @@ template mapTypeChooser(n: PNode): TSymKind =
 template mapTypeChooser(a: TLoc): TSymKind = mapTypeChooser(a.lode)
 
 proc addAddrLoc(conf: ConfigRef; a: TLoc; result: var Builder) =
-  if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result.add wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags:
     result.add a.snippet
+  elif mapType(conf, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result.add arrayAddr(a.snippet)
+  else:
+    result.add wrapPar(cAddr(a.snippet))
 
 proc addrLoc(conf: ConfigRef; a: TLoc): Rope =
-  if lfIndirect notin a.flags and mapType(conf, a.t, mapTypeChooser(a) == skParam) != ctArray:
-    result = wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags:
     result = a.snippet
+  elif mapType(conf, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result = arrayAddr(a.snippet)
+  else:
+    result = wrapPar(cAddr(a.snippet))
 
 proc byRefLoc(p: BProc; a: TLoc): Rope =
-  if lfIndirect notin a.flags and mapType(p.config, a.t, mapTypeChooser(a) == skParam) != ctArray and not
-      p.module.compileToCpp:
-    result = wrapPar(cAddr(a.snippet))
-  else:
+  if lfIndirect in a.flags or p.module.compileToCpp:
     result = a.snippet
+  elif mapType(p.config, a.t, mapTypeChooser(a) == skParam) == ctArray:
+    result = arrayAddr(a.snippet)
+  else:
+    result = wrapPar(cAddr(a.snippet))
 
 proc rdCharLoc(a: TLoc): Rope =
   # read a location that may need a char-cast:
@@ -605,7 +616,7 @@ proc initLocalVar(p: BProc, v: PSym, immediateAsgn: bool) =
 
 proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp, lode: lodeTyp t,
                 storage: OnStack, flags: {})
   if p.module.compileToCpp and isOrHasImportedCppType(t):
     var didGenTemp = false
@@ -627,7 +638,7 @@ proc getTemp(p: BProc, t: PType, needsInit=false): TLoc =
 
 proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp, lode: lodeTyp t,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp, lode: lodeTyp t,
                 storage: OnStack, flags: {})
   p.s(cpsStmts).addVar(kind = Local,
     name = result.snippet,
@@ -636,7 +647,7 @@ proc getTempCpp(p: BProc, t: PType, value: Rope): TLoc =
 
 proc getIntTemp(p: BProc): TLoc =
   inc(p.labels)
-  result = TLoc(snippet: "T" & rope(p.labels) & "_", k: locTemp,
+  result = TLoc(snippet: cSymbol("T" & rope(p.labels) & "_"), k: locTemp,
                 storage: OnStack, lode: lodeTyp getSysType(p.module.g.graph, unknownLineInfo, tyInt),
                 flags: {})
   p.s(cpsLocals).addVar(kind = Local, name = result.snippet, typ = NimInt)
@@ -795,7 +806,7 @@ proc genStmts(p: BProc, t: PNode)
 proc expr(p: BProc, n: PNode, d: var TLoc)
 
 proc putLocIntoDest(p: BProc, d: var TLoc, s: TLoc)
-proc genLiteral(p: BProc, n: PNode; result: var Builder)
+proc genLiteral(p: BProc, n: PNode; result: var Builder, noCast = false)
 proc genOtherArg(p: BProc; ri: PNode; i: int; typ: PType; result: var Builder; argBuilder: var CallBuilder)
 proc raiseExit(p: BProc)
 proc raiseExitCleanup(p: BProc, destroy: string)
@@ -817,31 +828,59 @@ proc initLocExprSingleUse(p: BProc, e: PNode): TLoc =
     result.flags.incl lfSingleUse
   expr(p, e, result)
 
+proc getProgramResult(m: BModule): Snippet =
+  when buildNifc:
+    if sfSystemModule in m.module.flags:
+      cSymbol("nim_program_result")
+    else:
+      cgsymValue(m, "programResult")
+  else:
+    cSymbol("nim_program_result")
+
+proc getTFrame(m: BModule): Snippet =
+  when buildNifc:
+    if sfSystemModule in m.module.flags:
+      cSymbol("TFrame")
+    else:
+      cgsymValue(m, "TFrame")
+  else:
+    cSymbol("TFrame")
+
 include ccgcalls, "ccgstmts.nim"
 
 proc initFrame(p: BProc, procname, filename: Rope): Rope =
-  # XXX cbuilder
-  const frameDefines = """
-$1define nimfr_(proc, file) \
-  TFrame FR_; \
-  FR_.procname = proc; FR_.filename = file; FR_.line = 0; FR_.len = 0; #nimFrame(&FR_);
+  when not buildNifc:
+    const frameDefines = """
+  $1define nimfr_(proc, file) \
+    TFrame FR_; \
+    FR_.procname = proc; FR_.filename = file; FR_.line = 0; FR_.len = 0; #nimFrame(&FR_);
 
-$1define nimln_(n) \
-  FR_.line = n;
+  $1define nimln_(n) \
+    FR_.line = n;
 
-$1define nimlf_(n, file) \
-  FR_.line = n; FR_.filename = file;
+  $1define nimlf_(n, file) \
+    FR_.line = n; FR_.filename = file;
 
-"""
-  if p.module.s[cfsFrameDefines].buf.len == 0:
-    appcg(p.module, p.module.s[cfsFrameDefines], frameDefines, ["#"])
+  """
+    if p.module.s[cfsFrameDefines].buf.len == 0:
+      appcg(p.module, p.module.s[cfsFrameDefines], frameDefines, ["#"])
 
   cgsym(p.module, "nimFrame")
-  result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
+  when buildNifc:
+    var res = newBuilder("")
+    res.addVar(name = cSymbol("FR_"), typ = getTFrame(p.module))
+    res.addFieldAssignment(cSymbol("FR_"), "procname", procname)
+    res.addFieldAssignment(cSymbol("FR_"), "filename", filename)
+    res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(0))
+    res.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
+    res.addCallStmt(cSymbol("nimFrame"), cAddr(cSymbol("FR_")))
+    result = extract(res)
+  else:
+    result = ropecg(p.module, "\tnimfr_($1, $2);$n", [procname, filename])
 
 proc initFrameNoDebug(p: BProc; frame, procname, filename: Snippet; line: int): Snippet =
   cgsym(p.module, "nimFrame")
-  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = "TFrame")
+  p.blocks[0].sections[cpsLocals].addVar(name = frame, typ = getTFrame(p.module))
   var res = newBuilder("")
   res.add('\t')
   res.addFieldAssignment(frame, "procname", procname)
@@ -939,9 +978,9 @@ proc mangleDynLibProc(sym: PSym): Rope =
   # optimization in genInfixCall, see test tests/cpp/t8241.nim
   if sfCompilerProc in sym.flags:
     # NOTE: sym.loc.snippet is the external name!
-    result = rope(sym.name.s)
+    result = cSymbol(sym.name.s)
   else:
-    result = rope(strutils.`%`("Dl_$1_", $sym.id))
+    result = cSymbol(strutils.`%`("Dl_$1_", $sym.id))
 
 proc symInDynamicLib(m: BModule, sym: PSym) =
   var lib = sym.annex
@@ -1034,9 +1073,10 @@ proc cgsymValue(m: BModule, name: string): Rope =
     result.addActualSuffixForHCR(m.module, sym)
 
 proc generateHeaders(m: BModule) =
-  var nimbase = m.config.nimbasePattern
-  if nimbase == "": nimbase = "nimbase.h"
-  m.s[cfsHeaders].addInclude('"' & nimbase & '"')
+  when not buildNifc:
+    var nimbase = m.config.nimbasePattern
+    if nimbase == "": nimbase = "nimbase.h"
+    m.s[cfsHeaders].addInclude('"' & nimbase & '"')
 
   for it in m.headerFiles:
     if it[0] == '#':
@@ -1045,7 +1085,8 @@ proc generateHeaders(m: BModule) =
       m.s[cfsHeaders].addInclude('"' & $it & '"')
     else:
       m.s[cfsHeaders].addInclude($it)
-  m.s[cfsHeaders].add("""#undef LANGUAGE_C
+  when not buildNifc:
+    m.s[cfsHeaders].add("""#undef LANGUAGE_C
 #undef MIPSEB
 #undef MIPSEL
 #undef PPC
@@ -1258,15 +1299,15 @@ proc getProcTypeCast(m: BModule, prc: PSym): Rope =
     var check = initIntSet()
     genProcParams(m, prc.typ, rettype, desc, check)
     let params = extract(desc)
-    result = procPtrTypeUnnamed(rettype = rettype, params = params)
+    result = procPtrTypeUnnamed(rettype = rettype, params = params, isVarargs = tfVarargs in prc.typ.flags)
 
 proc genProcBody(p: BProc; procBody: PNode) =
   genStmts(p, procBody) # modifies p.locals, p.init, etc.
   if {nimErrorFlagAccessed, nimErrorFlagDeclared, nimErrorFlagDisabled} * p.flags == {nimErrorFlagAccessed}:
     p.flags.incl nimErrorFlagDeclared
     p.blocks[0].sections[cpsLocals].addVar(kind = Local,
-      name = "nimErr_", typ = ptrType(NimBool))
-    p.blocks[0].sections[cpsInit].addAssignmentWithValue("nimErr_"):
+      name = cSymbol("nimErr_"), typ = ptrType(NimBool))
+    p.blocks[0].sections[cpsInit].addAssignmentWithValue(cSymbol("nimErr_")):
       p.blocks[0].sections[cpsInit].addCall(cgsymValue(p.module, "nimErrorFlag"))
 
 proc genProcAux*(m: BModule, prc: PSym) =
@@ -1404,7 +1445,7 @@ proc requiresExternC(m: BModule; sym: PSym): bool {.inline.} =
            sym.magic == mNone and
            m.config.backend == backendCpp)
 
-proc genProcPrototype(m: BModule, sym: PSym) =
+proc genProcPrototype(m: BModule, sym: PSym, thisModule: bool = true) =
   useHeader(m, sym)
   if lfNoDecl in sym.loc.flags or sfCppMember * sym.flags != {}: return
   if lfDynamicLib in sym.loc.flags:
@@ -1437,12 +1478,15 @@ proc genProcPrototype(m: BModule, sym: PSym) =
       let extraVis =
         if sym.typ.callConv != ccInline and requiresExternC(m, sym):
           ExternC
+        elif buildNifc and not thisModule and visibility notin {ImportLib, ExportLib}:
+          Extern
         else:
           None
-      m.s[cfsProcHeaders].addDeclWithVisibility(extraVis):
-        m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
-          m.s[cfsProcHeaders].add(extract(header))
-          m.s[cfsProcHeaders].finishProcHeaderAsProto()
+      if not buildNifc or {visibility, extraVis} * {Extern, ExternC, ImportLib} != {}:
+        m.s[cfsProcHeaders].addDeclWithVisibility(extraVis):
+          m.s[cfsProcHeaders].addDeclWithVisibility(visibility):
+            m.s[cfsProcHeaders].add(extract(header))
+            m.s[cfsProcHeaders].finishProcHeaderAsProto()
 
 # TODO: figure out how to rename this - it DOES generate a forward declaration
 proc genProcNoForward(m: BModule, prc: PSym) =
@@ -1458,7 +1502,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
   elif lfDynamicLib in prc.loc.flags:
     var q = findPendingModule(m, prc)
     fillProcLoc(q, prc.ast[namePos])
-    genProcPrototype(m, prc)
+    genProcPrototype(m, prc, q != nil and q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       symInDynamicLib(q, prc)
       # register the procedure even though it is in a different dynamic library and will not be
@@ -1506,7 +1550,7 @@ proc genProcNoForward(m: BModule, prc: PSym) =
           cCall("hcrGetProc",
             getModuleDllPath(m, prc),
             '"' & prc.loc.snippet & '"')))
-    genProcPrototype(m, prc)
+    genProcPrototype(m, prc, q != nil and q.module.id == m.module.id)
     if q != nil and not containsOrIncl(q.declaredThings, prc.id):
       # make sure there is a "prototype" in the external module
       # which will actually become a function pointer
@@ -1582,31 +1626,37 @@ proc genVarPrototype(m: BModule, n: PNode) =
               '"' & sym.loc.snippet & '"')))
 
 proc addNimDefines(result: var Builder; conf: ConfigRef) {.inline.} =
-  result.addf("#define NIM_INTBITS $1\L", [
-    platform.CPU[conf.target.targetCPU].intSize.rope])
-  if conf.cppCustomNamespace.len > 0:
-    result.add("#define USE_NIM_NAMESPACE ")
-    result.add(conf.cppCustomNamespace)
-    result.add("\L")
-  if conf.isDefined("nimEmulateOverflowChecks"):
-    result.add("#define NIM_EmulateOverflowChecks\L")
+  when not buildNifc:
+    result.addf("#define NIM_INTBITS $1\L", [
+      platform.CPU[conf.target.targetCPU].intSize.rope])
+    if conf.cppCustomNamespace.len > 0:
+      result.add("#define USE_NIM_NAMESPACE ")
+      result.add(conf.cppCustomNamespace)
+      result.add("\L")
+    if conf.isDefined("nimEmulateOverflowChecks"):
+      result.add("#define NIM_EmulateOverflowChecks\L")
 
 proc headerTop(): Rope =
-  result = "/* Generated by Nim Compiler v$1 */$N" % [rope(VersionAsString)]
+  when buildNifc:
+    result = "(.nif24)\n(stmts\n"
+  else:
+    result = "/* Generated by Nim Compiler v$1 */$N" % [rope(VersionAsString)]
 
 proc getCopyright(conf: ConfigRef; cfile: Cfile): Rope =
   result = headerTop()
-  if optCompileOnly notin conf.globalOptions:
-    result.add ("/* Compiled for: $1, $2, $3 */$N" &
-        "/* Command for C compiler:$n   $4 */$N") %
-        [rope(platform.OS[conf.target.targetOS].name),
-        rope(platform.CPU[conf.target.targetCPU].name),
-        rope(extccomp.CC[conf.cCompiler].name),
-        rope(getCompileCFileCmd(conf, cfile))]
+  when not buildNifc:
+    if optCompileOnly notin conf.globalOptions:
+      result.add ("/* Compiled for: $1, $2, $3 */$N" &
+          "/* Command for C compiler:$n   $4 */$N") %
+          [rope(platform.OS[conf.target.targetOS].name),
+          rope(platform.CPU[conf.target.targetCPU].name),
+          rope(extccomp.CC[conf.cCompiler].name),
+          rope(getCompileCFileCmd(conf, cfile))]
 
 proc getFileHeader(conf: ConfigRef; cfile: Cfile): Rope =
   var res = newBuilder(getCopyright(conf, cfile))
-  if conf.hcrOn: res.add("#define NIM_HOT_CODE_RELOADING\L")
+  when not buildNifc:
+    if conf.hcrOn: res.add("#define NIM_HOT_CODE_RELOADING\L")
   addNimDefines(res, conf)
   result = extract(res)
 
@@ -1626,11 +1676,12 @@ proc getSomeInitName(m: BModule, suffix: string): Rope =
   else:
     result = ""
   result.add suffix
+  result = cSymbol(result)
 
 proc getInitName(m: BModule): Rope =
   if sfMainModule in m.module.flags:
     # generate constant name for main module, for "easy" debugging.
-    result = rope(m.config.nimMainPrefix) & rope"NimMainModule"
+    result = cSymbol(rope(m.config.nimMainPrefix) & rope"NimMainModule")
   else:
     result = getSomeInitName(m, "Init000")
 
@@ -1647,41 +1698,41 @@ proc isInnerMainVolatile(m: BModule): bool =
 
 proc genPreMain(m: BModule) =
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMainInner", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(cSymbol(m.config.nimMainPrefix & "PreMainInner"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       m.s[cfsProcs].add(extract(m.g.otherModsInit))
   if optNoMain notin m.config.globalOptions:
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "cmdCount", typ = CInt)
+      m.s[cfsProcs].addVar(name = cSymbol("cmdCount"), typ = CInt)
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "cmdLine", typ = ptrType(ptrType(CChar)))
+      m.s[cfsProcs].addVar(name = cSymbol("cmdLine"), typ = ptrType(ptrType(CChar)))
     m.s[cfsProcs].addDeclWithVisibility(Private):
-      m.s[cfsProcs].addVar(name = "gEnv", typ = ptrType(ptrType(CChar)))
+      m.s[cfsProcs].addVar(name = cSymbol("gEnv"), typ = ptrType(ptrType(CChar)))
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(m.config.nimMainPrefix & "PreMain", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(cSymbol(m.config.nimMainPrefix & "PreMain"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       if isInnerMainVolatile(m):
-        m.s[cfsProcs].addProcVar(name = "inner", rettype = CVoid, params = cProcParams(), isVolatile = true)
-        m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "PreMainInner")
+        m.s[cfsProcs].addProcVar(name = cSymbol("inner"), rettype = CVoid, params = cProcParams(), isVolatile = true)
+        m.s[cfsProcs].addAssignment(cSymbol("inner"), cSymbol(m.config.nimMainPrefix & "PreMainInner"))
         m.s[cfsProcs].add(extract(m.g.mainDatInit))
-        m.s[cfsProcs].addCallStmt(cDeref("inner"))
+        m.s[cfsProcs].addCallStmt(cDeref(cSymbol("inner")))
       else:
         # not volatile
         m.s[cfsProcs].add(extract(m.g.mainDatInit))
-        m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "PreMainInner")
+        m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMainInner"))
 
 proc genMainProcs(m: BModule) =
-  m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMain")
+  m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "NimMain"))
 
 proc genMainProcsWithResult(m: BModule) =
   genMainProcs(m)
-  var res = "nim_program_result"
+  var res = getProgramResult(m)
   if m.hcrOn: res = cDeref(res)
   m.s[cfsProcs].addReturn(res)
 
 proc genNimMainInner(m: BModule) =
   m.s[cfsProcs].addDeclWithVisibility(Private):
-    m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMainInner", CVoid, cProcParams())
+    m.s[cfsProcs].addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMainInner"), CVoid, cProcParams())
     m.s[cfsProcs].finishProcHeaderWithBody():
       m.s[cfsProcs].add(extract(m.g.mainModInit))
   m.s[cfsProcs].addNewline()
@@ -1690,21 +1741,22 @@ proc initStackBottom(m: BModule): bool =
   not (m.config.target.targetOS == osStandalone or m.config.selectedGC in {gcNone, gcArc, gcAtomicArc, gcOrc})
 
 proc genNimMainProc(m: BModule, preMainCode: Snippet) =
-  m.s[cfsProcs].addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMain", CVoid, cProcParams())
+  m.s[cfsProcs].addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMain"), CVoid, cProcParams())
   m.s[cfsProcs].finishProcHeaderWithBody():
+    let inner = cSymbol("inner")
     if isInnerMainVolatile(m):
-      m.s[cfsProcs].addProcVar(name = "inner", rettype = CVoid, params = cProcParams(), isVolatile = true)
+      m.s[cfsProcs].addProcVar(name = inner, rettype = CVoid, params = cProcParams(), isVolatile = true)
       m.s[cfsProcs].add(preMainCode)
-      m.s[cfsProcs].addAssignment("inner", m.config.nimMainPrefix & "NimMainInner")
+      m.s[cfsProcs].addAssignment(inner, cSymbol(m.config.nimMainPrefix & "NimMainInner"))
       if initStackBottom(m):
-        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast(CPointer, cAddr("inner")))
-      m.s[cfsProcs].addCallStmt(cDeref("inner"))
+        m.s[cfsProcs].addCallStmt(cSymbol("initStackBottomWith"), cCast(CPointer, cAddr(inner)))
+      m.s[cfsProcs].addCallStmt(cDeref(inner))
     else:
       # not volatile
       m.s[cfsProcs].add(preMainCode)
       if initStackBottom(m):
-        m.s[cfsProcs].addCallStmt("initStackBottomWith", cCast(CPointer, cAddr("inner")))
-      m.s[cfsProcs].addCallStmt(m.config.nimMainPrefix & "NimMainInner")
+        m.s[cfsProcs].addCallStmt(cSymbol("initStackBottomWith"), cCast(CPointer, cAddr(inner)))
+      m.s[cfsProcs].addCallStmt(cSymbol(m.config.nimMainPrefix & "NimMainInner"))
   m.s[cfsProcs].addNewline()
 
 proc genNimMainBody(m: BModule, preMainCode: Snippet) =
@@ -1712,19 +1764,19 @@ proc genNimMainBody(m: BModule, preMainCode: Snippet) =
   genNimMainProc(m, preMainCode)
 
 proc genPosixCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader("main", CInt, cProcParams(
-    (name: "argc", typ: CInt),
-    (name: "args", typ: ptrType(ptrType(CChar))),
-    (name: "env", typ: ptrType(ptrType(CChar)))))
+  m.s[cfsProcs].addProcHeader(cSymbol("main"), CInt, cProcParams(
+    (name: cSymbol("argc"), typ: CInt),
+    (name: cSymbol("args"), typ: ptrType(ptrType(CChar))),
+    (name: cSymbol("env"), typ: ptrType(ptrType(CChar)))))
   m.s[cfsProcs].finishProcHeaderWithBody():
-    m.s[cfsProcs].addAssignment("cmdLine", "args")
-    m.s[cfsProcs].addAssignment("cmdCount", "argc")
-    m.s[cfsProcs].addAssignment("gEnv", "env")
+    m.s[cfsProcs].addAssignment(cSymbol("cmdLine"), cSymbol("args"))
+    m.s[cfsProcs].addAssignment(cSymbol("cmdCount"), cSymbol("argc"))
+    m.s[cfsProcs].addAssignment(cSymbol("gEnv"), cSymbol("env"))
     genMainProcsWithResult(m)
   m.s[cfsProcs].addNewline()
 
 proc genStandaloneCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader("main", CInt, cProcParams())
+  m.s[cfsProcs].addProcHeader(cSymbol("main"), CInt, cProcParams())
   m.s[cfsProcs].finishProcHeaderWithBody():
     genMainProcs(m)
     m.s[cfsProcs].addReturn(cIntValue(0))
@@ -1734,10 +1786,10 @@ proc genWinNimMain(m: BModule, preMainCode: Snippet) =
   genNimMainBody(m, preMainCode)
 
 proc genWinCMain(m: BModule) =
-  m.s[cfsProcs].addProcHeader(ccStdCall, "WinMain", CInt, cProcParams(
-    (name: "hCurInstance", typ: "HINSTANCE"),
-    (name: "hPrevInstance", typ: "HINSTANCE"),
-    (name: "lpCmdLine", typ: "LPSTR"),
+  m.s[cfsProcs].addProcHeader(ccStdCall, cSymbol("WinMain"), CInt, cProcParams(
+    (name: "hCurInstance", typ: cSymbol("HINSTANCE")),
+    (name: "hPrevInstance", typ: cSymbol("HINSTANCE")),
+    (name: "lpCmdLine", typ: cSymbol("LPSTR")),
     (name: "nCmdShow", typ: CInt)))
   m.s[cfsProcs].finishProcHeaderWithBody():
     genMainProcsWithResult(m)
@@ -1750,12 +1802,12 @@ proc genWinNimDllMain(m: BModule, preMainCode: Snippet) =
 
 proc genWinCDllMain(m: BModule) =
   # used to use WINAPI macro, now ccStdCall:
-  m.s[cfsProcs].addProcHeader(ccStdCall, "DllMain", "BOOL", cProcParams(
-    (name: "hinstDLL", typ: "HINSTANCE"),
-    (name: "fwdreason", typ: "DWORD"),
-    (name: "lpvReserved", typ: "LPVOID")))
+  m.s[cfsProcs].addProcHeader(ccStdCall, cSymbol("DllMain"), cSymbol("BOOL"), cProcParams(
+    (name: "hinstDLL", typ: cSymbol("HINSTANCE")),
+    (name: "fwdreason", typ: cSymbol("DWORD")),
+    (name: "lpvReserved", typ: cSymbol("LPVOID"))))
   m.s[cfsProcs].finishProcHeaderWithBody():
-    m.s[cfsProcs].addSingleIfStmt(removeSinglePar(cOp(Equal, "fwdreason", "DLL_PROCESS_ATTACH"))):
+    m.s[cfsProcs].addSingleIfStmt(removeSinglePar(cOp(Equal, "fwdreason", cSymbol("DLL_PROCESS_ATTACH")))):
       genMainProcs(m)
     m.s[cfsProcs].addReturn(cIntValue(1))
   m.s[cfsProcs].addNewline()
@@ -1771,7 +1823,7 @@ proc genPosixCDllMain(m: BModule) =
   m.s[cfsProcs].addNewline()
 
 proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
-  let typName = "Genode::Env"
+  let typName = cSymbol("Genode::Env")
   m.s[cfsProcs].addDeclWithVisibility(Extern):
     m.s[cfsProcs].addVar(name = "nim_runtime_env", typ = ptrType(typName))
   m.s[cfsProcs].addDeclWithVisibility(ExternC):
@@ -1780,8 +1832,8 @@ proc genGenodeNimMain(m: BModule, preMainCode: Snippet) =
   genNimMainBody(m, preMainCode)
 
 proc genComponentConstruct(m: BModule) =
-  let fnName = "Libc::Component::construct"
-  let typName = "Libc::Env"
+  let fnName = cSymbol("Libc::Component::construct")
+  let typName = cSymbol("Libc::Env")
   m.s[cfsProcs].addProcHeader(fnName, CVoid, cProcParams((name: "env", typ: cppRefType(typName))))
   m.s[cfsProcs].finishProcHeaderWithBody():
     m.s[cfsProcs].addLineComment("Set Env used during runtime initialization")
@@ -1818,7 +1870,7 @@ proc genMainProc(m: BModule) =
 
     loadLib(preMainBuilder, "hcr_handle", "hcrGetProc")
     if m.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
-      preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
+      preMainBuilder.addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMain"))
     else:
       preMainBuilder.addVar(name = "rtl_handle", typ = CPointer)
       loadLib(preMainBuilder, "rtl_handle", "nimGC_setStackBottom")
@@ -1827,7 +1879,7 @@ proc genMainProc(m: BModule) =
       preMainBuilder.addCallStmt("initStackBottomWith_actual", cCast(CPointer, cAddr("inner")))
       preMainBuilder.addCallStmt(cDeref("inner"))
   else:
-    preMainBuilder.addCallStmt(m.config.nimMainPrefix & "PreMain")
+    preMainBuilder.addCallStmt(cSymbol(m.config.nimMainPrefix & "PreMain"))
   let preMainCode = extract(preMainBuilder)
 
   if m.config.target.targetOS == osWindows and
@@ -1882,12 +1934,14 @@ proc registerInitProcs*(g: BModuleList; m: PSym; flags: set[ModuleBackendFlag]) 
   ## Called from the IC backend.
   if HasDatInitProc in flags:
     let datInit = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "DatInit000"
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private
+    g.mainModProcs.addDeclWithVisibility(vis):
       g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     g.mainDatInit.addCallStmt(datInit)
   if HasModuleInitProc in flags:
     let init = getSomeNameForModule(g.config, g.config.toFullPath(m.info.fileIndex).AbsoluteFile) & "Init000"
+    let vis = when buildNifc: Extern else: Private
     g.mainModProcs.addDeclWithVisibility(Private):
       g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
@@ -1918,14 +1972,20 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     let systemModulePath = getModuleDllPath(m, g.modules[g.graph.config.m.systemFileIdx.int].module)
     let mainModulePath = getModuleDllPath(m, m.module)
     hcrModuleMeta.addDeclWithVisibility(Private):
-      hcrModuleMeta.addArrayVarWithInitializer(kind = Local,
+      let len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
+        ord(sfMainModule in m.module.flags) +
+        1
+      hcrModuleMeta.addArrayVarWithInitializer(m,
+          kind = Local,
           name = "hcr_module_list",
           elementType = ptrConstType(CChar),
-          len = g.graph.importDeps.getOrDefault(FileIndex(m.module.position)).len +
-            ord(sfMainModule in m.module.flags) +
-            1):
+          len = len):
         var modules: StructInitializer
-        hcrModuleMeta.addStructInitializer(modules, siArray):
+        when buildNifc:
+          let arrTyp = getArrayType(m, ptrConstType(CChar), len)
+        else:
+          let arrTyp = ""
+        hcrModuleMeta.addStructInitializer(modules, siArray, typ = arrTyp):
           if sfMainModule in m.module.flags:
             hcrModuleMeta.addField(modules, ""):
               hcrModuleMeta.add(systemModulePath)
@@ -1947,24 +2007,25 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
       g.mainModProcs.add(extract(hcrModuleMeta))
       g.mainModProcs.addDeclWithVisibility(StaticProc):
         g.mainModProcs.addVar(name = "hcr_handle", typ = CPointer)
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeaderWithParams(ccNimCall, m.getHcrInitName, CVoid):
-          var hcrInitParams: ProcParamBuilder
-          g.mainModProcs.addProcParams(hcrInitParams):
-            g.mainModProcs.addUnnamedParam(hcrInitParams, CPointer)
-            g.mainModProcs.addProcTypedParam(hcrInitParams, ccNimCall, "getProcAddr", CPointer, cProcParams(
-              (name: "", typ: CPointer),
-              (name: "", typ: ptrType(CChar))))
-        g.mainModProcs.finishProcHeaderAsProto()
-      g.mainModProcs.addDeclWithVisibility(ExportLib):
-        g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", CVoid, cProcParams())
-        g.mainModProcs.finishProcHeaderAsProto()
+      when not buildNifc:
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeaderWithParams(ccNimCall, m.getHcrInitName, CVoid):
+            var hcrInitParams: ProcParamBuilder
+            g.mainModProcs.addProcParams(hcrInitParams):
+              g.mainModProcs.addUnnamedParam(hcrInitParams, CPointer)
+              g.mainModProcs.addProcTypedParam(hcrInitParams, ccNimCall, "getProcAddr", CPointer, cProcParams(
+                (name: "", typ: CPointer),
+                (name: "", typ: ptrType(CChar))))
+          g.mainModProcs.finishProcHeaderAsProto()
+        g.mainModProcs.addDeclWithVisibility(ExportLib):
+          g.mainModProcs.addProcHeader(ccNimCall, "HcrCreateTypeInfos", CVoid, cProcParams())
+          g.mainModProcs.finishProcHeaderAsProto()
       g.mainModInit.addCallStmt(init)
       g.otherModsInit.addCallStmt("hcrInit",
         cCast(ptrType(CPointer), "hcr_module_list"),
@@ -2007,7 +2068,8 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
     return
 
   if m.s[cfsDatInitProc].buf.len > 0:
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private 
+    g.mainModProcs.addDeclWithVisibility(Extern):
       g.mainModProcs.addProcHeader(ccNimCall, datInit, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     g.mainDatInit.addCallStmt(datInit)
@@ -2022,7 +2084,8 @@ proc registerModuleToMain(g: BModuleList; m: BModule) =
         cCast(CPointer, cAddr("inner")))
 
   if m.s[cfsInitProc].buf.len > 0:
-    g.mainModProcs.addDeclWithVisibility(Private):
+    let vis = when buildNifc: Extern else: Private 
+    g.mainModProcs.addDeclWithVisibility(vis):
       g.mainModProcs.addProcHeader(ccNimCall, init, CVoid, cProcParams())
       g.mainModProcs.finishProcHeaderAsProto()
     if sfMainModule in m.module.flags:
@@ -2097,10 +2160,12 @@ proc genInitCode(m: BModule) =
         CNil,
         cCast(ptrType(CPointer), cAddr(m.typeNodesName)))
     else:
-      m.s[cfsTypeInit1].addArrayVar(Global, name = m.typeNodesName,
+      m.s[cfsTypeInit1].addArrayVar(m,
+        Global, name = m.typeNodesName,
         elementType = cgsymValue(m, "TNimNode"), len = m.typeNodes)
   if m.nimTypes > 0:
-    m.s[cfsTypeInit1].addArrayVar(Global, name = m.nimTypesName,
+    m.s[cfsTypeInit1].addArrayVar(m,
+      Global, name = m.nimTypesName,
       elementType = cgsymValue(m, "TNimType"), len = m.nimTypes)
 
   if m.hcrOn:
@@ -2128,8 +2193,8 @@ proc genInitCode(m: BModule) =
     # Give this small function its own scope
     prcBody.addScope():
       # Keep a bogus frame in case the code needs one
-      prcBody.addVar(name = "FR_", typ = "TFrame")
-      prcBody.addFieldAssignment("FR_", "len", cIntValue(0))
+      prcBody.addVar(name = cSymbol("FR_"), typ = getTFrame(m))
+      prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(preInitProc, cpsLocals)
       writeSection(preInitProc, cpsInit, m.hcrOn)
@@ -2154,8 +2219,8 @@ proc genInitCode(m: BModule) =
           var procname = makeCString(m.module.name.s)
           prcBody.add(initFrame(m.initProc, procname, quotedFilename(m.config, m.module.info)))
         else:
-          prcBody.addVar(name = "FR_", typ = "TFrame")
-          prcBody.addFieldAssignment("FR_", "len", cIntValue(0))
+          prcBody.addVar(name = cSymbol("FR_"), typ = getTFrame(m))
+          prcBody.addFieldAssignment(cSymbol("FR_"), "len", cIntValue(0))
 
       writeSection(initProc, cpsInit, m.hcrOn)
       writeSection(initProc, cpsStmts)
@@ -2233,17 +2298,26 @@ proc postprocessCode(conf: ConfigRef, r: var Rope) =
   var
     nimlnDirLastF = ""
 
-  var res: Rope = r.substr(0, f - 1)
+  var res = newBuilder(r.substr(0, f - 1))
   while f != -1:
     var
       e = r.find(postprocessDirEnd, f + 1)
       dir = r.substr(f + 1, e - 1).split(postprocessDirSep)
     case dir[0]
     of "nimln":
+      let line = dir[1]
       if dir[2] == nimlnDirLastF:
-        res.add("nimln_(" & dir[1] & ");")
+        when buildNifc:
+          res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(parseInt(line)))
+        else:
+          res.add("nimln_(" & line & ");")
       else:
-        res.add("nimlf_(" & dir[1] & ", " & quotedFilename(conf, dir[2].parseInt.FileIndex) & ");")
+        let filename = quotedFilename(conf, dir[2].parseInt.FileIndex)
+        when buildNifc:
+          res.addFieldAssignment(cSymbol("FR_"), "line", cIntValue(parseInt(line)))
+          res.addFieldAssignment(cSymbol("FR_"), "filename", filename)
+        else:
+          res.add("nimlf_(" & line & ", " & filename & ");")
         nimlnDirLastF = dir[2]
     else:
       raiseAssert "unexpected postprocess directive"
@@ -2256,7 +2330,7 @@ proc postprocessCode(conf: ConfigRef, r: var Rope) =
     else:
       res.add(r.substr(e + 1))
 
-  r = res
+  r = extract(res)
 
 proc genModule(m: BModule, cfile: Cfile): Rope =
   var moduleIsEmpty = true
@@ -2286,12 +2360,17 @@ proc genModule(m: BModule, cfile: Cfile): Rope =
   if m.config.cppCustomNamespace.len > 0:
     closeNamespaceNim(res)
 
+  when buildNifc:
+    # finish (stmts
+    res.add(")")
+
   result = extract(res)
-  if optLineDir in m.config.options:
-    var srcFileDefs = ""
-    for fi in 0..m.config.m.fileInfos.high:
-      srcFileDefs.add("#define FX_" & $fi & " " & makeSingleLineCString(toFullPath(m.config, fi.FileIndex)) & "\n")
-    result = srcFileDefs & result
+  when not buildNifc:
+    if optLineDir in m.config.options:
+      var srcFileDefs = ""
+      for fi in 0..m.config.m.fileInfos.high:
+        srcFileDefs.add("#define FX_" & $fi & " " & makeSingleLineCString(toFullPath(m.config, fi.FileIndex)) & "\n")
+      result = srcFileDefs & result
 
   if moduleIsEmpty:
     result = ""
@@ -2305,7 +2384,10 @@ proc initProcOptions(m: BModule): TOptions =
 proc rawNewModule(g: BModuleList; module: PSym, filename: AbsoluteFile): BModule =
   new(result)
   result.g = g
-  result.tmpBase = rope("TM" & $hashOwner(module) & "_")
+  when buildNifc:
+    result.tmpBase = "tmp." & $hashOwner(module) & "."
+  else:
+    result.tmpBase = rope("TM" & $hashOwner(module) & "_")
   result.headerFiles = @[]
   result.declaredThings = initIntSet()
   result.declaredProtos = initIntSet()
@@ -2376,7 +2458,7 @@ proc writeHeader(m: BModule) =
 
   let vis = if optGenDynLib in m.config.globalOptions: ImportLib else: None
   result.addDeclWithVisibility(vis):
-    result.addProcHeader(ccCDecl, m.config.nimMainPrefix & "NimMain", CVoid, cProcParams())
+    result.addProcHeader(ccCDecl, cSymbol(m.config.nimMainPrefix & "NimMain"), CVoid, cProcParams())
     result.finishProcHeaderAsProto()
   if m.config.cppCustomNamespace.len > 0: closeNamespaceNim(result)
   result.addf("#endif /* $1 */$n", [guard])
@@ -2385,6 +2467,9 @@ proc writeHeader(m: BModule) =
 
 proc getCFile(m: BModule): AbsoluteFile =
   let ext =
+    when buildNifc:
+      ".nif"
+    else:
       if m.compileToCpp: ".nim.cpp"
       elif m.config.backend == backendObjc or sfCompileToObjc in m.module.flags: ".nim.m"
       else: ".nim.c"
@@ -2605,4 +2690,5 @@ proc cgenWriteModules*(backend: RootRef, config: ConfigRef) =
   for m in cgenModules(g):
     m.writeModule(pending=true)
   writeMapping(config, g.mapping)
-  if g.generatedHeader != nil: writeHeader(g.generatedHeader)
+  when not buildNifc:
+    if g.generatedHeader != nil: writeHeader(g.generatedHeader)

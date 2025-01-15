@@ -83,7 +83,7 @@ proc genTraverseProc(c: TTraversalClosure, accessor: Rope, typ: PType) =
     var i: TLoc = getTemp(p, getSysType(c.p.module.g.graph, unknownLineInfo, tyInt))
     var oldCode = p.s(cpsStmts)
     var oldLen, newLen: int
-    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize)):
+    p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), cIntValue(arraySize), NimInt):
       oldLen = p.s(cpsStmts).buf.len
       genTraverseProc(c, subscript(accessor, i.snippet), typ.elementType)
       newLen = p.s(cpsStmts).buf.len
@@ -129,7 +129,7 @@ proc genTraverseProcSeq(c: TTraversalClosure, accessor: Rope, typ: PType) =
   var a = TLoc(snippet: accessor)
   let le = lenExpr(c.p, a)
 
-  p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), le):
+  p.s(cpsStmts).addForRangeExclusive(i.snippet, cIntValue(0), le, NimInt):
     oldLen = p.s(cpsStmts).buf.len
     genTraverseProc(c, subscript(dataField(c.p, accessor), i.snippet), typ.elementType)
     newLen = p.s(cpsStmts).buf.len
@@ -171,9 +171,10 @@ proc genTraverseProc(m: BModule, origTyp: PType; sig: SigHash): Rope =
       headerBuilder.addParam(paramBuilder, name = "op", typ = NimInt)
   let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
-    m.s[cfsProcHeaders].add(header)
-    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  when not buildNifc:
+    m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+      m.s[cfsProcHeaders].add(header)
+      m.s[cfsProcHeaders].finishProcHeaderAsProto()
   m.s[cfsProcs].addDeclWithVisibility(StaticProc):
     m.s[cfsProcs].add(header)
     m.s[cfsProcs].finishProcHeaderWithBody():
@@ -221,9 +222,10 @@ proc genTraverseProcForGlobal(m: BModule, s: PSym; info: TLineInfo): Rope =
       discard
   let header = extract(headerBuilder)
 
-  m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
-    m.s[cfsProcHeaders].add(header)
-    m.s[cfsProcHeaders].finishProcHeaderAsProto()
+  when not buildNifc:
+    m.s[cfsProcHeaders].addDeclWithVisibility(StaticProc):
+      m.s[cfsProcHeaders].add(header)
+      m.s[cfsProcHeaders].finishProcHeaderAsProto()
   m.s[cfsProcs].addDeclWithVisibility(StaticProc):
     m.s[cfsProcs].add(header)
     m.s[cfsProcs].finishProcHeaderWithBody():

@@ -173,6 +173,8 @@ type
                                              # OpenGL wrapper
     sigConflicts*: CountTable[SigHash]
     g*: BModuleList
+    when buildNifc:
+      arrayTypes*: Table[(Snippet, int), Snippet]
 
 template config*(m: BModule): ConfigRef = m.g.config
 template config*(p: BProc): ConfigRef = p.module.g.config

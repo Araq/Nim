@@ -239,10 +239,13 @@ proc genOpenArraySlice(p: BProc; q: PNode; formalType, destType: PType; prepareF
       val = cDeref(ra)
     else:
       val = ra
+    var data = getTempName(p.module)
+    p.s(cpsLocals).addVar(Local, name = data, typ = ptrType(dest), initializer = NimNil)
+    p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, val), NimNil)):
+      p.s(cpsStmts).addAssignment(data, cCast(ptrType(dest),
+        cOp(Add, NimInt, dataField(p, val), rb)))
     result = (
-      cIfExpr(dataFieldAccessor(p, val),
-        cCast(ptrType(dest), cOp(Add, NimInt, dataField(p, val), rb)),
-        NimNil),
+      data,
       lengthExpr)
   else:
     result = ("", "")
@@ -268,7 +271,8 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
     result.add(y)
   else:
     var a = initLocExpr(p, if n.kind == nkHiddenStdConv: n[1] else: n)
-    case skipTypes(a.t, abstractVar+{tyStatic}).kind
+    let et = skipTypes(a.t, abstractVar+{tyStatic})
+    case et.kind
     of tyOpenArray, tyVarargs:
       let ra = rdLoc(a)
       if reifiedOpenArray(n):
@@ -295,13 +299,27 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
         let ra = a.rdLoc
         var t = TLoc(snippet: cDeref(ra))
         let lt = lenExpr(p, t)
-        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), NimNil))
+        var data = getTempName(p.module)
+        let payloadTyp =
+          if et.kind == tyString: ptrType(NimChar)
+          else: getSeqDataPtrType(p.module, et)
+        p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+        p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, t.snippet), NimNil)):
+          p.s(cpsStmts).addAssignment(data, dataField(p, t.snippet))
+        result.add(data)
         result.addArgumentSeparator()
         result.add(lt)
       else:
         let ra = a.rdLoc
         let la = lenExpr(p, a)
-        result.add(cIfExpr(dataFieldAccessor(p, ra), dataField(p, ra), NimNil))
+        var data = getTempName(p.module)
+        let payloadTyp =
+          if et.kind == tyString: ptrType(NimChar)
+          else: getSeqDataPtrType(p.module, et)
+        p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+        p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, ra), NimNil)):
+          p.s(cpsStmts).addAssignment(data, dataField(p, ra))
+        result.add(data)
         result.addArgumentSeparator()
         result.add(la)
     of tyArray:
@@ -310,12 +328,20 @@ proc openArrayLoc(p: BProc, formalType: PType, n: PNode; result: var Builder) =
       result.addArgumentSeparator()
       result.addIntValue(lengthOrd(p.config, a.t))
     of tyPtr, tyRef:
-      case elementType(a.t).kind
+      let et = elementType(a.t)
+      case et.kind
       of tyString, tySequence:
         let ra = a.rdLoc
         var t = TLoc(snippet: cDeref(ra))
         let lt = lenExpr(p, t)
-        result.add(cIfExpr(dataFieldAccessor(p, t.snippet), dataField(p, t.snippet), NimNil))
+        var data = getTempName(p.module)
+        let payloadTyp =
+          if et.kind == tyString: ptrType(NimChar)
+          else: getSeqDataPtrType(p.module, et)
+        p.s(cpsLocals).addVar(Local, name = data, typ = payloadTyp, initializer = NimNil)
+        p.s(cpsStmts).addSingleIfStmt(cOp(NotEqual, dataFieldAccessor(p, t.snippet), NimNil)):
+          p.s(cpsStmts).addAssignment(data, dataField(p, t.snippet))
+        result.add(data)
         result.addArgumentSeparator()
         result.add(lt)
       of tyArray:
@@ -380,6 +406,8 @@ proc genArg(p: BProc, n: PNode, param: PSym; call: PNode; result: var Builder; n
         {sfImportc, sfInfixCall, sfCompilerProc} * callee.sym.flags == {sfImportc} and
         {lfHeader, lfNoDecl} * callee.sym.loc.flags != {} and
         needsIndirect:
+      addAddrLoc(p.config, a, result)
+    elif not needsIndirect and buildNifc:
       addAddrLoc(p.config, a, result)
     else:
       addRdLoc(a, result)
@@ -517,7 +545,7 @@ proc genPrefixCall(p: BProc, le, ri: PNode, d: var TLoc) =
 
 proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
 
-  template callProc(rp, params, pTyp: Snippet): Snippet =
+  template withCallProc(builder: var Builder, rp, params, pTyp: Snippet, body: untyped) =
     let e = dotField(rp, "ClE_0")
     let p = dotField(rp, "ClP_0")
     let eCall =
@@ -526,9 +554,16 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
         cCall(p, e)
       else:
         cCall(p, params, e)
-    cIfExpr(e,
-      eCall, 
-      cCall(cCast(pTyp, p), params))
+    var ifStmt: IfBuilder
+    builder.addIfStmt(ifStmt):
+      builder.addElifBranch(ifStmt, e):
+        block:
+          let it {.inject.} = eCall
+          body
+      builder.addElseBranch(ifStmt):
+        block:
+          let it {.inject.} = cCall(cCast(pTyp, p), params)
+          body
 
   template callIter(rp, params: Snippet): Snippet =
     # we know the env exists
@@ -539,6 +574,26 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       cCall(p, e)
     else:
       cCall(p, params, e)
+
+  template addCallProc(builder: var Builder, rp, params, pTyp: Snippet) =
+    let e = dotField(rp, "ClE_0")
+    let p = dotField(rp, "ClP_0")
+    let eCall =
+      # note `params` here is actually multiple params
+      if params.len == 0:
+        cCall(p, e)
+      else:
+        cCall(p, params, e)
+    var ifStmt: IfBuilder
+    builder.addIfStmt(ifStmt):
+      builder.addElifBranch(ifStmt, e):
+        builder.addStmt():
+          builder.add(eCall)
+      builder.addElseBranch(ifStmt):
+        builder.addCallStmt(cCast(pTyp, p), params)
+
+  template addCallIter(builder: var Builder, rp, params: Snippet) =
+    builder.add(callIter(rp, params))
 
   var op = initLocExpr(p, ri[0])
 
@@ -555,9 +610,9 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
     let pars = extract(params)
     p.s(cpsStmts).addStmt():
       if tfIterator in typ.flags:
-        p.s(cpsStmts).add(callIter(rp, pars))
+        p.s(cpsStmts).addCallIter(rp, pars)
       else:
-        p.s(cpsStmts).add(callProc(rp, pars, rawProc))
+        p.s(cpsStmts).addCallProc(rp, pars, rawProc)
 
   let rawProc = getClosureType(p.module, typ, clHalf)
   let canRaise = p.config.exc == excGoto and canRaiseDisp(p, ri[0])
@@ -590,9 +645,11 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       let pars = extract(params)
       if tfIterator in typ.flags:
         list.snippet = callIter(rp, pars)
+        genAssignment(p, d, list, {}) # no need for deep copying
       else:
-        list.snippet = callProc(rp, pars, rawProc)
-      genAssignment(p, d, list, {}) # no need for deep copying
+        p.s(cpsStmts).withCallProc(rp, pars, rawProc):
+          list.snippet = it
+          genAssignment(p, d, list, {}) # no need for deep copying
       if canRaise: raiseExit(p)
     else:
       var tmp: TLoc = getTemp(p, typ.returnType)
@@ -602,9 +659,11 @@ proc genClosureCall(p: BProc, le, ri: PNode, d: var TLoc) =
       let pars = extract(params)
       if tfIterator in typ.flags:
         list.snippet = callIter(rp, pars)
+        genAssignment(p, tmp, list, {})
       else:
-        list.snippet = callProc(rp, pars, rawProc)
-      genAssignment(p, tmp, list, {})
+        p.s(cpsStmts).withCallProc(rp, pars, rawProc):
+          list.snippet = it
+          genAssignment(p, tmp, list, {})
       if canRaise: raiseExit(p)
       genAssignment(p, d, tmp, {})
   else:

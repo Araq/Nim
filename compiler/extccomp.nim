@@ -293,6 +293,32 @@ compiler envcc:
     cppXsupport: "",
     props: {hasGnuAsm})
 
+compiler nifc:
+  # no purpose other than config/exe path
+  result = (
+    name: "nifc",
+    objExt: "o",
+    optSpeed: "",
+    optSize: "",
+    compilerExe: "nifc",
+    cppCompiler: "",
+    compileTmpl: "",
+    buildGui: "",
+    buildDll: "",
+    buildLib: "",
+    linkerExe: "",
+    linkTmpl: "",
+    includeCmd: "",
+    linkDirCmd: "",
+    linkLibCmd: "",
+    debug: " -g ",
+    pic: "",
+    asmStmtFrmt: "",
+    structStmtFmt: "",
+    produceAsm: "",
+    cppXsupport: "",
+    props: {})
+
 const
   CC*: array[succ(low(TSystemCC))..high(TSystemCC), TInfoCC] = [
     gcc(),
@@ -307,7 +333,8 @@ const
     icc(),
     clangcl(),
     hipcc(),
-    nvcc()]
+    nvcc(),
+    nifc()]
 
   hExt* = ".h"
 
@@ -995,6 +1022,38 @@ proc callCCompiler*(conf: ConfigRef) =
     script.add(linkCmd)
     script.add("\n")
     generateScript(conf, script)
+
+proc callNifc*(conf: ConfigRef) =
+  var exe = getConfigVar(conf, ccNifc, ".exe")
+  if exe.len == 0: exe = getCompilerExe(conf, ccNifc, false)
+  if needsExeExt(conf): exe = addFileExt(exe, "exe")
+
+  var cmd = @[exe, "c"]
+  cmd.add("--nifcache:" & conf.getNimcacheDir().string)
+  cmd.add("--cc:" & CC[conf.cCompiler].name)
+  cmd.add("--out:" & conf.absOutFile.string)
+  let opts = conf.options * {optOptimizeSpeed, optOptimizeSize}
+  if opts == {optOptimizeSpeed}:
+    cmd.add("--opt:speed")
+  elif opts == {optOptimizeSize}:
+    cmd.add("--opt:size")
+  if optLineDir in conf.options:
+    cmd.add("--linedir:on")
+  for idx, it in conf.toCompile:
+    let cf = if noAbsolutePaths(conf): extractFilename(it.cname.string)
+             else: it.cname.string
+    cmd.add(cf)
+  execExternalProgram(conf, quoteShellCommand(cmd), hintExecuting)
+
+  if optCompileOnly in conf.globalOptions: return
+  let appName = splitFile(conf.toCompile[^1].cname).name
+  when defined(windows):
+    let makefilePath = conf.getNimcacheDir().string / "Makefile." & appName & ".bat"
+    let makeCmd = expandFilename(makefilePath)
+  else:
+    let makefilePath = conf.getNimcacheDir().string / "Makefile." & appName
+    let makeCmd = "make -f " & makefilePath
+  execExternalProgram(conf, makeCmd, hintExecuting)
 
 template hashNimExe(): string = $secureHashFile(os.getAppFilename())
 
