@@ -2968,7 +2968,11 @@ when notJSnotNims and not defined(nimSeqsV2):
 proc arrayWith*[T](y: T, size: static int): array[size, T] {.noinit, nodestroy, raises: [].} =
   ## Creates a new array filled with `y`.
   for i in 0..size-1:
-    result[i] = `=dup`(y)
+    when (NimMajor, NimMinor, NimPatch) >= (2, 3, 1):
+      result[i] = `=dup`(y)
+    else:
+      wasMoved(result[i])
+      `=copy`(result[i], y)
 
 proc arrayWithDefault*[T](size: static int): array[size, T] {.noinit, nodestroy, raises: [].} =
   ## Creates a new array filled with `default(T)`.
