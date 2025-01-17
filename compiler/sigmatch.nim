@@ -2251,7 +2251,7 @@ proc isLValue(c: PContext; n: PNode, isOutParam = false): bool {.inline.} =
     result = c.inUncheckedAssignSection > 0
   of arAddressableConst:
     let sym = getRoot(n)
-    result = noStrictDefs notin c.config.legacyFeatures and sym != nil and sym.kind == skLet and isOutParam
+    result = strictDefs in c.features and sym != nil and sym.kind == skLet and isOutParam
   else:
     result = false
 
