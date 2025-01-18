@@ -149,7 +149,7 @@ else:
     nimThreadProcWrapperBody(closure)
 {.pop.}
 
-proc running*[TArg](t: Thread[TArg]): bool {.inline.} =
+proc running*[TArg](t: var Thread[TArg]): bool {.inline.} =
   ## Returns true if `t` is running.
   when not defined(cpp):
     result = t.dataFn.load(moAcquireRelease) != nil
