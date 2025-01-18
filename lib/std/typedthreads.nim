@@ -354,14 +354,9 @@ else:
     when not defined(ios):
       # This fails on iOS
       doAssert(setstacksizeResult == 0)
-    when not defined(cpp):
-      if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
-        raise newException(ResourceExhaustedError, "cannot create thread")
-      doAssert pthread_attr_destroy(a) == 0
-    else:
-      if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
-        raise newException(ResourceExhaustedError, "cannot create thread")
-      doAssert pthread_attr_destroy(a) == 0
+    if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
+      raise newException(ResourceExhaustedError, "cannot create thread")
+    doAssert pthread_attr_destroy(a) == 0
 
   proc pinToCpu*[Arg](t: var Thread[Arg]; cpu: Natural) =
     ## Pins a thread to a `CPU`:idx:.
