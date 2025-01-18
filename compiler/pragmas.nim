@@ -590,7 +590,7 @@ proc processCompile(c: PContext, n: PNode) =
     var customArgs = ""
     if n.kind in nkCallKinds:
       s = getStrLit(c, n, 1)
-      if n.len <= 3:
+      if n.len == 3:
         customArgs = getStrLit(c, n, 2)
       else:
         localError(c.config, n.info, "'.compile' pragma takes up 2 arguments")

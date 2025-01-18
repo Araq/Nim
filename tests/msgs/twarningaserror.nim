@@ -1,5 +1,4 @@
 discard """
-  matrix: "--legacy:nostrictdefs"
   joinable: false
 """
 

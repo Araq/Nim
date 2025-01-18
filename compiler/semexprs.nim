@@ -878,7 +878,7 @@ proc newHiddenAddrTaken(c: PContext, n: PNode, isOutParam: bool): PNode =
     if aa notin {arLValue, arLocalLValue}:
       if aa == arDiscriminant and c.inUncheckedAssignSection > 0:
         discard "allow access within a cast(unsafeAssign) section"
-      elif noStrictDefs notin c.config.legacyFeatures and aa == arAddressableConst and
+      elif strictDefs in c.features and aa == arAddressableConst and
               sym != nil and sym.kind == skLet and isOutParam:
         discard "allow let varaibles to be passed to out parameters"
       else:
@@ -2068,8 +2068,7 @@ proc semAsgn(c: PContext, n: PNode; mode=asgnNormal): PNode =
   let root = getRoot(a)
   let useStrictDefLet = root != nil and root.kind == skLet and
                        assignable == arAddressableConst and
-                       noStrictDefs notin c.config.legacyFeatures and
-                       isLocalSym(root)
+                       strictDefs in c.features and isLocalSym(root)
   if le == nil:
     localError(c.config, a.info, "expression has no type")
   elif (skipTypes(le, {tyGenericInst, tyAlias, tySink}).kind notin {tyVar} and

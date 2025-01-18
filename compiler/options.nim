@@ -248,8 +248,6 @@ type
       ## Useful for libraries that rely on local passC
     jsNoLambdaLifting
       ## Old transformation for closures in JS backend
-    noStrictDefs
-      ## disable "strictdefs"
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest
