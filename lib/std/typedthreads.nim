@@ -149,9 +149,12 @@ else:
     nimThreadProcWrapperBody(closure)
 {.pop.}
 
-proc running*[TArg](t: var Thread[TArg]): bool {.inline.} =
+proc running*[TArg](t: Thread[TArg]): bool {.inline.} =
   ## Returns true if `t` is running.
-  result = t.dataFn.load() != nil
+  when not defined(cpp):
+    result = t.dataFn.load(moAcquireRelease) != nil
+  else:
+    result = t.dataFn != nil
 
 proc handle*[TArg](t: Thread[TArg]): SysThread {.inline.} =
   ## Returns the thread handle of `t`.
@@ -202,11 +205,20 @@ when false:
     else:
       discard pthread_cancel(t.sys)
     when declared(registerThread): unregisterThread(addr(t))
-    t.dataFn.store nil
+    when not defined(cpp):
+      t.dataFn.store(nil, moAcquireRelease)
+    else:
+      t.dataFn = nil
     ## if thread `t` already exited, `t.core` will be `null`.
-    if not isNil(t.core):
-      deallocThreadStorage(t.core)
-      t.core = nil
+    when not defined(cpp):
+      var coreTmp = t.core.load(moAcquireRelease)
+      if not isNil(coreTmp):
+        deallocThreadStorage(coreTmp)
+        t.core.store(nil, moAcquireRelease)
+    else:
+      if not isNil(t.core):
+        deallocThreadStorage(t.core)
+        t.core = nil
 
 when hostOS == "windows":
   proc createThread*[TArg](t: var Thread[TArg],
@@ -217,11 +229,30 @@ when hostOS == "windows":
     ## Entry point is the proc `tp`.
     ## `param` is passed to `tp`. `TArg` can be `void` if you
     ## don't need to pass any data to the thread.
-    t.core.store cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    when not defined(cpp):
+      t.core.store(cast[PGcThread](allocThreadStorage(sizeof(GcThread))), moAcquireRelease)
+    else:
+      t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    
+    when TArg isnot void:
+      when not defined(cpp):
+        t.data.store(param, moAcquireRelease)
+      else:
+        t.data = param
 
-    when TArg isnot void: t.data.store param
-    t.dataFn.store tp
-    when hasSharedHeap: t.core.stackSize = ThreadStackSize
+    when not defined(cpp):
+      t.dataFn.store(tp, moAcquireRelease)
+    else:
+      t.dataFn = tp
+    
+    when hasSharedHeap:
+      when not defined(cpp):
+        var core = cast[PGcThread](t.core.load(moAcquireRelease))
+        core.stackSize = ThreadStackSize
+        t.core.store(core, moAcquireRelease)
+      else:
+        t.core.stackSize = ThreadStackSize
+
     var dummyThreadId: int32 = 0'i32
     t.sys = createThread(nil, ThreadStackSize, threadProcWrapper[TArg],
                          addr(t), 0'i32, dummyThreadId)
@@ -242,11 +273,30 @@ elif defined(genode):
   proc createThread*[TArg](t: var Thread[TArg],
                            tp: proc (arg: TArg) {.thread, nimcall.},
                            param: TArg) =
-    t.core.store cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    when not defined(cpp):
+      t.core.store(cast[PGcThread](allocThreadStorage(sizeof(GcThread))), moAcquireRelease)
+    else:
+      t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
-    when TArg isnot void: t.data.store param
-    t.dataFn.store tp
-    when hasSharedHeap: t.stackSize = ThreadStackSize
+    when TArg isnot void:
+      when not defined(cpp):
+        t.data.store(param, moAcquireRelease)
+      else:
+        t.data = param
+
+    when not defined(cpp):
+      t.dataFn.store(tp, moAcquireRelease)
+    else:
+      t.dataFn = tp
+
+    when hasSharedHeap:
+      when not defined(cpp):
+        var core = cast[PGcThread](t.core.load(moAcquireRelease))
+        core.stackSize = ThreadStackSize
+        t.core.store(core, moAcquireRelease)
+      else:
+        t.core.stackSize = ThreadStackSize
+    
     t.sys.initThread(
       runtimeEnv,
       ThreadStackSize.culonglong,
@@ -266,14 +316,30 @@ else:
     ## Entry point is the proc `tp`. `param` is passed to `tp`.
     ## `TArg` can be `void` if you
     ## don't need to pass any data to the thread.
-    t.core.store cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
+    when not defined(cpp):
+      t.core.store(cast[PGcThread](allocThreadStorage(sizeof(GcThread))), moAcquireRelease)
+    else:
+      t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
-    when TArg isnot void: t.data.store param
-    t.dataFn.store tp
-    when hasSharedHeap: 
-      var stackSize: PGcThread = t.core.load()
-      stacksize.stackSize = ThreadStackSize
-      t.core.store stacksize
+    when TArg isnot void:
+      when not defined(cpp):
+        t.data.store(param, moAcquireRelease)       
+      else:
+        t.data = param
+
+    when not defined(cpp):
+      t.dataFn.store(tp, moAcquireRelease)
+    else:
+      t.dataFn = tp
+
+    when hasSharedHeap:
+      when not defined(cpp):
+        var core = cast[PGcThread](t.core.load(moAcquireRelease))
+        core.stackSize = ThreadStackSize
+        t.core.store(core, moAcquireRelease)
+      else:
+        t.core.stackSize = ThreadStackSize
+
     var a {.noinit.}: Pthread_attr
     doAssert pthread_attr_init(a) == 0
     when hasAllocStack:
@@ -288,9 +354,14 @@ else:
     when not defined(ios):
       # This fails on iOS
       doAssert(setstacksizeResult == 0)
-    if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
-      raise newException(ResourceExhaustedError, "cannot create thread")
-    doAssert pthread_attr_destroy(a) == 0
+    when not defined(cpp):
+      if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
+        raise newException(ResourceExhaustedError, "cannot create thread")
+      doAssert pthread_attr_destroy(a) == 0
+    else:
+      if pthread_create(t.sys, a, threadProcWrapper[TArg], addr(t)) != 0:
+        raise newException(ResourceExhaustedError, "cannot create thread")
+      doAssert pthread_attr_destroy(a) == 0
 
   proc pinToCpu*[Arg](t: var Thread[Arg]; cpu: Natural) =
     ## Pins a thread to a `CPU`:idx:.

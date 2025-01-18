@@ -162,16 +162,29 @@ type
 
 const hasAllocStack* = defined(zephyr) # maybe freertos too?
 
-type
-  Thread*[TArg] = object
-    core*: Atomic[PGcThread]
-    sys*: SysThread
-    when TArg is void:
-      dataFn*: Atomic[proc () {.nimcall, gcsafe.}]
-    else:
-      dataFn*: Atomic[proc (m: TArg) {.nimcall, gcsafe.}]
-      data*: Atomic[TArg]
-    when hasAllocStack:
-      rawStack*: pointer
+when not defined(cpp):
+  type
+    Thread*[TArg] = object
+      core*: Atomic[PGcThread]
+      sys*: SysThread
+      when TArg is void:
+        dataFn*: Atomic[proc () {.nimcall, gcsafe.}]
+      else:
+        dataFn*: Atomic[proc (m: TArg) {.nimcall, gcsafe.}]
+        data*: Atomic[TArg]
+      when hasAllocStack:
+        rawStack*: pointer
+else:
+  type
+    Thread*[TArg] = object
+      core*: PGcThread
+      sys*: SysThread
+      when TArg is void:
+        dataFn*: proc () {.nimcall, gcsafe.}
+      else:
+        dataFn*: proc (m: TArg) {.nimcall, gcsafe.}
+        data*: TArg
+      when hasAllocStack:
+        rawStack*: pointer
 
 proc `=copy`*[TArg](x: var Thread[TArg], y: Thread[TArg]) {.error.}

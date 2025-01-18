@@ -52,11 +52,19 @@ when defined(boehmgc):
     boehmGC_register_my_thread(sb)
     try:
       let thrd = cast[ptr Thread[TArg]](thrd)
-      let dataFn = thrd.dataFn.load()
+      when not defined(cpp):
+        let dataFn = thrd.dataFn.load(moAcquireRelease)
       when TArg is void:
-        dataFn()
+        when not defined(cpp):
+           dataFn()
+        else:
+          thrd.dataFn()
       else:
-        dataFn(thrd.data.load())
+        when not defined(cpp):
+          let data = thrd.data.load(moAcquireRelease)
+          dataFn(data)
+        else:
+          thrd.dataFn(thrd.data)
     except:
       threadTrouble()
     finally:
@@ -65,16 +73,28 @@ when defined(boehmgc):
 else:
   proc threadProcWrapDispatch[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
     try:
-      let dataFn = thrd.dataFn.load()
+      when not defined(cpp):
+        let dataFn = thrd.dataFn.load(moAcquireRelease)
       when TArg is void:
-        dataFn()
+        when not defined(cpp):
+           dataFn()
+        else:
+          thrd.dataFn()
       else:
         when defined(nimV2):
-          dataFn(thrd.data.load())
+          when not defined(cpp):
+            let data = thrd.data.load(moAcquireRelease)
+            dataFn(data)
+          else:
+            thrd.dataFn(thrd.data)
         else:
           var x: TArg = default(TArg)
-          deepCopy(x, thrd.data.load())
-          dataFn(x)
+          when not defined(cpp):
+            deepCopy(x, thrd.data.load(moAcquireRelease))
+            dataFn(x)
+          else:
+            deepCopy(x, thrd.data)
+            thrd.dataFn(x)
     except:
       threadTrouble()
     finally:
@@ -100,16 +120,29 @@ proc threadProcWrapStackFrame[TArg](thrd: ptr Thread[TArg]) {.raises: [].} =
 
 template nimThreadProcWrapperBody*(closure: untyped): untyped =
   var thrd = cast[ptr Thread[TArg]](closure)
-  var core = thrd.core.load()
-  when declared(globalsSlot): threadVarSetValue(globalsSlot, thrd.core.load())
+  when not defined(cpp):
+    # Segfault after this line with --tlsEmulation:on
+    var core = cast[PGcThread](thrd.core.load(moAcquireRelease))
+  else:
+    var core = thrd.core
+  when declared(globalsSlot): 
+    when not defined(cpp):
+      threadVarSetValue(globalsSlot, cast[PGcThread](thrd.core.load(moAcquireRelease)))
+    else:
+      threadVarSetValue(globalsSlot, thrd.core)
   threadProcWrapStackFrame(thrd)
   # Since an unhandled exception terminates the whole process (!), there is
-  # no need for a `try finally` here, nor would it be correct: The current
-  # exception is tried to be re-raised by the code-gen after the `finally`!
+  # no need for a ``try finally`` here, nor would it be correct: The current
+  # exception is tried to be re-raised by the code-gen after the ``finally``!
   # However this is doomed to fail, because we already unmapped every heap
   # page!
 
   # mark as not running anymore:
-  thrd.core.store nil
-  thrd.dataFn.store nil
-  deallocThreadStorage(core)
+  when not defined(cpp):
+    thrd.core.store(nil, moAcquireRelease)
+    thrd.dataFn.store(nil, moAcquireRelease)
+    deallocThreadStorage(cast[pointer](core))
+  else:
+    thrd.core = nil
+    thrd.dataFn = nil
+    deallocThreadStorage(cast[pointer](core))
