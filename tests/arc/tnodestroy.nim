@@ -1,13 +1,16 @@
 discard """
-  cmd: "nim c --gc:orc $file"
+  valgrind: true
+  cmd: "nim c --mm:arc -d:useMalloc $file"
 """
 
 proc arrayWith2[T](y: T, size: static int): array[size, T] {.noinit, nodestroy, raises: [].} =
   ## Creates a new array filled with `y`.
   for i in 0..size-1:
-    result[i] = `=dup`(y)
-    # wasMoved(result[i])
-    # `=sink`(result[i], y)
+    when defined(nimHasDup):
+      result[i] = `=dup`(y)
+    else:
+      wasMoved(result[i])
+      `=copy`(result[i], y)
 
 proc useArray(x: seq[int]) =
   var a = arrayWith2(x, 2)
