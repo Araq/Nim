@@ -3533,8 +3533,12 @@ proc expr(p: BProc, n: PNode, d: var TLoc) =
     else:
       # load it into 'd':
       if op.kind == nkSym and op.sym.magic != mNone:
+        if `??`(p.module.config, n.info, "tdup.nim"):
+          echo "genMagicExpr"
         genMagicExpr(p, n, d, op.sym.magic)
       else:
+        if `??`(p.module.config, n.info, "tdup.nim"):
+          echo "genCall"
         genCall(p, n, d)
   of nkCurly:
     if isDeepConstExpr(n) and n.len != 0:
