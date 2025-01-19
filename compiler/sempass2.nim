@@ -125,9 +125,7 @@ proc collectObjectTree(graph: ModuleGraph, n: PNode) =
               graph.objectTree[root].add (depthLevel, typ)
 
 proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
-  if typ == nil or sfGeneratedOp in tracked.owner.flags:
-    # don't create type bound ops for anything in a function with a `nodestroy` pragma
-    # bug #21987
+  if typ == nil:
     return
   when false:
     let realType = typ.skipTypes(abstractInst)
@@ -135,8 +133,11 @@ proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
         optSeqDestructors in tracked.config.globalOptions:
       createTypeBoundOps(tracked.graph, tracked.c, realType.lastSon, info)
 
+  # don't create type bound ops for anything in a function with a `nodestroy` pragma
+  # bug #21987
+
   createTypeBoundOps(tracked.graph, tracked.c, typ, info, tracked.c.idgen)
-  if (tfHasAsgn in typ.flags) or
+  if sfGeneratedOp notin tracked.owner.flags and (tfHasAsgn in typ.flags) or
       optSeqDestructors in tracked.config.globalOptions:
     tracked.owner.flags.incl sfInjectDestructors
 
@@ -1209,7 +1210,8 @@ proc track(tracked: PEffects, n: PNode) =
   of nkSym:
     useVar(tracked, n)
     if n.sym.typ != nil and tfHasAsgn in n.sym.typ.flags:
-      tracked.owner.flags.incl sfInjectDestructors
+      if not tracked.isInnerProc:
+        tracked.owner.flags.incl sfInjectDestructors
       # bug #15038: ensure consistency
       if n.typ == nil or (not hasDestructor(n.typ) and sameType(n.typ, n.sym.typ)): n.typ() = n.sym.typ
   of nkHiddenAddr, nkAddr:
