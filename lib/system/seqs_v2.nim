@@ -144,7 +144,7 @@ proc grow*[T](x: var seq[T]; newLen: Natural; value: T) {.nodestroy.} =
     xu.p = cast[typeof(xu.p)](prepareSeqAddUninit(oldLen, xu.p, newLen - oldLen, sizeof(T), alignof(T)))
   xu.len = newLen
   for i in oldLen .. newLen-1:
-    when (NimMajor, NimMinor, NimPatch) >= (2, 3, 1):
+    when defined(nimHasDup):
       xu.p.data[i] = `=dup`(value)
     else:
       wasMoved(xu.p.data[i])
