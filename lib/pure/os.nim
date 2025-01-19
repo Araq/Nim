@@ -82,8 +82,6 @@ elif defined(posix):
 
   proc toTime(ts: Timespec): times.Time {.inline.} =
     result = initTime(ts.tv_sec.int64, ts.tv_nsec.int)
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 when weirdTarget:
   {.pragma: noWeirdTarget, error: "this proc is not available on the NimScript/js target".}
@@ -255,7 +253,7 @@ proc findExe*(exe: string, followSymlinks: bool = true;
     for ext in extensions:
       var x = addFileExt(x, ext)
       if fileExists(x):
-        when not (defined(windows) or defined(nintendoswitch)):
+        when defined(posix): #not (defined(windows) or defined(nintendoswitch)):
           while followSymlinks: # doubles as if here
             if x.symlinkExists:
               var r = newString(maxSymlinkLen)
@@ -279,113 +277,197 @@ when weirdTarget:
   const times = "fake const"
   template Time(x: untyped): untyped = string
 
-proc getLastModificationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
-  ## Returns the `file`'s last modification time.
-  ##
-  ## See also:
-  ## * `getLastAccessTime proc`_
-  ## * `getCreationTime proc`_
-  ## * `fileNewer proc`_
-  when defined(posix):
-    var res: Stat = default(Stat)
-    if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
-    result = res.st_mtim.toTime
-  else:
-    var f: WIN32_FIND_DATA
-    var h = findFirstFile(file, f)
-    if h == -1'i32: raiseOSError(osLastError(), file)
-    result = fromWinTime(rdFileTime(f.ftLastWriteTime))
-    findClose(h)
+when defined(weirdTarget) or defined(posix) or defined(windows) or defined(nintendoswitch):
+  proc getLastModificationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
+    ## Returns the `file`'s last modification time.
+    ##
+    ## See also:
+    ## * `getLastAccessTime proc`_
+    ## * `getCreationTime proc`_
+    ## * `fileNewer proc`_
+    when defined(posix):
+      var res: Stat = default(Stat)
+      if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
+      result = res.st_mtim.toTime
+    else:
+      var f: WIN32_FIND_DATA
+      var h = findFirstFile(file, f)
+      if h == -1'i32: raiseOSError(osLastError(), file)
+      result = fromWinTime(rdFileTime(f.ftLastWriteTime))
+      findClose(h)
 
-proc getLastAccessTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
-  ## Returns the `file`'s last read or write access time.
-  ##
-  ## See also:
-  ## * `getLastModificationTime proc`_
-  ## * `getCreationTime proc`_
-  ## * `fileNewer proc`_
-  when defined(posix):
-    var res: Stat = default(Stat)
-    if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
-    result = res.st_atim.toTime
-  else:
-    var f: WIN32_FIND_DATA
-    var h = findFirstFile(file, f)
-    if h == -1'i32: raiseOSError(osLastError(), file)
-    result = fromWinTime(rdFileTime(f.ftLastAccessTime))
-    findClose(h)
+  proc getLastAccessTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
+    ## Returns the `file`'s last read or write access time.
+    ##
+    ## See also:
+    ## * `getLastModificationTime proc`_
+    ## * `getCreationTime proc`_
+    ## * `fileNewer proc`_
+    when defined(posix):
+      var res: Stat = default(Stat)
+      if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
+      result = res.st_atim.toTime
+    else:
+      var f: WIN32_FIND_DATA
+      var h = findFirstFile(file, f)
+      if h == -1'i32: raiseOSError(osLastError(), file)
+      result = fromWinTime(rdFileTime(f.ftLastAccessTime))
+      findClose(h)
 
-proc getCreationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
-  ## Returns the `file`'s creation time.
-  ##
-  ## **Note:** Under POSIX OS's, the returned time may actually be the time at
-  ## which the file's attribute's were last modified. See
-  ## `here <https://github.com/nim-lang/Nim/issues/1058>`_ for details.
-  ##
-  ## See also:
-  ## * `getLastModificationTime proc`_
-  ## * `getLastAccessTime proc`_
-  ## * `fileNewer proc`_
-  when defined(posix):
-    var res: Stat = default(Stat)
-    if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
-    result = res.st_ctim.toTime
-  else:
-    var f: WIN32_FIND_DATA
-    var h = findFirstFile(file, f)
-    if h == -1'i32: raiseOSError(osLastError(), file)
-    result = fromWinTime(rdFileTime(f.ftCreationTime))
-    findClose(h)
+  proc getCreationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
+    ## Returns the `file`'s creation time.
+    ##
+    ## **Note:** Under POSIX OS's, the returned time may actually be the time at
+    ## which the file's attribute's were last modified. See
+    ## `here <https://github.com/nim-lang/Nim/issues/1058>`_ for details.
+    ##
+    ## See also:
+    ## * `getLastModificationTime proc`_
+    ## * `getLastAccessTime proc`_
+    ## * `fileNewer proc`_
+    when defined(posix):
+      var res: Stat = default(Stat)
+      if stat(file, res) < 0'i32: raiseOSError(osLastError(), file)
+      result = res.st_ctim.toTime
+    else:
+      var f: WIN32_FIND_DATA
+      var h = findFirstFile(file, f)
+      if h == -1'i32: raiseOSError(osLastError(), file)
+      result = fromWinTime(rdFileTime(f.ftCreationTime))
+      findClose(h)
 
-proc fileNewer*(a, b: string): bool {.rtl, extern: "nos$1", noWeirdTarget.} =
-  ## Returns true if the file `a` is newer than file `b`, i.e. if `a`'s
-  ## modification time is later than `b`'s.
-  ##
-  ## See also:
-  ## * `getLastModificationTime proc`_
-  ## * `getLastAccessTime proc`_
-  ## * `getCreationTime proc`_
-  when defined(posix):
-    # If we don't have access to nanosecond resolution, use '>='
-    when not StatHasNanoseconds:
-      result = getLastModificationTime(a) >= getLastModificationTime(b)
+  proc fileNewer*(a, b: string): bool {.rtl, extern: "nos$1", noWeirdTarget.} =
+    ## Returns true if the file `a` is newer than file `b`, i.e. if `a`'s
+    ## modification time is later than `b`'s.
+    ##
+    ## See also:
+    ## * `getLastModificationTime proc`_
+    ## * `getLastAccessTime proc`_
+    ## * `getCreationTime proc`_
+    when defined(posix):
+      # If we don't have access to nanosecond resolution, use '>='
+      when not StatHasNanoseconds:
+        result = getLastModificationTime(a) >= getLastModificationTime(b)
+      else:
+        result = getLastModificationTime(a) > getLastModificationTime(b)
     else:
       result = getLastModificationTime(a) > getLastModificationTime(b)
-  else:
-    result = getLastModificationTime(a) > getLastModificationTime(b)
 
 
-proc isAdmin*: bool {.noWeirdTarget.} =
-  ## Returns whether the caller's process is a member of the Administrators local
-  ## group (on Windows) or a root (on POSIX), via `geteuid() == 0`.
-  when defined(windows):
-    # Rewrite of the example from Microsoft Docs:
-    # https://docs.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokenmembership#examples
-    # and corresponding PostgreSQL function:
-    # https://doxygen.postgresql.org/win32security_8c.html#ae6b61e106fa5d6c5d077a9d14ee80569
-    var ntAuthority = SID_IDENTIFIER_AUTHORITY(value: SECURITY_NT_AUTHORITY)
-    var administratorsGroup: PSID
-    if not isSuccess(allocateAndInitializeSid(addr ntAuthority,
-                                              BYTE(2),
-                                              SECURITY_BUILTIN_DOMAIN_RID,
-                                              DOMAIN_ALIAS_RID_ADMINS,
-                                              0, 0, 0, 0, 0, 0,
-                                              addr administratorsGroup)):
-      raiseOSError(osLastError(), "could not get SID for Administrators group")
+  proc isAdmin*: bool {.noWeirdTarget.} =
+    ## Returns whether the caller's process is a member of the Administrators local
+    ## group (on Windows) or a root (on POSIX), via `geteuid() == 0`.
+    when defined(windows):
+      # Rewrite of the example from Microsoft Docs:
+      # https://docs.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokenmembership#examples
+      # and corresponding PostgreSQL function:
+      # https://doxygen.postgresql.org/win32security_8c.html#ae6b61e106fa5d6c5d077a9d14ee80569
+      var ntAuthority = SID_IDENTIFIER_AUTHORITY(value: SECURITY_NT_AUTHORITY)
+      var administratorsGroup: PSID
+      if not isSuccess(allocateAndInitializeSid(addr ntAuthority,
+                                                BYTE(2),
+                                                SECURITY_BUILTIN_DOMAIN_RID,
+                                                DOMAIN_ALIAS_RID_ADMINS,
+                                                0, 0, 0, 0, 0, 0,
+                                                addr administratorsGroup)):
+        raiseOSError(osLastError(), "could not get SID for Administrators group")
 
-    try:
-      var b: WINBOOL
-      if not isSuccess(checkTokenMembership(0, administratorsGroup, addr b)):
-        raiseOSError(osLastError(), "could not check access token membership")
+      try:
+        var b: WINBOOL
+        if not isSuccess(checkTokenMembership(0, administratorsGroup, addr b)):
+          raiseOSError(osLastError(), "could not check access token membership")
 
-      result = isSuccess(b)
-    finally:
-      if freeSid(administratorsGroup) != nil:
-        raiseOSError(osLastError(), "failed to free SID for Administrators group")
+        result = isSuccess(b)
+      finally:
+        if freeSid(administratorsGroup) != nil:
+          raiseOSError(osLastError(), "failed to free SID for Administrators group")
 
-  else:
-    result = geteuid() == 0
+    else:
+      result = geteuid() == 0
 
+  proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
+    tags: [ReadDirEffect], noWeirdTarget.} =
+    ## Returns the full (`absolute`:idx:) path of an existing file `filename`.
+    ##
+    ## Raises `OSError` in case of an error. Follows symlinks.
+    result = ""
+    when defined(windows):
+      var bufsize = MAX_PATH.int32
+      var unused: WideCString = nil
+      var res = newWideCString(bufsize)
+      while true:
+        var L = getFullPathNameW(newWideCString(filename), bufsize, res, unused)
+        if L == 0'i32:
+          raiseOSError(osLastError(), filename)
+        elif L > bufsize:
+          res = newWideCString(L)
+          bufsize = L
+        else:
+          result = res$L
+          break
+      # getFullPathName doesn't do case corrections, so we have to use this convoluted
+      # way of retrieving the true filename
+      for x in walkFiles(result):
+        result = x
+      if not fileExists(result) and not dirExists(result):
+        # consider using: `raiseOSError(osLastError(), result)`
+        raise newException(OSError, "file '" & result & "' does not exist")
+    else:
+      # according to Posix we don't need to allocate space for result pathname.
+      # But we need to free return value with free(3).
+      var r = realpath(filename, nil)
+      if r.isNil:
+        raiseOSError(osLastError(), filename)
+      else:
+        result = $r
+        c_free(cast[pointer](r))
+
+  proc createHardlink*(src, dest: string) {.noWeirdTarget.} =
+    ## Create a hard link at `dest` which points to the item specified
+    ## by `src`.
+    ##
+    ## .. warning:: Some OS's restrict the creation of hard links to
+    ##   root users (administrators).
+    ##
+    ## See also:
+    ## * `createSymlink proc`_
+    when defined(windows):
+      var wSrc = newWideCString(src)
+      var wDst = newWideCString(dest)
+      if createHardLinkW(wDst, wSrc, nil) == 0:
+        raiseOSError(osLastError(), $(src, dest))
+    else:
+      if link(src, dest) != 0:
+        raiseOSError(osLastError(), $(src, dest))
+
+  proc sleep*(milsecs: int) {.rtl, extern: "nos$1", tags: [TimeEffect], noWeirdTarget.} =
+    ## Sleeps `milsecs` milliseconds.
+    ## A negative `milsecs` causes sleep to return immediately.
+    when defined(windows):
+      if milsecs < 0:
+        return  # fixes #23732
+      winlean.sleep(int32(milsecs))
+    else:
+      var a, b: Timespec = default(Timespec)
+      a.tv_sec = posix.Time(milsecs div 1000)
+      a.tv_nsec = (milsecs mod 1000) * 1000 * 1000
+      discard posix.nanosleep(a, b)
+
+  proc getFileSize*(file: string): BiggestInt {.rtl, extern: "nos$1",
+    tags: [ReadIOEffect], noWeirdTarget.} =
+    ## Returns the file size of `file` (in bytes). ``OSError`` is
+    ## raised in case of an error.
+    when defined(windows):
+      var a: WIN32_FIND_DATA
+      var resA = findFirstFile(file, a)
+      if resA == -1: raiseOSError(osLastError(), file)
+      result = rdFileSize(a)
+      findClose(resA)
+    else:
+      var rawInfo: Stat = default(Stat)
+      if stat(file, rawInfo) < 0'i32:
+        raiseOSError(osLastError(), file)
+      rawInfo.st_size
 
 proc exitStatusLikeShell*(status: cint): cint =
   ## Converts exit code from `c_system` into a shell exit code.
@@ -416,43 +498,6 @@ proc execShellCmd*(command: string): int {.rtl, extern: "nos$1",
   ##   ```
   result = exitStatusLikeShell(c_system(command))
 
-proc expandFilename*(filename: string): string {.rtl, extern: "nos$1",
-  tags: [ReadDirEffect], noWeirdTarget.} =
-  ## Returns the full (`absolute`:idx:) path of an existing file `filename`.
-  ##
-  ## Raises `OSError` in case of an error. Follows symlinks.
-  result = ""
-  when defined(windows):
-    var bufsize = MAX_PATH.int32
-    var unused: WideCString = nil
-    var res = newWideCString(bufsize)
-    while true:
-      var L = getFullPathNameW(newWideCString(filename), bufsize, res, unused)
-      if L == 0'i32:
-        raiseOSError(osLastError(), filename)
-      elif L > bufsize:
-        res = newWideCString(L)
-        bufsize = L
-      else:
-        result = res$L
-        break
-    # getFullPathName doesn't do case corrections, so we have to use this convoluted
-    # way of retrieving the true filename
-    for x in walkFiles(result):
-      result = x
-    if not fileExists(result) and not dirExists(result):
-      # consider using: `raiseOSError(osLastError(), result)`
-      raise newException(OSError, "file '" & result & "' does not exist")
-  else:
-    # according to Posix we don't need to allocate space for result pathname.
-    # But we need to free return value with free(3).
-    var r = realpath(filename, nil)
-    if r.isNil:
-      raiseOSError(osLastError(), filename)
-    else:
-      result = $r
-      c_free(cast[pointer](r))
-
 proc getCurrentCompilerExe*(): string {.compileTime.} =
   result = ""
   discard "implemented in the vmops"
@@ -462,24 +507,6 @@ proc getCurrentCompilerExe*(): string {.compileTime.} =
   ## Nim compiler from a Nim or nimscript program, or the nimble binary
   ## inside a nimble program (likewise with other binaries built from
   ## compiler API).
-
-proc createHardlink*(src, dest: string) {.noWeirdTarget.} =
-  ## Create a hard link at `dest` which points to the item specified
-  ## by `src`.
-  ##
-  ## .. warning:: Some OS's restrict the creation of hard links to
-  ##   root users (administrators).
-  ##
-  ## See also:
-  ## * `createSymlink proc`_
-  when defined(windows):
-    var wSrc = newWideCString(src)
-    var wDst = newWideCString(dest)
-    if createHardLinkW(wDst, wSrc, nil) == 0:
-      raiseOSError(osLastError(), $(src, dest))
-  else:
-    if link(src, dest) != 0:
-      raiseOSError(osLastError(), $(src, dest))
 
 proc inclFilePermissions*(filename: string,
                           permissions: set[FilePermission]) {.
@@ -693,135 +720,14 @@ proc getAppDir*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdT
   ## * `getAppFilename proc`_
   result = splitFile(getAppFilename()).dir
 
-proc sleep*(milsecs: int) {.rtl, extern: "nos$1", tags: [TimeEffect], noWeirdTarget.} =
-  ## Sleeps `milsecs` milliseconds.
-  ## A negative `milsecs` causes sleep to return immediately.
-  when defined(windows):
-    if milsecs < 0:
-      return  # fixes #23732
-    winlean.sleep(int32(milsecs))
-  else:
-    var a, b: Timespec = default(Timespec)
-    a.tv_sec = posix.Time(milsecs div 1000)
-    a.tv_nsec = (milsecs mod 1000) * 1000 * 1000
-    discard posix.nanosleep(a, b)
-
-proc getFileSize*(file: string): BiggestInt {.rtl, extern: "nos$1",
-  tags: [ReadIOEffect], noWeirdTarget.} =
-  ## Returns the file size of `file` (in bytes). ``OSError`` is
-  ## raised in case of an error.
-  when defined(windows):
-    var a: WIN32_FIND_DATA
-    var resA = findFirstFile(file, a)
-    if resA == -1: raiseOSError(osLastError(), file)
-    result = rdFileSize(a)
-    findClose(resA)
-  else:
-    var rawInfo: Stat = default(Stat)
-    if stat(file, rawInfo) < 0'i32:
-      raiseOSError(osLastError(), file)
-    rawInfo.st_size
-
 when defined(windows) or weirdTarget:
   type
     DeviceId* = int32
     FileId* = int64
-else:
+elif defined(posix):
   type
     DeviceId* = Dev
     FileId* = Ino
-
-type
-  FileInfo* = object
-    ## Contains information associated with a file object.
-    ##
-    ## See also:
-    ## * `getFileInfo(handle) proc`_
-    ## * `getFileInfo(file) proc`_
-    ## * `getFileInfo(path, followSymlink) proc`_
-    id*: tuple[device: DeviceId, file: FileId] ## Device and file id.
-    kind*: PathComponent              ## Kind of file object - directory, symlink, etc.
-    size*: BiggestInt                 ## Size of file.
-    permissions*: set[FilePermission] ## File permissions
-    linkCount*: BiggestInt            ## Number of hard links the file object has.
-    lastAccessTime*: times.Time       ## Time file was last accessed.
-    lastWriteTime*: times.Time        ## Time file was last modified/written to.
-    creationTime*: times.Time         ## Time file was created. Not supported on all systems!
-    blockSize*: int                   ## Preferred I/O block size for this object.
-                                      ## In some filesystems, this may vary from file to file.
-    isSpecial*: bool                  ## Is file special? (on Unix some "files"
-                                      ## can be special=non-regular like FIFOs,
-                                      ## devices); for directories `isSpecial`
-                                      ## is always `false`, for symlinks it is
-                                      ## the same as for the link's target.
-
-template rawToFormalFileInfo(rawInfo, path, formalInfo): untyped =
-  ## Transforms the native file info structure into the one nim uses.
-  ## 'rawInfo' is either a 'BY_HANDLE_FILE_INFORMATION' structure on Windows,
-  ## or a 'Stat' structure on posix
-  when defined(windows):
-    template merge[T](a, b): untyped =
-       cast[T](
-        (uint64(cast[uint32](a))) or
-        (uint64(cast[uint32](b)) shl 32)
-       )
-    formalInfo.id.device = rawInfo.dwVolumeSerialNumber
-    formalInfo.id.file = merge[FileId](rawInfo.nFileIndexLow, rawInfo.nFileIndexHigh)
-    formalInfo.size = merge[BiggestInt](rawInfo.nFileSizeLow, rawInfo.nFileSizeHigh)
-    formalInfo.linkCount = rawInfo.nNumberOfLinks
-    formalInfo.lastAccessTime = fromWinTime(rdFileTime(rawInfo.ftLastAccessTime))
-    formalInfo.lastWriteTime = fromWinTime(rdFileTime(rawInfo.ftLastWriteTime))
-    formalInfo.creationTime = fromWinTime(rdFileTime(rawInfo.ftCreationTime))
-    formalInfo.blockSize = 8192 # xxx use Windows API instead of hardcoding
-
-    # Retrieve basic permissions
-    if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_READONLY) != 0'i32:
-      formalInfo.permissions = {fpUserExec, fpUserRead, fpGroupExec,
-                                fpGroupRead, fpOthersExec, fpOthersRead}
-    else:
-      formalInfo.permissions = {fpUserExec..fpOthersRead}
-
-    # Retrieve basic file kind
-    if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) != 0'i32:
-      formalInfo.kind = pcDir
-    else:
-      formalInfo.kind = pcFile
-    if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_REPARSE_POINT) != 0'i32:
-      formalInfo.kind = succ(formalInfo.kind)
-
-  else:
-    template checkAndIncludeMode(rawMode, formalMode: untyped) =
-      if (rawInfo.st_mode and rawMode.Mode) != 0.Mode:
-        formalInfo.permissions.incl(formalMode)
-    formalInfo.id = (rawInfo.st_dev, rawInfo.st_ino)
-    formalInfo.size = rawInfo.st_size
-    formalInfo.linkCount = rawInfo.st_nlink.BiggestInt
-    formalInfo.lastAccessTime = rawInfo.st_atim.toTime
-    formalInfo.lastWriteTime = rawInfo.st_mtim.toTime
-    formalInfo.creationTime = rawInfo.st_ctim.toTime
-    formalInfo.blockSize = rawInfo.st_blksize
-
-    formalInfo.permissions = {}
-    checkAndIncludeMode(S_IRUSR, fpUserRead)
-    checkAndIncludeMode(S_IWUSR, fpUserWrite)
-    checkAndIncludeMode(S_IXUSR, fpUserExec)
-
-    checkAndIncludeMode(S_IRGRP, fpGroupRead)
-    checkAndIncludeMode(S_IWGRP, fpGroupWrite)
-    checkAndIncludeMode(S_IXGRP, fpGroupExec)
-
-    checkAndIncludeMode(S_IROTH, fpOthersRead)
-    checkAndIncludeMode(S_IWOTH, fpOthersWrite)
-    checkAndIncludeMode(S_IXOTH, fpOthersExec)
-
-    (formalInfo.kind, formalInfo.isSpecial) =
-      if S_ISDIR(rawInfo.st_mode):
-        (pcDir, false)
-      elif S_ISLNK(rawInfo.st_mode):
-        assert(path != "") # symlinks can't occur for file handles
-        getSymlinkFileKind(path)
-      else:
-        (pcFile, not S_ISREG(rawInfo.st_mode))
 
 when defined(js):
   when not declared(FileHandle):
@@ -829,116 +735,238 @@ when defined(js):
   when not declared(File):
     type File = object
 
-proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
-  ## Retrieves file information for the file object represented by the given
-  ## handle.
-  ##
-  ## If the information cannot be retrieved, such as when the file handle
-  ## is invalid, `OSError` is raised.
-  ##
-  ## See also:
-  ## * `getFileInfo(file) proc`_
-  ## * `getFileInfo(path, followSymlink) proc`_
+when weirdTarget or defined(windows) or defined(posix) or defined(nintendoswitch):
+  type
+    FileInfo* = object
+      ## Contains information associated with a file object.
+      ##
+      ## See also:
+      ## * `getFileInfo(handle) proc`_
+      ## * `getFileInfo(file) proc`_
+      ## * `getFileInfo(path, followSymlink) proc`_
+      id*: tuple[device: DeviceId, file: FileId] ## Device and file id.
+      kind*: PathComponent              ## Kind of file object - directory, symlink, etc.
+      size*: BiggestInt                 ## Size of file.
+      permissions*: set[FilePermission] ## File permissions
+      linkCount*: BiggestInt            ## Number of hard links the file object has.
+      lastAccessTime*: times.Time       ## Time file was last accessed.
+      lastWriteTime*: times.Time        ## Time file was last modified/written to.
+      creationTime*: times.Time         ## Time file was created. Not supported on all systems!
+      blockSize*: int                   ## Preferred I/O block size for this object.
+                                        ## In some filesystems, this may vary from file to file.
+      isSpecial*: bool                  ## Is file special? (on Unix some "files"
+                                        ## can be special=non-regular like FIFOs,
+                                        ## devices); for directories `isSpecial`
+                                        ## is always `false`, for symlinks it is
+                                        ## the same as for the link's target.
 
-  # Done: ID, Kind, Size, Permissions, Link Count
-  result = default(FileInfo)
-  when defined(windows):
-    var rawInfo: BY_HANDLE_FILE_INFORMATION
-    # We have to use the super special '_get_osfhandle' call (wrapped above)
-    # To transform the C file descriptor to a native file handle.
-    var realHandle = get_osfhandle(handle)
-    if getFileInformationByHandle(realHandle, addr rawInfo) == 0:
-      raiseOSError(osLastError(), $handle)
-    rawToFormalFileInfo(rawInfo, "", result)
-  else:
-    var rawInfo: Stat = default(Stat)
-    if fstat(handle, rawInfo) < 0'i32:
-      raiseOSError(osLastError(), $handle)
-    rawToFormalFileInfo(rawInfo, "", result)
+  template rawToFormalFileInfo(rawInfo, path, formalInfo): untyped =
+    ## Transforms the native file info structure into the one nim uses.
+    ## 'rawInfo' is either a 'BY_HANDLE_FILE_INFORMATION' structure on Windows,
+    ## or a 'Stat' structure on posix
+    when defined(windows):
+      template merge[T](a, b): untyped =
+         cast[T](
+          (uint64(cast[uint32](a))) or
+          (uint64(cast[uint32](b)) shl 32)
+         )
+      formalInfo.id.device = rawInfo.dwVolumeSerialNumber
+      formalInfo.id.file = merge[FileId](rawInfo.nFileIndexLow, rawInfo.nFileIndexHigh)
+      formalInfo.size = merge[BiggestInt](rawInfo.nFileSizeLow, rawInfo.nFileSizeHigh)
+      formalInfo.linkCount = rawInfo.nNumberOfLinks
+      formalInfo.lastAccessTime = fromWinTime(rdFileTime(rawInfo.ftLastAccessTime))
+      formalInfo.lastWriteTime = fromWinTime(rdFileTime(rawInfo.ftLastWriteTime))
+      formalInfo.creationTime = fromWinTime(rdFileTime(rawInfo.ftCreationTime))
+      formalInfo.blockSize = 8192 # xxx use Windows API instead of hardcoding
 
-proc getFileInfo*(file: File): FileInfo {.noWeirdTarget.} =
-  ## Retrieves file information for the file object.
-  ##
-  ## See also:
-  ## * `getFileInfo(handle) proc`_
-  ## * `getFileInfo(path, followSymlink) proc`_
-  if file.isNil:
-    raise newException(IOError, "File is nil")
-  result = getFileInfo(file.getFileHandle())
+      # Retrieve basic permissions
+      if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_READONLY) != 0'i32:
+        formalInfo.permissions = {fpUserExec, fpUserRead, fpGroupExec,
+                                  fpGroupRead, fpOthersExec, fpOthersRead}
+      else:
+        formalInfo.permissions = {fpUserExec..fpOthersRead}
 
-proc getFileInfo*(path: string, followSymlink = true): FileInfo {.noWeirdTarget.} =
-  ## Retrieves file information for the file object pointed to by `path`.
-  ##
-  ## Due to intrinsic differences between operating systems, the information
-  ## contained by the returned `FileInfo object`_ will be slightly
-  ## different across platforms, and in some cases, incomplete or inaccurate.
-  ##
-  ## When `followSymlink` is true (default), symlinks are followed and the
-  ## information retrieved is information related to the symlink's target.
-  ## Otherwise, information on the symlink itself is retrieved (however,
-  ## field `isSpecial` is still determined from the target on Unix).
-  ##
-  ## If the information cannot be retrieved, such as when the path doesn't
-  ## exist, or when permission restrictions prevent the program from retrieving
-  ## file information, `OSError` is raised.
-  ##
-  ## See also:
-  ## * `getFileInfo(handle) proc`_
-  ## * `getFileInfo(file) proc`_
-  result = default(FileInfo)
-  when defined(windows):
-    var
-      handle = openHandle(path, followSymlink)
-      rawInfo: BY_HANDLE_FILE_INFORMATION
-    if handle == INVALID_HANDLE_VALUE:
-      raiseOSError(osLastError(), path)
-    if getFileInformationByHandle(handle, addr rawInfo) == 0:
-      raiseOSError(osLastError(), path)
-    rawToFormalFileInfo(rawInfo, path, result)
-    discard closeHandle(handle)
-  else:
-    var rawInfo: Stat = default(Stat)
-    if followSymlink:
-      if stat(path, rawInfo) < 0'i32:
-        raiseOSError(osLastError(), path)
+      # Retrieve basic file kind
+      if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) != 0'i32:
+        formalInfo.kind = pcDir
+      else:
+        formalInfo.kind = pcFile
+      if (rawInfo.dwFileAttributes and FILE_ATTRIBUTE_REPARSE_POINT) != 0'i32:
+        formalInfo.kind = succ(formalInfo.kind)
+
     else:
-      if lstat(path, rawInfo) < 0'i32:
-        raiseOSError(osLastError(), path)
-    rawToFormalFileInfo(rawInfo, path, result)
+      template checkAndIncludeMode(rawMode, formalMode: untyped) =
+        if (rawInfo.st_mode and rawMode.Mode) != 0.Mode:
+          formalInfo.permissions.incl(formalMode)
+      formalInfo.id = (rawInfo.st_dev, rawInfo.st_ino)
+      formalInfo.size = rawInfo.st_size
+      formalInfo.linkCount = rawInfo.st_nlink.BiggestInt
+      formalInfo.lastAccessTime = rawInfo.st_atim.toTime
+      formalInfo.lastWriteTime = rawInfo.st_mtim.toTime
+      formalInfo.creationTime = rawInfo.st_ctim.toTime
+      formalInfo.blockSize = rawInfo.st_blksize
 
-proc sameFileContent*(path1, path2: string): bool {.rtl, extern: "nos$1",
-  tags: [ReadIOEffect], noWeirdTarget.} =
-  ## Returns true if both pathname arguments refer to files with identical
-  ## binary content.
-  ##
-  ## See also:
-  ## * `sameFile proc`_
-  result = false
-  var
-    a, b: File = default(File)
-  if not open(a, path1): return false
-  if not open(b, path2):
+      formalInfo.permissions = {}
+      checkAndIncludeMode(S_IRUSR, fpUserRead)
+      checkAndIncludeMode(S_IWUSR, fpUserWrite)
+      checkAndIncludeMode(S_IXUSR, fpUserExec)
+
+      checkAndIncludeMode(S_IRGRP, fpGroupRead)
+      checkAndIncludeMode(S_IWGRP, fpGroupWrite)
+      checkAndIncludeMode(S_IXGRP, fpGroupExec)
+
+      checkAndIncludeMode(S_IROTH, fpOthersRead)
+      checkAndIncludeMode(S_IWOTH, fpOthersWrite)
+      checkAndIncludeMode(S_IXOTH, fpOthersExec)
+
+      (formalInfo.kind, formalInfo.isSpecial) =
+        if S_ISDIR(rawInfo.st_mode):
+          (pcDir, false)
+        elif S_ISLNK(rawInfo.st_mode):
+          assert(path != "") # symlinks can't occur for file handles
+          getSymlinkFileKind(path)
+        else:
+          (pcFile, not S_ISREG(rawInfo.st_mode))
+
+  proc getFileInfo*(handle: FileHandle): FileInfo {.noWeirdTarget.} =
+    ## Retrieves file information for the file object represented by the given
+    ## handle.
+    ##
+    ## If the information cannot be retrieved, such as when the file handle
+    ## is invalid, `OSError` is raised.
+    ##
+    ## See also:
+    ## * `getFileInfo(file) proc`_
+    ## * `getFileInfo(path, followSymlink) proc`_
+
+    # Done: ID, Kind, Size, Permissions, Link Count
+    result = default(FileInfo)
+    when defined(windows):
+      var rawInfo: BY_HANDLE_FILE_INFORMATION
+      # We have to use the super special '_get_osfhandle' call (wrapped above)
+      # To transform the C file descriptor to a native file handle.
+      var realHandle = get_osfhandle(handle)
+      if getFileInformationByHandle(realHandle, addr rawInfo) == 0:
+        raiseOSError(osLastError(), $handle)
+      rawToFormalFileInfo(rawInfo, "", result)
+    else:
+      var rawInfo: Stat = default(Stat)
+      if fstat(handle, rawInfo) < 0'i32:
+        raiseOSError(osLastError(), $handle)
+      rawToFormalFileInfo(rawInfo, "", result)
+
+  proc getFileInfo*(file: File): FileInfo {.noWeirdTarget.} =
+    ## Retrieves file information for the file object.
+    ##
+    ## See also:
+    ## * `getFileInfo(handle) proc`_
+    ## * `getFileInfo(path, followSymlink) proc`_
+    if file.isNil:
+      raise newException(IOError, "File is nil")
+    result = getFileInfo(file.getFileHandle())
+
+  proc getFileInfo*(path: string, followSymlink = true): FileInfo {.noWeirdTarget.} =
+    ## Retrieves file information for the file object pointed to by `path`.
+    ##
+    ## Due to intrinsic differences between operating systems, the information
+    ## contained by the returned `FileInfo object`_ will be slightly
+    ## different across platforms, and in some cases, incomplete or inaccurate.
+    ##
+    ## When `followSymlink` is true (default), symlinks are followed and the
+    ## information retrieved is information related to the symlink's target.
+    ## Otherwise, information on the symlink itself is retrieved (however,
+    ## field `isSpecial` is still determined from the target on Unix).
+    ##
+    ## If the information cannot be retrieved, such as when the path doesn't
+    ## exist, or when permission restrictions prevent the program from retrieving
+    ## file information, `OSError` is raised.
+    ##
+    ## See also:
+    ## * `getFileInfo(handle) proc`_
+    ## * `getFileInfo(file) proc`_
+    result = default(FileInfo)
+    when defined(windows):
+      var
+        handle = openHandle(path, followSymlink)
+        rawInfo: BY_HANDLE_FILE_INFORMATION
+      if handle == INVALID_HANDLE_VALUE:
+        raiseOSError(osLastError(), path)
+      if getFileInformationByHandle(handle, addr rawInfo) == 0:
+        raiseOSError(osLastError(), path)
+      rawToFormalFileInfo(rawInfo, path, result)
+      discard closeHandle(handle)
+    else:
+      var rawInfo: Stat = default(Stat)
+      if followSymlink:
+        if stat(path, rawInfo) < 0'i32:
+          raiseOSError(osLastError(), path)
+      else:
+        if lstat(path, rawInfo) < 0'i32:
+          raiseOSError(osLastError(), path)
+      rawToFormalFileInfo(rawInfo, path, result)
+
+  proc sameFileContent*(path1, path2: string): bool {.rtl, extern: "nos$1",
+    tags: [ReadIOEffect], noWeirdTarget.} =
+    ## Returns true if both pathname arguments refer to files with identical
+    ## binary content.
+    ##
+    ## See also:
+    ## * `sameFile proc`_
+    result = false
+    var
+      a, b: File = default(File)
+    if not open(a, path1): return false
+    if not open(b, path2):
+      close(a)
+      return false
+    let bufSize = getFileInfo(a).blockSize
+    var bufA = alloc(bufSize)
+    var bufB = alloc(bufSize)
+    while true:
+      var readA = readBuffer(a, bufA, bufSize)
+      var readB = readBuffer(b, bufB, bufSize)
+      if readA != readB:
+        result = false
+        break
+      if readA == 0:
+        result = true
+        break
+      result = equalMem(bufA, bufB, readA)
+      if not result: break
+      if readA != bufSize: break # end of file
+    dealloc(bufA)
+    dealloc(bufB)
     close(a)
-    return false
-  let bufSize = getFileInfo(a).blockSize
-  var bufA = alloc(bufSize)
-  var bufB = alloc(bufSize)
-  while true:
-    var readA = readBuffer(a, bufA, bufSize)
-    var readB = readBuffer(b, bufB, bufSize)
-    if readA != readB:
-      result = false
-      break
-    if readA == 0:
-      result = true
-      break
-    result = equalMem(bufA, bufB, readA)
-    if not result: break
-    if readA != bufSize: break # end of file
-  dealloc(bufA)
-  dealloc(bufB)
-  close(a)
-  close(b)
+    close(b)
+
+  proc getCurrentProcessId*(): int {.noWeirdTarget.} =
+    ## Return current process ID.
+    ##
+    ## See also:
+    ## * `osproc.processID(p: Process) <osproc.html#processID,Process>`_
+    when defined(windows):
+      proc GetCurrentProcessId(): DWORD {.stdcall, dynlib: "kernel32",
+                                          importc: "GetCurrentProcessId".}
+      result = GetCurrentProcessId().int
+    else:
+      result = getpid()
+
+  proc setLastModificationTime*(file: string, t: times.Time) {.noWeirdTarget.} =
+    ## Sets the `file`'s last modification time. `OSError` is raised in case of
+    ## an error.
+    when defined(posix):
+      let unixt = posix.Time(t.toUnix)
+      let micro = convert(Nanoseconds, Microseconds, t.nanosecond)
+      var timevals = [Timeval(tv_sec: unixt, tv_usec: micro),
+        Timeval(tv_sec: unixt, tv_usec: micro)] # [last access, last modification]
+      if utimes(file, timevals.addr) != 0: raiseOSError(osLastError(), file)
+    else:
+      let h = openHandle(path = file, writeAccess = true)
+      if h == INVALID_HANDLE_VALUE: raiseOSError(osLastError(), file)
+      var ft = t.toWinTime.toFILETIME
+      let res = setFileTime(h, nil, nil, ft.addr)
+      discard h.closeHandle
+      if res == 0'i32: raiseOSError(osLastError(), file)
 
 proc isHidden*(path: string): bool {.noWeirdTarget.} =
   ## Determines whether ``path`` is hidden or not, using `this
@@ -966,35 +994,6 @@ proc isHidden*(path: string): bool {.noWeirdTarget.} =
   else:
     let fileName = lastPathPart(path)
     result = len(fileName) >= 2 and fileName[0] == '.' and fileName != ".."
-
-proc getCurrentProcessId*(): int {.noWeirdTarget.} =
-  ## Return current process ID.
-  ##
-  ## See also:
-  ## * `osproc.processID(p: Process) <osproc.html#processID,Process>`_
-  when defined(windows):
-    proc GetCurrentProcessId(): DWORD {.stdcall, dynlib: "kernel32",
-                                        importc: "GetCurrentProcessId".}
-    result = GetCurrentProcessId().int
-  else:
-    result = getpid()
-
-proc setLastModificationTime*(file: string, t: times.Time) {.noWeirdTarget.} =
-  ## Sets the `file`'s last modification time. `OSError` is raised in case of
-  ## an error.
-  when defined(posix):
-    let unixt = posix.Time(t.toUnix)
-    let micro = convert(Nanoseconds, Microseconds, t.nanosecond)
-    var timevals = [Timeval(tv_sec: unixt, tv_usec: micro),
-      Timeval(tv_sec: unixt, tv_usec: micro)] # [last access, last modification]
-    if utimes(file, timevals.addr) != 0: raiseOSError(osLastError(), file)
-  else:
-    let h = openHandle(path = file, writeAccess = true)
-    if h == INVALID_HANDLE_VALUE: raiseOSError(osLastError(), file)
-    var ft = t.toWinTime.toFILETIME
-    let res = setFileTime(h, nil, nil, ft.addr)
-    discard h.closeHandle
-    if res == 0'i32: raiseOSError(osLastError(), file)
 
 
 func isValidFilename*(filename: string, maxLen = 259.Positive): bool {.since: (1, 1).} =

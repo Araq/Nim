@@ -20,8 +20,6 @@ elif defined(windows):
   import std/winlean
 elif defined(posix):
   import std/posix, system/ansi_c
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 when weirdTarget:
   {.pragma: noWeirdTarget, error: "this proc is not available on the NimScript/js target".}
@@ -873,7 +871,7 @@ when not defined(nimscript):
         else:
           result = res$L
           break
-    else:
+    elif defined(posix):
       var bufsize = 1024 # should be enough
       result = newString(bufsize)
       while true:
@@ -1023,7 +1021,7 @@ proc sameFile*(path1, path2: string): bool {.rtl, extern: "nos$1",
     discard closeHandle(f2)
 
     if not success: raiseOSError(lastErr, $(path1, path2))
-  else:
+  elif defined(posix):
     var a, b: Stat
     if stat(path1, a) < 0'i32 or stat(path2, b) < 0'i32:
       raiseOSError(osLastError(), $(path1, path2))

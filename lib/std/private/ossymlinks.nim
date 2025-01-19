@@ -13,8 +13,6 @@ elif defined(windows):
   import std/[winlean, times]
 elif defined(posix):
   import std/posix
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 
 when weirdTarget:
@@ -52,7 +50,7 @@ proc createSymlink*(src, dest: string) {.noWeirdTarget.} =
     var wDst = newWideCString(dest)
     if createSymbolicLinkW(wDst, wSrc, flag) == 0 or getLastError() != 0:
       raiseOSError(osLastError(), $(src, dest))
-  else:
+  elif defined(posix):
     if symlink(src, dest) != 0:
       raiseOSError(osLastError(), $(src, dest))
 
@@ -65,7 +63,7 @@ proc expandSymlink*(symlinkPath: string): string {.noWeirdTarget.} =
   ## * `createSymlink proc`_
   when defined(windows) or defined(nintendoswitch):
     result = symlinkPath
-  else:
+  elif defined(posix):
     var bufLen = 1024
     while true:
       result = newString(bufLen)

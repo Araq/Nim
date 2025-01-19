@@ -21,8 +21,6 @@ elif defined(posix):
 
   proc toTime(ts: Timespec): times.Time {.inline.} =
     result = initTime(ts.tv_sec.int64, ts.tv_nsec.int)
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 
 when weirdTarget:
@@ -83,7 +81,7 @@ proc getFilePermissions*(filename: string): set[FilePermission] {.
     if (a.st_mode and S_IROTH.Mode) != 0.Mode: result.incl(fpOthersRead)
     if (a.st_mode and S_IWOTH.Mode) != 0.Mode: result.incl(fpOthersWrite)
     if (a.st_mode and S_IXOTH.Mode) != 0.Mode: result.incl(fpOthersExec)
-  else:
+  elif defined(posix):
     wrapUnary(res, getFileAttributesW, filename)
     if res == -1'i32: raiseOSError(osLastError(), filename)
     if (res and FILE_ATTRIBUTE_READONLY) != 0'i32:
@@ -132,7 +130,7 @@ proc setFilePermissions*(filename: string, permissions: set[FilePermission],
     else:
       if chmod(filename, cast[Mode](p)) != 0:
         raiseOSError(osLastError(), $(filename, permissions))
-  else:
+  elif defined(posix):
     wrapUnary(res, getFileAttributesW, filename)
     if res == -1'i32: raiseOSError(osLastError(), filename)
     if fpUserWrite in permissions:
@@ -363,7 +361,7 @@ proc tryRemoveFile*(file: string): bool {.rtl, extern: "nos$1", tags: [WriteDirE
          setFileAttributes(f, FILE_ATTRIBUTE_NORMAL) != 0 and
          deleteFile(f) != 0:
         result = true
-  else:
+  elif defined(posix):
     if unlink(file) != 0'i32 and errno != ENOENT:
       result = false
 

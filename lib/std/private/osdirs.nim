@@ -20,9 +20,6 @@ elif defined(windows):
 elif defined(posix):
   import std/[posix, times]
 
-else:
-  {.error: "OS module not ported to your operating system!".}
-
 
 when weirdTarget:
   {.pragma: noWeirdTarget, error: "this proc is not available on the NimScript/js target".}
@@ -79,7 +76,7 @@ template walkCommon(pattern: string, filter) =
           let errCode = getLastError()
           if errCode == ERROR_NO_MORE_FILES: break
           else: raiseOSError(errCode.OSErrorCode)
-  else: # here we use glob
+  elif defined(posix): # here we use glob
     var
       f: Glob
       res: int
@@ -223,7 +220,7 @@ iterator walkDir*(dir: string; relative = false, checkDir = false,
             let errCode = getLastError()
             if errCode == ERROR_NO_MORE_FILES: break
             else: raiseOSError(errCode.OSErrorCode)
-    else:
+    elif defined(posix):
       var d = opendir(dir)
       if d == nil:
         if checkDir:
@@ -333,7 +330,7 @@ proc rawRemoveDir(dir: string) {.noWeirdTarget.} =
     if res == 0'i32 and lastError.int32 != 3'i32 and
         lastError.int32 != 18'i32 and lastError.int32 != 2'i32:
       raiseOSError(lastError, dir)
-  else:
+  elif defined(posix):
     if rmdir(dir) != 0'i32 and errno != ENOENT: raiseOSError(osLastError(), dir)
 
 proc removeDir*(dir: string, checkDir = false) {.rtl, extern: "nos$1", tags: [
@@ -392,7 +389,7 @@ proc rawCreateDir(dir: string): bool {.noWeirdTarget.} =
     else:
       #echo res
       raiseOSError(osLastError(), dir)
-  else:
+  elif defined(posix):
     wrapUnary(res, createDirectoryW, dir)
 
     if res != 0'i32:
@@ -566,5 +563,5 @@ proc setCurrentDir*(newDir: string) {.inline, tags: [], noWeirdTarget.} =
   when defined(windows):
     if setCurrentDirectoryW(newWideCString(newDir)) == 0'i32:
       raiseOSError(osLastError(), newDir)
-  else:
+  elif defined(posix):
     if chdir(newDir) != 0'i32: raiseOSError(osLastError(), newDir)
