@@ -89,10 +89,11 @@ const
   errXCannotBeAssignedTo = "'$1' cannot be assigned to"
   errLetNeedsInit = "'let' symbol requires an initialization"
 
-proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
-  if typ == nil or sfGeneratedOp in tracked.owner.flags:
+proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo; explicit = false) =
+  if typ == nil or (sfGeneratedOp in tracked.owner.flags and not explicit):
     # don't create type bound ops for anything in a function with a `nodestroy` pragma
     # bug #21987
+    # unless this is an explicit call, bug #24626
     return
   when false:
     let realType = typ.skipTypes(abstractInst)
@@ -926,7 +927,7 @@ proc trackCall(tracked: PEffects; n: PNode) =
       # rebind type bounds operations after createTypeBoundOps call
       let t = n[1].typ.skipTypes({tyAlias, tyVar})
       if a.sym != getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind)):
-        createTypeBoundOps(tracked, t, n.info)
+        createTypeBoundOps(tracked, t, n.info, explicit = true)
         let op = getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind))
         if op != nil:
           n[0].sym = op
