@@ -908,7 +908,7 @@ template foldl*(sequence, operation: untyped): untyped =
       multiplication = foldl(numbers, a * b)
       words = @["nim", "is", "cool"]
       concatenation = foldl(words, a & b)
-      procs = @["proc", "Is", "Also", "Fine"]
+      procs = ["proc", "Is", "Also", "Fine"]
 
 
     func foo(acc, cur: string): string =
@@ -920,14 +920,13 @@ template foldl*(sequence, operation: untyped): untyped =
     assert concatenation == "nimiscool"
     assert foldl(procs, foo(a, b)) == "procIsAlsoFine"
 
-  let s = sequence
-  assert s.len > 0, "Can't fold empty sequences"
-  var result: typeof(s[0])
-  result = s[0]
-  for i in 1..<s.len:
+  assert sequence.len > 0, "Can't fold empty sequences"
+  var result: typeof(sequence[0])
+  result = sequence[0]
+  for i in 1..<sequence.len:
     let
       a {.inject.} = result
-      b {.inject.} = s[i]
+      b {.inject.} = sequence[i]
     result = operation
   result
 
