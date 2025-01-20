@@ -6,7 +6,9 @@ import std/oserrors
 
 import ospaths2, osfiles
 import oscommon
-export dirExists, PathComponent
+import std/staticos
+when supportedSystem:
+  export dirExists, PathComponent
 
 
 when defined(nimPreviewSlimSystem):
@@ -76,7 +78,7 @@ template walkCommon(pattern: string, filter) =
           let errCode = getLastError()
           if errCode == ERROR_NO_MORE_FILES: break
           else: raiseOSError(errCode.OSErrorCode)
-  elif defined(posix): # here we use glob
+  else: # here we use glob
     var
       f: Glob
       res: int
@@ -149,10 +151,6 @@ iterator walkDirs*(pattern: string): string {.tags: [ReadDirEffect], noWeirdTarg
     assert "lib/pure/concurrency".unixToNativePath in paths
   walkCommon(pattern, isDir)
 
-proc staticWalkDir(dir: string; relative: bool): seq[
-                  tuple[kind: PathComponent, path: string]] =
-  discard
-
 iterator walkDir*(dir: string; relative = false, checkDir = false,
                   skipSpecial = false):
   tuple[kind: PathComponent, path: string] {.tags: [ReadDirEffect].} =
@@ -220,7 +218,7 @@ iterator walkDir*(dir: string; relative = false, checkDir = false,
             let errCode = getLastError()
             if errCode == ERROR_NO_MORE_FILES: break
             else: raiseOSError(errCode.OSErrorCode)
-    elif defined(posix):
+    else:
       var d = opendir(dir)
       if d == nil:
         if checkDir:
@@ -322,7 +320,6 @@ iterator walkDirRec*(dir: string,
       # continue iteration.
       # Future work can provide a way to customize this and do error reporting.
 
-
 proc rawRemoveDir(dir: string) {.noWeirdTarget.} =
   when defined(windows):
     wrapUnary(res, removeDirectoryW, dir)
@@ -330,7 +327,7 @@ proc rawRemoveDir(dir: string) {.noWeirdTarget.} =
     if res == 0'i32 and lastError.int32 != 3'i32 and
         lastError.int32 != 18'i32 and lastError.int32 != 2'i32:
       raiseOSError(lastError, dir)
-  elif defined(posix):
+  else:
     if rmdir(dir) != 0'i32 and errno != ENOENT: raiseOSError(osLastError(), dir)
 
 proc removeDir*(dir: string, checkDir = false) {.rtl, extern: "nos$1", tags: [
@@ -389,7 +386,7 @@ proc rawCreateDir(dir: string): bool {.noWeirdTarget.} =
     else:
       #echo res
       raiseOSError(osLastError(), dir)
-  elif defined(posix):
+  else:
     wrapUnary(res, createDirectoryW, dir)
 
     if res != 0'i32:
@@ -563,5 +560,5 @@ proc setCurrentDir*(newDir: string) {.inline, tags: [], noWeirdTarget.} =
   when defined(windows):
     if setCurrentDirectoryW(newWideCString(newDir)) == 0'i32:
       raiseOSError(osLastError(), newDir)
-  elif defined(posix):
+  else:
     if chdir(newDir) != 0'i32: raiseOSError(osLastError(), newDir)

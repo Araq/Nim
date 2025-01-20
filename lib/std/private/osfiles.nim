@@ -81,7 +81,7 @@ proc getFilePermissions*(filename: string): set[FilePermission] {.
     if (a.st_mode and S_IROTH.Mode) != 0.Mode: result.incl(fpOthersRead)
     if (a.st_mode and S_IWOTH.Mode) != 0.Mode: result.incl(fpOthersWrite)
     if (a.st_mode and S_IXOTH.Mode) != 0.Mode: result.incl(fpOthersExec)
-  elif defined(posix):
+  else:
     wrapUnary(res, getFileAttributesW, filename)
     if res == -1'i32: raiseOSError(osLastError(), filename)
     if (res and FILE_ATTRIBUTE_READONLY) != 0'i32:
@@ -130,7 +130,7 @@ proc setFilePermissions*(filename: string, permissions: set[FilePermission],
     else:
       if chmod(filename, cast[Mode](p)) != 0:
         raiseOSError(osLastError(), $(filename, permissions))
-  elif defined(posix):
+  else:
     wrapUnary(res, getFileAttributesW, filename)
     if res == -1'i32: raiseOSError(osLastError(), filename)
     if fpUserWrite in permissions:
@@ -361,7 +361,7 @@ proc tryRemoveFile*(file: string): bool {.rtl, extern: "nos$1", tags: [WriteDirE
          setFileAttributes(f, FILE_ATTRIBUTE_NORMAL) != 0 and
          deleteFile(f) != 0:
         result = true
-  elif defined(posix):
+  else:
     if unlink(file) != 0'i32 and errno != ENOENT:
       result = false
 

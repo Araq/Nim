@@ -32,19 +32,20 @@ runnableExamples:
 import std/private/ospaths2
 export ospaths2
 
-import std/private/osfiles
-export osfiles
+import std/private/oscommon
 
-import std/private/osdirs
-export osdirs
+when supportedSystem:
+  import std/private/osfiles
+  export osfiles
 
-import std/private/ossymlinks
-export ossymlinks
+  import std/private/osdirs
+  export osdirs
+
+  import std/private/ossymlinks
+  export ossymlinks
 
 import std/private/osappdirs
 export osappdirs
-
-import std/private/oscommon
 
 include system/inclrtl
 import std/private/since
@@ -219,65 +220,65 @@ const
     ## On Windows ``["exe", "cmd", "bat"]``, on Posix ``[""]``.
     when defined(windows): ["exe", "cmd", "bat"] else: [""]
 
-proc findExe*(exe: string, followSymlinks: bool = true;
-              extensions: openArray[string]=ExeExts): string {.
-  tags: [ReadDirEffect, ReadEnvEffect, ReadIOEffect], noNimJs.} =
-  ## Searches for `exe` in the current working directory and then
-  ## in directories listed in the ``PATH`` environment variable.
-  ##
-  ## Returns `""` if the `exe` cannot be found. `exe`
-  ## is added the `ExeExts`_ file extensions if it has none.
-  ##
-  ## If the system supports symlinks it also resolves them until it
-  ## meets the actual file. This behavior can be disabled if desired
-  ## by setting `followSymlinks = false`.
+when supportedSystem:
+  proc findExe*(exe: string, followSymlinks: bool = true;
+                extensions: openArray[string]=ExeExts): string {.
+    tags: [ReadDirEffect, ReadEnvEffect, ReadIOEffect], noNimJs.} =
+    ## Searches for `exe` in the current working directory and then
+    ## in directories listed in the ``PATH`` environment variable.
+    ##
+    ## Returns `""` if the `exe` cannot be found. `exe`
+    ## is added the `ExeExts`_ file extensions if it has none.
+    ##
+    ## If the system supports symlinks it also resolves them until it
+    ## meets the actual file. This behavior can be disabled if desired
+    ## by setting `followSymlinks = false`.
 
-  if exe.len == 0: return
-  template checkCurrentDir() =
-    for ext in extensions:
-      result = addFileExt(exe, ext)
-      if fileExists(result): return
-  when defined(posix):
-    if '/' in exe: checkCurrentDir()
-  else:
-    checkCurrentDir()
-  let path = getEnv("PATH")
-  for candidate in split(path, PathSep):
-    if candidate.len == 0: continue
-    when defined(windows):
-      var x = (if candidate[0] == '"' and candidate[^1] == '"':
-                substr(candidate, 1, candidate.len-2) else: candidate) /
-              exe
+    if exe.len == 0: return
+    template checkCurrentDir() =
+      for ext in extensions:
+        result = addFileExt(exe, ext)
+        if fileExists(result): return
+    when defined(posix):
+      if '/' in exe: checkCurrentDir()
     else:
-      var x = expandTilde(candidate) / exe
-    for ext in extensions:
-      var x = addFileExt(x, ext)
-      if fileExists(x):
-        when defined(posix): #not (defined(windows) or defined(nintendoswitch)):
-          while followSymlinks: # doubles as if here
-            if x.symlinkExists:
-              var r = newString(maxSymlinkLen)
-              var len = readlink(x.cstring, r.cstring, maxSymlinkLen)
-              if len < 0:
-                raiseOSError(osLastError(), exe)
-              if len > maxSymlinkLen:
-                r = newString(len+1)
-                len = readlink(x.cstring, r.cstring, len)
-              setLen(r, len)
-              if isAbsolute(r):
-                x = r
+      checkCurrentDir()
+    let path = getEnv("PATH")
+    for candidate in split(path, PathSep):
+      if candidate.len == 0: continue
+      when defined(windows):
+        var x = (if candidate[0] == '"' and candidate[^1] == '"':
+                  substr(candidate, 1, candidate.len-2) else: candidate) /
+                exe
+      else:
+        var x = expandTilde(candidate) / exe
+      for ext in extensions:
+        var x = addFileExt(x, ext)
+        if fileExists(x):
+          when defined(posix): #not (defined(windows) or defined(nintendoswitch)):
+            while followSymlinks: # doubles as if here
+              if x.symlinkExists:
+                var r = newString(maxSymlinkLen)
+                var len = readlink(x.cstring, r.cstring, maxSymlinkLen)
+                if len < 0:
+                  raiseOSError(osLastError(), exe)
+                if len > maxSymlinkLen:
+                  r = newString(len+1)
+                  len = readlink(x.cstring, r.cstring, len)
+                setLen(r, len)
+                if isAbsolute(r):
+                  x = r
+                else:
+                  x = parentDir(x) / r
               else:
-                x = parentDir(x) / r
-            else:
-              break
-        return x
-  result = ""
+                break
+          return x
+    result = ""
 
-when weirdTarget:
-  const times = "fake const"
-  template Time(x: untyped): untyped = string
+  when weirdTarget:
+    const times = "fake const"
+    template Time(x: untyped): untyped = string
 
-when defined(weirdTarget) or defined(posix) or defined(windows) or defined(nintendoswitch):
   proc getLastModificationTime*(file: string): times.Time {.rtl, extern: "nos$1", noWeirdTarget.} =
     ## Returns the `file`'s last modification time.
     ##
@@ -469,62 +470,52 @@ when defined(weirdTarget) or defined(posix) or defined(windows) or defined(ninte
         raiseOSError(osLastError(), file)
       rawInfo.st_size
 
-proc exitStatusLikeShell*(status: cint): cint =
-  ## Converts exit code from `c_system` into a shell exit code.
-  when defined(posix) and not weirdTarget:
-    if WIFSIGNALED(status):
-      # like the shell!
-      128 + WTERMSIG(status)
+  proc exitStatusLikeShell*(status: cint): cint =
+    ## Converts exit code from `c_system` into a shell exit code.
+    when defined(posix) and not weirdTarget:
+      if WIFSIGNALED(status):
+        # like the shell!
+        128 + WTERMSIG(status)
+      else:
+        WEXITSTATUS(status)
     else:
-      WEXITSTATUS(status)
-  else:
-    status
+      status
 
-proc execShellCmd*(command: string): int {.rtl, extern: "nos$1",
-  tags: [ExecIOEffect], noWeirdTarget.} =
-  ## Executes a `shell command`:idx:.
-  ##
-  ## Command has the form 'program args' where args are the command
-  ## line arguments given to program. The proc returns the error code
-  ## of the shell when it has finished (zero if there is no error).
-  ## The proc does not return until the process has finished.
-  ##
-  ## To execute a program without having a shell involved, use `osproc.execProcess proc
-  ## <osproc.html#execProcess,string,string,openArray[string],StringTableRef,set[ProcessOption]>`_.
-  ##
-  ## **Examples:**
-  ##   ```Nim
-  ##   discard execShellCmd("ls -la")
-  ##   ```
-  result = exitStatusLikeShell(c_system(command))
+  proc execShellCmd*(command: string): int {.rtl, extern: "nos$1",
+    tags: [ExecIOEffect], noWeirdTarget.} =
+    ## Executes a `shell command`:idx:.
+    ##
+    ## Command has the form 'program args' where args are the command
+    ## line arguments given to program. The proc returns the error code
+    ## of the shell when it has finished (zero if there is no error).
+    ## The proc does not return until the process has finished.
+    ##
+    ## To execute a program without having a shell involved, use `osproc.execProcess proc
+    ## <osproc.html#execProcess,string,string,openArray[string],StringTableRef,set[ProcessOption]>`_.
+    ##
+    ## **Examples:**
+    ##   ```Nim
+    ##   discard execShellCmd("ls -la")
+    ##   ```
+    result = exitStatusLikeShell(c_system(command))
 
-proc getCurrentCompilerExe*(): string {.compileTime.} =
-  result = ""
-  discard "implemented in the vmops"
-  ## Returns the path of the currently running Nim compiler or nimble executable.
-  ##
-  ## Can be used to retrieve the currently executing
-  ## Nim compiler from a Nim or nimscript program, or the nimble binary
-  ## inside a nimble program (likewise with other binaries built from
-  ## compiler API).
+  proc inclFilePermissions*(filename: string,
+                            permissions: set[FilePermission]) {.
+    rtl, extern: "nos$1", tags: [ReadDirEffect, WriteDirEffect], noWeirdTarget.} =
+    ## A convenience proc for:
+    ##   ```nim
+    ##   setFilePermissions(filename, getFilePermissions(filename)+permissions)
+    ##   ```
+    setFilePermissions(filename, getFilePermissions(filename)+permissions)
 
-proc inclFilePermissions*(filename: string,
-                          permissions: set[FilePermission]) {.
-  rtl, extern: "nos$1", tags: [ReadDirEffect, WriteDirEffect], noWeirdTarget.} =
-  ## A convenience proc for:
-  ##   ```nim
-  ##   setFilePermissions(filename, getFilePermissions(filename)+permissions)
-  ##   ```
-  setFilePermissions(filename, getFilePermissions(filename)+permissions)
-
-proc exclFilePermissions*(filename: string,
-                          permissions: set[FilePermission]) {.
-  rtl, extern: "nos$1", tags: [ReadDirEffect, WriteDirEffect], noWeirdTarget.} =
-  ## A convenience proc for:
-  ##   ```nim
-  ##   setFilePermissions(filename, getFilePermissions(filename)-permissions)
-  ##   ```
-  setFilePermissions(filename, getFilePermissions(filename)-permissions)
+  proc exclFilePermissions*(filename: string,
+                            permissions: set[FilePermission]) {.
+    rtl, extern: "nos$1", tags: [ReadDirEffect, WriteDirEffect], noWeirdTarget.} =
+    ## A convenience proc for:
+    ##   ```nim
+    ##   setFilePermissions(filename, getFilePermissions(filename)-permissions)
+    ##   ```
+    setFilePermissions(filename, getFilePermissions(filename)-permissions)
 
 when not weirdTarget and (defined(freebsd) or defined(dragonfly) or defined(netbsd)):
   proc sysctl(name: ptr cint, namelen: cuint, oldp: pointer, oldplen: ptr csize_t,
@@ -610,7 +601,7 @@ when not weirdTarget and defined(openbsd):
     else:
       result = ""
 
-when not (defined(windows) or defined(macosx) or weirdTarget):
+when not (defined(windows) or defined(macosx) or weirdTarget) and supportedSystem:
   proc getApplHeuristic(): string =
     when declared(paramStr):
       result = paramStr(0)
@@ -654,71 +645,81 @@ when defined(haiku):
     else:
       result = ""
 
-proc getAppFilename*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdTarget, raises: [].} =
-  ## Returns the filename of the application's executable.
-  ## This proc will resolve symlinks.
-  ##
-  ## Returns empty string when name is unavailable
-  ##
-  ## See also:
-  ## * `getAppDir proc`_
-  ## * `getCurrentCompilerExe proc`_
+  proc getAppFilename*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdTarget, raises: [].} =
+    ## Returns the filename of the application's executable.
+    ## This proc will resolve symlinks.
+    ##
+    ## Returns empty string when name is unavailable
+    ##
+    ## See also:
+    ## * `getAppDir proc`_
+    ## * `getCurrentCompilerExe proc`_
 
-  # Linux: /proc/<pid>/exe
-  # Solaris:
-  # /proc/<pid>/object/a.out (filename only)
-  # /proc/<pid>/path/a.out (complete pathname)
-  when defined(windows):
-    var bufsize = int32(MAX_PATH)
-    var buf = newWideCString(bufsize)
-    while true:
-      var L = getModuleFileNameW(0, buf, bufsize)
-      if L == 0'i32:
+    # Linux: /proc/<pid>/exe
+    # Solaris:
+    # /proc/<pid>/object/a.out (filename only)
+    # /proc/<pid>/path/a.out (complete pathname)
+    when defined(windows):
+      var bufsize = int32(MAX_PATH)
+      var buf = newWideCString(bufsize)
+      while true:
+        var L = getModuleFileNameW(0, buf, bufsize)
+        if L == 0'i32:
+          result = "" # error!
+          break
+        elif L > bufsize:
+          buf = newWideCString(L)
+          bufsize = L
+        else:
+          result = buf$L
+          break
+    elif defined(macosx):
+      var size = cuint32(0)
+      getExecPath1(nil, size)
+      result = newString(int(size))
+      if getExecPath2(result.cstring, size):
         result = "" # error!
-        break
-      elif L > bufsize:
-        buf = newWideCString(L)
-        bufsize = L
-      else:
-        result = buf$L
-        break
-  elif defined(macosx):
-    var size = cuint32(0)
-    getExecPath1(nil, size)
-    result = newString(int(size))
-    if getExecPath2(result.cstring, size):
-      result = "" # error!
-    if result.len > 0:
-      try:
-        result = result.expandFilename
-      except OSError:
+      if result.len > 0:
+        try:
+          result = result.expandFilename
+        except OSError:
+          result = ""
+    else:
+      when defined(linux) or defined(aix):
+        result = getApplAux("/proc/self/exe")
+      elif defined(solaris):
+        result = getApplAux("/proc/" & $getpid() & "/path/a.out")
+      elif defined(genode):
+        result = "" # Not supported
+      elif defined(freebsd) or defined(dragonfly) or defined(netbsd):
+        result = getApplFreebsd()
+      elif defined(haiku):
+        result = getApplHaiku()
+      elif defined(openbsd):
+        result = try: getApplOpenBsd() except OSError: ""
+      elif defined(nintendoswitch):
         result = ""
-  else:
-    when defined(linux) or defined(aix):
-      result = getApplAux("/proc/self/exe")
-    elif defined(solaris):
-      result = getApplAux("/proc/" & $getpid() & "/path/a.out")
-    elif defined(genode):
-      result = "" # Not supported
-    elif defined(freebsd) or defined(dragonfly) or defined(netbsd):
-      result = getApplFreebsd()
-    elif defined(haiku):
-      result = getApplHaiku()
-    elif defined(openbsd):
-      result = try: getApplOpenBsd() except OSError: ""
-    elif defined(nintendoswitch):
-      result = ""
 
-    # little heuristic that may work on other POSIX-like systems:
-    if result.len == 0:
-      result = try: getApplHeuristic() except OSError: ""
+      # little heuristic that may work on other POSIX-like systems:
+      if result.len == 0:
+        result = try: getApplHeuristic() except OSError: ""
 
-proc getAppDir*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdTarget.} =
-  ## Returns the directory of the application's executable.
+  proc getAppDir*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdTarget.} =
+    ## Returns the directory of the application's executable.
+    ##
+    ## See also:
+    ## * `getAppFilename proc`_
+    result = splitFile(getAppFilename()).dir
+
+proc getCurrentCompilerExe*(): string {.compileTime.} =
+  result = ""
+  discard "implemented in the vmops"
+  ## Returns the path of the currently running Nim compiler or nimble executable.
   ##
-  ## See also:
-  ## * `getAppFilename proc`_
-  result = splitFile(getAppFilename()).dir
+  ## Can be used to retrieve the currently executing
+  ## Nim compiler from a Nim or nimscript program, or the nimble binary
+  ## inside a nimble program (likewise with other binaries built from
+  ## compiler API).
 
 when defined(windows) or weirdTarget:
   type

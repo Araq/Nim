@@ -19,7 +19,7 @@ include system/inclrtl
 
 when defined(nimPreviewSlimSystem):
   import std/widestrs
-  
+
 when defined(nodejs):
   from std/private/oscommon import ReadDirEffect
 

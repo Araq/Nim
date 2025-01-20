@@ -14,3 +14,18 @@ proc staticDirExists*(dir: string): bool {.compileTime.} =
   ## Returns true if the directory `dir` exists. If `dir` is a file, false
   ## is returned. Follows symlinks.
   raiseAssert "implemented in the vmops"
+
+type
+  PathComponent* = enum   ## Enumeration specifying a path component.
+    ##
+    ## See also:
+    ## * `walkDirRec iterator`_
+    ## * `FileInfo object`_
+    pcFile,               ## path refers to a file
+    pcLinkToFile,         ## path refers to a symbolic link to a file
+    pcDir,                ## path refers to a directory
+    pcLinkToDir           ## path refers to a symbolic link to a directory
+
+proc staticWalkDir*(dir: string; relative: bool = false): seq[
+                  tuple[kind: PathComponent, path: string]] =
+  discard

@@ -2,7 +2,8 @@ include system/inclrtl
 import std/oserrors
 
 import oscommon
-export symlinkExists
+when supportedSystem:
+  export symlinkExists
 
 when defined(nimPreviewSlimSystem):
   import std/[syncio, assertions, widestrs]
@@ -50,7 +51,7 @@ proc createSymlink*(src, dest: string) {.noWeirdTarget.} =
     var wDst = newWideCString(dest)
     if createSymbolicLinkW(wDst, wSrc, flag) == 0 or getLastError() != 0:
       raiseOSError(osLastError(), $(src, dest))
-  elif defined(posix):
+  else:
     if symlink(src, dest) != 0:
       raiseOSError(osLastError(), $(src, dest))
 
@@ -63,7 +64,7 @@ proc expandSymlink*(symlinkPath: string): string {.noWeirdTarget.} =
   ## * `createSymlink proc`_
   when defined(windows) or defined(nintendoswitch):
     result = symlinkPath
-  elif defined(posix):
+  else:
     var bufLen = 1024
     while true:
       result = newString(bufLen)
