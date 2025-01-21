@@ -459,8 +459,7 @@ proc defaultConstructionError(c: PContext, t: PType, info: TLineInfo) =
 proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
   var t = semTypeNode(c, n[0], nil)
   result = newNodeIT(nkObjConstr, n.info, t)
-  result.add newNodeIT(nkType, n[0].info, t)
-  for i in 1..<n.len:
+  for i in 0..<n.len:
     result.add n[i]
 
   if t == nil:
