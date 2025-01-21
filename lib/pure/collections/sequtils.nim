@@ -142,7 +142,7 @@ func concat*[T](seqs: varargs[seq[T]]): seq[T] =
       inc(i)
 
 func addUnique*[T](s: var seq[T], x: sink T) =
-  ## Adds `x` to the container `s` if it is not already present. 
+  ## Adds `x` to the container `s` if it is not already present.
   ## Uses `==` to check if the item is already present.
   runnableExamples:
     var a = @[1, 2, 3]
@@ -920,10 +920,10 @@ template foldl*(sequence, operation: untyped): untyped =
     assert concatenation == "nimiscool"
     assert foldl(procs, foo(a, b)) == "procIsAlsoFine"
 
-  assert sequence.len > 0, "Can't fold empty sequences"
-  var result: typeof(sequence[0])
-  result = sequence[0]
-  for i in 1..<sequence.len:
+  let n = sequence.len
+  assert n > 0, "Can't fold empty sequences"
+  var result = sequence[0]
+  for i in 1..<n:
     let
       a {.inject.} = result
       b {.inject.} = sequence[i]
@@ -988,13 +988,12 @@ template foldr*(sequence, operation: untyped): untyped =
     assert multiplication == 495, "Multiplication is (5*(9*(11)))"
     assert concatenation == "nimiscool"
 
-  let s = sequence # xxx inefficient, use {.evalonce.} pending #13750
-  let n = s.len
+  let n = sequence.len
   assert n > 0, "Can't fold empty sequences"
-  var result = s[n - 1]
+  var result = sequence[n - 1]
   for i in countdown(n - 2, 0):
     let
-      a {.inject.} = s[i]
+      a {.inject.} = sequence[i]
       b {.inject.} = result
     result = operation
   result
