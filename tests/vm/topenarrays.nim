@@ -67,3 +67,12 @@ template fn=
   doAssert test([0,1,2,3,4,5]).id == 0
 fn() # ok
 static: fn()
+
+block: # bug #24630
+  func f(a: static openArray[int]): int =
+    12
+
+  func g(a: static openArray[int]) =
+    const b = f(a)
+
+  g(@[1,2,3])
