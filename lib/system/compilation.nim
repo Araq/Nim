@@ -10,7 +10,7 @@ const
     ## is the minor number of Nim's version.
     ## Odd for devel, even for releases.
 
-  NimPatch* {.intdefine.}: int = 14
+  NimPatch* {.intdefine.}: int = 15
     ## is the patch number of Nim's version.
     ## Odd for devel, even for releases.
 
