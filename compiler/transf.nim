@@ -109,7 +109,7 @@ proc transformSons(c: PTransf, n: PNode, noConstFold = false): PNode =
 proc transformSonsAfterType(c: PTransf, n: PNode, noConstFold = false): PNode =
   result = newTransNode(n)
   assert n.len != 0
-  result[0] = n[0]
+  result[0] = copyTree(n[0])
   for i in 1..<n.len:
     result[i] = transform(c, n[i], noConstFold)
 
