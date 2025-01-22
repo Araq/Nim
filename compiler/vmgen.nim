@@ -2040,7 +2040,7 @@ proc genArrayConstr(c: PCtx, n: PNode, dest: var TDest) =
   c.gABx(n, opcLdNull, dest, c.genType(n.typ))
 
   let intType = getSysType(c.graph, n.info, tyInt)
-  let seqType = n.typ.skipTypes(abstractVar-{tyTypeDesc})
+  let seqType = n.typ.skipTypes(abstractVar+{tyStatic}-{tyTypeDesc})
   if seqType.kind == tySequence:
     var tmp = c.getTemp(intType)
     c.gABx(n, opcLdImmInt, tmp, n.len)
