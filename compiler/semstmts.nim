@@ -1793,7 +1793,7 @@ proc typeSectionFinalPass(c: PContext, n: PNode) =
         if pragmas[i].kind == nkExprColonExpr and
             pragmas[i][0].kind == nkIdent and
             whichKeyword(pragmas[i][0].ident) == wSize:
-          if s.typ.kind != tyEnum and sfImportC notin s.flags:
+          if s.typ.kind != tyEnum and sfImportc notin s.flags:
             # EventType* {.size: sizeof(uint32).} = enum
             # AtomicFlag* {.importc: "atomic_flag", header: "<stdatomic.h>", size: 1.} = object
             localError(c.config, pragmas[i].info, "size pragma only allowed for enum types and imported types")
