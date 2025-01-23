@@ -645,6 +645,7 @@ when defined(haiku):
     else:
       result = ""
 
+when supportedSystem:
   proc getAppFilename*(): string {.rtl, extern: "nos$1", tags: [ReadIOEffect], noWeirdTarget, raises: [].} =
     ## Returns the filename of the application's executable.
     ## This proc will resolve symlinks.
