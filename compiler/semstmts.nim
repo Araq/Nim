@@ -1796,7 +1796,7 @@ proc typeSectionFinalPass(c: PContext, n: PNode) =
           if s.typ.kind != tyEnum and sfImportC notin s.flags:
             # EventType* {.size: sizeof(uint32).} = enum
             # AtomicFlag* {.importc: "atomic_flag", header: "<stdatomic.h>", size: 1.} = object
-            localError(c.config, pragmas[i].info, "size pragma only allowed for imported objects and enums")
+            localError(c.config, pragmas[i].info, "size pragma only allowed for enum types and imported types")
 
     if a[1].kind == nkEmpty:
       var x = a[2]
