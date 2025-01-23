@@ -2447,9 +2447,9 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
         dummyTemplate[paramsPos].add newTreeI(nkIdentDefs, n.info, ids[i], newNodeIT(nkType, n.info, typ), c.graph.emptyNode)
       else:
         dummyTemplate[paramsPos].add newTreeI(nkIdentDefs, n.info, ids[i], getSysSym(c.graph, n.info, "typed").newSymNode, c.graph.emptyNode)
-  # don't allow templates to capture variables in macors without backticks
+  # don't allow templates to capture syms without backticks
   let oldScope = c.currentScope
-  c.currentScope = c.topLevelScope
+  c.currentScope = PScope(parent: nil, symbols: initStrTable(), depthLevel: 0)
   var tmpl = semTemplateDef(c, dummyTemplate)
   c.currentScope = oldScope
   quotes[0] = tmpl[namePos]
