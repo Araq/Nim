@@ -2449,7 +2449,10 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
         dummyTemplate[paramsPos].add newTreeI(nkIdentDefs, n.info, ids[i], getSysSym(c.graph, n.info, "typed").newSymNode, c.graph.emptyNode)
   # don't allow templates to capture syms without backticks
   let oldScope = c.currentScope
-  c.currentScope = PScope(parent: nil, symbols: initStrTable(), depthLevel: 0)
+  # c.currentScope = PScope(parent: nil, symbols: initStrTable(), depthLevel: 0)
+  # TODO: allows toplevel syms to be captured for backwards compatibility
+  # perhaps `{.dirty.}` can be used for `dummyTemplate`
+  c.currentScope = c.topLevelScope
   var tmpl = semTemplateDef(c, dummyTemplate)
   c.currentScope = oldScope
   quotes[0] = tmpl[namePos]
