@@ -43,12 +43,8 @@ static:
   let sym1 = genSym()
   let sym2 = genSym()
   let sym3 = sym1
-  let nimsym = sym1.symbol
   doAssert sym1 == sym1
   doAssert sym2 != sym3
-  doAssert sym2.symbol != sym3.symbol
   doAssert sym3 == sym1
-  doAssert sym1.symbol == sym1.symbol
-  doAssert nimsym == nimsym
 
 echo "true"

@@ -41,13 +41,13 @@ proc quoted2ident*(a: NimNode): NimNode {.compileTime.} =
     return a
   var pname = ""
   for piece in 0..a.len - 1:
-    pname.add($a[piece].ident)
+    pname.add($a[piece].strVal)
   result = ^pname
 
 
 macro `?`(a: untyped): untyped =
   ## Character literal ?A #=> 'A'
-  result = ($a[1].ident)[0].lit
+  result = ($a[1].strVal)[0].lit
 ## echo(?F,?a,?t,?t,?y)
 
 when false:
