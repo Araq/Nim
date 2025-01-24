@@ -2453,14 +2453,14 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   if c.p.owner != nil and c.p.owner.kind in routineKinds:
     # skips the current routine scopes
     block exitLabel:
-      while c.currentScope != nil:
-        c.currentScope = c.currentScope.parent
+      while c.currentScope != c.topLevelScope:
         block continueLabel:
           for s in items(c.currentScope.symbols):
             if s.owner != c.p.owner:
               break exitLabel
             else:
               break continueLabel
+        c.currentScope = c.currentScope.parent
   var tmpl = semTemplateDef(c, dummyTemplate)
   c.currentScope = oldScope
   quotes[0] = tmpl[namePos]
