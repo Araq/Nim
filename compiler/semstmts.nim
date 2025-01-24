@@ -2144,7 +2144,7 @@ proc bindTypeHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp) =
                t.len == 3 and t.returnType == nil and t.firstParamType.kind == tyVar and t[2].kind == tyPointer
              of attachedDestructor:
                if c.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
-                 t.len == 2 and t.returnType == nil
+                 t.len == 2 and t.returnType == nil and t.firstParamType.kind != tyVar
                else:
                  t.len == 2 and t.returnType == nil and t.firstParamType.kind == tyVar
              else:

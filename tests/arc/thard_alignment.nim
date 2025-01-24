@@ -1,6 +1,6 @@
 discard """
 disabled: "arm64"
-cmd: "nim c --mm:arc -u:nimPreviewNonVarDestructor $file"
+cmd: "nim c --mm:arc -d:nimLegacyVarDestructor $file"
 output: "y"
 """
 

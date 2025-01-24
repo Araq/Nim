@@ -383,7 +383,7 @@ proc arrPut[I: Ordinal;T,S](a: T; i: I;
   x: S) {.noSideEffect, magic: "ArrPut".}
 
 
-when defined(nimAllowNonVarDestructor) and arcLikeMem and defined(nimPreviewNonVarDestructor):
+when defined(nimAllowNonVarDestructor) and arcLikeMem and not defined(nimLegacyVarDestructor):
   proc `=destroy`*[T](x: T) {.inline, magic: "Destroy".} =
     ## Generic `destructor`:idx: implementation that can be overridden.
     discard
@@ -392,15 +392,7 @@ else:
     ## Generic `destructor`:idx: implementation that can be overridden.
     discard
 
-  when defined(nimAllowNonVarDestructor) and arcLikeMem:
-    proc `=destroy`*(x: string) {.inline, magic: "Destroy", enforceNoRaises.} =
-      discard
 
-    proc `=destroy`*[T](x: seq[T]) {.inline, magic: "Destroy".} =
-      discard
-
-    proc `=destroy`*[T](x: ref T) {.inline, magic: "Destroy".} =
-      discard
 
 when defined(nimHasDup):
   proc `=dup`*[T](x: T): T {.inline, magic: "Dup".} =
