@@ -500,6 +500,21 @@ proc semAfterMacroCall(c: PContext, call, macroResult: PNode,
   dec(c.config.evalTemplateCounter)
   discard c.friendModules.pop()
 
+proc getLineInfo(n: PNode): TLineInfo =
+  case n.kind
+  of nkPostfix:
+    if len(n) > 1:
+      result = getLineInfo(n[1])
+    else:
+      result = n.info
+  of nkAccQuoted, nkPragmaExpr:
+    if len(n) > 0:
+      result = getLineInfo(n[0])
+    else:
+      result = n.info
+  else:
+    result = n.info
+
 const
   errMissingGenericParamsForTemplate = "'$1' has unspecified generic parameters"
 
