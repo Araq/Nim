@@ -2450,7 +2450,7 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   # don't allow templates to capture syms without backticks
   let oldScope = c.currentScope
   # c.currentScope = PScope(parent: nil, symbols: initStrTable(), depthLevel: 0)
-  if c.p.owner.kind in routineKinds:
+  if c.p.owner != nil and c.p.owner.kind in routineKinds:
     # skips the current routine scopes
     block exitLabel:
       while c.currentScope != nil:
