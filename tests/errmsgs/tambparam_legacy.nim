@@ -1,7 +1,7 @@
 import mambparam2, mambparam3
 
 echo test #[tt.Error
-^ type mismatch: got <string | string>
+^ type mismatch: got <mambparam1.test: string | mambparam3.test: string>
 but expected one of:
 proc echo(x: varargs[typed, `$$`])
   first type mismatch at position: 1

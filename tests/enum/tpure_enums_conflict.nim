@@ -18,7 +18,7 @@ when true:
   echo amb #[tt.Error
   ^ type mismatch
 Expression: echo amb
-  [1] amb: MyEnum | OtherEnum
+  [1] amb: MyEnum.amb: MyEnum | OtherEnum.amb: OtherEnum
 
 Expected one of (first mismatch at [position]):
 [1] proc echo(x: varargs[typed, `$$`])

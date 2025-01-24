@@ -7,7 +7,7 @@ import mambparam2, mambparam3
 echo test #[tt.Error
 ^ type mismatch
 Expression: echo test
-  [1] test: string | string
+  [1] test: mambparam1.test: string | mambparam3.test: string
 
 Expected one of (first mismatch at [position]):
 [1] proc echo(x: varargs[typed, `$$`])

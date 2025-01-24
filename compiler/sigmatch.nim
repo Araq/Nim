@@ -432,9 +432,16 @@ proc cmpCandidates*(a, b: TCandidate, isFormal=true): int =
 
 proc argTypeToString(arg: PNode; prefer: TPreferedDesc): string =
   if arg.kind in nkSymChoices:
-    result = typeToString(arg[0].typ, prefer)
-    for i in 1..<arg.len:
-      result.add(" | ")
+    result = ""
+    for i in 0..<arg.len:
+      if i != 0:
+        result.add(" | ")
+      let s = arg[i].sym
+      if s.owner != nil:
+        result.add(s.owner.name.s)
+        result.add(".")
+      result.add(s.name.s)
+      result.add(": ")
       result.add typeToString(arg[i].typ, prefer)
   elif arg.typ == nil:
     result = "void"

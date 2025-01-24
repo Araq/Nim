@@ -12,7 +12,7 @@ when true:
   echo valueA # MyEnum.valueA
   echo MyEnum.amb # OK.
   echo amb #[tt.Error
-  ^ type mismatch: got <MyEnum | OtherEnum>
+  ^ type mismatch: got <MyEnum.amb: MyEnum | OtherEnum.amb: OtherEnum>
 but expected one of:
 proc echo(x: varargs[typed, `$$`])
   first type mismatch at position: 1
