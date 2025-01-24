@@ -691,6 +691,9 @@ proc semTemplateDef(c: PContext, n: PNode): PNode =
     s = semIdentVis(c, skTemplate, n[namePos], {})
   assert s.kind == skTemplate
 
+  let info = getLineInfo(n[namePos])
+  suggestSym(c.graph, info, s, c.graph.usageSym)
+
   styleCheckDef(c, s)
   onDef(n[namePos].info, s)
   # check parameter list:
