@@ -19,7 +19,7 @@ include system/inclrtl
 
 when defined(nimPreviewSlimSystem):
   import std/widestrs
-  
+
 when defined(nodejs):
   from std/private/oscommon import ReadDirEffect
 
@@ -33,8 +33,6 @@ elif defined(windows):
   import std/winlean
 elif defined(posix):
   import std/posix
-else:
-  {.error: "The cmdline module has not been implemented for the target platform.".}
 
 
 # Needed by windows in order to obtain the command line for targets
