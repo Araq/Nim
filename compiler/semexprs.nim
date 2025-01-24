@@ -2450,9 +2450,17 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   # don't allow templates to capture syms without backticks
   let oldScope = c.currentScope
   # c.currentScope = PScope(parent: nil, symbols: initStrTable(), depthLevel: 0)
-  # TODO: allows toplevel syms to be captured for backwards compatibility
-  # perhaps `{.dirty.}` can be used for `dummyTemplate`
-  c.currentScope = c.topLevelScope
+  if c.p.owner.kind in routineKinds:
+    # skips the current routine scopes
+    block exitLabel:
+      while c.currentScope != nil:
+        c.currentScope = c.currentScope.parent
+        block continueLabel:
+          for s in items(c.currentScope.symbols):
+            if s.owner != c.p.owner:
+              break exitLabel
+            else:
+              break continueLabel
   var tmpl = semTemplateDef(c, dummyTemplate)
   c.currentScope = oldScope
   quotes[0] = tmpl[namePos]
