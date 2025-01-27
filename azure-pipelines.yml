@@ -133,7 +133,7 @@ jobs:
       displayName: 'Install dependencies (i386 Linux)'
       condition: and(succeeded(), eq(variables['skipci'], 'false'), eq(variables['Agent.OS'], 'Linux'), eq(variables['CPU'], 'i386'))
 
-    - bash: brew install boehmgc make sfml clang
+    - bash: brew install boehmgc make sfml llvm
       displayName: 'Install dependencies (OSX)'
       condition: and(succeeded(), eq(variables['skipci'], 'false'), eq(variables['Agent.OS'], 'Darwin'))
       # XXX can't find boehm on macos 13
