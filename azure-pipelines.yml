@@ -32,7 +32,7 @@ jobs:
         vmImage: 'macOS-13'
         CPU: amd64
       OSX_arm64:
-        vmImage: 'macOS-14'
+        vmImage: 'macOS-15'
         CPU: arm64
       OSX_amd64_cpp:
         vmImage: 'macOS-13'
