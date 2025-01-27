@@ -13,7 +13,7 @@ when defined(js):
 ## Regular expression support for Nim.
 ##
 ## This module is implemented by providing a wrapper around the
-## `PCRE (Perl-Compatible Regular Expressions) <http://www.pcre.org>`_
+## `PCRE (Perl-Compatible Regular Expressions) <https://www.pcre.org>`_
 ## C library. This means that your application will depend on the PCRE
 ## library's licence when using this module, which should not be a problem
 ## though.
@@ -466,7 +466,7 @@ template `=~` *(s: string, pattern: Regex): untyped =
     doAssert parse("   # comment ... ") == """("# comment ... ",)"""
   bind MaxSubpatterns
   when not declaredInScope(matches):
-    var matches {.inject.}: array[MaxSubpatterns, string]
+    var matches {.inject.}: array[MaxSubpatterns, string] = default(array[MaxSubpatterns, string])
   match(s, pattern, matches)
 
 # ------------------------- more string handling ------------------------------

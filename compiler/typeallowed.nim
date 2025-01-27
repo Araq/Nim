@@ -200,7 +200,7 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
       result = typeAllowedNode(marker, t.n, kind, c, flags)
   of tyEmpty:
     if kind in {skVar, skLet}: result = t
-  of tyProxy:
+  of tyError:
     # for now same as error node; we say it's a valid type as it should
     # prevent cascading errors:
     result = nil
@@ -209,9 +209,6 @@ proc typeAllowedAux(marker: var IntSet, typ: PType, kind: TSymKind,
       result = typeAllowedAux(marker, t.skipModifier, kind, c, flags+{taHeap})
     else:
       result = t
-  of tyConcept:
-    if kind != skParam: result = t
-    else: result = nil
 
 proc typeAllowed*(t: PType, kind: TSymKind; c: PContext; flags: TTypeAllowedFlags = {}): PType =
   # returns 'nil' on success and otherwise the part of the type that is

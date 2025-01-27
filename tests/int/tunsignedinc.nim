@@ -32,3 +32,9 @@ block t4175:
   const j = 0u - 1u
   doAssert i == j
   doAssert j + 1u == 0u
+
+block: # https://forum.nim-lang.org/t/12465#76998
+  var a: int = 1
+  var x: uint8 = 1
+  a.inc(x)   # Error: type mismatch
+  doAssert a == 2

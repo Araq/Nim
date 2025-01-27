@@ -14,7 +14,7 @@ when defined(nimdoc):
       ## Wrapper for `time_t`. On posix, this is an alias to `posix.Time`.
 elif defined(windows):
   when defined(i386) and defined(gcc):
-    type Time* {.importc: "time_t", header: "<time.h>".} = distinct int32
+    type Time* {.importc: "time_t", header: "<time.h>".} = distinct clong
   else:
     # newest version of Visual C++ defines time_t to be of 64 bits
     type Time* {.importc: "time_t", header: "<time.h>".} = distinct int64

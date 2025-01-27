@@ -16,3 +16,16 @@ block:
     doAssert s == 2
 
   foo()
+
+import std/deques
+
+block: # bug #24319
+  var queue = initDeque[array[32, byte]]()
+  for i in 0 ..< 5:
+    let element: array[32, byte] = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 1,
+          ]
+    queue.addLast(element)
+
+  doAssert queue.popLast[^1] == byte(1)

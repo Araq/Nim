@@ -1,6 +1,7 @@
 discard """
   output: '''
 Hello World
+Hello World
 Hello World'''
   joinable: false
 """
@@ -8,7 +9,7 @@ type MyProc = proc() {.cdecl.}
 type MyProc2 = proc() {.nimcall.}
 type MyProc3 = proc() #{.closure.} is implicit
 
-proc testProc()  = echo "Hello World"
+proc testProc() {.exportc:"foo".} = echo "Hello World"
 
 template reject(x) = doAssert(not compiles(x))
 
@@ -22,6 +23,10 @@ proc callPointer(p: pointer) =
 
   ffunc0()
   ffunc1()
+
+    # bug #5901
+  proc foo() {.importc.}
+  (cast[proc(a: int) {.cdecl.}](foo))(5)
 
 callPointer(cast[pointer](testProc))
 

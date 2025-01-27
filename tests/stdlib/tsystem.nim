@@ -4,7 +4,7 @@ discard """
 """
 
 import stdtest/testutils
-import std/assertions
+import std/[assertions, formatfloat]
 
 # TODO: in future work move existing `system` tests here, where they belong
 
@@ -182,3 +182,19 @@ block: # bug #20516
 
   when not defined(js):
     let a = create(Foo)
+
+block: # bug #6549
+  when not defined(js):
+    block:
+      const v = 18446744073709551615'u64
+
+      doAssert $v == "18446744073709551615"
+      doAssert $float32(v) == "1.8446744e+19", $float32(v)
+      doAssert $float64(v) == "1.8446744073709552e+19", $float64(v)
+
+    block:
+      let v = 18446744073709551615'u64
+
+      doAssert $v == "18446744073709551615"
+      doAssert $float32(v) == "1.8446744e+19"
+      doAssert $float64(v) == "1.8446744073709552e+19"

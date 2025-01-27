@@ -1,6 +1,7 @@
 discard """
   outputsub: "true"
   disabled: "32bit"
+  retries: 2
 """
 
 type

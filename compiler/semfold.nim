@@ -38,7 +38,7 @@ proc newIntNodeT*(intVal: Int128, n: PNode; idgen: IdGenerator; g: ModuleGraph):
   # original type was 'int', not a distinct int etc.
   if n.typ.kind == tyInt:
     # access cache for the int lit type
-    result.typ = getIntLitTypeG(g, result, idgen)
+    result.typ() = getIntLitTypeG(g, result, idgen)
   result.info = n.info
 
 proc newFloatNodeT*(floatVal: BiggestFloat, n: PNode; g: ModuleGraph): PNode =
@@ -46,12 +46,12 @@ proc newFloatNodeT*(floatVal: BiggestFloat, n: PNode; g: ModuleGraph): PNode =
     result = newFloatNode(nkFloat32Lit, floatVal)
   else:
     result = newFloatNode(nkFloatLit, floatVal)
-  result.typ = n.typ
+  result.typ() = n.typ
   result.info = n.info
 
 proc newStrNodeT*(strVal: string, n: PNode; g: ModuleGraph): PNode =
   result = newStrNode(nkStrLit, strVal)
-  result.typ = n.typ
+  result.typ() = n.typ
   result.info = n.info
 
 proc getConstExpr*(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode
@@ -302,6 +302,9 @@ proc evalOp(m: TMagic, n, a, b, c: PNode; idgen: IdGenerator; g: ModuleGraph): P
   of mMinusSet:
     result = nimsets.diffSets(g.config, a, b)
     result.info = n.info
+  of mXorSet:
+    result = nimsets.symdiffSets(g.config, a, b)
+    result.info = n.info
   of mConStrStr: result = newStrNodeT(getStrOrChar(a) & getStrOrChar(b), n, g)
   of mInSet: result = newIntNodeT(toInt128(ord(inSet(a, b))), n, idgen, g)
   of mRepr:
@@ -316,7 +319,7 @@ proc evalOp(m: TMagic, n, a, b, c: PNode; idgen: IdGenerator; g: ModuleGraph): P
   of mEnumToStr: result = newStrNodeT(ordinalValToString(a, g), n, g)
   of mArrToSeq:
     result = copyTree(a)
-    result.typ = n.typ
+    result.typ() = n.typ
   of mCompileOption:
     result = newIntNodeT(toInt128(ord(commands.testCompileOption(g.config, a.getStr, n.info))), n, idgen, g)
   of mCompileOptionArg:
@@ -411,7 +414,7 @@ proc foldConv(n, a: PNode; idgen: IdGenerator; g: ModuleGraph; check = false): P
       result = newIntNodeT(toInt128(a.getOrdValue != 0), n, idgen, g)
     of tyBool, tyEnum: # xxx shouldn't we disallow `tyEnum`?
       result = a
-      result.typ = n.typ
+      result.typ() = n.typ
     else:
       raiseAssert $srcTyp.kind
   of tyInt..tyInt64, tyUInt..tyUInt64:
@@ -420,14 +423,17 @@ proc foldConv(n, a: PNode; idgen: IdGenerator; g: ModuleGraph; check = false): P
       result = newIntNodeT(toInt128(getFloat(a)), n, idgen, g)
     of tyChar, tyUInt..tyUInt64, tyInt..tyInt64:
       var val = a.getOrdValue
-      if check: rangeCheck(n, val, g)
-      result = newIntNodeT(val, n, idgen, g)
       if dstTyp.kind in {tyUInt..tyUInt64}:
+        result = newIntNodeT(maskBytes(val, int getSize(g.config, dstTyp)), n, idgen, g)
         result.transitionIntKind(nkUIntLit)
+      else:
+        if check: rangeCheck(n, val, g)
+        result = newIntNodeT(val, n, idgen, g)
     else:
       result = a
-      result.typ = n.typ
-    if check and result.kind in {nkCharLit..nkUInt64Lit}:
+      result.typ() = n.typ
+    if check and result.kind in {nkCharLit..nkUInt64Lit} and
+          dstTyp.kind notin {tyUInt..tyUInt64}:
       rangeCheck(n, getInt(result), g)
   of tyFloat..tyFloat64:
     case srcTyp.kind
@@ -435,12 +441,12 @@ proc foldConv(n, a: PNode; idgen: IdGenerator; g: ModuleGraph; check = false): P
       result = newFloatNodeT(toFloat64(getOrdValue(a)), n, g)
     else:
       result = a
-      result.typ = n.typ
+      result.typ() = n.typ
   of tyOpenArray, tyVarargs, tyProc, tyPointer:
     result = nil
   else:
     result = a
-    result.typ = n.typ
+    result.typ() = n.typ
 
 proc getArrayConstr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode =
   if n.kind == nkBracket:
@@ -511,10 +517,10 @@ proc foldConStrStr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode
 proc newSymNodeTypeDesc*(s: PSym; idgen: IdGenerator; info: TLineInfo): PNode =
   result = newSymNode(s, info)
   if s.typ.kind != tyTypeDesc:
-    result.typ = newType(tyTypeDesc, idgen, s.owner)
+    result.typ() = newType(tyTypeDesc, idgen, s.owner)
     result.typ.addSonSkipIntLit(s.typ, idgen)
   else:
-    result.typ = s.typ
+    result.typ() = s.typ
 
 proc foldDefine(m, s: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode =
   result = nil
@@ -583,7 +589,7 @@ proc foldDefine(m, s: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode
             raise newException(ValueError, "invalid enum value: " & str)
         else:
           localError(g.config, s.info, "unsupported type $1 for define '$2'" %
-            [name, typeToString(rawTyp)])
+            [typeToString(rawTyp), name])
       except ValueError as e:
         localError(g.config, s.info,
           "could not process define '$1' of type $2; $3" %
@@ -633,7 +639,7 @@ proc getConstExpr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode 
       if s.typ.kind == tyStatic:
         if s.typ.n != nil and tfUnresolved notin s.typ.flags:
           result = s.typ.n
-          result.typ = s.typ.base
+          result.typ() = s.typ.base
       elif s.typ.isIntLit:
         result = s.typ.n
       else:
@@ -701,10 +707,7 @@ proc getConstExpr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode 
     except DivByZeroDefect:
       localError(g.config, n.info, "division by zero")
   of nkAddr:
-    var a = getConstExpr(m, n[0], idgen, g)
-    if a != nil:
-      result = n
-      n[0] = a
+    result = nil # don't fold paths containing nkAddr
   of nkBracket, nkCurly:
     result = copyNode(n)
     for son in n.items:
@@ -749,7 +752,9 @@ proc getConstExpr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode 
     if a == nil: return
     if leValueConv(n[1], a) and leValueConv(a, n[2]):
       result = a              # a <= x and x <= b
-      result.typ = n.typ
+      result.typ() = n.typ
+    elif n.typ.kind in {tyUInt..tyUInt64}:
+      discard "don't check uints"
     else:
       localError(g.config, n.info,
         "conversion from $1 to $2 is invalid" %
@@ -758,7 +763,7 @@ proc getConstExpr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode 
     var a = getConstExpr(m, n[0], idgen, g)
     if a == nil: return
     result = a
-    result.typ = n.typ
+    result.typ() = n.typ
   of nkHiddenStdConv, nkHiddenSubConv, nkConv:
     var a = getConstExpr(m, n[1], idgen, g)
     if a == nil: return
@@ -771,10 +776,11 @@ proc getConstExpr(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode 
   of nkCast:
     var a = getConstExpr(m, n[1], idgen, g)
     if a == nil: return
-    if n.typ != nil and n.typ.kind in NilableTypes:
+    if n.typ != nil and n.typ.kind in NilableTypes and
+        not (n.typ.kind == tyProc and a.typ.kind == tyProc):
       # we allow compile-time 'cast' for pointer types:
       result = a
-      result.typ = n.typ
+      result.typ() = n.typ
   of nkBracketExpr: result = foldArrayAccess(m, n, idgen, g)
   of nkDotExpr: result = foldFieldAccess(m, n, idgen, g)
   of nkCheckedFieldExpr:

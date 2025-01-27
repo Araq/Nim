@@ -1,19 +1,19 @@
 #
 #
 #         Maintenance program for Nim
-#        (c) Copyright 2017 Andreas Rumpf
+#        (c) Copyright 2024 Andreas Rumpf
 #
 #    See the file "copying.txt", included in this
 #    distribution, for details about the copyright.
 #
-#    See doc/koch.txt for documentation.
+#    See doc/koch.md for documentation.
 #
 
 const
   # examples of possible values for repos: Head, ea82b54
-  NimbleStableCommit = "f8bd7b5fa6ea7a583b411b5959b06e6b5eb23667" # master
+  NimbleStableCommit = "123f97a5e4ee9ba35720c0869e19a047c43c797e" # 0.16.4
   AtlasStableCommit = "5faec3e9a33afe99a7d22377dd1b45a5391f5504"
-  ChecksumsStableCommit = "025bcca3915a1b9f19878cea12ad68f9884648fc"
+  ChecksumsStableCommit = "bd9bf4eaea124bf8d01e08f92ac1b14c6879d8d3"
   SatStableCommit = "faf1617f44d7632ee9601ebc13887644925dcc01"
 
   # examples of possible values for fusion: #head, #ea82b54, 1.2.3
@@ -52,7 +52,7 @@ const
 +-----------------------------------------------------------------+
 |         Maintenance program for Nim                             |
 |             Version $1|
-|             (c) 2017 Andreas Rumpf                              |
+|             (c) 2024 Andreas Rumpf                              |
 +-----------------------------------------------------------------+
 Build time: $2, $3
 
@@ -77,6 +77,7 @@ Possible Commands:
                            doesn't require network connectivity
   nimble                   builds the Nimble tool
   atlas                    builds the Atlas tool
+  checksums                installs the checksums dependency
   fusion                   installs fusion via Nimble
 
 Boot options:
@@ -158,13 +159,12 @@ proc bundleNimbleExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: NimbleStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/nimble.git",
                   commit = commit, allowBundled = true)
-  cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/checksums.git",
-                commit = ChecksumsStableCommit, allowBundled = true) # or copy it from dist?
-  cloneDependency(distDir / "nimble" / distDir, "https://github.com/nim-lang/sat.git",
-                commit = SatStableCommit, allowBundled = true)
-  # installer.ini expects it under $nim/bin
+  updateSubmodules(distDir / "nimble", allowBundled = true)
   nimCompile("dist/nimble/src/nimble.nim",
-             options = "-d:release -d:nimNimbleBootstrap --noNimblePath " & args)
+             options = "-d:release --noNimblePath " & args)
+  const zippyTests = "dist/nimble/vendor/zippy/tests"
+  if dirExists(zippyTests):
+    removeDir(zippyTests)
 
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
@@ -344,8 +344,7 @@ proc boot(args: string, skipIntegrityCheck: bool) =
   let smartNimcache = (if "release" in args or "danger" in args: "nimcache/r_" else: "nimcache/d_") &
                       hostOS & "_" & hostCPU
 
-  if not dirExists("dist/checksums"):
-    bundleChecksums(false)
+  bundleChecksums(false)
 
   let usingLibFFI = "nimHasLibFFI" in args
   if usingLibFFI and not dirExists("dist/libffi"):
@@ -508,8 +507,7 @@ proc temp(args: string) =
       result[1].add " " & quoteShell(args[i])
       inc i
 
-  if not dirExists("dist/checksums"):
-    bundleChecksums(false)
+  bundleChecksums(false)
 
   let d = getAppDir()
   let output = d / "compiler" / "nim".exe

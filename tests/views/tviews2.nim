@@ -57,3 +57,34 @@ block: # bug #16671
       s.add(Y(field: toOpenArray([1, 2, 3], 0, 1)))
 
     f()
+
+block: # bug #15746
+  type
+    Reader = object
+      data: openArray[char]
+      current: int
+
+  proc initReader(data: openArray[char], offset = 0): Reader =
+    result = Reader(data: data, current: offset)
+
+  let s = "\x01\x00\x00\x00"
+  doAssert initReader(s).data[0].int == 1
+
+block:
+  proc foo(x: openArray[char]) =
+    discard x
+
+  foo("12254")
+  foo(@['a', 'b'])
+
+  var a1 = "12254"
+  foo(a1)
+
+  var a2 = @['a', 'b']
+  foo(a2)
+
+  var s = "138443"
+  var ooo: openArray[char] = s
+  var xxx: openArray[char] = ooo
+  foo(ooo)
+  foo(xxx)

@@ -283,7 +283,7 @@ The definition of `"strictFuncs"` was changed.
 The old definition was roughly: "A store to a ref/ptr deref is forbidden unless it's coming from a `var T` parameter".
 The new definition is: "A store to a ref/ptr deref is forbidden."
 
-This new definition is much easier to understand, the price is some expressitivity. The following code used to be
+This new definition is much easier to understand, the price is some expressiveness. The following code used to be
 accepted:
 
 ```nim

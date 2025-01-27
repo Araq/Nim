@@ -324,7 +324,7 @@ proc `==`*[T](x, y: seq[T]): bool {.noSideEffect.} =
         return true
     else:
       var sameObject = false
-      {.emit: """`sameObject` = `x` === `y`""".}
+      {.emit: """`sameObject` = `x` === `y`;""".}
       if sameObject: return true
 
   if x.len != y.len:

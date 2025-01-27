@@ -24,7 +24,7 @@ bootSwitch(usedMarkAndSweep, defined(gcmarkandsweep), "--gc:markAndSweep")
 bootSwitch(usedGoGC, defined(gogc), "--gc:go")
 bootSwitch(usedNoGC, defined(nogc), "--gc:none")
 
-import std/[setutils, os, strutils, parseutils, parseopt, sequtils, strtabs]
+import std/[setutils, os, strutils, parseutils, parseopt, sequtils, strtabs, enumutils]
 import
   msgs, options, nversion, condsyms, extccomp, platform,
   wordrecg, nimblecmd, lineinfos, pathutils
@@ -203,13 +203,14 @@ proc processSpecificNote*(arg: string, state: TSpecialWord, pass: TCmdLinePass,
   else: invalidCmdLineOption(conf, pass, orig, info)
 
   let isSomeHint = state in {wHint, wHintAsError}
+  let isSomeWarning = state in {wWarning, wWarningAsError}
   template findNote(noteMin, noteMax, name) =
     # unfortunately, hintUser and warningUser clash, otherwise implementation would simplify a bit
     let x = findStr(noteMin, noteMax, id, errUnknown)
     if x != errUnknown: notes = {TNoteKind(x)}
     else:
-      if isSomeHint:
-        message(conf, info, hintUnknownHint, id)
+      if isSomeHint or isSomeWarning:
+        message(conf, info, warnUnknownNotes, "unknown $#: $#" % [name, id])
       else:
         localError(conf, info, "unknown $#: $#" % [name, id])
   case id.normalize
@@ -248,6 +249,7 @@ const
   errNoneSpeedOrSizeExpectedButXFound = "'none', 'speed' or 'size' expected, but '$1' found"
   errGuiConsoleOrLibExpectedButXFound = "'gui', 'console', 'lib' or 'staticlib' expected, but '$1' found"
   errInvalidExceptionSystem = "'goto', 'setjmp', 'cpp' or 'quirky' expected, but '$1' found"
+  errInvalidFeatureButXFound = Feature.toSeq.map(proc(val:Feature): string = "'$1'" % $val).join(", ") & " expected, but '$1' found"
 
 template warningOptionNoop(switch: string) =
   warningDeprecated(conf, info, "'$#' is deprecated, now a noop" % switch)
@@ -303,6 +305,12 @@ proc testCompileOptionArg*(conf: ConfigRef; switch, arg: string, info: TLineInfo
     else:
       result = false
       localError(conf, info, errInvalidExceptionSystem % arg)
+  of "experimental":
+    try:
+      result = conf.features.contains parseEnum[Feature](arg)
+    except ValueError:
+      result = false
+      localError(conf, info, errInvalidFeatureButXFound % arg)
   else:
     result = false
     invalidCmdLineOption(conf, passCmd1, switch, info)
@@ -462,7 +470,6 @@ proc handleCmdInput*(conf: ConfigRef) =
 proc parseCommand*(command: string): Command =
   case command.normalize
   of "c", "cc", "compile", "compiletoc": cmdCompileToC
-  of "nir": cmdCompileToNir
   of "cpp", "compiletocpp": cmdCompileToCpp
   of "objc", "compiletooc": cmdCompileToOC
   of "js", "compiletojs": cmdCompileToJS
@@ -500,7 +507,6 @@ proc setCmd*(conf: ConfigRef, cmd: Command) =
   of cmdCompileToCpp: conf.backend = backendCpp
   of cmdCompileToOC: conf.backend = backendObjc
   of cmdCompileToJS: conf.backend = backendJs
-  of cmdCompileToNir: conf.backend = backendNir
   else: discard
 
 proc setCommandEarly*(conf: ConfigRef, command: string) =
@@ -914,6 +920,12 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
     discard parseSaturatedNatural(arg, value)
     if not value > 0: localError(conf, info, "maxLoopIterationsVM must be a positive integer greater than zero")
     conf.maxLoopIterationsVM = value
+  of "maxcalldepthvm":
+    expectArg(conf, switch, arg, pass, info)
+    var value: int = 2_000
+    discard parseSaturatedNatural(arg, value)
+    if value <= 0: localError(conf, info, "maxCallDepthVM must be a positive integer greater than zero")
+    conf.maxCallDepthVM = value
   of "errormax":
     expectArg(conf, switch, arg, pass, info)
     # Note: `nim check` (etc) can overwrite this.

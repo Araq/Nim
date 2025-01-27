@@ -531,3 +531,10 @@ block:
 
   check(a)
   check(b)
+
+block: # https://forum.nim-lang.org/t/12522, backticks
+  template `mypragma`() {.pragma.}
+  # Error: invalid pragma: `mypragma`
+  type Test = object
+    field {.`mypragma`.}: int
+  doAssert Test().field.hasCustomPragma(mypragma)

@@ -117,3 +117,45 @@ macro foo(x: typed) =
   doAssert Fruit(x.intVal) == banana
 
 foo(banana)
+
+block: # bug #17733
+  macro repr2(s: typed): string = 
+    result = newLit(s.repr)
+
+  macro symHash(s: typed): string = 
+    result = newLit(symBodyHash(s))
+
+  type A[T] = object
+    x: T
+
+  proc fn1(x: seq) = discard
+  proc fn2(x: ref) = discard
+  proc fn2b(x: ptr) = discard
+  proc fn3(x: pointer | ref | ptr) = discard
+  proc fn4(x: A) = discard
+
+  proc fn0(x: pointer) = discard
+  proc fn5[T](x: A[T]) = discard
+  proc fn6(x: tuple) = discard
+  proc fn7(x: pointer | tuple) = discard
+
+  # ok
+  discard symHash(fn0)
+  discard symHash(fn5)
+  discard symHash(fn6)
+  discard symHash(fn7)
+
+  # ok
+  discard repr2(fn2)
+  discard repr2(fn2b)
+  discard repr2(fn3)
+
+  # BUG D20210415T162824: Error: 'fn4' doesn't have a concrete type, due to unspecified generic parameters.
+  discard symHash(fn4)
+  discard symHash(fn1) # ditto
+
+  # BUG D20210415T162832: Error: unhandled exception: index out of bounds, the container is empty [IndexDefect]
+  discard symHash(fn3)
+  discard symHash(fn2) # ditto
+  discard symHash(fn2b) # ditto
+

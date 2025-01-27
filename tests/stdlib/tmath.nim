@@ -186,7 +186,7 @@ template main() =
     when not defined(nimTmathCase2):
       doAssert classify(trunc(f_nan.float32)) == fcNan
     doAssert classify(trunc(0.0'f32)) == fcZero
-  
+
   block: # divmod
     doAssert divmod(int.high, 1) == (int.high, 0)
     doAssert divmod(-1073741823, 17) == (-63161283, -12)
@@ -201,7 +201,7 @@ template main() =
         doAssertRaises(OverflowDefect, (discard divmod(clong.low, -1.clong)))
         doAssertRaises(OverflowDefect, (discard divmod(clonglong.low, -1.clonglong)))
         doAssertRaises(DivByZeroDefect, (discard divmod(1, 0)))
-  
+
   block: # log
     doAssert log(4.0, 3.0) ==~ ln(4.0) / ln(3.0)
     doAssert log2(8.0'f64) == 3.0'f64
@@ -245,13 +245,86 @@ template main() =
       empty.cumsum
       doAssert empty == @[]
 
+  block: # cumprod
+    block: #cumprod int seq return
+      let counts = [ 1, 2, 3, 4 ]
+      doAssert counts.cumproded == [ 1, 2, 6, 24 ]
+
+    block: # cumprod float seq return
+      let counts = [ 1.0, 2.0, 3.0, 4.0 ]
+      doAssert counts.cumproded == [ 1.0, 2.0, 6.0, 24.0 ]
+
+    block: # cumprod int in-place
+      var counts = [ 1, 2, 3, 4 ]
+      counts.cumprod
+      doAssert counts == [ 1, 2, 6, 24 ]
+
+    block: # cumprod float in-place
+      var counts = [ 1.0, 2.0, 3.0, 4.0 ]
+      counts.cumprod
+      doAssert counts == [ 1.0, 2.0, 6.0, 24.0 ]
+
   block: # ^ compiles for valid types
     doAssert: compiles(5 ^ 2)
     doAssert: compiles(5.5 ^ 2)
     doAssert: compiles(5.5 ^ 2.int8)
     doAssert: compiles(5.5 ^ 2.uint)
     doAssert: compiles(5.5 ^ 2.uint8)
-    doAssert: not compiles(5.5 ^ 2.2)
+
+  block:
+    doAssert: compiles(5.5 ^ 2.2)
+    when not defined(danger):
+      doAssertRaises(AssertionDefect): discard (0.0 ^ -5.0)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -5.0)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -5.3)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -4.0)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -5.3)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -4.0)
+      doAssertRaises(AssertionDefect): discard (-0.0 ^ -4.0)
+      # Base finite, negative and exponent finite, non-integer returns NaN and raises Error
+      doAssertRaises(AssertionDefect): discard (-5.5 ^ 2.2)
+    doAssert: -1.0 ^ Inf == 1.0
+    doAssert: -1.0 ^ -Inf == 1.0
+    doAssert: 1.0 ^ Inf == 1.0
+    doAssert: 1.0 ^ -Inf == 1.0
+    doAssert: 1.0 ^ -5.4 == 1.0
+    doAssert: 1.0 ^ 1.0 == 1.0
+
+    # ^-Inf or ^Inf returns 0 or Inf depending on base absolute value relative to 1
+    doAssert: 0.5 ^ -Inf == Inf
+    doAssert: -0.5 ^ -Inf == Inf
+    doAssert: 1.01 ^ -Inf == 0.0
+    doAssert: -1.01 ^ -Inf == 0.0
+    doAssert: 0.5 ^ Inf == 0.0
+    doAssert: -0.5 ^ Inf == 0.0
+    doAssert: 1.01 ^ Inf == Inf
+    doAssert: -1.01 ^ Inf == Inf
+
+    # -Inf base (the sign depends on the exponent parity)
+    doAssert: -Inf ^ -5.0 == -0.0
+    doAssert: -Inf ^ -4.0 == 0.0
+    doAssert: -Inf ^ -5.1 == 0.0
+
+    doAssert: -Inf ^ 3.0 == -Inf
+    doAssert: -Inf ^ 3.1 == Inf
+    doAssert: -Inf ^ 2.0 == Inf
+
+    doAssert: Inf ^ -5.0 == 0.0
+    doAssert: Inf ^ -5.1 == 0.0
+
+    doAssert: Inf ^ 4.3 == Inf
+    doAssert: Inf ^ 5.0 == Inf
+
+    doAssert: -Inf ^ -Inf == 0.0
+    doAssert: -Inf ^ Inf == Inf
+    doAssert: Inf ^ -Inf == 0.0
+    doAssert: Inf ^ Inf == Inf
+
+  block:
+    # doAssert: 1.0 ^ NaN == 1.0
+    # doAssert: NaN ^ 0.0 == 1.0
+    doAssert: (0.0 ^ NaN).isNaN
+    doAssert: (NaN ^ 1.0).isNaN
 
   block: # isNaN
     doAssert NaN.isNaN
@@ -471,3 +544,4 @@ when not defined(js) and not defined(danger):
 
       doAssertRaises(OverflowDefect):
         discard sum(x)
+

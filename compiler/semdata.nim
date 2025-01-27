@@ -15,8 +15,8 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 import
-  options, ast, astalgo, msgs, idents, renderer,
-  magicsys, vmdef, modulegraphs, lineinfos, pathutils
+  options, ast, msgs, idents, renderer,
+  magicsys, vmdef, modulegraphs, lineinfos, pathutils, layeredtable
 
 import ic / ic
 
@@ -73,9 +73,9 @@ type
     efNoUndeclared, efIsDotCall, efCannotBeDotCall,
       # Use this if undeclared identifiers should not raise an error during
       # overload resolution.
-    efNoDiagnostics,
     efTypeAllowed # typeAllowed will be called after
     efWantNoDefaults
+    efIgnoreDefaults # var statements without initialization
     efAllowSymChoice # symchoice node should not be resolved
 
   TExprFlags* = set[TExprFlag]
@@ -136,9 +136,13 @@ type
     semOverloadedCall*: proc (c: PContext, n, nOrig: PNode,
                               filter: TSymKinds, flags: TExprFlags, expectedType: PType = nil): PNode {.nimcall.}
     semTypeNode*: proc(c: PContext, n: PNode, prev: PType): PType {.nimcall.}
-    semInferredLambda*: proc(c: PContext, pt: Table[ItemId, PType], n: PNode): PNode
-    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: Table[ItemId, PType],
+    semInferredLambda*: proc(c: PContext, pt: LayeredIdTable, n: PNode): PNode
+    semGenerateInstance*: proc (c: PContext, fn: PSym, pt: LayeredIdTable,
                                 info: TLineInfo): PSym
+    instantiateOnlyProcType*: proc (c: PContext, pt: LayeredIdTable,
+                                    prc: PSym, info: TLineInfo): PType
+      # used by sigmatch for explicit generic instantiations
+    fitDefaultNode*: proc (c: PContext, n: var PNode, expectedType: PType)
     includedFiles*: IntSet    # used to detect recursive include files
     pureEnumFields*: TStrTable   # pure enum fields that can be used unambiguously
     userPragmas*: TStrTable
@@ -168,6 +172,7 @@ type
     inUncheckedAssignSection*: int
     importModuleLookup*: Table[int, seq[int]] # (module.ident.id, [module.id])
     skipTypes*: seq[PNode] # used to skip types between passes in type section. So far only used for inheritance, sets and generic bodies.
+    inTypeofContext*: int
   TBorrowState* = enum
     bsNone, bsReturnNotMatch, bsNoDistinct, bsGeneric, bsNotSupported, bsMatch
 
@@ -191,29 +196,29 @@ proc getIntLitType*(c: PContext; literal: PNode): PType =
 proc setIntLitType*(c: PContext; result: PNode) =
   let i = result.intVal
   case c.config.target.intSize
-  of 8: result.typ = getIntLitType(c, result)
+  of 8: result.typ() = getIntLitType(c, result)
   of 4:
     if i >= low(int32) and i <= high(int32):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 2:
     if i >= low(int16) and i <= high(int16):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   of 1:
     # 8 bit CPUs are insane ...
     if i >= low(int8) and i <= high(int8):
-      result.typ = getIntLitType(c, result)
+      result.typ() = getIntLitType(c, result)
     elif i >= low(int16) and i <= high(int16):
-      result.typ = getSysType(c.graph, result.info, tyInt16)
+      result.typ() = getSysType(c.graph, result.info, tyInt16)
     elif i >= low(int32) and i <= high(int32):
-      result.typ = getSysType(c.graph, result.info, tyInt32)
+      result.typ() = getSysType(c.graph, result.info, tyInt32)
     else:
-      result.typ = getSysType(c.graph, result.info, tyInt64)
+      result.typ() = getSysType(c.graph, result.info, tyInt64)
   else:
     internalError(c.config, result.info, "invalid int size")
 
@@ -445,7 +450,7 @@ when false:
 proc makeStaticExpr*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkStaticExpr, n.info)
   result.sons = @[n]
-  result.typ = if n.typ != nil and n.typ.kind == tyStatic: n.typ
+  result.typ() = if n.typ != nil and n.typ.kind == tyStatic: n.typ
                else: newTypeS(tyStatic, c, n.typ)
 
 proc makeAndType*(c: PContext, t1, t2: PType): PType =
@@ -504,7 +509,7 @@ proc errorType*(c: PContext): PType =
 
 proc errorNode*(c: PContext, n: PNode): PNode =
   result = newNodeI(nkEmpty, n.info)
-  result.typ = errorType(c)
+  result.typ() = errorType(c)
 
 # These mimic localError
 template localErrorNode*(c: PContext, n: PNode, info: TLineInfo, msg: TMsgKind, arg: string): PNode =
@@ -525,10 +530,11 @@ template localErrorNode*(c: PContext, n: PNode, arg: string): PNode =
   liMessage(c.config, n2.info, errGenerated, arg, doNothing, instLoc())
   errorNode(c, n2)
 
-proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
-  dest.kind = kind
-  dest.owner = getCurrOwner(c)
-  dest.size = - 1
+when false:
+  proc fillTypeS*(dest: PType, kind: TTypeKind, c: PContext) =
+    dest.kind = kind
+    dest.owner = getCurrOwner(c)
+    dest.size = - 1
 
 proc makeRangeType*(c: PContext; first, last: BiggestInt;
                     info: TLineInfo; intType: PType = nil): PType =
@@ -559,7 +565,7 @@ proc symFromType*(c: PContext; t: PType, info: TLineInfo): PSym =
 
 proc symNodeFromType*(c: PContext, t: PType, info: TLineInfo): PNode =
   result = newSymNode(symFromType(c, t, info), info)
-  result.typ = makeTypeDesc(c, t)
+  result.typ() = makeTypeDesc(c, t)
 
 proc markIndirect*(c: PContext, s: PSym) {.inline.} =
   if s.kind in {skProc, skFunc, skConverter, skMethod, skIterator}:

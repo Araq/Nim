@@ -18,7 +18,7 @@ renderer.setDrawColor 29, 64, 153, 255
 renderer.clear
 renderer.setDrawColor 255, 255, 255, 255
 
-when defined(c):
+when false: # no long work with gcc 14!
   # just to ensure code from NimInAction still works, but
   # the `else` branch would work as well in C mode
   var points = [

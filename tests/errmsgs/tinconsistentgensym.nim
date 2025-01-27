@@ -7,7 +7,7 @@ block:
     when false:
       let x = 123
     else:
-      template x: untyped = 456
+      template x: untyped {.inject.} = 456
     echo x #[tt.Error
          ^ undeclared identifier: 'x`gensym0'; if declared in a template, this identifier may be inconsistently marked inject or gensym]#
   foo()

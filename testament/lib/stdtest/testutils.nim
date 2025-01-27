@@ -66,6 +66,11 @@ template enableRemoteNetworking*: bool =
   ## a `nim` invocation (possibly via additional intermediate processes).
   getEnv("NIM_TESTAMENT_REMOTE_NETWORKING") == "1"
 
+template disableSSLTesting*: bool =
+  ## TODO: workaround for GitHub Action gcc 14 matrix; remove this
+  ## matrix and the flag after Azure agent supports ubuntu 24.04
+  getEnv("NIM_TESTAMENT_DISABLE_SSL") == "1"
+
 template whenRuntimeJs*(bodyIf, bodyElse) =
   ##[
   Behaves as `when defined(js) and not nimvm` (which isn't legal yet).

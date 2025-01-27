@@ -40,6 +40,7 @@ proc `=sink`*[T](dest: var SharedPtr[T], src: SharedPtr[T]) =
 
  
 proc newSharedPtr*[T](val: sink T): SharedPtr[T] =
+  result = default(SharedPtr[T])
   result.val = cast[type(result.val)](alloc(sizeof(result.val[])))
   reset(result.val[])
   result.val.atomicCounter = 1

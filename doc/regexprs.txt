@@ -41,7 +41,7 @@ Regular expression syntax and semantics
 =======================================
 
 As the regular expressions supported by this module are enormous,
-the reader is referred to http://perldoc.perl.org/perlre.html for the
+the reader is referred to https://perldoc.perl.org/perlre.html for the
 full documentation of Perl's regular expressions.
 
 Because the backslash ``\`` is a meta character both in the Nim

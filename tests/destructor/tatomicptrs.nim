@@ -143,11 +143,13 @@ proc `=sink`*[T](m: var MySeq[T], m2: MySeq[T]) {.inline.} =
       `=destroy`(m)
     m.len = m2.len
     m.data = m2.data
+    m.refcount = m2.refcount
 
 proc len*[T](m: MySeq[T]): int {.inline.} = m.len
 
 proc newMySeq*[T](size: int, initial_value: T): MySeq[T] =
   result.len = size
+  result.refcount = 1
   if size > 0:
     result.data = cast[ptr UncheckedArray[T]](allocShared(sizeof(T) * size))
 

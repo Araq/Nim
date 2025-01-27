@@ -919,7 +919,7 @@ proc infix(ctx: NilCheckerContext, l: PNode, r: PNode, magic: TMagic): PNode =
     newSymNode(op, r.info),
     l,
     r)
-  result.typ = newType(tyBool, ctx.idgen, nil)
+  result.typ() = newType(tyBool, ctx.idgen, nil)
 
 proc prefixNot(ctx: NilCheckerContext, node: PNode): PNode =
   var cache = newIdentCache()
@@ -929,7 +929,7 @@ proc prefixNot(ctx: NilCheckerContext, node: PNode): PNode =
   result = nkPrefix.newTree(
     newSymNode(op, node.info),
     node)
-  result.typ = newType(tyBool, ctx.idgen, nil)
+  result.typ() = newType(tyBool, ctx.idgen, nil)
 
 proc infixEq(ctx: NilCheckerContext, l: PNode, r: PNode): PNode =
   infix(ctx, l, r, mEqRef)

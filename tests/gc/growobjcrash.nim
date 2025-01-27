@@ -1,3 +1,7 @@
+discard """
+  retries: 2
+"""
+
 import std/[cgi, strtabs]
 
 proc handleRequest(query: string): StringTableRef =

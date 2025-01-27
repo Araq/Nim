@@ -194,7 +194,9 @@ when hasThreadSupport:
         if s.changesLength > 0:
           if kevent(s.kqFD, addr(s.changes[0]), cint(s.changesLength),
                     nil, 0, nil) == -1:
-            raiseIOSelectorsError(osLastError())
+            let res = osLastError()
+            if cint(res) != ENOENT: # ignore pipes whose read end is closed
+              raiseIOSelectorsError(res)
           s.changesLength = 0
 else:
   template modifyKQueue[T](s: Selector[T], nident: uint, nfilter: cshort,
@@ -211,7 +213,9 @@ else:
       if length > 0:
         if kevent(s.kqFD, addr(s.changes[0]), length,
                   nil, 0, nil) == -1:
-          raiseIOSelectorsError(osLastError())
+          let res = osLastError()
+          if cint(res) != ENOENT: # ignore pipes whose read end is closed
+            raiseIOSelectorsError(res)
         s.changes.setLen(0)
 
 proc registerHandle*[T](s: Selector[T], fd: int | SocketHandle,

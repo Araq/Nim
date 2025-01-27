@@ -19,7 +19,6 @@ from net import newSocket, newContext, wrapSocket, connect, close, Port,
 from strutils import contains
 
 const
-  expired = "https://expired.badssl.com/"
   good = "https://google.com/"
 
 
@@ -56,12 +55,13 @@ suite "SSL certificate check":
       var ctx = newContext(verifyMode=CVerifyPeerUseEnvVars)
       ctx.wrapSocket(sock)
       checkpoint("Socket created")
-      try:
-        sock.connect("expired.badssl.com", 443.Port)
-        fail()
-      except:
-        sock.close
-        check getCurrentExceptionMsg().contains("certificate verify failed")
+      when false: # badssl tests disabled indefinitely
+        try:
+          sock.connect("expired.badssl.com", 443.Port)
+          fail()
+        except:
+          sock.close
+          check getCurrentExceptionMsg().contains("certificate verify failed")
 
     elif existsEnv("SSL_CERT_DIR"):
       var sock = newSocket()

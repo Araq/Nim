@@ -77,27 +77,30 @@ testPred(1)
 
 
 
-# bug #6526
-type
-  BaseObj = ref object of RootObj
-  DerivedObj = ref object of BaseObj
-  OtherDerivate = ref object of BaseObj
+block: # bug #6526
+  type
+    BaseObj = ref object of RootObj
+    DerivedObj = ref object of BaseObj
+    OtherDerivate = ref object of BaseObj
 
-proc `==`*[T1, T2: BaseObj](a: T1, b: T2): bool =
-  echo "baseobj =="
-  return true
+  proc p[T](a: T, b: T): bool =
+    assert false
 
-let a = DerivedObj()
-let b = DerivedObj()
-echo a == b
+  proc p[T1, T2: BaseObj](a: T1, b: T2): bool =
+    echo "baseobj =="
+    return true
 
-proc `==`*[T1, T2: OtherDerivate](a: T1, b: T2): bool =
-  echo "even better! =="
-  return true
+  let a = DerivedObj()
+  let b = DerivedObj()
+  echo p(a,b)
 
-let a2 = OtherDerivate()
-let b2 = OtherDerivate()
-echo a2 == b2
+  proc p[T1, T2: OtherDerivate](a: T1, b: T2): bool =
+    echo "even better! =="
+    return true
+
+  let a2 = OtherDerivate()
+  let b2 = OtherDerivate()
+  echo p(a2, b2)
 
 
 

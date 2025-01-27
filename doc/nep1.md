@@ -21,7 +21,7 @@ library should follow.
 Note that there can be exceptions to these rules. Nim being as flexible as it
 is, there will be parts of this style guide that don't make sense in certain
 contexts. Furthermore, just as
-[Python's style guide](http://legacy.python.org/dev/peps/pep-0008/) changes
+[Python's style guide](https://legacy.python.org/dev/peps/pep-0008/) changes
 over time, this style guide will too.
 
 These rules will only be enforced for contributions to the Nim

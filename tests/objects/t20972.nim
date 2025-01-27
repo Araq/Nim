@@ -13,3 +13,11 @@ var info = ForkedEpochInfo(kind: true)
 doAssert info.kind
 info.kind = false
 doAssert not info.kind
+
+block: # bug #22153
+  discard allocCStringArray([""])
+  discard allocCStringArray(["1234"])
+
+  var s = "1245"
+  s.add "1"
+  discard allocCStringArray([s])

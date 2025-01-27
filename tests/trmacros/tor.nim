@@ -1,7 +1,7 @@
 discard """
   output: '''
 3
-0
+30
 true
 '''
 """
@@ -15,7 +15,9 @@ echo z
 
 
 template arithOps: untyped = (`+` | `-` | `*`)
-template testOr{ (arithOps{f})(a, b) }(a, b, f: untyped): untyped = f(a mod 10, b)
+template testOr{ (arithOps{f})(a, b) }(a, b, f: untyped): untyped =
+  {.noRewrite.}:
+    f(a mod 10, b)
 
 let xx = 10
 echo 10*xx

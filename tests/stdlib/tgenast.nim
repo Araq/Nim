@@ -54,7 +54,7 @@ proc main =
           x.a = val
 
     m1()
-    var x0: Foo
+    var x0: Foo = Foo()
     x0.a1 = 10
     doAssert x0 == Foo(a: 10)
 

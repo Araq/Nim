@@ -20,6 +20,37 @@ template track(op, address, size) =
 
 # We manage *chunks* of memory. Each chunk is a multiple of the page size.
 # Each chunk starts at an address that is divisible by the page size.
+# Small chunks may be divided into smaller cells of reusable pointers to reduce the number of page allocations.
+
+# An allocation of a small pointer looks approximately like this
+#[
+
+  alloc -> rawAlloc -> No free chunk available > Request a new page from tslf -> result = chunk.data -------------+
+              |                                                                                                   |
+              v                                                                                                   |
+    Free chunk available                                                                                          |
+              |                                                                                                   |
+              v                                                                                                   v
+      Fetch shared cells -> No free cells available -> Advance acc -> result = chunk.data + chunk.acc -------> return
+    (may not add new cells)                                                                                       ^
+              |                                                                                                   |
+              v                                                                                                   |
+     Free cells available -> result = chunk.freeList -> Advance chunk.freeList -----------------------------------+
+]#
+# so it is split into 3 paths, where the last path is preferred to prevent unnecessary allocations.
+#
+#
+# A deallocation of a small pointer then looks like this
+#[
+  dealloc -> rawDealloc -> chunk.owner == addr(a) --------------> This thread owns the chunk ------> The current chunk is active    -> Chunk is completely unused -----> Chunk references no foreign cells
+                                      |                                       |                   (Add cell into the current chunk)                 |                  Return the current chunk back to tlsf
+                                      |                                       |                                   |                                 |
+                                      v                                       v                                   v                                 v
+                      A different thread owns this chunk.     The current chunk is not active.          chunk.free was < size      Chunk references foreign cells, noop
+                      Add the cell to a.sharedFreeLists      Add the cell into the active chunk          Activate the chunk                       (end)
+                                    (end)                                    (end)                              (end)
+]#
+# So "true" deallocation is delayed for as long as possible in favor of reusing cells.
 
 const
   nimMinHeapPages {.intdefine.} = 128 # 0.5 MB
@@ -71,6 +102,8 @@ const
 
 type
   FreeCell {.final, pure.} = object
+    # A free cell is a pointer that has been freed, meaning it became available for reuse.
+    # It may become foreign if it is lent to a chunk that did not create it, doing so reduces the amount of needed pages.
     next: ptr FreeCell  # next free cell in chunk (overlaid with refcount)
     when not defined(gcDestructors):
       zeroField: int       # 0 means cell is not used (overlaid with typ field)
@@ -90,11 +123,18 @@ type
 
   SmallChunk = object of BaseChunk
     next, prev: PSmallChunk  # chunks of the same size
-    freeList: ptr FreeCell
-    free: int            # how many bytes remain
-    acc: int             # accumulator for small object allocation
-    when defined(gcDestructors):
-      sharedFreeList: ptr FreeCell # make no attempt at avoiding false sharing for now for this object field
+    freeList: ptr FreeCell   # Singly linked list of cells. They may be from foreign chunks or from the current chunk.
+                             #  Should be `nil` when the chunk isn't active in `a.freeSmallChunks`.
+    free: int32              # Bytes this chunk is able to provide using both the accumulator and free cells.
+                             # When a cell is considered foreign, its source chunk's free field is NOT adjusted until it
+                             #  reaches dealloc while the source chunk is active.
+                             # Instead, the receiving chunk gains the capacity and thus reserves space in the foreign chunk.
+    acc: uint32              # Offset from data, used when there are no free cells available but the chunk is considered free.
+    foreignCells: int        # When a free cell is given to a chunk that is not its origin,
+                             #  both the cell and the source chunk are considered foreign.
+                             # Receiving a foreign cell can happen both when deallocating from another thread or when
+                             #  the active chunk in `a.freeSmallChunks` is not the current chunk.
+                             # Freeing a chunk while `foreignCells > 0` leaks memory as all references to it become lost.
     data {.align: MemAlign.}: UncheckedArray[byte]      # start of usable memory
 
   BigChunk = object of BaseChunk # not necessarily > PageSize!
@@ -109,7 +149,12 @@ type
   MemRegion = object
     when not defined(gcDestructors):
       minLargeObj, maxLargeObj: int
-    freeSmallChunks: array[0..max(1,SmallChunkSize div MemAlign-1), PSmallChunk]
+    freeSmallChunks: array[0..max(1, SmallChunkSize div MemAlign-1), PSmallChunk]
+      # List of available chunks per size class. Only one is expected to be active per class.
+    when defined(gcDestructors):
+      sharedFreeLists: array[0..max(1, SmallChunkSize div MemAlign-1), ptr FreeCell]
+        # When a thread frees a pointer it did not create, it must not adjust the counters.
+        # Instead, the cell is placed here and deferred until the next allocation.
     flBitmap: uint32
     slBitmap: array[RealFli, uint32]
     matrix: array[RealFli, array[MaxSli, PBigChunk]]
@@ -433,7 +478,7 @@ iterator allObjects(m: var MemRegion): pointer {.inline.} =
 
           let size = c.size
           var a = cast[int](addr(c.data))
-          let limit = a + c.acc
+          let limit = a + c.acc.int
           while a <% limit:
             yield cast[pointer](a)
             a = a +% size
@@ -530,6 +575,7 @@ proc isAccessible(a: MemRegion, p: pointer): bool {.inline.} =
   result = contains(a.chunkStarts, pageIndex(p))
 
 proc contains[T](list, x: T): bool =
+  result = false
   var it = list
   while it != nil:
     if it == x: return true
@@ -777,41 +823,42 @@ when defined(gcDestructors):
     sysAssert c.next == nil, "c.next pointer must be nil"
     atomicPrepend a.sharedFreeListBigChunks, c
 
-  proc addToSharedFreeList(c: PSmallChunk; f: ptr FreeCell) {.inline.} =
-    atomicPrepend c.sharedFreeList, f
+  proc addToSharedFreeList(c: PSmallChunk; f: ptr FreeCell; size: int) {.inline.} =
+    atomicPrepend c.owner.sharedFreeLists[size], f
+
+  const MaxSteps = 20
 
   proc compensateCounters(a: var MemRegion; c: PSmallChunk; size: int) =
     # rawDealloc did NOT do the usual:
     # `inc(c.free, size); dec(a.occ, size)` because it wasn't the owner of these
     # memory locations. We have to compensate here for these for the entire list.
-    # Well, not for the entire list, but for `max` elements of the list because
-    # we split the list in order to achieve bounded response times.
     var it = c.freeList
-    var x = 0
-    var maxIters = 20 # make it time-bounded
+    var total = 0
     while it != nil:
-      if maxIters == 0:
-        let rest = it.next.loada
-        if rest != nil:
-          it.next.storea nil
-          addToSharedFreeList(c, rest)
-        break
-      inc x, size
-      it = it.next.loada
-      dec maxIters
-    inc(c.free, x)
-    dec(a.occ, x)
+      inc total, size
+      let chunk = cast[PSmallChunk](pageAddr(it))
+      if c != chunk:
+        # The cell is foreign, potentially even from a foreign thread.
+        # It must block the current chunk from being freed, as doing so would leak memory.
+        inc c.foreignCells
+      it = it.next
+    # By not adjusting the foreign chunk we reserve space in it to prevent deallocation
+    inc(c.free, total)
+    dec(a.occ, total)
 
   proc freeDeferredObjects(a: var MemRegion; root: PBigChunk) =
     var it = root
-    var maxIters = 20 # make it time-bounded
+    var maxIters = MaxSteps # make it time-bounded
     while true:
+      let rest = it.next.loada
+      it.next.storea nil
+      deallocBigChunk(a, cast[PBigChunk](it))
       if maxIters == 0:
-        let rest = it.next.loada
-        it.next.storea nil
-        addToSharedFreeListBigChunks(a, rest)
+        if rest != nil:
+          addToSharedFreeListBigChunks(a, rest)
+          sysAssert a.sharedFreeListBigChunks != nil, "re-enqueing failed"
         break
-      it = it.next.loada
+      it = rest
       dec maxIters
       if it == nil: break
 
@@ -826,56 +873,85 @@ proc rawAlloc(a: var MemRegion, requestedSize: int): pointer =
   #c_fprintf(stdout, "alloc; size: %ld; %ld\n", requestedSize, size)
 
   if size <= SmallChunkSize-smallChunkOverhead():
+    template fetchSharedCells(tc: PSmallChunk) =
+      # Consumes cells from (potentially) foreign threads from `a.sharedFreeLists[s]`
+      when defined(gcDestructors):
+        if tc.freeList == nil:
+          when hasThreadSupport:
+            # Steal the entire list from `sharedFreeList`:
+            tc.freeList = atomicExchangeN(addr a.sharedFreeLists[s], nil, ATOMIC_RELAXED)
+          else:
+            tc.freeList = a.sharedFreeLists[s]
+            a.sharedFreeLists[s] = nil
+          # if `tc.freeList` isn't nil, `tc` will gain capacity.
+          # We must calculate how much it gained and how many foreign cells are included.
+          compensateCounters(a, tc, size)
+
     # allocate a small block: for small chunks, we use only its next pointer
     let s = size div MemAlign
     var c = a.freeSmallChunks[s]
     if c == nil:
+      # There is no free chunk of the requested size available, we need a new one.
       c = getSmallChunk(a)
+      # init all fields in case memory didn't get zeroed
       c.freeList = nil
+      c.foreignCells = 0
       sysAssert c.size == PageSize, "rawAlloc 3"
       c.size = size
-      c.acc = size
-      when defined(gcDestructors):
-        c.sharedFreeList = nil
-      c.free = SmallChunkSize - smallChunkOverhead() - size
+      c.acc = size.uint32
+      c.free = SmallChunkSize - smallChunkOverhead() - size.int32
       sysAssert c.owner == addr(a), "rawAlloc: No owner set!"
       c.next = nil
       c.prev = nil
-      listAdd(a.freeSmallChunks[s], c)
+      # Shared cells are fetched here in case `c.size * 2 >= SmallChunkSize - smallChunkOverhead()`.
+      # For those single cell chunks, we would otherwise have to allocate a new one almost every time.
+      fetchSharedCells(c)
+      if c.free >= size:
+        # Because removals from `a.freeSmallChunks[s]` only happen in the other alloc branch and during dealloc,
+        #  we must not add it to the list if it cannot be used the next time a pointer of `size` bytes is needed.
+        listAdd(a.freeSmallChunks[s], c)
       result = addr(c.data)
       sysAssert((cast[int](result) and (MemAlign-1)) == 0, "rawAlloc 4")
     else:
+      # There is a free chunk of the requested size available, use it.
       sysAssert(allocInv(a), "rawAlloc: begin c != nil")
       sysAssert c.next != c, "rawAlloc 5"
       #if c.size != size:
       #  c_fprintf(stdout, "csize: %lld; size %lld\n", c.size, size)
       sysAssert c.size == size, "rawAlloc 6"
-      when defined(gcDestructors):
-        if c.freeList == nil:
-          when hasThreadSupport:
-            c.freeList = atomicExchangeN(addr c.sharedFreeList, nil, ATOMIC_RELAXED)
-          else:
-            c.freeList = c.sharedFreeList
-            c.sharedFreeList = nil
-          compensateCounters(a, c, size)
       if c.freeList == nil:
-        sysAssert(c.acc + smallChunkOverhead() + size <= SmallChunkSize,
+        sysAssert(c.acc.int + smallChunkOverhead() + size <= SmallChunkSize,
                   "rawAlloc 7")
-        result = cast[pointer](cast[int](addr(c.data)) +% c.acc)
+        result = cast[pointer](cast[int](addr(c.data)) +% c.acc.int)
         inc(c.acc, size)
       else:
+        # There are free cells available, prefer them over the accumulator
         result = c.freeList
         when not defined(gcDestructors):
           sysAssert(c.freeList.zeroField == 0, "rawAlloc 8")
         c.freeList = c.freeList.next
+        if cast[PSmallChunk](pageAddr(result)) != c:
+          # This cell isn't a blocker for the current chunk's deallocation anymore
+          dec(c.foreignCells)
+        else:
+          sysAssert(c == cast[PSmallChunk](pageAddr(result)), "rawAlloc: Bad cell")
+      # Even if the cell we return is foreign, the local chunk's capacity decreases.
+      # The capacity was previously reserved in the source chunk (when it first got allocated),
+      #  then added into the current chunk during dealloc,
+      #  so the source chunk will not be freed or leak memory because of this.
       dec(c.free, size)
       sysAssert((cast[int](result) and (MemAlign-1)) == 0, "rawAlloc 9")
       sysAssert(allocInv(a), "rawAlloc: end c != nil")
-    sysAssert(allocInv(a), "rawAlloc: before c.free < size")
-    if c.free < size:
-      sysAssert(allocInv(a), "rawAlloc: before listRemove test")
-      listRemove(a.freeSmallChunks[s], c)
-      sysAssert(allocInv(a), "rawAlloc: end listRemove test")
+      # We fetch deferred cells *after* advancing `c.freeList`/`acc` to adjust `c.free`.
+      # If after the adjustment it turns out there's free cells available,
+      #  the chunk stays in `a.freeSmallChunks[s]` and the need for a new chunk is delayed.
+      fetchSharedCells(c)
+      sysAssert(allocInv(a), "rawAlloc: before c.free < size")
+      if c.free < size:
+        # Even after fetching shared cells the chunk has no usable memory left. It is no longer the active chunk
+        sysAssert(allocInv(a), "rawAlloc: before listRemove test")
+        listRemove(a.freeSmallChunks[s], c)
+        sysAssert(allocInv(a), "rawAlloc: end listRemove test")
     sysAssert(((cast[int](result) and PageMask) - smallChunkOverhead()) %%
                size == 0, "rawAlloc 21")
     sysAssert(allocInv(a), "rawAlloc: end small size")
@@ -907,7 +983,7 @@ proc rawAlloc(a: var MemRegion, requestedSize: int): pointer =
     trackSize(c.size)
   sysAssert(isAccessible(a, result), "rawAlloc 14")
   sysAssert(allocInv(a), "rawAlloc: end")
-  when logAlloc: cprintf("var pointer_%p = alloc(%ld)\n", result, requestedSize)
+  when logAlloc: cprintf("var pointer_%p = alloc(%ld) # %p\n", result, requestedSize, addr a)
 
 proc rawAlloc0(a: var MemRegion, requestedSize: int): pointer =
   result = rawAlloc(a, requestedSize)
@@ -923,7 +999,7 @@ proc rawDealloc(a: var MemRegion, p: pointer) =
   if isSmallChunk(c):
     # `p` is within a small chunk:
     var c = cast[PSmallChunk](c)
-    var s = c.size
+    let s = c.size
     #       ^ We might access thread foreign storage here.
     # The other thread cannot possibly free this block as it's still alive.
     var f = cast[ptr FreeCell](p)
@@ -938,31 +1014,48 @@ proc rawDealloc(a: var MemRegion, p: pointer) =
         #echo("setting to nil: ", $cast[int](addr(f.zeroField)))
         sysAssert(f.zeroField != 0, "rawDealloc 1")
         f.zeroField = 0
-      f.next = c.freeList
-      c.freeList = f
       when overwriteFree:
         # set to 0xff to check for usage after free bugs:
         nimSetMem(cast[pointer](cast[int](p) +% sizeof(FreeCell)), -1'i32,
                 s -% sizeof(FreeCell))
-      # check if it is not in the freeSmallChunks[s] list:
-      if c.free < s:
-        # add it to the freeSmallChunks[s] array:
-        listAdd(a.freeSmallChunks[s div MemAlign], c)
-        inc(c.free, s)
+      let activeChunk = a.freeSmallChunks[s div MemAlign]
+      if activeChunk != nil and c != activeChunk:
+        # This pointer is not part of the active chunk, lend it out
+        #  and do not adjust the current chunk (same logic as compensateCounters.)
+        # Put the cell into the active chunk,
+        #  may prevent a queue of available chunks from forming in a.freeSmallChunks[s div MemAlign].
+        #  This queue would otherwise waste memory in the form of free cells until we return to those chunks.
+        f.next = activeChunk.freeList
+        activeChunk.freeList = f # lend the cell
+        inc(activeChunk.free, s) # By not adjusting the current chunk's capacity it is prevented from being freed
+        inc(activeChunk.foreignCells) # The cell is now considered foreign from the perspective of the active chunk
       else:
-        inc(c.free, s)
-        if c.free == SmallChunkSize-smallChunkOverhead():
-          listRemove(a.freeSmallChunks[s div MemAlign], c)
-          c.size = SmallChunkSize
-          freeBigChunk(a, cast[PBigChunk](c))
+        f.next = c.freeList
+        c.freeList = f
+        if c.free < s:
+          # The chunk could not have been active as it didn't have enough space to give
+          listAdd(a.freeSmallChunks[s div MemAlign], c)
+          inc(c.free, s)
+        else:
+          inc(c.free, s)
+          # Free only if the entire chunk is unused and there are no borrowed cells.
+          # If the chunk were to be freed while it references foreign cells,
+          #  the foreign chunks will leak memory and can never be freed.
+          if c.free == SmallChunkSize-smallChunkOverhead() and c.foreignCells == 0:
+            listRemove(a.freeSmallChunks[s div MemAlign], c)
+            c.size = SmallChunkSize
+            freeBigChunk(a, cast[PBigChunk](c))
     else:
+      when logAlloc: cprintf("dealloc(pointer_%p) # SMALL FROM %p CALLER %p\n", p, c.owner, addr(a))
+
       when defined(gcDestructors):
-        addToSharedFreeList(c, f)
+        addToSharedFreeList(c, f, s div MemAlign)
     sysAssert(((cast[int](p) and PageMask) - smallChunkOverhead()) %%
                s == 0, "rawDealloc 2")
   else:
     # set to 0xff to check for usage after free bugs:
     when overwriteFree: nimSetMem(p, -1'i32, c.size -% bigChunkOverhead())
+    when logAlloc: cprintf("dealloc(pointer_%p) # BIG %p\n", p, c.owner)
     when defined(gcDestructors):
       if c.owner == addr(a):
         deallocBigChunk(a, cast[PBigChunk](c))
@@ -970,8 +1063,9 @@ proc rawDealloc(a: var MemRegion, p: pointer) =
         addToSharedFreeListBigChunks(c.owner[], cast[PBigChunk](c))
     else:
       deallocBigChunk(a, cast[PBigChunk](c))
+
   sysAssert(allocInv(a), "rawDealloc: end")
-  when logAlloc: cprintf("dealloc(pointer_%p)\n", p)
+  #when logAlloc: cprintf("dealloc(pointer_%p)\n", p)
 
 when not defined(gcDestructors):
   proc isAllocatedPtr(a: MemRegion, p: pointer): bool =
@@ -982,7 +1076,7 @@ when not defined(gcDestructors):
           var c = cast[PSmallChunk](c)
           var offset = (cast[int](p) and (PageSize-1)) -%
                       smallChunkOverhead()
-          result = (c.acc >% offset) and (offset %% c.size == 0) and
+          result = (c.acc.int >% offset) and (offset %% c.size == 0) and
             (cast[ptr FreeCell](p).zeroField >% 1)
         else:
           var c = cast[PBigChunk](c)
@@ -1000,7 +1094,7 @@ when not defined(gcDestructors):
           var c = cast[PSmallChunk](c)
           var offset = (cast[int](p) and (PageSize-1)) -%
                       smallChunkOverhead()
-          if c.acc >% offset:
+          if c.acc.int >% offset:
             sysAssert(cast[int](addr(c.data)) +% offset ==
                       cast[int](p), "offset is not what you think it is")
             var d = cast[ptr FreeCell](cast[int](addr(c.data)) +%
@@ -1071,6 +1165,7 @@ proc dealloc(allocator: var MemRegion, p: pointer) =
     rawDealloc(allocator, p)
 
 proc realloc(allocator: var MemRegion, p: pointer, newsize: Natural): pointer =
+  result = nil
   if newsize > 0:
     result = alloc(allocator, newsize)
     if p != nil:

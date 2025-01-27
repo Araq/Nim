@@ -35,7 +35,7 @@ proc atomicTypeX(cache: IdentCache; name: string; m: TMagic; t: PType; info: TLi
   sym.magic = m
   sym.typ = t
   result = newSymNode(sym)
-  result.typ = t
+  result.typ() = t
 
 proc atomicTypeX(s: PSym; info: TLineInfo): PNode =
   result = newSymNode(s)
@@ -52,7 +52,7 @@ proc mapTypeToBracketX(cache: IdentCache; name: string; m: TMagic; t: PType; inf
   for a in t.kids:
     if a == nil:
       let voidt = atomicTypeX(cache, "void", mVoid, t, info, idgen)
-      voidt.typ = newType(tyVoid, idgen, t.owner)
+      voidt.typ() = newType(tyVoid, idgen, t.owner)
       result.add voidt
     else:
       result.add mapTypeToAstX(cache, a, info, idgen, inst)
@@ -136,7 +136,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       if allowRecursion:
         result = mapTypeToAstR(t.skipModifier, info)
         # keep original type info for getType calls on the output node:
-        result.typ = t
+        result.typ() = t
       else:
         result = newNodeX(nkBracketExpr)
         #result.add mapTypeToAst(t.last, info)
@@ -146,7 +146,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
     else:
       result = mapTypeToAstX(cache, t.skipModifier, info, idgen, inst, allowRecursion)
       # keep original type info for getType calls on the output node:
-      result.typ = t
+      result.typ() = t
   of tyGenericBody:
     if inst:
       result = mapTypeToAstR(t.typeBodyImpl, info)
@@ -237,7 +237,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
   of tySequence: result = mapTypeToBracket("seq", mSeq, t, info)
   of tyProc:
     if inst:
-      result = newNodeX(nkProcTy)
+      result = newNodeX(if tfIterator in t.flags: nkIteratorTy else: nkProcTy)
       var fp = newNodeX(nkFormalParams)
       if t.returnType == nil:
         fp.add newNodeI(nkEmpty, info)
@@ -246,8 +246,15 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       for i in FirstParamAt..<t.kidsLen:
         fp.add newIdentDefs(t.n[i], t[i])
       result.add fp
-      result.add if t.n[0].len > 0: t.n[0][pragmasEffects].copyTree
-                 else: newNodeI(nkEmpty, info)
+      var prag =
+        if t.n[0].len > 0:
+          t.n[0][pragmasEffects].copyTree
+        else:
+          newNodeI(nkEmpty, info)
+      if t.callConv != ccClosure or tfExplicitCallConv in t.flags:
+        if prag.kind == nkEmpty: prag = newNodeI(nkPragma, info)
+        prag.add newIdentNode(getIdent(cache, $t.callConv), info)
+      result.add prag
     else:
       result = mapTypeToBracket("proc", mNone, t, info)
   of tyOpenArray: result = mapTypeToBracket("openArray", mOpenArray, t, info)
@@ -282,7 +289,7 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
   of tyUInt32: result = atomicType("uint32", mUInt32)
   of tyUInt64: result = atomicType("uint64", mUInt64)
   of tyVarargs: result = mapTypeToBracket("varargs", mVarargs, t, info)
-  of tyProxy: result = atomicType("error", mNone)
+  of tyError: result = atomicType("error", mNone)
   of tyBuiltInTypeClass:
     result = mapTypeToBracket("builtinTypeClass", mNone, t, info)
   of tyUserTypeClass, tyUserTypeClassInst:

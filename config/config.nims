@@ -20,4 +20,4 @@ when defined(nimStrictMode):
     switch("hintAsError", "ConvFromXtoItselfNotNeeded")
     # future work: XDeclaredButNotUsed
 
-switch("define", "nimVersion:" & NimVersion)
+switch("define", "nimVersion:" & NimVersion) # deadcode

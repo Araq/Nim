@@ -24,6 +24,9 @@ for i, (x, y) in pairs(data):
 var (a, b) = (1, 2)
 type
   A* = object
+
+var t04 = 1.0'f128
+t04 = 2.0'f128
 '''
 """
 
@@ -49,3 +52,7 @@ echoTypedAndUntypedRepr:
     discard
   var (a,b) = (1,2)
   type A* = object # issue #22933
+
+echoUntypedRepr:
+  var t04 = 1'f128
+  t04 = 2'f128

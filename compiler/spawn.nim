@@ -16,7 +16,7 @@ from trees import getMagic, getRoot
 proc callProc(a: PNode): PNode =
   result = newNodeI(nkCall, a.info)
   result.add a
-  result.typ = a.typ.returnType
+  result.typ() = a.typ.returnType
 
 # we have 4 cases to consider:
 # - a void proc --> nothing to do
@@ -109,6 +109,16 @@ stmtList:
 
 """
 
+proc castToVoidPointer(g: ModuleGraph, n: PNode, fvField: PNode): PNode =
+  if g.config.backend == backendCpp:
+    result = fvField
+  else:
+    let ptrType = getSysType(g, n.info, tyPointer)
+    result = newNodeI(nkCast, fvField.info)
+    result.add newNodeI(nkEmpty, fvField.info)
+    result.add fvField
+    result.typ() = ptrType
+
 proc createWrapperProc(g: ModuleGraph; f: PNode; threadParam, argsParam: PSym;
                        varSection, varInit, call, barrier, fv: PNode;
                        idgen: IdGenerator;
@@ -156,8 +166,9 @@ proc createWrapperProc(g: ModuleGraph; f: PNode; threadParam, argsParam: PSym;
     if barrier == nil:
       # by now 'fv' is shared and thus might have beeen overwritten! we need
       # to use the thread-local view instead:
+      let castExpr = castToVoidPointer(g, f, threadLocalProm.newSymNode)
       body.add callCodegenProc(g, "nimFlowVarSignal", threadLocalProm.info,
-        threadLocalProm.newSymNode)
+        castExpr)
   else:
     body.add call
   if barrier != nil:
@@ -189,7 +200,7 @@ proc createCastExpr(argsParam: PSym; objType: PType; idgen: IdGenerator): PNode 
   result = newNodeI(nkCast, argsParam.info)
   result.add newNodeI(nkEmpty, argsParam.info)
   result.add newSymNode(argsParam)
-  result.typ = newType(tyPtr, idgen, objType.owner)
+  result.typ() = newType(tyPtr, idgen, objType.owner)
   result.typ.rawAddSon(objType)
 
 template checkMagicProcs(g: ModuleGraph, n: PNode, formal: PNode) =
@@ -255,9 +266,9 @@ proc setupArgsForParallelism(g: ModuleGraph; n: PNode; objType: PType;
     if argType.kind in {tyVarargs, tyOpenArray}:
       # important special case: we always create a zero-copy slice:
       let slice = newNodeI(nkCall, n.info, 4)
-      slice.typ = n.typ
+      slice.typ() = n.typ
       slice[0] = newSymNode(createMagic(g, idgen, "slice", mSlice))
-      slice[0].typ = getSysType(g, n.info, tyInt) # fake type
+      slice[0].typ() = getSysType(g, n.info, tyInt) # fake type
       var fieldB = newSym(skField, tmpName, idgen, objType.owner, n.info, g.config.options)
       fieldB.typ = getSysType(g, n.info, tyInt)
       discard objType.addField(fieldB, g.cache, idgen)
@@ -413,7 +424,8 @@ proc wrapProcForSpawn*(g: ModuleGraph; idgen: IdGenerator; owner: PSym; spawnExp
     # create flowVar:
     result.add newFastAsgnStmt(fvField, callProc(spawnExpr[^1]))
     if barrier == nil:
-      result.add callCodegenProc(g, "nimFlowVarCreateSemaphore", fvField.info, fvField)
+      let castExpr = castToVoidPointer(g, n, fvField)
+      result.add callCodegenProc(g, "nimFlowVarCreateSemaphore", fvField.info, castExpr)
 
   elif spawnKind == srByVar:
     var field = newSym(skField, getIdent(g.cache, "fv"), idgen, owner, n.info, g.config.options)

@@ -1,5 +1,6 @@
 discard """
   outputsub: "finished"
+  retries: 2
 """
 
 # Test the garbage collector.

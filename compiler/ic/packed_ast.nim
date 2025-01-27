@@ -16,7 +16,7 @@ import std/[hashes, tables, strtabs]
 import bitabs, rodfiles
 import ".." / [ast, options]
 
-import ".." / nir / nirlineinfos
+import iclineinfos
 
 when defined(nimPreviewSlimSystem):
   import std/assertions
@@ -47,6 +47,7 @@ type
     path*: NodeId
 
   PackedSym* = object
+    id*: int32
     kind*: TSymKind
     name*: LitId
     typ*: PackedItemId
@@ -71,6 +72,7 @@ type
     instantiatedFrom*: PackedItemId
 
   PackedType* = object
+    id*: int32
     kind*: TTypeKind
     callConv*: TCallingConvention
     #nodekind*: TNodeKind

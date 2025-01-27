@@ -38,12 +38,14 @@ proc add*(self: Config, param, value, section: string) {.nosinks.} =
 
 # ----------------------------------------------------------------------------------------------------------------------
 proc sections*(self: Config): seq[string] =
+    result = @[]
     for i in self.table.keys:
         let s = if i == defaultSection: "" else: i
         result.add(s)
 
 # ----------------------------------------------------------------------------------------------------------------------
 proc params*(self: Config, section: string): seq[string] =
+    result = @[]
     let s = if section == "": defaultSection else: section
 
     if self.table.contains(s):

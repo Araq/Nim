@@ -287,6 +287,7 @@ else:
         discard posix.close(fd)
 
 proc urandomInternalImpl(dest: var openArray[byte]): int {.inline.} =
+  result = 0
   when batchImplOS:
     batchImpl(result, dest, getRandomImpl)
   else:

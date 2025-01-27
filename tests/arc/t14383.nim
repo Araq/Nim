@@ -198,6 +198,7 @@ proc allocCpuStorage[T](s: var CpuStorage[T], size: int) =
   s.size = size
 
 proc newTensor[T](size: int): Tensor[T] =
+  result = default(Tensor[T])
   allocCpuStorage(result.buf, size)
 
 proc `[]`[T](t: Tensor[T], idx: int): T = t.buf.raw_buffer[idx]
@@ -209,7 +210,7 @@ proc toTensor[T](s: seq[T]): Tensor[T] =
     result[i] = x
 
 proc main2() =
-  var t: TestObject
+  var t: TestObject = TestObject()
   t.x = toTensor(@[1.0, 2, 3, 4])
   t.x = t.x  
   doAssert(t.x.buf != nil) # self-assignment above should be eliminated

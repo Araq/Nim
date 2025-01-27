@@ -15,7 +15,7 @@ proc testRoundtrip[T](t: T, expected: string) =
   let j = t.toJson
   doAssert $j == expected, "\n" & $j & "\n" & expected
   doAssert j.jsonTo(T).toJson == j
-  var t2: T
+  var t2: T = default(T)
   t2.fromJson(j)
   doAssert t2.toJson == j
 
@@ -205,6 +205,19 @@ template fn() =
     testRoundtrip(Foo[int](x0: 1.5, t1: false, z2: 6)): """{"x0":1.5,"t1":false,"z2":6,"x1":""}"""
     # sanity check: nesting inside a tuple
     testRoundtrip((Foo[int](x0: 1.5, t1: false, z2: 6), "foo")): """[{"x0":1.5,"t1":false,"z2":6,"x1":""},"foo"]"""
+
+  block: # generic case object using generic type
+    type Foo[T] = ref object
+      x0: float
+      case t1: bool
+      of true: z1: int8
+      of false: z2: uint16
+      x1: string
+      x2: T
+    testRoundtrip(Foo[float](t1: true, z1: 5, x1: "bar", x2: 2.5)): """{"x0":0.0,"t1":true,"z1":5,"x1":"bar","x2":2.5}"""
+    testRoundtrip(Foo[int](x0: 1.5, t1: false, z2: 6, x2: 2)): """{"x0":1.5,"t1":false,"z2":6,"x1":"","x2":2}"""
+    # sanity check: nesting inside a tuple
+    testRoundtrip((Foo[int](x0: 1.5, t1: false, z2: 6, x2: 2), "foo")): """[{"x0":1.5,"t1":false,"z2":6,"x1":"","x2":2},"foo"]"""
 
   block: # case object: 2 discriminants, `when` branch, range discriminant
     type Foo[T] = object

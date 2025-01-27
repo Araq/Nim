@@ -260,7 +260,7 @@ else:
   import std/[termios, posix, os, parseutils]
 
   proc setRaw(fd: FileHandle, time: cint = TCSAFLUSH) =
-    var mode: Termios
+    var mode: Termios = default(Termios)
     discard fd.tcGetAttr(addr mode)
     mode.c_iflag = mode.c_iflag and not Cflag(BRKINT or ICRNL or INPCK or
       ISTRIP or IXON)
@@ -277,8 +277,8 @@ else:
     var
       xStr = ""
       yStr = ""
-      ch: char
-      ct: int
+      ch: char = '\0'
+      ct: int = 0
       readX = false
 
     # use raw mode to ask terminal for cursor position
@@ -316,7 +316,7 @@ else:
   proc terminalWidthIoctl*(fds: openArray[int]): int =
     ## Returns terminal width from first fd that supports the ioctl.
 
-    var win: IOctl_WinSize
+    var win: IOctl_WinSize = default(IOctl_WinSize)
     for fd in fds:
       if ioctl(cint(fd), TIOCGWINSZ, addr win) != -1:
         return int(win.ws_col)
@@ -325,7 +325,7 @@ else:
   proc terminalHeightIoctl*(fds: openArray[int]): int =
     ## Returns terminal height from first fd that supports the ioctl.
 
-    var win: IOctl_WinSize
+    var win: IOctl_WinSize = default(IOctl_WinSize)
     for fd in fds:
       if ioctl(cint(fd), TIOCGWINSZ, addr win) != -1:
         return int(win.ws_row)
@@ -349,7 +349,7 @@ else:
     # unrelated to the terminal characteristics.
     # See POSIX Base Definitions Section 8.1 Environment Variable Definition
 
-    var w: int
+    var w: int = 0
     var s = getEnv("COLUMNS") # Try standard env var
     if len(s) > 0 and parseSaturatedNatural(s, w) > 0 and w > 0:
       return w
@@ -383,7 +383,7 @@ else:
     # unrelated to the terminal characteristics.
     # See POSIX Base Definitions Section 8.1 Environment Variable Definition
 
-    var h: int
+    var h: int = 0
     var s = getEnv("LINES") # Try standard env var
     if len(s) > 0 and parseSaturatedNatural(s, h) > 0 and h > 0:
       return h
@@ -928,7 +928,7 @@ else:
                             bool {.tags: [ReadIOEffect, WriteIOEffect].} =
     password.setLen(0)
     let fd = stdin.getFileHandle()
-    var cur, old: Termios
+    var cur, old: Termios = default(Termios)
     discard fd.tcGetAttr(cur.addr)
     old = cur
     cur.c_lflag = cur.c_lflag and not Cflag(ECHO)

@@ -14,7 +14,8 @@ finally 2
 expected
 cpp exception caught
 '''
-disabled: "windows" # pending bug #18011
+# doesn't work on macos 13 seemingly due to libc++ linking issue https://stackoverflow.com/a/77375947
+disabled: osx
 """
 
 type

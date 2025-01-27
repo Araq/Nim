@@ -27,9 +27,8 @@ Raises
 """
 # test os path creation, iteration, and deletion
 
-import os, strutils, pathnorm
 from stdtest/specialpaths import buildDir
-import std/[syncio, assertions]
+import std/[syncio, assertions, osproc, os, strutils, pathnorm]
 
 block fileOperations:
   let files = @["these.txt", "are.x", "testing.r", "files.q"]
@@ -160,6 +159,18 @@ block fileOperations:
 
   # createDir should not fail if `dir` is empty
   createDir("")
+
+
+  when defined(linux): # bug #24174
+    createDir("a/b")
+    open("a/file.txt", fmWrite).close
+
+    if not fileExists("a/fifoFile"):
+      doAssert execCmd("mkfifo -m 600 a/fifoFile") == 0
+
+    copyDir("a/", "../dest/a/", skipSpecial = true)
+    copyDirWithPermissions("a/", "../dest2/a/", skipSpecial = true)
+    removeDir("a")
 
   # Symlink handling in `copyFile`, `copyFileWithPermissions`, `copyFileToDir`,
   # `copyDir`, `copyDirWithPermissions`, `moveFile`, and `moveDir`.

@@ -22,8 +22,6 @@ import
   modules,
   modulegraphs, lineinfos, pathutils, vmprofiler
 
-# ensure NIR compiles:
-import nir / nir
 
 when defined(nimPreviewSlimSystem):
   import std/[syncio, assertions]
@@ -47,9 +45,6 @@ proc writeDepsFile(g: ModuleGraph) =
     if g.getModule(k).isNil:  # don't repeat includes which are also modules
       f.writeLine(toFullPath(g.config, k))
   f.close()
-
-proc writeNinjaFile(g: ModuleGraph) =
-  discard "to implement"
 
 proc writeCMakeDepsFile(conf: ConfigRef) =
   ## write a list of C files for build systems like CMake.
@@ -161,26 +156,6 @@ proc commandCompileToC(graph: ModuleGraph) =
     if optGenCDeps in graph.config.globalOptions:
       writeCMakeDepsFile(conf)
 
-proc commandCompileToNir(graph: ModuleGraph) =
-  let conf = graph.config
-  extccomp.initVars(conf)
-  if conf.symbolFiles == disabledSf:
-    if {optRun, optForceFullMake} * conf.globalOptions == {optRun}:
-      if not changeDetectedViaJsonBuildInstructions(conf, conf.jsonBuildInstructionsFile):
-        # nothing changed
-        graph.config.notes = graph.config.mainPackageNotes
-        return
-
-  if not extccomp.ccHasSaneOverflow(conf):
-    conf.symbols.defineSymbol("nimEmulateOverflowChecks")
-
-  if conf.symbolFiles == disabledSf:
-    setPipeLinePass(graph, NirPass)
-  else:
-    setPipeLinePass(graph, SemPass)
-  compilePipelineProject(graph)
-  writeNinjaFile(graph)
-
 proc commandJsonScript(graph: ModuleGraph) =
   extccomp.runJsonBuildInstructions(graph.config, graph.config.jsonBuildInstructionsFile)
 
@@ -197,16 +172,13 @@ proc commandCompileToJS(graph: ModuleGraph) =
     if optGenScript in conf.globalOptions:
       writeDepsFile(graph)
 
-proc commandInteractive(graph: ModuleGraph; useNir: bool) =
+proc commandInteractive(graph: ModuleGraph) =
   graph.config.setErrorMaxHighMaybe
   initDefines(graph.config.symbols)
-  if useNir:
-    defineSymbol(graph.config.symbols, "noSignalHandler")
-  else:
-    defineSymbol(graph.config.symbols, "nimscript")
+  defineSymbol(graph.config.symbols, "nimscript")
   # note: seems redundant with -d:nimHasLibFFI
   when hasFFI: defineSymbol(graph.config.symbols, "nimffi")
-  setPipeLinePass(graph, if useNir: NirReplPass else: InterpreterPass)
+  setPipeLinePass(graph, InterpreterPass)
   compilePipelineSystemModule(graph)
   if graph.config.commandArgs.len > 0:
     discard graph.compilePipelineModule(fileInfoIdx(graph.config, graph.config.projectFull), {})
@@ -293,8 +265,6 @@ proc mainCommand*(graph: ModuleGraph) =
         # and it has added this define implictly, so we must undo that here.
         # A better solution might be to fix system.nim
         undefSymbol(conf.symbols, "useNimRtl")
-    of backendNir:
-      if conf.exc == excNone: conf.exc = excGoto
     of backendInvalid: raiseAssert "unreachable"
 
   proc compileToBackend() =
@@ -305,7 +275,6 @@ proc mainCommand*(graph: ModuleGraph) =
     of backendCpp: commandCompileToC(graph)
     of backendObjc: commandCompileToC(graph)
     of backendJs: commandCompileToJS(graph)
-    of backendNir: commandCompileToNir(graph)
     of backendInvalid: raiseAssert "unreachable"
 
   template docLikeCmd(body) =
@@ -444,7 +413,7 @@ proc mainCommand*(graph: ModuleGraph) =
     wantMainModule(conf)
     commandView(graph)
     #msgWriteln(conf, "Beware: Indentation tokens depend on the parser's state!")
-  of cmdInteractive: commandInteractive(graph, isDefined(conf, "nir"))
+  of cmdInteractive: commandInteractive(graph)
   of cmdNimscript:
     if conf.projectIsCmd or conf.projectIsStdin: discard
     elif not fileExists(conf.projectFull):

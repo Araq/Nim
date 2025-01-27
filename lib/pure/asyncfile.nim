@@ -354,7 +354,7 @@ proc writeBuffer*(f: AsyncFile, buf: pointer, size: int): Future[void] =
     )
     # passing -1 here should work according to MSDN, but doesn't. For more
     # information see
-    # http://stackoverflow.com/questions/33650899/does-asynchronous-file-
+    # https://stackoverflow.com/questions/33650899/does-asynchronous-file-
     #   appending-in-windows-preserve-order
     ol.offset = DWORD(f.offset and 0xffffffff)
     ol.offsetHigh = DWORD(f.offset shr 32)

@@ -55,7 +55,7 @@ proc methodCall*(n: PNode; conf: ConfigRef): PNode =
   # replace ordinary method by dispatcher method:
   let disp = getDispatcher(result[0].sym)
   if disp != nil:
-    result[0].typ = disp.typ
+    result[0].typ() = disp.typ
     result[0].sym = disp
     # change the arguments to up/downcasts to fit the dispatcher's parameters:
     for i in 1..<result.len:
@@ -133,7 +133,7 @@ proc createDispatcher(s: PSym; g: ModuleGraph; idgen: IdGenerator): PSym =
   if disp.typ.callConv == ccInline: disp.typ.callConv = ccNimCall
   disp.ast = copyTree(s.ast)
   disp.ast[bodyPos] = newNodeI(nkEmpty, s.info)
-  disp.loc.r = ""
+  disp.loc.snippet = ""
   if s.typ.returnType != nil:
     if disp.ast.len > resultPos:
       disp.ast[resultPos].sym = copySym(s.ast[resultPos].sym, idgen)

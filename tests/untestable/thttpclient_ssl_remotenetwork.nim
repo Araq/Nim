@@ -33,7 +33,8 @@ when enableRemoteNetworking and (defined(nimTestsEnableFlaky) or not defined(win
     CertTest = tuple[url:string, category:Category, desc: string]
 
   # badssl certs sometimes expire, set to false when that happens
-  when true:
+  # badssl now disabled indefinitely
+  when false:
     const certificate_tests: array[0..54, CertTest] = [
       ("https://wrong.host.badssl.com/", bad, "wrong.host"),
       ("https://captive-portal.badssl.com/", bad, "captive-portal"),
@@ -197,7 +198,7 @@ when enableRemoteNetworking and (defined(nimTestsEnableFlaky) or not defined(win
 
   type NetSocketTest = tuple[hostname: string, port: Port, category:Category, desc: string]
   # badssl certs sometimes expire, set to false when that happens
-  when true:
+  when false:
     const net_tests:array[0..3, NetSocketTest] = [
       ("imap.gmail.com", 993.Port, good, "IMAP"),
       ("wrong.host.badssl.com", 443.Port, bad, "wrong.host"),

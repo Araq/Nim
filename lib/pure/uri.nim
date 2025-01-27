@@ -146,6 +146,7 @@ func encodeQuery*(query: openArray[(string, string)], usePlus = true,
     assert encodeQuery({"a": "1", "b": "2"}) == "a=1&b=2"
     assert encodeQuery({"a": "1", "b": ""}) == "a=1&b"
     assert encodeQuery({"a": "1", "b": ""}, omitEq = false, sep = ';') == "a=1;b="
+  result = ""
   for elem in query:
     # Encode the `key = value` pairs and separate them with 'sep'
     if result.len > 0: result.add(sep)
@@ -382,7 +383,7 @@ func combine*(base: Uri, reference: Uri): Uri =
   ## Combines a base URI with a reference URI.
   ##
   ## This uses the algorithm specified in
-  ## `section 5.2.2 of RFC 3986 <http://tools.ietf.org/html/rfc3986#section-5.2.2>`_.
+  ## `section 5.2.2 of RFC 3986 <https://tools.ietf.org/html/rfc3986#section-5.2.2>`_.
   ##
   ## This means that the slashes inside the base URIs path as well as reference
   ## URIs path affect the resulting URI.

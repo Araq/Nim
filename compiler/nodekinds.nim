@@ -204,6 +204,7 @@ type
     nkModuleRef           # for .rod file support: A (moduleId, itemId) pair
     nkReplayAction        # for .rod file support: A replay action
     nkNilRodNode          # for .rod file support: a 'nil' PNode
+    nkOpenSym             # container for captured sym that can be overriden by local symbols
 
 const
   nkCallKinds* = {nkCall, nkInfix, nkPrefix, nkPostfix,

@@ -92,9 +92,11 @@ type
     warnStmtListLambda = "StmtListLambda",
     warnBareExcept = "BareExcept",
     warnImplicitDefaultValue = "ImplicitDefaultValue",
-    warnGenericsIgnoredInjection = "GenericsIgnoredInjection",
+    warnIgnoredSymbolInjection = "IgnoredSymbolInjection",
     warnStdPrefix = "StdPrefix"
+    warnUnknownNotes = "UnknownNotes"
     warnUser = "User",
+    warnGlobalVarConstructorTemporary = "GlobalVarConstructorTemporary",
     # hints
     hintSuccess = "Success", hintSuccessX = "SuccessX",
     hintCC = "CC",
@@ -110,7 +112,6 @@ type
     hintUser = "User", hintUserRaw = "UserRaw", hintExtendedContext = "ExtendedContext",
     hintMsgOrigin = "MsgOrigin", # since 1.3.5
     hintDeclaredLoc = "DeclaredLoc", # since 1.5.1
-    hintUnknownHint = "UnknownHint"
 
 const
   MsgKindToStr*: array[TMsgKind, string] = [
@@ -197,9 +198,11 @@ const
     warnStmtListLambda: "statement list expression assumed to be anonymous proc; this is deprecated, use `do (): ...` or `proc () = ...` instead",
     warnBareExcept: "$1",
     warnImplicitDefaultValue: "$1",
-    warnGenericsIgnoredInjection: "$1",
+    warnIgnoredSymbolInjection: "$1",
     warnStdPrefix: "$1 needs the 'std' prefix",
+    warnUnknownNotes: "$1",
     warnUser: "$1",
+    warnGlobalVarConstructorTemporary: "global variable '$1' initialization requires a temporary variable",
     hintSuccess: "operation successful: $#",
     # keep in sync with `testament.isSuccess`
     hintSuccessX: "$build\n$loc lines; ${sec}s; $mem; proj: $project; out: $output",
@@ -234,8 +237,7 @@ const
     hintUserRaw: "$1",
     hintExtendedContext: "$1",
     hintMsgOrigin: "$1",
-    hintDeclaredLoc: "$1",
-    hintUnknownHint: "unknown hint: $1"
+    hintDeclaredLoc: "$1"
   ]
 
 const
@@ -266,6 +268,7 @@ const
   NotesVerbosity* = computeNotesVerbosity()
   errXMustBeCompileTime* = "'$1' can only be used in compile-time context"
   errArgsNeedRunOption* = "arguments can only be given if the '--run' option is selected"
+  errFloatToString* = "cannot convert '$1' to '$2'"
 
 type
   TFileInfo* = object

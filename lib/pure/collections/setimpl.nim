@@ -45,7 +45,7 @@ proc enlarge[A](s: var HashSet[A]) =
 template inclImpl() {.dirty.} =
   if s.data.len == 0:
     initImpl(s, defaultInitialSize)
-  var hc: Hash
+  var hc: Hash = default(Hash)
   var index = rawGet(s, key, hc)
   if index < 0:
     if mustRehash(s):

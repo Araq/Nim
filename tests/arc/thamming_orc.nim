@@ -140,7 +140,7 @@ proc main =
            "Algorithmic error finding first 20 Hamming numbers!!!"
 
   when not defined(trace20):
-    var lsth: TriVal
+    var lsth: TriVal = default(TriVal)
     for h in hammings(200): lsth = h
     doAssert $lsth.convertTriVal2BigInt == "16200",
              "Algorithmic error finding 200th Hamming number!!!"

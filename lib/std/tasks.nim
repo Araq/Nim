@@ -190,7 +190,7 @@ macro toTask*(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand | nkC
         # passing by static parameters
         # so we pass them directly instead of passing by scratchObj
         callNode.add nnkExprEqExpr.newTree(formalParams[i][0], e[i])
-      of nnkSym, nnkPtrTy, nnkProcTy, nnkTupleConstr:
+      of nnkSym, nnkPtrTy, nnkProcTy, nnkTupleTy, nnkTupleConstr:
         addAllNode(param, e[i])
       of nnkCharLit..nnkNilLit:
         callNode.add nnkExprEqExpr.newTree(formalParams[i][0], e[i])

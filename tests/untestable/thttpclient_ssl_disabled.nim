@@ -9,7 +9,8 @@
 ## nim r --putenv:NIM_TESTAMENT_REMOTE_NETWORKING:1 -d:nimDisableCertificateValidation -d:ssl -p:. tests/untestable/thttpclient_ssl_disabled.nim
 
 from stdtest/testutils import enableRemoteNetworking
-when enableRemoteNetworking and (defined(nimTestsEnableFlaky) or not defined(openbsd)):
+# badssl tests disabled indefinitely
+when false and enableRemoteNetworking and (defined(nimTestsEnableFlaky) or not defined(openbsd)):
   import httpclient, net, unittest
 
   const expired = "https://expired.badssl.com/"

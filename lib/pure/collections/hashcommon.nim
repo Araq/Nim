@@ -32,11 +32,11 @@ proc nextTry(h, maxHash: Hash): Hash {.inline.} =
 proc mustRehash[T](t: T): bool {.inline.} =
   # If this is changed, make sure to synchronize it with `slotsNeeded` below
   assert(t.dataLen > t.counter)
-  result = (t.dataLen * 2 < t.counter * 3) or (t.dataLen - t.counter < 4)
+  result = (t.dataLen < (t.counter + t.counter div 2)) or (t.dataLen - t.counter < 4)
 
 proc slotsNeeded(count: Natural): int {.inline.} =
   # Make sure to synchronize with `mustRehash` above
-  result = nextPowerOfTwo(count * 3 div 2 + 4)
+  result = nextPowerOfTwo(count div 2 + count + 4)
 
 template rawGetKnownHCImpl() {.dirty.} =
   if t.dataLen == 0:

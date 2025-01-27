@@ -19,6 +19,8 @@ from std/typetraits import supportsCopyMem
 when defined(nimPreviewSlimSystem):
   import std/[syncio, assertions]
 
+import std / tables
+
 ## Overview
 ## ========
 ## `RodFile` represents a Rod File (versioned binary format), and the
@@ -170,6 +172,18 @@ proc storeSeq*[T](f: var RodFile; s: seq[T]) =
     for i in 0..<s.len:
       storePrim(f, s[i])
 
+proc storeOrderedTable*[K, T](f: var RodFile; s: OrderedTable[K, T]) =
+  if f.err != ok: return
+  if s.len >= high(int32):
+    setError f, tooBig
+    return
+  var lenPrefix = int32(s.len)
+  if writeBuffer(f.f, addr lenPrefix, sizeof(lenPrefix)) != sizeof(lenPrefix):
+    setError f, ioFailure
+  else:
+    for _, v in s:
+      storePrim(f, v)
+
 proc loadPrim*(f: var RodFile; s: var string) =
   ## Read a string, the length was stored as a prefix
   if f.err != ok: return
@@ -210,6 +224,19 @@ proc loadSeq*[T](f: var RodFile; s: var seq[T]) =
     s = newSeq[T](lenPrefix)
     for i in 0..<lenPrefix:
       loadPrim(f, s[i])
+
+proc loadOrderedTable*[K, T](f: var RodFile; s: var OrderedTable[K, T]) =
+  ## `T` must be compatible with `copyMem`, see `loadPrim`
+  if f.err != ok: return
+  var lenPrefix = int32(0)
+  if readBuffer(f.f, addr lenPrefix, sizeof(lenPrefix)) != sizeof(lenPrefix):
+    setError f, ioFailure
+  else:
+    s = initOrderedTable[K, T](lenPrefix)
+    for i in 0..<lenPrefix:
+      var x = default T
+      loadPrim(f, x)
+      s[x.id] = x
 
 proc storeHeader*(f: var RodFile; cookie = defaultCookie) =
   ## stores the header which is described by `cookie`.

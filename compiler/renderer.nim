@@ -442,6 +442,11 @@ proc atom(g: TSrcGen; n: PNode): string =
       result = $n.floatVal & "\'f64"
     else:
       result = litAux(g, n, (cast[ptr int64](addr(n.floatVal)))[], 8) & "\'f64"
+  of nkFloat128Lit:
+    if n.flags * {nfBase2, nfBase8, nfBase16} == {}:
+      result = $n.floatVal & "\'f128"
+    else:
+      result = litAux(g, n, (cast[ptr int64](addr(n.floatVal)))[], 8) & "\'f128"
   of nkNilLit: result = "nil"
   of nkType:
     if (n.typ != nil) and (n.typ.sym != nil): result = n.typ.sym.name.s
@@ -514,6 +519,7 @@ proc lsub(g: TSrcGen; n: PNode): int =
     result = if n.len > 0: lcomma(g, n) + 2 else: len("{:}")
   of nkClosedSymChoice, nkOpenSymChoice:
     if n.len > 0: result += lsub(g, n[0])
+  of nkOpenSym: result = lsub(g, n[0])
   of nkTupleTy: result = lcomma(g, n) + len("tuple[]")
   of nkTupleClassTy: result = len("tuple")
   of nkDotExpr: result = lsons(g, n) + 1
@@ -1013,7 +1019,7 @@ proc bracketKind*(g: TSrcGen, n: PNode): BracketKind =
 proc skipHiddenNodes(n: PNode): PNode =
   result = n
   while result != nil:
-    if result.kind in {nkHiddenStdConv, nkHiddenSubConv, nkHiddenCallConv} and result.len > 1:
+    if result.kind in {nkHiddenStdConv, nkHiddenSubConv, nkHiddenCallConv, nkOpenSym} and result.len > 1:
       result = result[1]
     elif result.kind in {nkCheckedFieldExpr, nkHiddenAddr, nkHiddenDeref, nkStringToCString, nkCStringToString} and
         result.len > 0:
@@ -1275,6 +1281,7 @@ proc gsub(g: var TSrcGen, n: PNode, c: TContext, fromStmtList = false) =
       put(g, tkParRi, if n.kind == nkOpenSymChoice: "|...)" else: ")")
     else:
       gsub(g, n, 0)
+  of nkOpenSym: gsub(g, n, 0)
   of nkPar, nkClosure:
     put(g, tkParLe, "(")
     gcomma(g, n, c)
@@ -1304,10 +1311,11 @@ proc gsub(g: var TSrcGen, n: PNode, c: TContext, fromStmtList = false) =
       put(g, tkCustomLit, n[0].strVal)
       gsub(g, n, 1)
     else:
-      gsub(g, n, 0)
+      for i in 0..<n.len-1:
+        gsub(g, n, i)
       put(g, tkDot, ".")
-      assert n.len == 2, $n.len
-      accentedName(g, n[1])
+      if n.len > 1:
+        accentedName(g, n[^1])
   of nkBind:
     putWithSpace(g, tkBind, "bind")
     gsub(g, n, 0)

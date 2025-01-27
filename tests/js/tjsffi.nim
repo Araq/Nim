@@ -1,4 +1,5 @@
 discard """
+matrix: "--legacy:jsnolambdalifting;"
 output: '''
 3
 2

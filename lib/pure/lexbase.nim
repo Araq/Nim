@@ -104,9 +104,9 @@ proc fillBaseLexer(L: var BaseLexer, pos: int): int =
     result = 0
 
 proc handleCR*(L: var BaseLexer, pos: int): int =
-  ## Call this if you scanned over '\c' in the buffer; it returns the
+  ## Call this if you scanned over `'\c'` in the buffer; it returns the
   ## position to continue the scanning from. `pos` must be the position
-  ## of the '\c'.
+  ## of the `'\c'`.
   assert(L.buf[pos] == '\c')
   inc(L.lineNumber)
   result = fillBaseLexer(L, pos)
@@ -115,9 +115,9 @@ proc handleCR*(L: var BaseLexer, pos: int): int =
   L.lineStart = result
 
 proc handleLF*(L: var BaseLexer, pos: int): int =
-  ## Call this if you scanned over '\L' in the buffer; it returns the
+  ## Call this if you scanned over `'\L'` in the buffer; it returns the
   ## position to continue the scanning from. `pos` must be the position
-  ## of the '\L'.
+  ## of the `'\L'`.
   assert(L.buf[pos] == '\L')
   inc(L.lineNumber)
   result = fillBaseLexer(L, pos) #L.lastNL := result-1; // BUGFIX: was: result;

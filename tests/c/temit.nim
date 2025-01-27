@@ -4,6 +4,7 @@ discard """
 # Test the new ``emit`` pragma:
 
 {.emit: """
+#include <stdio.h>
 static int cvariable = 420;
 
 """.}

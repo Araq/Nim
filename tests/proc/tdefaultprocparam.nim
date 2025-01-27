@@ -88,3 +88,9 @@ proc foo(a = 0, b = a.high, c = high(typeof(a))) =
 
 foo()
 
+import std/strformat
+
+block: # issue #18074
+  proc somefn[T](query: string, _: type[T], message = query) = discard
+  somefn(fmt"", string)
+

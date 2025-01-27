@@ -99,3 +99,46 @@ block: # bug #23019
   k(w)
   {.pop.}
   {.pop.}
+
+{.push exportC.}
+
+block:
+  proc foo11() =
+    const factor = [1, 2, 3, 4]
+    doAssert factor[0] == 1
+  proc foo21() =
+    const factor = [1, 2, 3, 4]
+    doAssert factor[0] == 1
+
+  foo11()
+  foo21()
+
+template foo31() =
+  let factor = [1, 2, 3, 4]
+  doAssert factor[0] == 1
+template foo41() =
+  let factor = [1, 2, 3, 4]
+  doAssert factor[0] == 1
+
+foo31()
+foo41()
+
+{.pop.}
+
+import macros
+
+block:
+  {.push deprecated.}
+  template test() = discard
+  test()
+  {.pop.}
+  macro foo(): bool =
+    let ast = getImpl(bindSym"test")
+    var found = false
+    if ast[4].kind == nnkPragma:
+      for x in ast[4]:
+        if x.eqIdent"deprecated":
+          found = true
+          break
+    result = newLit(found)
+  doAssert foo()

@@ -51,7 +51,7 @@ Advanced options:
   --spellSuggest:num        show at most `num >= 0` spelling suggestions on typos.
                             if `num` is not specified (or `auto`), return
                             an implementation defined set of suggestions.
-  --hints:on|off|list.      `on|off` enables or disables hints.
+  --hints:on|off|list       `on|off` enables or disables hints.
                             `list` reports which hints are selected.
   --hint:X:on|off           turn specific hint X on|off. `hint:X` means `hint:X:on`,
                             as with similar flags. `all` is the set of all hints
@@ -165,6 +165,7 @@ Advanced options:
   --verbosity:0|1|2|3       set Nim's verbosity level (1 is default)
   --errorMax:N              stop compilation after N errors; 0 means unlimited
   --maxLoopIterationsVM:N   set max iterations for all VM loops
+  --maxCallDepthVM:N        set max call depth in the VM
   --experimental:$1
                             enable experimental language feature
   --legacy:$2

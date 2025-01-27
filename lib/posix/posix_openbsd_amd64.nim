@@ -131,15 +131,19 @@ type
     ## used for block sizes
   Clock* {.importc: "clock_t", header: "<sys/types.h>".} = int
   ClockId* {.importc: "clockid_t", header: "<sys/types.h>".} = int
-  Dev* {.importc: "dev_t", header: "<sys/types.h>".} = int32
+  Dev* {.importc: "dev_t", header: "<sys/types.h>".} = (
+    when defined(freebsd):
+      uint32
+    else:
+      int32)
   Fsblkcnt* {.importc: "fsblkcnt_t", header: "<sys/types.h>".} = int
   Fsfilcnt* {.importc: "fsfilcnt_t", header: "<sys/types.h>".} = int
-  Gid* {.importc: "gid_t", header: "<sys/types.h>".} = int32
+  Gid* {.importc: "gid_t", header: "<sys/types.h>".} = uint32
   Id* {.importc: "id_t", header: "<sys/types.h>".} = int
   Ino* {.importc: "ino_t", header: "<sys/types.h>".} = int
   Key* {.importc: "key_t", header: "<sys/types.h>".} = int
   Mode* {.importc: "mode_t", header: "<sys/types.h>".} = uint32
-  Nlink* {.importc: "nlink_t", header: "<sys/types.h>".} = int16
+  Nlink* {.importc: "nlink_t", header: "<sys/types.h>".} = uint32
   Off* {.importc: "off_t", header: "<sys/types.h>".} = int64
   Pid* {.importc: "pid_t", header: "<sys/types.h>".} = int32
   Pthread_attr* {.importc: "pthread_attr_t", header: "<pthread.h>".} = int
@@ -171,7 +175,7 @@ type
   Trace_event_set* {.importc: "trace_event_set_t",
                       header: "<sys/types.h>".} = int
   Trace_id* {.importc: "trace_id_t", header: "<sys/types.h>".} = int
-  Uid* {.importc: "uid_t", header: "<sys/types.h>".} = int32
+  Uid* {.importc: "uid_t", header: "<sys/types.h>".} = uint32
   Useconds* {.importc: "useconds_t", header: "<sys/types.h>".} = int
 
   Utsname* {.importc: "struct utsname",
@@ -366,7 +370,7 @@ when hasSpawnH:
     Tposix_spawn_file_actions* {.importc: "posix_spawn_file_actions_t",
                                  header: "<spawn.h>", final, pure.} = object
 
-# according to http://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
+# according to https://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
 # this is >=92
 const Sockaddr_un_path_length* = 92
 
@@ -446,9 +450,9 @@ type
                    header: "<netinet/in.h>".} = object ## struct sockaddr_in6
     sin6_family*: TSa_Family ## AF_INET6.
     sin6_port*: InPort      ## Port number.
-    sin6_flowinfo*: int32    ## IPv6 traffic class and flow information.
+    sin6_flowinfo*: uint32    ## IPv6 traffic class and flow information.
     sin6_addr*: In6Addr     ## IPv6 address.
-    sin6_scope_id*: int32    ## Set of interfaces for a scope.
+    sin6_scope_id*: uint32    ## Set of interfaces for a scope.
 
   Tipv6_mreq* {.importc: "struct ipv6_mreq", pure, final,
                 header: "<netinet/in.h>".} = object ## struct ipv6_mreq
@@ -475,7 +479,7 @@ type
                              ## alternative network names, terminated by a
                              ## null pointer.
     n_addrtype*: cint        ## The address type of the network.
-    n_net*: int32            ## The network number, in host byte order.
+    n_net*: uint32            ## The network number, in host byte order.
 
   Protoent* {.importc: "struct protoent", pure, final,
               header: "<netdb.h>".} = object ## struct protoent
@@ -512,8 +516,6 @@ type
     fd*: cint        ## The following descriptor being polled.
     events*: cshort  ## The input event flags (see below).
     revents*: cshort ## The output event flags (see below).
-
-  Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = cint
 
 var
   errno* {.importc, header: "<errno.h>".}: cint ## error variable

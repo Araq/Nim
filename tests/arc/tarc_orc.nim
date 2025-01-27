@@ -17,6 +17,7 @@ block:
       private: PrivateKey
 
   proc initKeyPair(): KeyPair =
+    result = KeyPair()
     ed25519_create_keypair(result.public.addr, result.private.addr)
 
   let keys = initKeyPair()
@@ -52,6 +53,7 @@ type Obj = tuple
   arr: seq[int]
 
 proc bug(): seq[Obj] =
+  result = @[]
   result.add (value: 0, arr: @[])
   result[^1].value = 1
   result[^1].arr.add 1
@@ -160,3 +162,27 @@ block:
     testCase()
 
   main()
+
+block: # bug #23858
+  type Object = object
+    a: int
+    b: ref int
+  var x = 0
+  proc fn(): auto {.cdecl.} =
+    inc x
+    return Object()
+  discard fn()
+  doAssert x == 1
+
+block: # bug #24147
+  type
+    O = object of RootObj
+      val: string
+    OO = object of O
+
+  proc `=copy`(dest: var O, src: O) =
+      dest.val = src.val
+
+  let oo = OO(val: "hello world")
+  var ooCopy : OO
+  `=copy`(ooCopy, oo)

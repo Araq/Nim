@@ -1,6 +1,7 @@
 discard """
 action: compile
 disabled: "windows"
+disabled: osx
 """
 
 import sfml, os

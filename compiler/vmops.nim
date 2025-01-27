@@ -27,6 +27,7 @@ from std/envvars import getEnv, existsEnv, delEnv, putEnv, envPairs
 from std/os import getAppFilename
 from std/private/oscommon import dirExists, fileExists
 from std/private/osdirs import walkDir, createDir
+from std/private/ospaths2 import getCurrentDir
 
 from std/times import cpuTime
 from std/hashes import hash
@@ -262,7 +263,7 @@ proc registerAdditionalOps*(c: PCtx) =
     wrap2si(readLines, ioop)
     systemop getCurrentExceptionMsg
     systemop getCurrentException
-    registerCallback c, "stdlib.osdirs.staticWalkDir", proc (a: VmArgs) {.nimcall.} =
+    registerCallback c, "stdlib.staticos.staticWalkDir", proc (a: VmArgs) {.nimcall.} =
       setResult(a, staticWalkDirImpl(getString(a, 0), getBool(a, 1)))
     registerCallback c, "stdlib.staticos.staticDirExists", proc (a: VmArgs) {.nimcall.} =
       setResult(a, dirExists(getString(a, 0)))
@@ -341,8 +342,8 @@ proc registerAdditionalOps*(c: PCtx) =
     ## reproducible builds and users need to understand that this runs at CT.
     ## Note that `staticExec` can already do equal amount of damage so it's more
     ## of a semantic issue than a security issue.
-    registerCallback c, "stdlib.os.getCurrentDir", proc (a: VmArgs) {.nimcall.} =
-      setResult(a, os.getCurrentDir())
+    registerCallback c, "stdlib.ospaths2.getCurrentDir", proc (a: VmArgs) {.nimcall.} =
+      setResult(a, getCurrentDir())
     registerCallback c, "stdlib.osproc.execCmdEx", proc (a: VmArgs) {.nimcall.} =
       let options = getNode(a, 1).fromLit(set[osproc.ProcessOption])
       a.setResult osproc.execCmdEx(getString(a, 0), options).toLit
