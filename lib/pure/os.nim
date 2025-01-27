@@ -255,7 +255,7 @@ when supportedSystem:
       for ext in extensions:
         var x = addFileExt(x, ext)
         if fileExists(x):
-          when defined(posix): #not (defined(windows) or defined(nintendoswitch)):
+          when defined(posix) and not defined(nintendoswitch):
             while followSymlinks: # doubles as if here
               if x.symlinkExists:
                 var r = newString(maxSymlinkLen)
