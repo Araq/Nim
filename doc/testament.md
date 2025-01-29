@@ -40,18 +40,18 @@ html                        generate testresults.html from the database
 Options
 =======
 
---print                   print results to the console
---verbose                 print commands (compiling and running tests)
---simulate                see what tests would be run but don't run them (for debugging)
---failing                 only show failing/ignored tests
---targets:"c cpp js objc" run tests for specified targets (default: c)
---nim:path                use a particular nim executable (default: $PATH/nim)
---directory:dir           Change to directory dir before reading the tests or doing anything else.
---colors:on|off           Turn messages coloring on|off.
---backendLogging:on|off   Disable or enable backend logging. By default turned on.
---megatest:on|off         Enable or disable megatest. Default is on.
---valgrind:on|off         Enable or disable valgrind support. Default is on.
---skipFrom:file           Read tests to skip from `file` - one test per line, # comments ignored
+--print                    print results to the console
+--verbose                  print commands (compiling and running tests)
+--simulate                 see what tests would be run but don't run them (for debugging)
+--failing                  only show failing/ignored tests
+--targets:"c cpp js objc"  run tests for specified targets (default: c)
+--nim:path                 use a particular nim executable (default: $PATH/nim)
+--directory:dir            Change to directory dir before reading the tests or doing anything else.
+--colors:on|off            Turn messages coloring on|off.
+--backendLogging:on|off    Disable or enable backend logging. By default turned on.
+--megatest:on|off          Enable or disable megatest. Default is on.
+--valgrind:on|off          Enable or disable valgrind support. Default is on.
+--skipFrom:file            Read tests to skip from `file` - one test per line, # comments ignored
 
 
 Running a single test
