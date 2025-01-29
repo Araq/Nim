@@ -67,9 +67,9 @@ when defined(unix):  # XXX: suitable?
     if p.isNil:
       if nomem:
         raise newException(OutOfMemDefect, "")
-      else:
-        raise newException(KeyError,
-          "getpwnam(): name not found: " & username.repr)
+      #else: ...KeyError "getpwnam(): name not found: " & username.repr
+      # XXX: do not raise KeyError, as it used to raise no CatchableError.
+      #  e.g. `osproc.findExe(data.sysCommand, true, ExeExts)` expects so
     else:
       result = ""
       if not getPwDir(p, result):
