@@ -30,11 +30,13 @@ a working NodeJS on `PATH`.
 Commands
 ========
 
+==========================  ==========================
 p|pat|pattern <glob>        run all the tests matching the given pattern
 all                         run all tests inside of category folders
 c|cat|category <category>   run all the tests of a certain category
 r|run <test>                run single test file
 html                        generate testresults.html from the database
+==========================  ==========================
 
 
 Options
