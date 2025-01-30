@@ -1099,7 +1099,9 @@ when not defined(lwip):
   # Meanwhile, BSD derivatives had used unsigned int; we will use this
   # for the else case, because it is more widely cloned than SVR4's
   # behavior.
-  when defined(linux) or defined(haiku):
+  # Finally, bionic libc (Android) also uses unsigned int, despite being
+  # a Linux.
+  when defined(linux) and not defined(android) or defined(haiku):
     type
       Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = culong
   elif defined(zephyr):
