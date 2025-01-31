@@ -163,9 +163,12 @@ proc methodDef*(g: ModuleGraph; idgen: IdGenerator; s: PSym) =
       g.config.isDefined("nimInternalNonVtablesTesting"):
     localError(g.config, s.info, errGenerated, "method `" & s.name.s &
           "` can be defined only in the same module with its type (" & s.typ.firstParamType.typeToString() & ")")
-  if sfImportc in s.flags:
+  elif sfImportc in s.flags:
     localError(g.config, s.info, errGenerated, "method `" & s.name.s &
           "` is not allowed to have 'importc' pragmas")
+  elif s.typ.firstParamType.kind == tyObject:
+    localError(g.config, s.info, errGenerated, "method `" & s.name.s &
+          "` is not allowed to have an object allocated on the stack as the first parameter")
 
   for i in 0..<g.methods.len:
     let disp = g.methods[i].dispatcher
