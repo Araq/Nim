@@ -140,26 +140,27 @@ proc expandTilde*(path: string): string {.
   elif (path[1] in {DirSep, AltSep}):
     tryGetHomeOrRet
     result = result / path.substr(2)
-  elif compiles(getHomeDir("bob")):
-    # handle path beginning with `~bob` and `~bob/`
-    # which means home of bob
-    var i = path.find(DirSep, 1)
-    if i < 0:
-      i = len(path)
-
-    let
-      name = path[1..<i]
-      userhome = getHomeDir(name)
-
-    if userhome == "" and hostOS == "vsworks":
-      # XXX: As of the moment this line is written,
-      #  hostOS won't be "vsworks" yet.
-      return path
-
-    result = userhome & path.substr(i)
-
   else:
-    result = path
+    when compiles(getHomeDir("bob")):
+      # handle path beginning with `~bob` and `~bob/`
+      # which means home of bob
+      var i = path.find(DirSep, 1)
+      if i < 0:
+        i = len(path)
+
+      let
+        name = path[1..<i]
+        userhome = getHomeDir(name)
+
+      if userhome == "" and hostOS == "vsworks":
+        # XXX: As of the moment this line is written,
+        #  hostOS won't be "vsworks" yet.
+        return path
+
+      result = userhome & path.substr(i)
+
+    else:
+      result = path
 
 proc quoteShellWindows*(s: string): string {.noSideEffect, rtl, extern: "nosp$1".} =
   ## Quote `s`, so it can be safely passed to Windows API.
