@@ -60,10 +60,10 @@ when defined(unix):  # XXX: suitable?
           break
 
         bufsize = bufsize shl 1
+      defer: deallocShared buf
     else:
       p = getpwnam(name_chars)
-    
-    defer: deallocShared buf
+
     if p.isNil:
       if nomem:
         raise newException(OutOfMemDefect, "")
