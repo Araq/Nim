@@ -29,17 +29,20 @@ when defined(unix):  # XXX: suitable?
     ##
     # replace "~username" with `pwd.getpwnam(username).pw_dir`
     # translated from CPython's pwd.getpwnam, a.k.a. pwd_getpwnam_impl in Modules/pwdmodule.c
-    var bufsize = sysconf(SC_GETPW_R_SIZE_MAX)
-    if bufsize == -1:
-      bufsize = DEFAULT_BUFFER_SIZE
-    
     let name_chars = cstring username 
 
     var
       nomem = false
       p: ptr Passwd = nil
-      buf: cstring = nil
-    when declared(getpwnam_r) and declared(reallocShared):
+
+    when declared(getpwnam_r) and declared(SC_GETPW_R_SIZE_MAX) and
+        declared(reallocShared):
+      var
+        buf: cstring = nil
+        bufsize = sysconf(SC_GETPW_R_SIZE_MAX)
+      if bufsize == -1:
+        bufsize = DEFAULT_BUFFER_SIZE
+
       var pwd: Passwd
       while true:
         let buf2 = cast[cstring](reallocShared(buf, bufsize))
