@@ -39,7 +39,7 @@ when defined(unix):  # XXX: suitable?
       nomem = false
       p: ptr Passwd = nil
       buf: cstring = nil
-    when declared(getpwnam_r):
+    when declared(getpwnam_r) and declared(reallocShared):
       var pwd: Passwd
       while true:
         let buf2 = cast[cstring](reallocShared(buf, bufsize))
