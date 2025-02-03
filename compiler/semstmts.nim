@@ -2351,7 +2351,7 @@ proc semCppMember(c: PContext; s: PSym; n: PNode) =
           isInitializer = false
           break
         var j = 0
-        while p[j].sym.kind == skParam:
+        while p[j].kind == nkSym and p[j].sym.kind == skParam:
           initializerCall.add val
           inc j
       if isInitializer:
