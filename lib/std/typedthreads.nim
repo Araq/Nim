@@ -78,6 +78,7 @@ deinitLock(l)
 
 import std/private/[threadtypes]
 export Thread
+import std/atomics
 
 import system/ansi_c
 
@@ -149,9 +150,10 @@ else:
     nimThreadProcWrapperBody(closure)
 {.pop.}
 
-proc running*[TArg](t: Thread[TArg]): bool {.inline.} =
+proc running*[TArg](t: var Thread[TArg]): bool {.inline.} =
   ## Returns true if `t` is running.
-  result = t.dataFn != nil
+  let dataFn = t.dataFn.load()
+  result = dataFn != nil
 
 proc handle*[TArg](t: Thread[TArg]): SysThread {.inline.} =
   ## Returns the thread handle of `t`.
@@ -202,7 +204,7 @@ when false:
     else:
       discard pthread_cancel(t.sys)
     when declared(registerThread): unregisterThread(addr(t))
-    t.dataFn = nil
+    t.dataFn.store nil
     ## if thread `t` already exited, `t.core` will be `null`.
     if not isNil(t.core):
       deallocThreadStorage(t.core)
@@ -220,7 +222,7 @@ when hostOS == "windows":
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data = param
-    t.dataFn = tp
+    t.dataFn.store tp
     when hasSharedHeap: t.core.stackSize = ThreadStackSize
     var dummyThreadId: int32 = 0'i32
     t.sys = createThread(nil, ThreadStackSize, threadProcWrapper[TArg],
@@ -245,7 +247,7 @@ elif defined(genode):
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data = param
-    t.dataFn = tp
+    t.dataFn.store(tp)
     when hasSharedHeap: t.stackSize = ThreadStackSize
     t.sys.initThread(
       runtimeEnv,
@@ -269,7 +271,7 @@ else:
     t.core = cast[PGcThread](allocThreadStorage(sizeof(GcThread)))
 
     when TArg isnot void: t.data = param
-    t.dataFn = tp
+    t.dataFn.store(tp)
     when hasSharedHeap: t.core.stackSize = ThreadStackSize
     var a {.noinit.}: Pthread_attr
     doAssert pthread_attr_init(a) == 0
