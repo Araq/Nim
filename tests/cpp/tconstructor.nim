@@ -129,3 +129,9 @@ block:
     var b2 = makeBoo2()
 
   main()
+
+block: # bug #24658
+  type
+    A {.importcpp: "A".} = object
+
+  proc a(something: ptr cint = nil): A {.cdecl, constructor, importcpp: "A(@)".}
