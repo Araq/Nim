@@ -2397,9 +2397,6 @@ proc processQuotations(c: PContext; n: var PNode, op: string,
         tempNode[0] = n[0]
         tempNode[1] = n[1]
         handlePrefixOp(tempNode)
-  elif n.kind == nkIdent:
-    if n.ident.s == "result":
-      n = ids[0]
 
   for i in 0..<n.safeLen:
     processQuotations(c, n[i], op, quotes, ids)
@@ -2413,18 +2410,15 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   var
     quotedBlock = n[^1]
     op = if n.len == 3: expectString(c, n[1]) else: "``"
-    quotes = newSeq[PNode](2)
+    quotes = newSeq[PNode](1)
       # the quotes will be added to a nkCall statement
-      # leave some room for the callee symbol and the result symbol
-    ids = newSeq[PNode](1)
+      # leave some room for the callee symbol
+    ids = newSeq[PNode]()
       # this will store the generated param names
-      # leave some room for the result symbol
 
   if quotedBlock.kind != nkStmtList:
     localError(c.config, n.info, errXExpected, "block")
 
-  # This adds a default first field to pass the result symbol
-  ids[0] = newAnonSym(c, skParam, n.info).newSymNode
   processQuotations(c, quotedBlock, op, quotes, ids)
 
   let dummyTemplateSym = newAnonSym(c, skTemplate, n.info)
@@ -2439,8 +2433,7 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   if ids.len > 0:
     dummyTemplate[paramsPos] = newNodeI(nkFormalParams, n.info)
     dummyTemplate[paramsPos].add getSysSym(c.graph, n.info, "untyped").newSymNode # return type
-    dummyTemplate[paramsPos].add newTreeI(nkIdentDefs, n.info, ids[0], getSysSym(c.graph, n.info, "typed").newSymNode, c.graph.emptyNode)
-    for i in 1..<ids.len:
+    for i in 0..<ids.len:
       let exp = semExprWithType(c, quotes[i+1], {})
       let typ = exp.typ
       if tfTriggersCompileTime notin typ.flags and typ.kind != tyStatic and exp.kind == nkSym and exp.sym.kind notin routineKinds + {skType}:
@@ -2464,7 +2457,6 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
   var tmpl = semTemplateDef(c, dummyTemplate)
   c.currentScope = oldScope
   quotes[0] = tmpl[namePos]
-  # This adds a call to newIdentNode("result") as the first argument to the template call
   let identNodeSym = getCompilerProc(c.graph, "newIdentNode")
   # so that new Nim compilers can compile old macros.nim versions, we check for 'nil'
   # here and provide the old fallback solution:
@@ -2472,7 +2464,6 @@ proc semQuoteAst(c: PContext, n: PNode): PNode =
                     newIdentNode(getIdent(c.cache, "newIdentNode"), n.info)
                   else:
                     identNodeSym.newSymNode
-  quotes[1] = newTreeI(nkCall, n.info, identNode, newStrNode(nkStrLit, "result"))
   result = newTreeI(nkCall, n.info,
      createMagic(c.graph, c.idgen, "getAst", mExpandToAst).newSymNode,
      newTreeI(nkCall, n.info, quotes))
