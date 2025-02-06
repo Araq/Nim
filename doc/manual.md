@@ -5186,22 +5186,22 @@ caught by reference. Example:
   proc fn() =
     let a = initRuntimeError("foo")
     doAssert $a.what == "foo"
-    var b: cstring
+    var b = ""
     try: raise initRuntimeError("foo2")
     except CStdException as e:
       doAssert e is CStdException
-      b = e.what()
-    doAssert $b == "foo2"
+      b = $e.what()
+    doAssert b == "foo2"
 
     try: raise initStdException()
     except CStdException: discard
 
     try: raise initRuntimeError("foo3")
     except CRuntimeError as e:
-      b = e.what()
+      b = $e.what()
     except CStdException:
       doAssert false
-    doAssert $b == "foo3"
+    doAssert b == "foo3"
 
   fn()
   ```
