@@ -1,0 +1,10 @@
+nimTitle	rodutils	rodutils.html	module rodutils		0
+nim	toStrMaxPrecision	rodutils.html#toStrMaxPrecision	proc toStrMaxPrecision(f: BiggestFloat | float32): string		47
+nim	encodeStr	rodutils.html#encodeStr,string,string	proc encodeStr(s: string; result: var string)		68
+nim	decodeStr	rodutils.html#decodeStr,cstring,int	proc decodeStr(s: cstring; pos: var int): string		81
+nim	encodeVBiggestInt	rodutils.html#encodeVBiggestInt,BiggestInt,string	proc encodeVBiggestInt(x: BiggestInt; result: var string)		127
+nim	encodeVInt	rodutils.html#encodeVInt,int,string	proc encodeVInt(x: int; result: var string)		136
+nim	decodeVInt	rodutils.html#decodeVInt,cstring,int	proc decodeVInt(s: cstring; pos: var int): int		159
+nim	decodeVBiggestInt	rodutils.html#decodeVBiggestInt,cstring,int	proc decodeVBiggestInt(s: cstring; pos: var int): BiggestInt		162
+nim	decodeVIntArray	rodutils.html#decodeVIntArray.i,cstring	iterator decodeVIntArray(s: cstring): int		167
+nim	decodeStrArray	rodutils.html#decodeStrArray.i,cstring	iterator decodeStrArray(s: cstring): string		173

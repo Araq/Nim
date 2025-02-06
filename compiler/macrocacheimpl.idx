@@ -1,0 +1,5 @@
+nimTitle	macrocacheimpl	macrocacheimpl.html	module macrocacheimpl		0
+nim	recordInc	macrocacheimpl.html#recordInc,PCtx,TLineInfo,string,BiggestInt	proc recordInc(c: PCtx; info: TLineInfo; key: string; by: BiggestInt)		17
+nim	recordPut	macrocacheimpl.html#recordPut,PCtx,TLineInfo,string,string,PNode	proc recordPut(c: PCtx; info: TLineInfo; key: string; k: string; val: PNode)		24
+nim	recordAdd	macrocacheimpl.html#recordAdd,PCtx,TLineInfo,string,PNode	proc recordAdd(c: PCtx; info: TLineInfo; key: string; val: PNode)		32
+nim	recordIncl	macrocacheimpl.html#recordIncl,PCtx,TLineInfo,string,PNode	proc recordIncl(c: PCtx; info: TLineInfo; key: string; val: PNode)		39

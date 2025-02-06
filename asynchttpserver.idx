@@ -1,0 +1,13 @@
+nimTitle	asynchttpserver	asynchttpserver.html	module std/asynchttpserver		0
+nim	Request	asynchttpserver.html#Request	object Request		61
+nim	AsyncHttpServer	asynchttpserver.html#AsyncHttpServer	type AsyncHttpServer		70
+nim	getPort	asynchttpserver.html#getPort,AsyncHttpServer	proc getPort(self: AsyncHttpServer): Port		77
+nim	newAsyncHttpServer	asynchttpserver.html#newAsyncHttpServer,int	proc newAsyncHttpServer(reuseAddr = true; reusePort = false; maxBody = 8388608): AsyncHttpServer		90
+nim	sendHeaders	asynchttpserver.html#sendHeaders,Request,HttpHeaders	proc sendHeaders(req: Request; headers: HttpHeaders): Future[void]		99
+nim	respond	asynchttpserver.html#respond,Request,HttpCode,string,HttpHeaders	proc respond(req: Request; code: HttpCode; content: string;\n        headers: HttpHeaders = nil): Future[void]		105
+nim	nimMaxDescriptorsFallback	asynchttpserver.html#nimMaxDescriptorsFallback	const nimMaxDescriptorsFallback		377
+nim	listen	asynchttpserver.html#listen,AsyncHttpServer,Port,string	proc listen(server: AsyncHttpServer; port: Port; address = ""; domain = AF_INET)		382
+nim	shouldAcceptRequest	asynchttpserver.html#shouldAcceptRequest,AsyncHttpServer,int	proc shouldAcceptRequest(server: AsyncHttpServer; assumedDescriptorsPerRequest = 5): bool		397
+nim	acceptRequest	asynchttpserver.html#acceptRequest,AsyncHttpServer,proc(Request)	proc acceptRequest(server: AsyncHttpServer; callback: proc (request: Request): Future[\n    void] {.closure, gcsafe.}): owned(Future[void])		406
+nim	serve	asynchttpserver.html#serve,AsyncHttpServer,Port,proc(Request),string,int	proc serve(server: AsyncHttpServer; port: Port;\n      callback: proc (request: Request): Future[void] {.closure, gcsafe.};\n      address = ""; assumedDescriptorsPerRequest = -1; domain = AF_INET): owned(\n    Future[void])		416
+nim	close	asynchttpserver.html#close,AsyncHttpServer	proc close(server: AsyncHttpServer)		439

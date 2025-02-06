@@ -1,0 +1,4 @@
+nimTitle	asciitables	asciitables.html	module std/private/asciitables		0
+nim	Cell	asciitables.html#Cell	object Cell		6
+nim	parseTableCells	asciitables.html#parseTableCells.i,string,char	iterator parseTableCells(s: string; delim = '\t'): Cell		10
+nim	alignTable	asciitables.html#alignTable,string,char,char,string	proc alignTable(s: string; delim = '\t'; fill = ' '; sep = " "): string		71

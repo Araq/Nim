@@ -1,0 +1,5 @@
+nimTitle	modulepaths	modulepaths.html	module modulepaths		0
+nim	getModuleName	modulepaths.html#getModuleName,ConfigRef,PNode	proc getModuleName(conf: ConfigRef; n: PNode): string		15
+nim	checkModuleName	modulepaths.html#checkModuleName,ConfigRef,PNode	proc checkModuleName(conf: ConfigRef; n: PNode; doLocalError = true): FileIndex		70
+nim	mangleModuleName	modulepaths.html#mangleModuleName,ConfigRef,AbsoluteFile	proc mangleModuleName(conf: ConfigRef; path: AbsoluteFile): string		82
+nim	demangleModuleName	modulepaths.html#demangleModuleName,string	proc demangleModuleName(path: string): string		93

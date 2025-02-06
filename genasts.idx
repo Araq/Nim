@@ -1,0 +1,6 @@
+nimTitle	genasts	genasts.html	module std/genasts		0
+nim	kDirtyTemplate	genasts.html#kDirtyTemplate	GenAstOpt.kDirtyTemplate		5
+nim	kNoNewLit	genasts.html#kNoNewLit	GenAstOpt.kNoNewLit		5
+nim	GenAstOpt	genasts.html#GenAstOpt	enum GenAstOpt		5
+nim	genAstOpt	genasts.html#genAstOpt.m,staticset[GenAstOpt],varargs[untyped]	macro genAstOpt(options: static set[GenAstOpt]; args: varargs[untyped]): untyped		15
+nim	genAst	genasts.html#genAst.t,varargs[untyped]	template genAst(args: varargs[untyped]): untyped		87

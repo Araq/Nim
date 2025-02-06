@@ -1,0 +1,40 @@
+nimTitle	sysatomics	sysatomics.html	module std/sysatomics		0
+nim	AtomType	sysatomics.html#AtomType	type AtomType		22
+nim	AtomMemModel	sysatomics.html#AtomMemModel	type AtomMemModel		26
+nim	ATOMIC_RELAXED	sysatomics.html#ATOMIC_RELAXED	var ATOMIC_RELAXED		28
+nim	ATOMIC_CONSUME	sysatomics.html#ATOMIC_CONSUME	var ATOMIC_CONSUME		30
+nim	ATOMIC_ACQUIRE	sysatomics.html#ATOMIC_ACQUIRE	var ATOMIC_ACQUIRE		33
+nim	ATOMIC_RELEASE	sysatomics.html#ATOMIC_RELEASE	var ATOMIC_RELEASE		37
+nim	ATOMIC_ACQ_REL	sysatomics.html#ATOMIC_ACQ_REL	var ATOMIC_ACQ_REL		41
+nim	ATOMIC_SEQ_CST	sysatomics.html#ATOMIC_SEQ_CST	var ATOMIC_SEQ_CST		45
+nim	atomicLoadN	sysatomics.html#atomicLoadN,ptr.T,AtomMemModel	proc atomicLoadN[T: AtomType](p: ptr T; mem: AtomMemModel): T		50
+nim	atomicLoad	sysatomics.html#atomicLoad,ptr.T,ptr.T,AtomMemModel	proc atomicLoad[T: AtomType](p, ret: ptr T; mem: AtomMemModel)		55
+nim	atomicStoreN	sysatomics.html#atomicStoreN,ptr.T,T,AtomMemModel	proc atomicStoreN[T: AtomType](p: ptr T; val: T; mem: AtomMemModel)		59
+nim	atomicStore	sysatomics.html#atomicStore,ptr.T,ptr.T,AtomMemModel	proc atomicStore[T: AtomType](p, val: ptr T; mem: AtomMemModel)		64
+nim	atomicExchangeN	sysatomics.html#atomicExchangeN,ptr.T,T,AtomMemModel	proc atomicExchangeN[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		68
+nim	atomicExchange	sysatomics.html#atomicExchange,ptr.T,ptr.T,ptr.T,AtomMemModel	proc atomicExchange[T: AtomType](p, val, ret: ptr T; mem: AtomMemModel)		74
+nim	atomicCompareExchangeN	sysatomics.html#atomicCompareExchangeN,ptr.T,ptr.T,T,bool,AtomMemModel,AtomMemModel	proc atomicCompareExchangeN[T: AtomType](p, expected: ptr T; desired: T; weak: bool;\n                                    success_memmodel: AtomMemModel;\n                                    failure_memmodel: AtomMemModel): bool		79
+nim	atomicCompareExchange	sysatomics.html#atomicCompareExchange,ptr.T,ptr.T,ptr.T,bool,AtomMemModel,AtomMemModel	proc atomicCompareExchange[T: AtomType](p, expected, desired: ptr T; weak: bool;\n                                   success_memmodel: AtomMemModel;\n                                   failure_memmodel: AtomMemModel): bool		95
+nim	atomicAddFetch	sysatomics.html#atomicAddFetch,ptr.T,T,AtomMemModel	proc atomicAddFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		103
+nim	atomicSubFetch	sysatomics.html#atomicSubFetch,ptr.T,T,AtomMemModel	proc atomicSubFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		105
+nim	atomicOrFetch	sysatomics.html#atomicOrFetch,ptr.T,T,AtomMemModel	proc atomicOrFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		107
+nim	atomicAndFetch	sysatomics.html#atomicAndFetch,ptr.T,T,AtomMemModel	proc atomicAndFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		109
+nim	atomicXorFetch	sysatomics.html#atomicXorFetch,ptr.T,T,AtomMemModel	proc atomicXorFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		111
+nim	atomicNandFetch	sysatomics.html#atomicNandFetch,ptr.T,T,AtomMemModel	proc atomicNandFetch[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		113
+nim	atomicFetchAdd	sysatomics.html#atomicFetchAdd,ptr.T,T,AtomMemModel	proc atomicFetchAdd[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		117
+nim	atomicFetchSub	sysatomics.html#atomicFetchSub,ptr.T,T,AtomMemModel	proc atomicFetchSub[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		119
+nim	atomicFetchOr	sysatomics.html#atomicFetchOr,ptr.T,T,AtomMemModel	proc atomicFetchOr[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		121
+nim	atomicFetchAnd	sysatomics.html#atomicFetchAnd,ptr.T,T,AtomMemModel	proc atomicFetchAnd[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		123
+nim	atomicFetchXor	sysatomics.html#atomicFetchXor,ptr.T,T,AtomMemModel	proc atomicFetchXor[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		125
+nim	atomicFetchNand	sysatomics.html#atomicFetchNand,ptr.T,T,AtomMemModel	proc atomicFetchNand[T: AtomType](p: ptr T; val: T; mem: AtomMemModel): T		127
+nim	atomicTestAndSet	sysatomics.html#atomicTestAndSet,pointer,AtomMemModel	proc atomicTestAndSet(p: pointer; mem: AtomMemModel): bool		130
+nim	atomicClear	sysatomics.html#atomicClear,pointer,AtomMemModel	proc atomicClear(p: pointer; mem: AtomMemModel)		137
+nim	atomicThreadFence	sysatomics.html#atomicThreadFence,AtomMemModel	proc atomicThreadFence(mem: AtomMemModel)		143
+nim	atomicSignalFence	sysatomics.html#atomicSignalFence,AtomMemModel	proc atomicSignalFence(mem: AtomMemModel)		148
+nim	atomicAlwaysLockFree	sysatomics.html#atomicAlwaysLockFree,int,pointer	proc atomicAlwaysLockFree(size: int; p: pointer): bool		153
+nim	atomicIsLockFree	sysatomics.html#atomicIsLockFree,int,pointer	proc atomicIsLockFree(size: int; p: pointer): bool		162
+nim	fence	sysatomics.html#fence.t	template fence()		171
+nim	atomicInc	sysatomics.html#atomicInc,int,int	proc atomicInc(memLoc: var int; x: int = 1): int		267
+nim	atomicDec	sysatomics.html#atomicDec,int,int	proc atomicDec(memLoc: var int; x: int = 1): int		278
+nim	cas	sysatomics.html#cas,ptr.T,T,T	proc cas[T: bool | int | ptr](p: ptr T; oldValue, newValue: T): bool		346
+nim	cpuRelax	sysatomics.html#cpuRelax	proc cpuRelax()		358

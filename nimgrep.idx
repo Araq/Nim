@@ -1,0 +1,7 @@
+markupTitle	nimgrep User's manual	nimgrep.html	nimgrep User's manual		0
+heading	Installation	nimgrep.html#installation	 Installation		0
+heading	Command line switches	nimgrep.html#command-line-switches	 Command line switches		0
+heading	Path filter options	nimgrep.html#command-line-switches-path-filter-options	  Path filter options		0
+heading	Combining multiple filter options together and negating them	nimgrep.html#command-line-switches-combining-multiple-filter-options-together-and-negating-them	  Combining multiple filter options together and negating them		0
+heading	Meaning of ^ and $	nimgrep.html#meaning-of-roof-and-dollar	 Meaning of <tt class="docutils literal"><span class="pre">^</span></tt> and <tt class="docutils literal"><span class="pre">$</span></tt>		0
+heading	Examples	nimgrep.html#examples	 Examples		0

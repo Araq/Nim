@@ -1,0 +1,25 @@
+nimTitle	nilcheck	nilcheck.html	module nilcheck		0
+nim	add	nilcheck.html#add,SeqOfDistinct[T,U],U	proc add[T, U](a: var SeqOfDistinct[T, U]; value: U)		109
+nim	Parent	nilcheck.html#Parent	Nilability.Parent		166
+nim	Safe	nilcheck.html#Safe	Nilability.Safe		166
+nim	MaybeNil	nilcheck.html#MaybeNil	Nilability.MaybeNil		166
+nim	Nil	nilcheck.html#Nil	Nilability.Nil		166
+nim	Unreachable	nilcheck.html#Unreachable	Nilability.Unreachable		166
+nim	Nilability	nilcheck.html#Nilability	enum Nilability		166
+nim	`<`	nilcheck.html#<,ExprIndex,ExprIndex	proc `<`(a: ExprIndex; b: ExprIndex): bool		180
+nim	`<=`	nilcheck.html#<=,ExprIndex,ExprIndex	proc `<=`(a: ExprIndex; b: ExprIndex): bool		183
+nim	`>`	nilcheck.html#>,ExprIndex,ExprIndex	proc `>`(a: ExprIndex; b: ExprIndex): bool		186
+nim	`>=`	nilcheck.html#>=,ExprIndex,ExprIndex	proc `>=`(a: ExprIndex; b: ExprIndex): bool		189
+nim	`==`	nilcheck.html#==,ExprIndex,ExprIndex	proc `==`(a: ExprIndex; b: ExprIndex): bool		192
+nim	`$`	nilcheck.html#$,ExprIndex	proc `$`(a: ExprIndex): string		195
+nim	`+`	nilcheck.html#+,ExprIndex,ExprIndex	proc `+`(a: ExprIndex; b: ExprIndex): ExprIndex		198
+nim	`-`	nilcheck.html#-,ExprIndex,ExprIndex	proc `-`(a: ExprIndex; b: ExprIndex): ExprIndex		202
+nim	`$`	nilcheck.html#$,SetIndex	proc `$`(a: SetIndex): string		205
+nim	`==`	nilcheck.html#==,SetIndex,SetIndex	proc `==`(a: SetIndex; b: SetIndex): bool		208
+nim	`+`	nilcheck.html#+,SetIndex,SetIndex	proc `+`(a: SetIndex; b: SetIndex): SetIndex		211
+nim	`-`	nilcheck.html#-,SetIndex,SetIndex	proc `-`(a: SetIndex; b: SetIndex): SetIndex		215
+nim	checkNil	nilcheck.html#checkNil,PSym,PNode,ConfigRef,IdGenerator	proc checkNil(s: PSym; body: PNode; conf: ConfigRef; idgen: IdGenerator)		1355
+nimgrp	==	nilcheck.html#==-procs-all	proc		192
+nimgrp	+	nilcheck.html#+-procs-all	proc		198
+nimgrp	-	nilcheck.html#--procs-all	proc		202
+nimgrp	$	nilcheck.html#$-procs-all	proc		195

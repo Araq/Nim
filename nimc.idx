@@ -1,0 +1,42 @@
+markupTitle	Nim Compiler User Guide	nimc.html	Nim Compiler User Guide		0
+heading	Introduction	nimc.html#introduction	 Introduction		0
+heading	Compiler Usage	nimc.html#compiler-usage	 Compiler Usage		0
+heading	Command-line switches	nimc.html#compiler-usage-commandminusline-switches	  Command-line switches		0
+heading	List of warnings	nimc.html#compiler-usage-list-of-warnings	  List of warnings		0
+heading	List of hints	nimc.html#compiler-usage-list-of-hints	  List of hints		0
+heading	Verbosity levels	nimc.html#compiler-usage-verbosity-levels	  Verbosity levels		0
+heading	Compile-time symbols	nimc.html#compiler-usage-compileminustime-symbols	  Compile-time symbols		0
+heading	Configuration files	nimc.html#compiler-usage-configuration-files	  Configuration files		0
+idx	debug build	nimc.html#debug-build_1	Configuration files		0
+idx	release build	nimc.html#release-build_1	Configuration files		0
+idx	dangerous release build	nimc.html#dangerous-release-build_1	Configuration files		0
+heading	Search path handling	nimc.html#compiler-usage-search-path-handling	  Search path handling		0
+heading	Generated C code directory	nimc.html#compiler-usage-generated-c-code-directory	  Generated C code directory		0
+heading	Compiler Selection	nimc.html#compiler-selection	 Compiler Selection		0
+heading	Cross-compilation	nimc.html#crossminuscompilation	 Cross-compilation		0
+heading	Cross-compilation for Windows	nimc.html#crossminuscompilation-for-windows	 Cross-compilation for Windows		0
+heading	Cross-compilation for Android	nimc.html#crossminuscompilation-for-android	 Cross-compilation for Android		0
+heading	Cross-compilation for iOS	nimc.html#crossminuscompilation-for-ios	 Cross-compilation for iOS		0
+heading	Cross-compilation for Nintendo Switch	nimc.html#crossminuscompilation-for-nintendo-switch	 Cross-compilation for Nintendo Switch		0
+heading	GPU Compilation	nimc.html#gpu-compilation	 GPU Compilation		0
+heading	DLL generation	nimc.html#dll-generation	 DLL generation		0
+heading	Additional compilation switches	nimc.html#additional-compilation-switches	 Additional compilation switches		0
+idx	malloc	nimc.html#malloc_1	Additional compilation switches		0
+heading	Additional Features	nimc.html#additional-features	 Additional Features		0
+heading	LineDir option	nimc.html#additional-features-linedir-option	  LineDir option		0
+heading	StackTrace option	nimc.html#additional-features-stacktrace-option	  StackTrace option		0
+heading	LineTrace option	nimc.html#additional-features-linetrace-option	  LineTrace option		0
+heading	DynlibOverride	nimc.html#dynliboverride	 DynlibOverride		0
+heading	Backend language options	nimc.html#backend-language-options	 Backend language options		0
+heading	Nim documentation tools	nimc.html#nim-documentation-tools	 Nim documentation tools		0
+idx	doc	nimc.html#doc_1	Nim documentation tools		0
+heading	Nim idetools integration	nimc.html#nim-idetools-integration	 Nim idetools integration		0
+heading	Nim for embedded systems	nimc.html#nim-for-embedded-systems	 Nim for embedded systems		0
+heading	nimAllocPagesViaMalloc	nimc.html#nim-for-embedded-systems-nimallocpagesviamalloc	  nimAllocPagesViaMalloc		0
+heading	nimPage256 / nimPage512 / nimPage1k	nimc.html#nimpage256-slash-nimpage512-slash-nimpage1k	 nimPage256 / nimPage512 / nimPage1k		0
+heading	nimMemAlignTiny	nimc.html#nimmemaligntiny	 nimMemAlignTiny		0
+heading	Thread stack size	nimc.html#thread-stack-size	 Thread stack size		0
+heading	Nim for realtime systems	nimc.html#nim-for-realtime-systems	 Nim for realtime systems		0
+heading	Signal handling in Nim	nimc.html#signal-handling-in-nim	 Signal handling in Nim		0
+heading	Optimizing for Nim	nimc.html#optimizing-for-nim	 Optimizing for Nim		0
+heading	Optimizing string handling	nimc.html#optimizing-for-nim-optimizing-string-handling	  Optimizing string handling		0

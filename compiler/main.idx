@@ -1,0 +1,4 @@
+nimTitle	main	main.html	module main		0
+nim	hashMainCompilationParams	main.html#hashMainCompilationParams,ConfigRef	proc hashMainCompilationParams(conf: ConfigRef): string		215
+nim	setOutFile	main.html#setOutFile,ConfigRef	proc setOutFile(conf: ConfigRef)		224
+nim	mainCommand	main.html#mainCommand,ModuleGraph	proc mainCommand(graph: ModuleGraph)		240

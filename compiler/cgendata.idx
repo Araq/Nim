@@ -1,0 +1,85 @@
+nimTitle	cgendata	cgendata.html	module cgendata		0
+nim	TLabel	cgendata.html#TLabel	type TLabel		19
+nim	cfsHeaders	cgendata.html#cfsHeaders	TCFileSection.cfsHeaders		20
+nim	cfsFrameDefines	cgendata.html#cfsFrameDefines	TCFileSection.cfsFrameDefines		20
+nim	cfsForwardTypes	cgendata.html#cfsForwardTypes	TCFileSection.cfsForwardTypes		20
+nim	cfsTypes	cgendata.html#cfsTypes	TCFileSection.cfsTypes		20
+nim	cfsSeqTypes	cgendata.html#cfsSeqTypes	TCFileSection.cfsSeqTypes		20
+nim	cfsTypeInfo	cgendata.html#cfsTypeInfo	TCFileSection.cfsTypeInfo		20
+nim	cfsProcHeaders	cgendata.html#cfsProcHeaders	TCFileSection.cfsProcHeaders		20
+nim	cfsStrData	cgendata.html#cfsStrData	TCFileSection.cfsStrData		20
+nim	cfsData	cgendata.html#cfsData	TCFileSection.cfsData		20
+nim	cfsVars	cgendata.html#cfsVars	TCFileSection.cfsVars		20
+nim	cfsProcs	cgendata.html#cfsProcs	TCFileSection.cfsProcs		20
+nim	cfsInitProc	cgendata.html#cfsInitProc	TCFileSection.cfsInitProc		20
+nim	cfsDatInitProc	cgendata.html#cfsDatInitProc	TCFileSection.cfsDatInitProc		20
+nim	cfsTypeInit1	cgendata.html#cfsTypeInit1	TCFileSection.cfsTypeInit1		20
+nim	cfsTypeInit3	cgendata.html#cfsTypeInit3	TCFileSection.cfsTypeInit3		20
+nim	cfsDynLibInit	cgendata.html#cfsDynLibInit	TCFileSection.cfsDynLibInit		20
+nim	TCFileSection	cgendata.html#TCFileSection	enum TCFileSection		20
+nim	ctVoid	cgendata.html#ctVoid	TCTypeKind.ctVoid		39
+nim	ctChar	cgendata.html#ctChar	TCTypeKind.ctChar		39
+nim	ctBool	cgendata.html#ctBool	TCTypeKind.ctBool		39
+nim	ctInt	cgendata.html#ctInt	TCTypeKind.ctInt		39
+nim	ctInt8	cgendata.html#ctInt8	TCTypeKind.ctInt8		39
+nim	ctInt16	cgendata.html#ctInt16	TCTypeKind.ctInt16		39
+nim	ctInt32	cgendata.html#ctInt32	TCTypeKind.ctInt32		39
+nim	ctInt64	cgendata.html#ctInt64	TCTypeKind.ctInt64		39
+nim	ctFloat	cgendata.html#ctFloat	TCTypeKind.ctFloat		39
+nim	ctFloat32	cgendata.html#ctFloat32	TCTypeKind.ctFloat32		39
+nim	ctFloat64	cgendata.html#ctFloat64	TCTypeKind.ctFloat64		39
+nim	ctFloat128	cgendata.html#ctFloat128	TCTypeKind.ctFloat128		39
+nim	ctUInt	cgendata.html#ctUInt	TCTypeKind.ctUInt		39
+nim	ctUInt8	cgendata.html#ctUInt8	TCTypeKind.ctUInt8		39
+nim	ctUInt16	cgendata.html#ctUInt16	TCTypeKind.ctUInt16		39
+nim	ctUInt32	cgendata.html#ctUInt32	TCTypeKind.ctUInt32		39
+nim	ctUInt64	cgendata.html#ctUInt64	TCTypeKind.ctUInt64		39
+nim	ctArray	cgendata.html#ctArray	TCTypeKind.ctArray		39
+nim	ctPtrToArray	cgendata.html#ctPtrToArray	TCTypeKind.ctPtrToArray		39
+nim	ctStruct	cgendata.html#ctStruct	TCTypeKind.ctStruct		39
+nim	ctPtr	cgendata.html#ctPtr	TCTypeKind.ctPtr		39
+nim	ctNimStr	cgendata.html#ctNimStr	TCTypeKind.ctNimStr		39
+nim	ctNimSeq	cgendata.html#ctNimSeq	TCTypeKind.ctNimSeq		39
+nim	ctProc	cgendata.html#ctProc	TCTypeKind.ctProc		39
+nim	ctCString	cgendata.html#ctCString	TCTypeKind.ctCString		39
+nim	TCTypeKind	cgendata.html#TCTypeKind	enum TCTypeKind		39
+nim	TCFileSections	cgendata.html#TCFileSections	type TCFileSections		46
+nim	cpsLocals	cgendata.html#cpsLocals	TCProcSection.cpsLocals		47
+nim	cpsInit	cgendata.html#cpsInit	TCProcSection.cpsInit		47
+nim	cpsStmts	cgendata.html#cpsStmts	TCProcSection.cpsStmts		47
+nim	TCProcSection	cgendata.html#TCProcSection	enum TCProcSection		47
+nim	TCProcSections	cgendata.html#TCProcSections	type TCProcSections		51
+nim	BModule	cgendata.html#BModule	type BModule		52
+nim	BProc	cgendata.html#BProc	type BProc		53
+nim	TBlock	cgendata.html#TBlock	object TBlock		54
+nim	beforeRetNeeded	cgendata.html#beforeRetNeeded	TCProcFlag.beforeRetNeeded		64
+nim	threadVarAccessed	cgendata.html#threadVarAccessed	TCProcFlag.threadVarAccessed		64
+nim	hasCurFramePointer	cgendata.html#hasCurFramePointer	TCProcFlag.hasCurFramePointer		64
+nim	noSafePoints	cgendata.html#noSafePoints	TCProcFlag.noSafePoints		64
+nim	nimErrorFlagAccessed	cgendata.html#nimErrorFlagAccessed	TCProcFlag.nimErrorFlagAccessed		64
+nim	nimErrorFlagDeclared	cgendata.html#nimErrorFlagDeclared	TCProcFlag.nimErrorFlagDeclared		64
+nim	nimErrorFlagDisabled	cgendata.html#nimErrorFlagDisabled	TCProcFlag.nimErrorFlagDisabled		64
+nim	TCProcFlag	cgendata.html#TCProcFlag	enum TCProcFlag		64
+nim	TTypeSeq	cgendata.html#TTypeSeq	type TTypeSeq		102
+nim	TypeCache	cgendata.html#TypeCache	type TypeCache		103
+nim	TypeCacheWithOwner	cgendata.html#TypeCacheWithOwner	type TypeCacheWithOwner		104
+nim	preventStackTrace	cgendata.html#preventStackTrace	CodegenFlag.preventStackTrace		106
+nim	usesThreadVars	cgendata.html#usesThreadVars	CodegenFlag.usesThreadVars		106
+nim	frameDeclared	cgendata.html#frameDeclared	CodegenFlag.frameDeclared		106
+nim	isHeaderFile	cgendata.html#isHeaderFile	CodegenFlag.isHeaderFile		106
+nim	includesStringh	cgendata.html#includesStringh	CodegenFlag.includesStringh		106
+nim	objHasKidsValid	cgendata.html#objHasKidsValid	CodegenFlag.objHasKidsValid		106
+nim	useAliveDataFromDce	cgendata.html#useAliveDataFromDce	CodegenFlag.useAliveDataFromDce		106
+nim	CodegenFlag	cgendata.html#CodegenFlag	enum CodegenFlag		106
+nim	BModuleList	cgendata.html#BModuleList	type BModuleList		117
+nim	config	cgendata.html#config.t,BModule	template config(m: BModule): ConfigRef		177
+nim	config	cgendata.html#config.t,BProc	template config(p: BProc): ConfigRef		178
+nim	vccAndC	cgendata.html#vccAndC.t,BProc	template vccAndC(p: BProc): bool		179
+nim	includeHeader	cgendata.html#includeHeader,BModule,string	proc includeHeader(this: BModule; header: string)		181
+nim	s	cgendata.html#s,BProc,TCProcSection	proc s(p: BProc; s: TCProcSection): var Builder		185
+nim	procSec	cgendata.html#procSec,BProc,TCProcSection	proc procSec(p: BProc; s: TCProcSection): var Builder		189
+nim	initBlock	cgendata.html#initBlock	proc initBlock(): TBlock		193
+nim	newProc	cgendata.html#newProc,PSym,BModule	proc newProc(prc: PSym; module: BModule): BProc		198
+nim	newModuleList	cgendata.html#newModuleList,ModuleGraph	proc newModuleList(g: ModuleGraph): BModuleList		211
+nim	cgenModules	cgendata.html#cgenModules.i,BModuleList	iterator cgenModules(g: BModuleList): BModule		215
+nimgrp	config	cgendata.html#config-templates-all	template		177

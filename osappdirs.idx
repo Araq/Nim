@@ -1,0 +1,8 @@
+nimTitle	osappdirs	osappdirs.html	module std/private/osappdirs		0
+nim	getHomeDir	osappdirs.html#getHomeDir	proc getHomeDir(): string		7
+nim	getDataDir	osappdirs.html#getDataDir	proc getDataDir(): string		28
+nim	getConfigDir	osappdirs.html#getConfigDir	proc getConfigDir(): string		52
+nim	getCacheDir	osappdirs.html#getCacheDir	proc getCacheDir(): string		77
+nim	getCacheDir	osappdirs.html#getCacheDir,string	proc getCacheDir(app: string): string		102
+nim	getTempDir	osappdirs.html#getTempDir	proc getTempDir(): string		136
+nimgrp	getcachedir	osappdirs.html#getCacheDir-procs-all	proc		77

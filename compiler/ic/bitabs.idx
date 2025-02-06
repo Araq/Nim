@@ -1,0 +1,21 @@
+nimTitle	bitabs	ic/bitabs.html	module ic/bitabs		0
+nim	LitId	ic/bitabs.html#LitId	type LitId		11
+nim	BiTable	ic/bitabs.html#BiTable	object BiTable		13
+nim	initBiTable	ic/bitabs.html#initBiTable	proc initBiTable[T](): BiTable[T]		17
+nim	`$`	ic/bitabs.html#$,LitId	proc `$`(x: LitId): string		25
+nim	`<`	ic/bitabs.html#<,LitId,LitId	proc `<`(x, y: LitId): bool		26
+nim	`<=`	ic/bitabs.html#<=,LitId,LitId	proc `<=`(x, y: LitId): bool		27
+nim	`==`	ic/bitabs.html#==,LitId,LitId	proc `==`(x, y: LitId): bool		28
+nim	hash	ic/bitabs.html#hash,LitId	proc hash(x: LitId): Hash		29
+nim	len	ic/bitabs.html#len,BiTable[T]	proc len[T](t: BiTable[T]): int		32
+nim	hasLitId	ic/bitabs.html#hasLitId,BiTable[T],LitId	proc hasLitId[T](t: BiTable[T]; x: LitId): bool		43
+nim	getKeyId	ic/bitabs.html#getKeyId,BiTable[T],T	proc getKeyId[T](t: BiTable[T]; v: T): LitId		59
+nim	getOrIncl	ic/bitabs.html#getOrIncl,BiTable[T],T	proc getOrIncl[T](t: var BiTable[T]; v: T): LitId		70
+nim	`[]`	ic/bitabs.html#[],BiTable[T],LitId	proc `[]`[T](t: var BiTable[T]; litId: LitId): var T		97
+nim	`[]`	ic/bitabs.html#[],BiTable[T],LitId_2	proc `[]`[T](t: BiTable[T]; litId: LitId): lent T		102
+nim	hash	ic/bitabs.html#hash,BiTable[T]	proc hash[T](t: BiTable[T]): Hash		107
+nim	store	ic/bitabs.html#store,RodFile,BiTable[T]	proc store[T](f: var RodFile; t: BiTable[T])		114
+nim	load	ic/bitabs.html#load,RodFile,BiTable[T]	proc load[T](f: var RodFile; t: var BiTable[T])		118
+nim	sizeOnDisc	ic/bitabs.html#sizeOnDisc,BiTable[string]	proc sizeOnDisc(t: BiTable[string]): int		122
+nimgrp	[]	ic/bitabs.html#[]-procs-all	proc		97
+nimgrp	hash	ic/bitabs.html#hash-procs-all	proc		29

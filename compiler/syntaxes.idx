@@ -1,0 +1,4 @@
+nimTitle	syntaxes	syntaxes.html	module syntaxes		0
+nim	openParser	syntaxes.html#openParser,Parser,FileIndex,PLLStream,IdentCache,ConfigRef	proc openParser(p: var Parser; fileIdx: FileIndex; inputstream: PLLStream;\n           cache: IdentCache; config: ConfigRef)		119
+nim	setupParser	syntaxes.html#setupParser,Parser,FileIndex,IdentCache,ConfigRef	proc setupParser(p: var Parser; fileIdx: FileIndex; cache: IdentCache;\n            config: ConfigRef): bool		129
+nim	parseFile	syntaxes.html#parseFile,FileIndex,IdentCache,ConfigRef	proc parseFile(fileIdx: FileIndex; cache: IdentCache; config: ConfigRef): PNode		139

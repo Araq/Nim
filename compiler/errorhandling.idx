@@ -1,0 +1,12 @@
+nimTitle	errorhandling	errorhandling.html	module errorhandling		0
+nim	RawTypeMismatchError	errorhandling.html#RawTypeMismatchError	ErrorKind.RawTypeMismatchError		20
+nim	ExpressionCannotBeCalled	errorhandling.html#ExpressionCannotBeCalled	ErrorKind.ExpressionCannotBeCalled		20
+nim	CustomError	errorhandling.html#CustomError	ErrorKind.CustomError		20
+nim	WrongNumberOfArguments	errorhandling.html#WrongNumberOfArguments	ErrorKind.WrongNumberOfArguments		20
+nim	AmbiguousCall	errorhandling.html#AmbiguousCall	ErrorKind.AmbiguousCall		20
+nim	ErrorKind	errorhandling.html#ErrorKind	enum ErrorKind		20
+nim	errorSubNode	errorhandling.html#errorSubNode,PNode	proc errorSubNode(n: PNode): PNode		27
+nim	newError	errorhandling.html#newError,PNode,ErrorKind,varargs[PNode]	proc newError(wrongNode: PNode; k: ErrorKind; args: varargs[PNode]): PNode		39
+nim	newError	errorhandling.html#newError,PNode,string	proc newError(wrongNode: PNode; msg: string): PNode		50
+nim	errorToString	errorhandling.html#errorToString,ConfigRef,PNode	proc errorToString(config: ConfigRef; n: PNode): string		61
+nimgrp	newerror	errorhandling.html#newError-procs-all	proc		39

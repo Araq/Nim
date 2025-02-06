@@ -1,0 +1,31 @@
+nimTitle	db_odbc	db_odbc.html	module src/db_connector/db_odbc		0
+nim	DbConn	db_odbc.html#DbConn	type DbConn		107
+nim	Row	db_odbc.html#Row	type Row		108
+nim	InstantRow	db_odbc.html#InstantRow	tuple InstantRow		110
+nim	dbError	db_odbc.html#dbError,DbConn	proc dbError(db: var DbConn)		146
+nim	dbQuote	db_odbc.html#dbQuote,string	proc dbQuote(s: string): string		196
+nim	tryExec	db_odbc.html#tryExec,DbConn,SqlQuery,varargs[string,]	proc tryExec(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): bool		240
+nim	exec	db_odbc.html#exec,DbConn,SqlQuery,varargs[string,]	proc exec(db: var DbConn; query: SqlQuery; args: varargs[string, `$`])		259
+nim	fastRows	db_odbc.html#fastRows.i,DbConn,SqlQuery,varargs[string,]	iterator fastRows(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		269
+nim	instantRows	db_odbc.html#instantRows.i,DbConn,SqlQuery,varargs[string,]	iterator instantRows(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): InstantRow		304
+nim	`[]`	db_odbc.html#[],InstantRow,int	proc `[]`(row: InstantRow; col: int): string		332
+nim	unsafeColumnAt	db_odbc.html#unsafeColumnAt,InstantRow,int	proc unsafeColumnAt(row: InstantRow; index: int): cstring		336
+nim	len	db_odbc.html#len,InstantRow	proc len(row: InstantRow): int		340
+nim	getRow	db_odbc.html#getRow,DbConn,SqlQuery,varargs[string,]	proc getRow(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		344
+nim	getAllRows	db_odbc.html#getAllRows,DbConn,SqlQuery,varargs[string,]	proc getAllRows(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): seq[Row]		371
+nim	rows	db_odbc.html#rows.i,DbConn,SqlQuery,varargs[string,]	iterator rows(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		400
+nim	getValue	db_odbc.html#getValue,DbConn,SqlQuery,varargs[string,]	proc getValue(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): string		410
+nim	tryInsertId	db_odbc.html#tryInsertId,DbConn,SqlQuery,varargs[string,]	proc tryInsertId(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		421
+nim	insertId	db_odbc.html#insertId,DbConn,SqlQuery,varargs[string,]	proc insertId(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		445
+nim	tryInsert	db_odbc.html#tryInsert,DbConn,SqlQuery,string,varargs[string,]	proc tryInsert(db: var DbConn; query: SqlQuery; pkName: string;\n          args: varargs[string, `$`]): int64		453
+nim	insert	db_odbc.html#insert,DbConn,SqlQuery,string,varargs[string,]	proc insert(db: var DbConn; query: SqlQuery; pkName: string;\n       args: varargs[string, `$`]): int64		459
+nim	execAffectedRows	db_odbc.html#execAffectedRows,DbConn,SqlQuery,varargs[string,]	proc execAffectedRows(db: var DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		466
+nim	close	db_odbc.html#close,DbConn	proc close(db: var DbConn)		481
+nim	open	db_odbc.html#open,string,string,string,string	proc open(connection, user, password, database: string): DbConn		495
+nim	setEncoding	db_odbc.html#setEncoding,DbConn,string	proc setEncoding(connection: DbConn; encoding: string): bool		526
+heading	Parameter substitution	db_odbc.html#parameter-substitution	 Parameter substitution		0
+heading	Examples	db_odbc.html#examples	 Examples		0
+heading	Opening a connection to a database	db_odbc.html#examples-opening-a-connection-to-a-database	  Opening a connection to a database		0
+heading	Creating a table	db_odbc.html#examples-creating-a-table	  Creating a table		0
+heading	Inserting data	db_odbc.html#examples-inserting-data	  Inserting data		0
+heading	Large example	db_odbc.html#examples-large-example	  Large example		0

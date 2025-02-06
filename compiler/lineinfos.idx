@@ -1,0 +1,158 @@
+nimTitle	lineinfos	lineinfos.html	module lineinfos		0
+nim	explanationsBaseUrl	lineinfos.html#explanationsBaseUrl	const explanationsBaseUrl		17
+nim	createDocLink	lineinfos.html#createDocLink,string	proc createDocLink(urlSuffix: string): string		21
+nim	errUnknown	lineinfos.html#errUnknown	TMsgKind.errUnknown		30
+nim	errFatal	lineinfos.html#errFatal	TMsgKind.errFatal		30
+nim	errInternal	lineinfos.html#errInternal	TMsgKind.errInternal		30
+nim	errIllFormedAstX	lineinfos.html#errIllFormedAstX	TMsgKind.errIllFormedAstX		30
+nim	errCannotOpenFile	lineinfos.html#errCannotOpenFile	TMsgKind.errCannotOpenFile		30
+nim	errXExpected	lineinfos.html#errXExpected	TMsgKind.errXExpected		30
+nim	errRstMissingClosing	lineinfos.html#errRstMissingClosing	TMsgKind.errRstMissingClosing		30
+nim	errRstGridTableNotImplemented	lineinfos.html#errRstGridTableNotImplemented	TMsgKind.errRstGridTableNotImplemented		30
+nim	errRstMarkdownIllformedTable	lineinfos.html#errRstMarkdownIllformedTable	TMsgKind.errRstMarkdownIllformedTable		30
+nim	errRstIllformedTable	lineinfos.html#errRstIllformedTable	TMsgKind.errRstIllformedTable		30
+nim	errRstNewSectionExpected	lineinfos.html#errRstNewSectionExpected	TMsgKind.errRstNewSectionExpected		30
+nim	errRstGeneralParseError	lineinfos.html#errRstGeneralParseError	TMsgKind.errRstGeneralParseError		30
+nim	errRstInvalidDirectiveX	lineinfos.html#errRstInvalidDirectiveX	TMsgKind.errRstInvalidDirectiveX		30
+nim	errRstInvalidField	lineinfos.html#errRstInvalidField	TMsgKind.errRstInvalidField		30
+nim	errRstFootnoteMismatch	lineinfos.html#errRstFootnoteMismatch	TMsgKind.errRstFootnoteMismatch		30
+nim	errRstSandboxedDirective	lineinfos.html#errRstSandboxedDirective	TMsgKind.errRstSandboxedDirective		30
+nim	errProveInit	lineinfos.html#errProveInit	TMsgKind.errProveInit		30
+nim	errGenerated	lineinfos.html#errGenerated	TMsgKind.errGenerated		30
+nim	errFailedMove	lineinfos.html#errFailedMove	TMsgKind.errFailedMove		30
+nim	errUser	lineinfos.html#errUser	TMsgKind.errUser		30
+nim	warnCannotOpenFile	lineinfos.html#warnCannotOpenFile	TMsgKind.warnCannotOpenFile		30
+nim	warnOctalEscape	lineinfos.html#warnOctalEscape	TMsgKind.warnOctalEscape		30
+nim	warnXIsNeverRead	lineinfos.html#warnXIsNeverRead	TMsgKind.warnXIsNeverRead		30
+nim	warnXmightNotBeenInit	lineinfos.html#warnXmightNotBeenInit	TMsgKind.warnXmightNotBeenInit		30
+nim	warnDeprecated	lineinfos.html#warnDeprecated	TMsgKind.warnDeprecated		30
+nim	warnConfigDeprecated	lineinfos.html#warnConfigDeprecated	TMsgKind.warnConfigDeprecated		30
+nim	warnDotLikeOps	lineinfos.html#warnDotLikeOps	TMsgKind.warnDotLikeOps		30
+nim	warnSmallLshouldNotBeUsed	lineinfos.html#warnSmallLshouldNotBeUsed	TMsgKind.warnSmallLshouldNotBeUsed		30
+nim	warnUnknownMagic	lineinfos.html#warnUnknownMagic	TMsgKind.warnUnknownMagic		30
+nim	warnRstRedefinitionOfLabel	lineinfos.html#warnRstRedefinitionOfLabel	TMsgKind.warnRstRedefinitionOfLabel		30
+nim	warnRstUnknownSubstitutionX	lineinfos.html#warnRstUnknownSubstitutionX	TMsgKind.warnRstUnknownSubstitutionX		30
+nim	warnRstAmbiguousLink	lineinfos.html#warnRstAmbiguousLink	TMsgKind.warnRstAmbiguousLink		30
+nim	warnRstBrokenLink	lineinfos.html#warnRstBrokenLink	TMsgKind.warnRstBrokenLink		30
+nim	warnRstLanguageXNotSupported	lineinfos.html#warnRstLanguageXNotSupported	TMsgKind.warnRstLanguageXNotSupported		30
+nim	warnRstFieldXNotSupported	lineinfos.html#warnRstFieldXNotSupported	TMsgKind.warnRstFieldXNotSupported		30
+nim	warnRstUnusedImportdoc	lineinfos.html#warnRstUnusedImportdoc	TMsgKind.warnRstUnusedImportdoc		30
+nim	warnRstStyle	lineinfos.html#warnRstStyle	TMsgKind.warnRstStyle		30
+nim	warnCommentXIgnored	lineinfos.html#warnCommentXIgnored	TMsgKind.warnCommentXIgnored		30
+nim	warnTypelessParam	lineinfos.html#warnTypelessParam	TMsgKind.warnTypelessParam		30
+nim	warnUseBase	lineinfos.html#warnUseBase	TMsgKind.warnUseBase		30
+nim	warnWriteToForeignHeap	lineinfos.html#warnWriteToForeignHeap	TMsgKind.warnWriteToForeignHeap		30
+nim	warnUnsafeCode	lineinfos.html#warnUnsafeCode	TMsgKind.warnUnsafeCode		30
+nim	warnUnusedImportX	lineinfos.html#warnUnusedImportX	TMsgKind.warnUnusedImportX		30
+nim	warnInheritFromException	lineinfos.html#warnInheritFromException	TMsgKind.warnInheritFromException		30
+nim	warnEachIdentIsTuple	lineinfos.html#warnEachIdentIsTuple	TMsgKind.warnEachIdentIsTuple		30
+nim	warnUnsafeSetLen	lineinfos.html#warnUnsafeSetLen	TMsgKind.warnUnsafeSetLen		30
+nim	warnUnsafeDefault	lineinfos.html#warnUnsafeDefault	TMsgKind.warnUnsafeDefault		30
+nim	warnProveInit	lineinfos.html#warnProveInit	TMsgKind.warnProveInit		30
+nim	warnProveField	lineinfos.html#warnProveField	TMsgKind.warnProveField		30
+nim	warnProveIndex	lineinfos.html#warnProveIndex	TMsgKind.warnProveIndex		30
+nim	warnUnreachableElse	lineinfos.html#warnUnreachableElse	TMsgKind.warnUnreachableElse		30
+nim	warnUnreachableCode	lineinfos.html#warnUnreachableCode	TMsgKind.warnUnreachableCode		30
+nim	warnStaticIndexCheck	lineinfos.html#warnStaticIndexCheck	TMsgKind.warnStaticIndexCheck		30
+nim	warnGcUnsafe	lineinfos.html#warnGcUnsafe	TMsgKind.warnGcUnsafe		30
+nim	warnGcUnsafe2	lineinfos.html#warnGcUnsafe2	TMsgKind.warnGcUnsafe2		30
+nim	warnUninit	lineinfos.html#warnUninit	TMsgKind.warnUninit		30
+nim	warnGcMem	lineinfos.html#warnGcMem	TMsgKind.warnGcMem		30
+nim	warnDestructor	lineinfos.html#warnDestructor	TMsgKind.warnDestructor		30
+nim	warnLockLevel	lineinfos.html#warnLockLevel	TMsgKind.warnLockLevel		30
+nim	warnResultShadowed	lineinfos.html#warnResultShadowed	TMsgKind.warnResultShadowed		30
+nim	warnInconsistentSpacing	lineinfos.html#warnInconsistentSpacing	TMsgKind.warnInconsistentSpacing		30
+nim	warnCaseTransition	lineinfos.html#warnCaseTransition	TMsgKind.warnCaseTransition		30
+nim	warnCycleCreated	lineinfos.html#warnCycleCreated	TMsgKind.warnCycleCreated		30
+nim	warnObservableStores	lineinfos.html#warnObservableStores	TMsgKind.warnObservableStores		30
+nim	warnStrictNotNil	lineinfos.html#warnStrictNotNil	TMsgKind.warnStrictNotNil		30
+nim	warnResultUsed	lineinfos.html#warnResultUsed	TMsgKind.warnResultUsed		30
+nim	warnCannotOpen	lineinfos.html#warnCannotOpen	TMsgKind.warnCannotOpen		30
+nim	warnFileChanged	lineinfos.html#warnFileChanged	TMsgKind.warnFileChanged		30
+nim	warnSuspiciousEnumConv	lineinfos.html#warnSuspiciousEnumConv	TMsgKind.warnSuspiciousEnumConv		30
+nim	warnAnyEnumConv	lineinfos.html#warnAnyEnumConv	TMsgKind.warnAnyEnumConv		30
+nim	warnHoleEnumConv	lineinfos.html#warnHoleEnumConv	TMsgKind.warnHoleEnumConv		30
+nim	warnCstringConv	lineinfos.html#warnCstringConv	TMsgKind.warnCstringConv		30
+nim	warnPtrToCstringConv	lineinfos.html#warnPtrToCstringConv	TMsgKind.warnPtrToCstringConv		30
+nim	warnEffect	lineinfos.html#warnEffect	TMsgKind.warnEffect		30
+nim	warnCastSizes	lineinfos.html#warnCastSizes	TMsgKind.warnCastSizes		30
+nim	warnAboveMaxSizeSet	lineinfos.html#warnAboveMaxSizeSet	TMsgKind.warnAboveMaxSizeSet		30
+nim	warnImplicitTemplateRedefinition	lineinfos.html#warnImplicitTemplateRedefinition	TMsgKind.warnImplicitTemplateRedefinition		30
+nim	warnUnnamedBreak	lineinfos.html#warnUnnamedBreak	TMsgKind.warnUnnamedBreak		30
+nim	warnStmtListLambda	lineinfos.html#warnStmtListLambda	TMsgKind.warnStmtListLambda		30
+nim	warnBareExcept	lineinfos.html#warnBareExcept	TMsgKind.warnBareExcept		30
+nim	warnImplicitDefaultValue	lineinfos.html#warnImplicitDefaultValue	TMsgKind.warnImplicitDefaultValue		30
+nim	warnIgnoredSymbolInjection	lineinfos.html#warnIgnoredSymbolInjection	TMsgKind.warnIgnoredSymbolInjection		30
+nim	warnStdPrefix	lineinfos.html#warnStdPrefix	TMsgKind.warnStdPrefix		30
+nim	warnUnknownNotes	lineinfos.html#warnUnknownNotes	TMsgKind.warnUnknownNotes		30
+nim	warnUser	lineinfos.html#warnUser	TMsgKind.warnUser		30
+nim	warnGlobalVarConstructorTemporary	lineinfos.html#warnGlobalVarConstructorTemporary	TMsgKind.warnGlobalVarConstructorTemporary		30
+nim	hintSuccess	lineinfos.html#hintSuccess	TMsgKind.hintSuccess		30
+nim	hintSuccessX	lineinfos.html#hintSuccessX	TMsgKind.hintSuccessX		30
+nim	hintCC	lineinfos.html#hintCC	TMsgKind.hintCC		30
+nim	hintXDeclaredButNotUsed	lineinfos.html#hintXDeclaredButNotUsed	TMsgKind.hintXDeclaredButNotUsed		30
+nim	hintDuplicateModuleImport	lineinfos.html#hintDuplicateModuleImport	TMsgKind.hintDuplicateModuleImport		30
+nim	hintXCannotRaiseY	lineinfos.html#hintXCannotRaiseY	TMsgKind.hintXCannotRaiseY		30
+nim	hintConvToBaseNotNeeded	lineinfos.html#hintConvToBaseNotNeeded	TMsgKind.hintConvToBaseNotNeeded		30
+nim	hintConvFromXtoItselfNotNeeded	lineinfos.html#hintConvFromXtoItselfNotNeeded	TMsgKind.hintConvFromXtoItselfNotNeeded		30
+nim	hintExprAlwaysX	lineinfos.html#hintExprAlwaysX	TMsgKind.hintExprAlwaysX		30
+nim	hintQuitCalled	lineinfos.html#hintQuitCalled	TMsgKind.hintQuitCalled		30
+nim	hintProcessing	lineinfos.html#hintProcessing	TMsgKind.hintProcessing		30
+nim	hintProcessingStmt	lineinfos.html#hintProcessingStmt	TMsgKind.hintProcessingStmt		30
+nim	hintCodeBegin	lineinfos.html#hintCodeBegin	TMsgKind.hintCodeBegin		30
+nim	hintCodeEnd	lineinfos.html#hintCodeEnd	TMsgKind.hintCodeEnd		30
+nim	hintConf	lineinfos.html#hintConf	TMsgKind.hintConf		30
+nim	hintPath	lineinfos.html#hintPath	TMsgKind.hintPath		30
+nim	hintConditionAlwaysTrue	lineinfos.html#hintConditionAlwaysTrue	TMsgKind.hintConditionAlwaysTrue		30
+nim	hintConditionAlwaysFalse	lineinfos.html#hintConditionAlwaysFalse	TMsgKind.hintConditionAlwaysFalse		30
+nim	hintName	lineinfos.html#hintName	TMsgKind.hintName		30
+nim	hintPattern	lineinfos.html#hintPattern	TMsgKind.hintPattern		30
+nim	hintExecuting	lineinfos.html#hintExecuting	TMsgKind.hintExecuting		30
+nim	hintLinking	lineinfos.html#hintLinking	TMsgKind.hintLinking		30
+nim	hintDependency	lineinfos.html#hintDependency	TMsgKind.hintDependency		30
+nim	hintSource	lineinfos.html#hintSource	TMsgKind.hintSource		30
+nim	hintPerformance	lineinfos.html#hintPerformance	TMsgKind.hintPerformance		30
+nim	hintStackTrace	lineinfos.html#hintStackTrace	TMsgKind.hintStackTrace		30
+nim	hintGCStats	lineinfos.html#hintGCStats	TMsgKind.hintGCStats		30
+nim	hintGlobalVar	lineinfos.html#hintGlobalVar	TMsgKind.hintGlobalVar		30
+nim	hintExpandMacro	lineinfos.html#hintExpandMacro	TMsgKind.hintExpandMacro		30
+nim	hintUser	lineinfos.html#hintUser	TMsgKind.hintUser		30
+nim	hintUserRaw	lineinfos.html#hintUserRaw	TMsgKind.hintUserRaw		30
+nim	hintExtendedContext	lineinfos.html#hintExtendedContext	TMsgKind.hintExtendedContext		30
+nim	hintMsgOrigin	lineinfos.html#hintMsgOrigin	TMsgKind.hintMsgOrigin		30
+nim	hintDeclaredLoc	lineinfos.html#hintDeclaredLoc	TMsgKind.hintDeclaredLoc		30
+nim	TMsgKind	lineinfos.html#TMsgKind	enum TMsgKind		30
+nim	MsgKindToStr	lineinfos.html#MsgKindToStr	const MsgKindToStr		117
+nim	fatalMsgs	lineinfos.html#fatalMsgs	const fatalMsgs		244
+nim	errMin	lineinfos.html#errMin	const errMin		245
+nim	errMax	lineinfos.html#errMax	const errMax		246
+nim	warnMin	lineinfos.html#warnMin	const warnMin		247
+nim	warnMax	lineinfos.html#warnMax	const warnMax		248
+nim	hintMin	lineinfos.html#hintMin	const hintMin		249
+nim	hintMax	lineinfos.html#hintMax	const hintMax		250
+nim	rstWarnings	lineinfos.html#rstWarnings	const rstWarnings		251
+nim	TNoteKind	lineinfos.html#TNoteKind	type TNoteKind		254
+nim	TNoteKinds	lineinfos.html#TNoteKinds	type TNoteKinds		255
+nim	NotesVerbosity	lineinfos.html#NotesVerbosity	const NotesVerbosity		268
+nim	errXMustBeCompileTime	lineinfos.html#errXMustBeCompileTime	const errXMustBeCompileTime		269
+nim	errArgsNeedRunOption	lineinfos.html#errArgsNeedRunOption	const errArgsNeedRunOption		270
+nim	errFloatToString	lineinfos.html#errFloatToString	const errFloatToString		271
+nim	TFileInfo	lineinfos.html#TFileInfo	object TFileInfo		274
+nim	FileIndex	lineinfos.html#FileIndex	type FileIndex		294
+nim	TLineInfo	lineinfos.html#TLineInfo	object TLineInfo		295
+nim	eStdOut	lineinfos.html#eStdOut	TErrorOutput.eStdOut		308
+nim	eStdErr	lineinfos.html#eStdErr	TErrorOutput.eStdErr		308
+nim	TErrorOutput	lineinfos.html#TErrorOutput	enum TErrorOutput		308
+nim	TErrorOutputs	lineinfos.html#TErrorOutputs	type TErrorOutputs		312
+nim	ERecoverableError	lineinfos.html#ERecoverableError	object ERecoverableError		314
+nim	ESuggestDone	lineinfos.html#ESuggestDone	object ESuggestDone		315
+nim	`==`	lineinfos.html#==,FileIndex,FileIndex	proc `==`(a, b: FileIndex): bool		317
+nim	hash	lineinfos.html#hash,TLineInfo	proc hash(i: TLineInfo): Hash		319
+nim	raiseRecoverableError	lineinfos.html#raiseRecoverableError,string	proc raiseRecoverableError(msg: string)		322
+nim	InvalidFileIdx	lineinfos.html#InvalidFileIdx	const InvalidFileIdx		326
+nim	unknownLineInfo	lineinfos.html#unknownLineInfo	const unknownLineInfo		327
+nim	Severity	lineinfos.html#Severity	enum Severity		330
+nim	trackPosInvalidFileIdx	lineinfos.html#trackPosInvalidFileIdx	const trackPosInvalidFileIdx		334
+nim	commandLineIdx	lineinfos.html#commandLineIdx	const commandLineIdx		336
+nim	MsgConfig	lineinfos.html#MsgConfig	object MsgConfig		339
+nim	initMsgConfig	lineinfos.html#initMsgConfig	proc initMsgConfig(): MsgConfig		352

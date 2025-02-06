@@ -1,0 +1,61 @@
+nimTitle	xmltree	xmltree.html	module std/xmltree		0
+nim	XmlNode	xmltree.html#XmlNode	type XmlNode		41
+nim	xnText	xmltree.html#xnText	XmlNodeKind.xnText		46
+nim	xnVerbatimText	xmltree.html#xnVerbatimText	XmlNodeKind.xnVerbatimText		46
+nim	xnElement	xmltree.html#xnElement	XmlNodeKind.xnElement		46
+nim	xnCData	xmltree.html#xnCData	XmlNodeKind.xnCData		46
+nim	xnEntity	xmltree.html#xnEntity	XmlNodeKind.xnEntity		46
+nim	xnComment	xmltree.html#xnComment	XmlNodeKind.xnComment		46
+nim	XmlNodeKind	xmltree.html#XmlNodeKind	enum XmlNodeKind		46
+nim	XmlAttributes	xmltree.html#XmlAttributes	type XmlAttributes		54
+nim	xmlHeader	xmltree.html#xmlHeader	const xmlHeader		70
+nim	newElement	xmltree.html#newElement,sinkstring	proc newElement(tag: sink string): XmlNode		85
+nim	newText	xmltree.html#newText,sinkstring	proc newText(text: sink string): XmlNode		104
+nim	newVerbatimText	xmltree.html#newVerbatimText,sinkstring	proc newVerbatimText(text: sink string): XmlNode		114
+nim	newComment	xmltree.html#newComment,sinkstring	proc newComment(comment: sink string): XmlNode		120
+nim	newCData	xmltree.html#newCData,sinkstring	proc newCData(cdata: sink string): XmlNode		130
+nim	newEntity	xmltree.html#newEntity,string	proc newEntity(entity: string): XmlNode		140
+nim	newXmlTree	xmltree.html#newXmlTree,sinkstring,openArray[XmlNode],XmlAttributes	proc newXmlTree(tag: sink string; children: openArray[XmlNode];\n           attributes: XmlAttributes = nil): XmlNode		150
+nim	text	xmltree.html#text,XmlNode	proc text(n: XmlNode): lent string		178
+nim	text=	xmltree.html#text=,XmlNode,sinkstring	proc text=(n: XmlNode; text: sink string)		196
+nim	tag	xmltree.html#tag,XmlNode	proc tag(n: XmlNode): lent string		214
+nim	tag=	xmltree.html#tag=,XmlNode,sinkstring	proc tag=(n: XmlNode; tag: sink string)		235
+nim	rawText	xmltree.html#rawText,XmlNode	proc rawText(n: XmlNode): string		258
+nim	rawTag	xmltree.html#rawTag,XmlNode	proc rawTag(n: XmlNode): string		267
+nim	innerText	xmltree.html#innerText,XmlNode	proc innerText(n: XmlNode): string		276
+nim	add	xmltree.html#add,XmlNode,XmlNode	proc add(father, son: XmlNode)		307
+nim	add	xmltree.html#add,XmlNode,openArray[XmlNode]	proc add(father: XmlNode; sons: openArray[XmlNode])		329
+nim	insert	xmltree.html#insert,XmlNode,XmlNode,int	proc insert(father, son: XmlNode; index: int)		350
+nim	insert	xmltree.html#insert,XmlNode,openArray[XmlNode],int	proc insert(father: XmlNode; sons: openArray[XmlNode]; index: int)		378
+nim	delete	xmltree.html#delete,XmlNode,Natural	proc delete(n: XmlNode; i: Natural)		407
+nim	delete	xmltree.html#delete,XmlNode,Slice[int]	proc delete(n: XmlNode; slice: Slice[int])		430
+nim	replace	xmltree.html#replace,XmlNode,Natural,openArray[XmlNode]	proc replace(n: XmlNode; i: Natural; replacement: openArray[XmlNode])		453
+nim	replace	xmltree.html#replace,XmlNode,Slice[int],openArray[XmlNode]	proc replace(n: XmlNode; slice: Slice[int]; replacement: openArray[XmlNode])		481
+nim	len	xmltree.html#len,XmlNode	proc len(n: XmlNode): int		509
+nim	kind	xmltree.html#kind,XmlNode	proc kind(n: XmlNode): XmlNodeKind		519
+nim	`[]`	xmltree.html#[],XmlNode,int	proc `[]`(n: XmlNode; i: int): XmlNode		528
+nim	`[]`	xmltree.html#[],XmlNode,int_2	proc `[]`(n: var XmlNode; i: int): var XmlNode		540
+nim	clear	xmltree.html#clear,XmlNode	proc clear(n: var XmlNode)		545
+nim	items	xmltree.html#items.i,XmlNode	iterator items(n: XmlNode): XmlNode		573
+nim	mitems	xmltree.html#mitems.i,XmlNode	iterator mitems(n: var XmlNode): var XmlNode		597
+nim	toXmlAttributes	xmltree.html#toXmlAttributes,varargs[tuple[string,string]]	proc toXmlAttributes(keyValuePairs: varargs[tuple[key, val: string]]): XmlAttributes		602
+nim	attrs	xmltree.html#attrs,XmlNode	proc attrs(n: XmlNode): XmlAttributes		615
+nim	attrs=	xmltree.html#attrs=,XmlNode,XmlAttributes	proc attrs=(n: XmlNode; attr: XmlAttributes)		634
+nim	attrsLen	xmltree.html#attrsLen,XmlNode	proc attrsLen(n: XmlNode): int		651
+nim	attr	xmltree.html#attr,XmlNode,string	proc attr(n: XmlNode; name: string): string		669
+nim	clientData	xmltree.html#clientData,XmlNode	proc clientData(n: XmlNode): int		688
+nim	clientData=	xmltree.html#clientData=,XmlNode,int	proc clientData=(n: XmlNode; data: int)		694
+nim	addEscaped	xmltree.html#addEscaped,string,string	proc addEscaped(result: var string; s: string)		700
+nim	escape	xmltree.html#escape,string	proc escape(s: string): string		711
+nim	add	xmltree.html#add,string,XmlNode,int,int	proc add(result: var string; n: XmlNode; indent = 0; indWidth = 2; addNewLines = true)		815
+nim	`$`	xmltree.html#$,XmlNode	proc `$`(n: XmlNode): string		830
+nim	child	xmltree.html#child,XmlNode,string	proc child(n: XmlNode; name: string): XmlNode		838
+nim	findAll	xmltree.html#findAll,XmlNode,string,seq[XmlNode]	proc findAll(n: XmlNode; tag: string; result: var seq[XmlNode];\n        caseInsensitive = false)		854
+nim	findAll	xmltree.html#findAll,XmlNode,string	proc findAll(n: XmlNode; tag: string; caseInsensitive = false): seq[XmlNode]		893
+nim	`<>`	xmltree.html#<>.m,untyped	macro `<>`(x: untyped): untyped		938
+nimgrp	replace	xmltree.html#replace-procs-all	proc		453
+nimgrp	delete	xmltree.html#delete-procs-all	proc		407
+nimgrp	findall	xmltree.html#findAll-procs-all	proc		854
+nimgrp	[]	xmltree.html#[]-procs-all	proc		528
+nimgrp	add	xmltree.html#add-procs-all	proc		307
+nimgrp	insert	xmltree.html#insert-procs-all	proc		350

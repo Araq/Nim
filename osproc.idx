@@ -1,0 +1,37 @@
+nimTitle	osproc	osproc.html	module std/osproc		0
+nim	poEchoCmd	osproc.html#poEchoCmd	ProcessOption.poEchoCmd		41
+nim	poUsePath	osproc.html#poUsePath	ProcessOption.poUsePath		41
+nim	poEvalCommand	osproc.html#poEvalCommand	ProcessOption.poEvalCommand		41
+nim	poStdErrToStdOut	osproc.html#poStdErrToStdOut	ProcessOption.poStdErrToStdOut		41
+nim	poParentStreams	osproc.html#poParentStreams	ProcessOption.poParentStreams		41
+nim	poInteractive	osproc.html#poInteractive	ProcessOption.poInteractive		41
+nim	poDaemon	osproc.html#poDaemon	ProcessOption.poDaemon		41
+nim	ProcessOption	osproc.html#ProcessOption	enum ProcessOption		41
+nim	Process	osproc.html#Process	type Process		73
+nim	execProcess	osproc.html#execProcess,string,string,openArray[string],StringTableRef,set[ProcessOption]	proc execProcess(command: string; workingDir: string = "";\n            args: openArray[string] = []; env: StringTableRef = nil; options: set[\n    ProcessOption] = {poStdErrToStdOut, poUsePath, poEvalCommand}): string		76
+nim	execCmd	osproc.html#execCmd,string	proc execCmd(command: string): int		101
+nim	startProcess	osproc.html#startProcess,string,string,openArray[string],StringTableRef,set[ProcessOption]	proc startProcess(command: string; workingDir: string = "";\n             args: openArray[string] = []; env: StringTableRef = nil;\n             options: set[ProcessOption] = {poStdErrToStdOut}): owned(Process)		120
+nim	close	osproc.html#close,Process	proc close(p: Process)		155
+nim	suspend	osproc.html#suspend,Process	proc suspend(p: Process)		162
+nim	resume	osproc.html#resume,Process	proc resume(p: Process)		171
+nim	terminate	osproc.html#terminate,Process	proc terminate(p: Process)		179
+nim	kill	osproc.html#kill,Process	proc kill(p: Process)		192
+nim	running	osproc.html#running,Process	proc running(p: Process): bool		204
+nim	processID	osproc.html#processID,Process	proc processID(p: Process): int		207
+nim	waitForExit	osproc.html#waitForExit,Process,int	proc waitForExit(p: Process; timeout: int = -1): int		214
+nim	peekExitCode	osproc.html#peekExitCode,Process	proc peekExitCode(p: Process): int		228
+nim	inputStream	osproc.html#inputStream,Process	proc inputStream(p: Process): Stream		234
+nim	outputStream	osproc.html#outputStream,Process	proc outputStream(p: Process): Stream		244
+nim	errorStream	osproc.html#errorStream,Process	proc errorStream(p: Process): Stream		258
+nim	peekableOutputStream	osproc.html#peekableOutputStream,Process	proc peekableOutputStream(p: Process): Stream		272
+nim	peekableErrorStream	osproc.html#peekableErrorStream,Process	proc peekableErrorStream(p: Process): Stream		284
+nim	inputHandle	osproc.html#inputHandle,Process	proc inputHandle(p: Process): FileHandle		296
+nim	outputHandle	osproc.html#outputHandle,Process	proc outputHandle(p: Process): FileHandle		308
+nim	errorHandle	osproc.html#errorHandle,Process	proc errorHandle(p: Process): FileHandle		320
+nim	countProcessors	osproc.html#countProcessors	proc countProcessors(): int		332
+nim	execProcesses	osproc.html#execProcesses,openArray[string],proc(int),proc(int,Process)	proc execProcesses(cmds: openArray[string];\n              options = {poStdErrToStdOut, poParentStreams};\n              n = countProcessors(); beforeRunEvent: proc (idx: int) = nil;\n              afterRunEvent: proc (idx: int; p: Process) = nil): int		341
+nim	lines	osproc.html#lines.i,Process	iterator lines(p: Process; keepNewLines = false): string		460
+nim	readLines	osproc.html#readLines,Process	proc readLines(p: Process): (seq[string], int)		489
+nim	hasData	osproc.html#hasData,Process	proc hasData(p: Process): bool		1512
+nim	execCmdEx	osproc.html#execCmdEx,string,set[ProcessOption],StringTableRef,string,string	proc execCmdEx(command: string;\n          options: set[ProcessOption] = {poStdErrToStdOut, poUsePath};\n          env: StringTableRef = nil; workingDir = ""; input = ""): tuple[\n    output: string, exitCode: int]		1522
+idx	system	osproc.html#system_1	Module osproc		0

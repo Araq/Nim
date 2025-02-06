@@ -1,0 +1,6 @@
+nimTitle	cstrutils	cstrutils.html	module std/cstrutils		0
+nim	startsWith	cstrutils.html#startsWith,cstring,cstring	proc startsWith(s, prefix: cstring): bool		27
+nim	endsWith	cstrutils.html#endsWith,cstring,cstring	proc endsWith(s, suffix: cstring): bool		50
+nim	cmpIgnoreStyle	cstrutils.html#cmpIgnoreStyle,cstring,cstring	proc cmpIgnoreStyle(a, b: cstring): int		75
+nim	cmpIgnoreCase	cstrutils.html#cmpIgnoreCase,cstring,cstring	proc cmpIgnoreCase(a, b: cstring): int		104
+heading	See also	cstrutils.html#see-also	 See also		0

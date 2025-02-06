@@ -1,0 +1,42 @@
+nimTitle	os	os.html	module std/os		0
+nim	invalidFilenameChars	os.html#invalidFilenameChars	const invalidFilenameChars		65
+nim	invalidFilenames	os.html#invalidFilenames	const invalidFilenames		69
+nim	expandTilde	os.html#expandTilde,string	proc expandTilde(path: string): string		111
+nim	quoteShellWindows	os.html#quoteShellWindows,string	proc quoteShellWindows(s: string): string		140
+nim	quoteShellPosix	os.html#quoteShellPosix,string	proc quoteShellPosix(s: string): string		173
+nim	quoteShell	os.html#quoteShell,string	proc quoteShell(s: string): string		185
+nim	quoteShellCommand	os.html#quoteShellCommand,openArray[string]	proc quoteShellCommand(args: openArray[string]): string		195
+nim	ExeExts	os.html#ExeExts	const ExeExts		219
+nim	findExe	os.html#findExe,string,bool,openArray[string]	proc findExe(exe: string; followSymlinks: bool = true;\n        extensions: openArray[string] = ExeExts): string		224
+nim	getLastModificationTime	os.html#getLastModificationTime,string	proc getLastModificationTime(file: string): times.Time		282
+nim	getLastAccessTime	os.html#getLastAccessTime,string	proc getLastAccessTime(file: string): times.Time		300
+nim	getCreationTime	os.html#getCreationTime,string	proc getCreationTime(file: string): times.Time		318
+nim	fileNewer	os.html#fileNewer,string,string	proc fileNewer(a, b: string): bool		340
+nim	isAdmin	os.html#isAdmin	proc isAdmin(): bool		358
+nim	expandFilename	os.html#expandFilename,string	proc expandFilename(filename: string): string		389
+nim	createHardlink	os.html#createHardlink,string,string	proc createHardlink(src, dest: string)		426
+nim	sleep	os.html#sleep,int	proc sleep(milsecs: int)		444
+nim	getFileSize	os.html#getFileSize,string	proc getFileSize(file: string): BiggestInt		457
+nim	exitStatusLikeShell	os.html#exitStatusLikeShell,cint	proc exitStatusLikeShell(status: cint): cint		473
+nim	execShellCmd	os.html#execShellCmd,string	proc execShellCmd(command: string): int		484
+nim	inclFilePermissions	os.html#inclFilePermissions,string,set[FilePermission]	proc inclFilePermissions(filename: string; permissions: set[FilePermission])		502
+nim	exclFilePermissions	os.html#exclFilePermissions,string,set[FilePermission]	proc exclFilePermissions(filename: string; permissions: set[FilePermission])		511
+nim	getAppFilename	os.html#getAppFilename	proc getAppFilename(): string		649
+nim	getAppDir	os.html#getAppDir	proc getAppDir(): string		708
+nim	getCurrentCompilerExe	os.html#getCurrentCompilerExe	proc getCurrentCompilerExe(): string		715
+nim	DeviceId	os.html#DeviceId	type DeviceId		731
+nim	FileId	os.html#FileId	type FileId		732
+nim	FileInfo	os.html#FileInfo	object FileInfo		742
+nim	getFileInfo	os.html#getFileInfo,FileHandle	proc getFileInfo(handle: FileHandle): FileInfo		833
+nim	getFileInfo	os.html#getFileInfo,File	proc getFileInfo(file: File): FileInfo		860
+nim	getFileInfo	os.html#getFileInfo,string	proc getFileInfo(path: string; followSymlink = true): FileInfo		870
+nim	sameFileContent	os.html#sameFileContent,string,string	proc sameFileContent(path1, path2: string): bool		910
+nim	getCurrentProcessId	os.html#getCurrentProcessId	proc getCurrentProcessId(): int		944
+nim	setLastModificationTime	os.html#setLastModificationTime,string,	proc setLastModificationTime(file: string; t: times.Time)		956
+nim	isHidden	os.html#isHidden,string	proc isHidden(path: string): bool		973
+nim	isValidFilename	os.html#isValidFilename,string	proc isValidFilename(filename: string; maxLen = 259.Positive): bool		1001
+nim	existsFile	os.html#existsFile.t,varargs[untyped]	template existsFile(args: varargs[untyped]): untyped		1036
+nim	existsDir	os.html#existsDir.t,varargs[untyped]	template existsDir(args: varargs[untyped]): untyped		1038
+idx	shell command	os.html#shell-command_1	Module os		0
+idx	absolute	os.html#absolute_1	Module os		0
+nimgrp	getfileinfo	os.html#getFileInfo-procs-all	proc		833

@@ -1,0 +1,2 @@
+nimTitle	util	util.html	module nre/private/util		0
+nim	formatStr	util.html#formatStr.t,,,	template formatStr(howExpr, namegetter, idgetter): untyped		7

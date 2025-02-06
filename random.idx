@@ -1,0 +1,35 @@
+nimTitle	random	random.html	module std/random		0
+nim	Rand	random.html#Rand	object Rand		95
+nim	randState	random.html#randState.t	template randState(): untyped		130
+nim	next	random.html#next,Rand	proc next(r: var Rand): uint64		138
+nim	skipRandomNumbers	random.html#skipRandomNumbers,Rand	proc skipRandomNumbers(s: var Rand)		161
+nim	rand	random.html#rand,Rand,Natural	proc rand(r: var Rand; max: Natural): int		246
+nim	rand	random.html#rand,int	proc rand(max: int): int		263
+nim	rand	random.html#rand,Rand,range[]	proc rand(r: var Rand; max: range[0.0 .. high(float)]): float		284
+nim	rand	random.html#rand,float	proc rand(max: float): float		311
+nim	rand	random.html#rand,Rand,HSlice[T: Ordinal or float or float32 or float64,T: Ordinal or float or float32 or float64]	proc rand[T: Ordinal or SomeFloat](r: var Rand; x: HSlice[T, T]): T		332
+nim	rand	random.html#rand,HSlice[T: Ordinal or float or float32 or float64,T: Ordinal or float or float32 or float64]	proc rand[T: Ordinal or SomeFloat](x: HSlice[T, T]): T		357
+nim	rand	random.html#rand,Rand,typedesc[T]	proc rand[T: Ordinal](r: var Rand; t: typedesc[T]): T		379
+nim	rand	random.html#rand,typedesc[T]	proc rand[T: Ordinal](t: typedesc[T]): T		400
+nim	sample	random.html#sample,Rand,set[T]	proc sample[T](r: var Rand; s: set[T]): T		425
+nim	sample	random.html#sample,set[T]	proc sample[T](s: set[T]): T		444
+nim	sample	random.html#sample,Rand,openArray[T]	proc sample[T](r: var Rand; a: openArray[T]): T		464
+nim	sample	random.html#sample,openArray[T]	proc sample[T](a: openArray[T]): lent T		479
+nim	sample	random.html#sample,Rand,openArray[T],openArray[U]	proc sample[T, U](r: var Rand; a: openArray[T]; cdf: openArray[U]): T		499
+nim	sample	random.html#sample,openArray[T],openArray[U]	proc sample[T, U](a: openArray[T]; cdf: openArray[U]): T		533
+nim	gauss	random.html#gauss,Rand,float,float	proc gauss(r: var Rand; mu = 0.0; sigma = 1.0): float		562
+nim	gauss	random.html#gauss,float,float	proc gauss(mu = 0.0; sigma = 1.0): float		578
+nim	initRand	random.html#initRand,int64	proc initRand(seed: int64): Rand		588
+nim	randomize	random.html#randomize,int64	proc randomize(seed: int64)		615
+nim	shuffle	random.html#shuffle,Rand,openArray[T]	proc shuffle[T](r: var Rand; x: var openArray[T])		636
+nim	shuffle	random.html#shuffle,openArray[T]	proc shuffle[T](x: var openArray[T])		652
+nim	initRand	random.html#initRand	proc initRand(): Rand		687
+nim	randomize	random.html#randomize	proc randomize()		739
+heading	Basic usage	random.html#basic-usage	 Basic usage		0
+heading	See also	random.html#see-also	 See also		0
+nimgrp	sample	random.html#sample-procs-all	proc		425
+nimgrp	rand	random.html#rand-procs-all	proc		246
+nimgrp	randomize	random.html#randomize-procs-all	proc		615
+nimgrp	initrand	random.html#initRand-procs-all	proc		588
+nimgrp	gauss	random.html#gauss-procs-all	proc		562
+nimgrp	shuffle	random.html#shuffle-procs-all	proc		636

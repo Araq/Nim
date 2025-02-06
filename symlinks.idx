@@ -1,0 +1,4 @@
+nimTitle	symlinks	symlinks.html	module std/symlinks		0
+nim	symlinkExists	symlinks.html#symlinkExists,Path	proc symlinkExists(link: Path): bool		9
+nim	createSymlink	symlinks.html#createSymlink,Path,Path	proc createSymlink(src, dest: Path)		14
+nim	expandSymlink	symlinks.html#expandSymlink,Path	proc expandSymlink(symlinkPath: Path): Path		26

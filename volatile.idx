@@ -1,0 +1,3 @@
+nimTitle	volatile	volatile.html	module std/volatile		0
+nim	volatileLoad	volatile.html#volatileLoad,ptr.T	proc volatileLoad[T](src: ptr T): T		13
+nim	volatileStore	volatile.html#volatileStore,ptr.T,T	proc volatileStore[T](dest: ptr T; val: T)		24

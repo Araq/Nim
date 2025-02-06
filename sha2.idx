@@ -1,0 +1,32 @@
+nimTitle	sha2	sha2.html	module src/checksums/sha2		0
+nim	Sha_224	sha2.html#Sha_224	ShaInstance.Sha_224		404
+nim	Sha_256	sha2.html#Sha_256	ShaInstance.Sha_256		404
+nim	Sha_384	sha2.html#Sha_384	ShaInstance.Sha_384		404
+nim	Sha_512	sha2.html#Sha_512	ShaInstance.Sha_512		404
+nim	ShaInstance	sha2.html#ShaInstance	enum ShaInstance		404
+nim	ShaDigest_224	sha2.html#ShaDigest_224	type ShaDigest_224		412
+nim	ShaDigest_256	sha2.html#ShaDigest_256	type ShaDigest_256		413
+nim	ShaDigest_384	sha2.html#ShaDigest_384	type ShaDigest_384		414
+nim	ShaDigest_512	sha2.html#ShaDigest_512	type ShaDigest_512		415
+nim	ShaState	sha2.html#ShaState	type ShaState		417
+nim	ShaStateStatic	sha2.html#ShaStateStatic	type ShaStateStatic		423
+nim	digestLength	sha2.html#digestLength,ShaInstance	proc digestLength(instance: ShaInstance): int		426
+nim	initSha	sha2.html#initSha,ShaInstance	proc initSha(instance: ShaInstance): ShaState		434
+nim	initShaStateStatic	sha2.html#initShaStateStatic,staticShaInstance	proc initShaStateStatic(instance: static ShaInstance): ShaStateStatic[instance]		438
+nim	initSha_224	sha2.html#initSha_224	proc initSha_224(): ShaStateStatic[Sha_224]		442
+nim	initSha_256	sha2.html#initSha_256	proc initSha_256(): ShaStateStatic[Sha_256]		445
+nim	initSha_384	sha2.html#initSha_384	proc initSha_384(): ShaStateStatic[Sha_384]		448
+nim	initSha_512	sha2.html#initSha_512	proc initSha_512(): ShaStateStatic[Sha_512]		451
+nim	update	sha2.html#update,ShaStateStatic[instance],openArray[char]	proc update[instance: static ShaInstance](state: var ShaStateStatic[instance];\n                                     data: openArray[char])		455
+nim	update	sha2.html#update,ShaState,openArray[char]	proc update(state: var ShaState; data: openArray[char])		461
+nim	digest	sha2.html#digest,ShaStateStatic[ShaInstance]	proc digest(state: var ShaStateStatic[Sha_224]): ShaDigest_224		468
+nim	digest	sha2.html#digest,ShaStateStatic[ShaInstance]_2	proc digest(state: var ShaStateStatic[Sha_256]): ShaDigest_256		472
+nim	digest	sha2.html#digest,ShaStateStatic[ShaInstance]_3	proc digest(state: var ShaStateStatic[Sha_384]): ShaDigest_384		476
+nim	digest	sha2.html#digest,ShaStateStatic[ShaInstance]_4	proc digest(state: var ShaStateStatic[Sha_512]): ShaDigest_512		480
+nim	digest	sha2.html#digest,ShaState,openArray[char]	proc digest(state: var ShaState; dest: var openArray[char]): int		484
+nim	secureHash	sha2.html#secureHash,staticShaInstance,openArray[char]	proc secureHash(instance: static ShaInstance; data: openArray[char]): auto		499
+nim	secureHash	sha2.html#secureHash,ShaInstance,openArray[char]	proc secureHash(instance: ShaInstance; data: openArray[char]): seq[char]		507
+nimgrp	securehash	sha2.html#secureHash-procs-all	proc		499
+nimgrp	update	sha2.html#update-procs-all	proc		455
+nimgrp	digest	sha2.html#digest-procs-all	proc		468
+heading	Implemented Algorithms	sha2.html#implemented-algorithms	 Implemented Algorithms		0

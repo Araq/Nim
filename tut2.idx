@@ -1,0 +1,24 @@
+markupTitle	Nim Tutorial (Part II)	tut2.html	Nim Tutorial (Part II)		0
+heading	Introduction	tut2.html#introduction	 Introduction		0
+heading	Pragmas	tut2.html#pragmas	 Pragmas		0
+heading	Object Oriented Programming	tut2.html#object-oriented-programming	 Object Oriented Programming		0
+heading	Inheritance	tut2.html#object-oriented-programming-inheritance	  Inheritance		0
+heading	Mutually recursive types	tut2.html#object-oriented-programming-mutually-recursive-types	  Mutually recursive types		0
+heading	Type conversions	tut2.html#object-oriented-programming-type-conversions	  Type conversions		0
+idx	type casts	tut2.html#type-casts_1	Type conversions		0
+idx	type conversions	tut2.html#type-conversions_1	Type conversions		0
+heading	Object variants	tut2.html#object-oriented-programming-object-variants	  Object variants		0
+heading	Method call syntax	tut2.html#object-oriented-programming-method-call-syntax	  Method call syntax		0
+heading	Properties	tut2.html#object-oriented-programming-properties	  Properties		0
+idx	array properties	tut2.html#array-properties_1	Properties		0
+heading	Dynamic dispatch	tut2.html#object-oriented-programming-dynamic-dispatch	  Dynamic dispatch		0
+heading	Exceptions	tut2.html#exceptions	 Exceptions		0
+heading	Raise statement	tut2.html#exceptions-raise-statement	  Raise statement		0
+heading	Try statement	tut2.html#exceptions-try-statement	  Try statement		0
+heading	Annotating procs with raised exceptions	tut2.html#exceptions-annotating-procs-with-raised-exceptions	  Annotating procs with raised exceptions		0
+heading	Generics	tut2.html#generics	 Generics		0
+idx	type parameters	tut2.html#type-parameters_1	Generics		0
+heading	Templates	tut2.html#templates	 Templates		0
+heading	Example: Lifting Procs	tut2.html#templates-examplecolon-lifting-procs	  Example: Lifting Procs		0
+heading	Compilation to JavaScript	tut2.html#compilation-to-javascript	 Compilation to JavaScript		0
+heading	Part 3	tut2.html#part-3	 Part 3		0

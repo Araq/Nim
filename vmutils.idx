@@ -1,0 +1,2 @@
+nimTitle	vmutils	vmutils.html	module std/vmutils		0
+nim	vmTrace	vmutils.html#vmTrace,bool	proc vmTrace(on: bool)		5

@@ -1,0 +1,9 @@
+nimTitle	bitops_utils	bitops_utils.html	module std/private/bitops_utils		0
+nim	forwardImpl	bitops_utils.html#forwardImpl.t,,	template forwardImpl(impl, arg)		1
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,int8	template castToUnsigned(x: int8): uint8		17
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,int16	template castToUnsigned(x: int16): uint16		18
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,int32	template castToUnsigned(x: int32): uint32		19
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,int64	template castToUnsigned(x: int64): uint64		20
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,int	template castToUnsigned(x: int): uint		21
+nim	castToUnsigned	bitops_utils.html#castToUnsigned.t,T	template castToUnsigned[T: SomeUnsignedInt](x: T): T		22
+nimgrp	casttounsigned	bitops_utils.html#castToUnsigned-templates-all	template		17

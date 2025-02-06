@@ -1,0 +1,38 @@
+nimTitle	rstgen	rstgen.html	module packages/docutils/rstgen		0
+nim	IndexExt	rstgen.html#IndexExt	const IndexExt		55
+nim	outHtml	rstgen.html#outHtml	OutputTarget.outHtml		58
+nim	outLatex	rstgen.html#outLatex	OutputTarget.outLatex		58
+nim	OutputTarget	rstgen.html#OutputTarget	enum OutputTarget		58
+nim	metaNone	rstgen.html#metaNone	MetaEnum.metaNone		62
+nim	metaTitleRaw	rstgen.html#metaTitleRaw	MetaEnum.metaTitleRaw		62
+nim	metaTitle	rstgen.html#metaTitle	MetaEnum.metaTitle		62
+nim	metaSubtitle	rstgen.html#metaSubtitle	MetaEnum.metaSubtitle		62
+nim	metaAuthor	rstgen.html#metaAuthor	MetaEnum.metaAuthor		62
+nim	metaVersion	rstgen.html#metaVersion	MetaEnum.metaVersion		62
+nim	MetaEnum	rstgen.html#MetaEnum	enum MetaEnum		62
+nim	emText	rstgen.html#emText	EscapeMode.emText		65
+nim	emOption	rstgen.html#emOption	EscapeMode.emOption		65
+nim	emUrl	rstgen.html#emUrl	EscapeMode.emUrl		65
+nim	EscapeMode	rstgen.html#EscapeMode	enum EscapeMode		65
+nim	RstGenerator	rstgen.html#RstGenerator	object RstGenerator		69
+nim	prettyLink	rstgen.html#prettyLink,string	proc prettyLink(file: string): string		107
+nim	initRstGenerator	rstgen.html#initRstGenerator,RstGenerator,OutputTarget,StringTableRef,string,FindFileHandler,MsgHandler	proc initRstGenerator(g: var RstGenerator; target: OutputTarget;\n                 config: StringTableRef; filename: string;\n                 findFile: FindFileHandler = nil; msgHandler: MsgHandler = nil;\n                 filenames = default(RstFileTable); hasToc = false)		116
+nim	writeIndexFile	rstgen.html#writeIndexFile,RstGenerator,string	proc writeIndexFile(g: var RstGenerator; outfile: string)		186
+nim	escChar	rstgen.html#escChar,OutputTarget,string,char,EscapeMode	proc escChar(target: OutputTarget; dest: var string; c: char; escMode: EscapeMode)		229
+nim	nextSplitPoint	rstgen.html#nextSplitPoint,string,int	proc nextSplitPoint(s: string; start: int): int		240
+nim	esc	rstgen.html#esc,OutputTarget,string,int	proc esc(target: OutputTarget; s: string; splitAfter = -1; escMode = emText): string		252
+nim	renderRstToOut	rstgen.html#renderRstToOut,RstGenerator,PRstNode,string	proc renderRstToOut(d: var RstGenerator; n: PRstNode; result: var string)		287
+nim	setIndexTerm	rstgen.html#setIndexTerm,RstGenerator,IndexEntryKind,string,string,string,string,string,int	proc setIndexTerm(d: var RstGenerator; k: IndexEntryKind; htmlFile, id, term: string;\n             linkTitle, linkDesc = ""; line = 0)		325
+nim	renderIndexTerm	rstgen.html#renderIndexTerm,PDoc,PRstNode,string	proc renderIndexTerm(d: PDoc; n: PRstNode; result: var string)		372
+nim	IndexedDocs	rstgen.html#IndexedDocs	type IndexedDocs		394
+nim	readIndexDir	rstgen.html#readIndexDir,string	proc readIndexDir(dir: string): tuple[modules: seq[string], symbols: seq[IndexEntry],\n                                 docs: IndexedDocs]		577
+nim	mergeIndexes	rstgen.html#mergeIndexes,string	proc mergeIndexes(dir: string): string		624
+nim	renderTocEntries	rstgen.html#renderTocEntries,RstGenerator,int,int,string	proc renderTocEntries(d: var RstGenerator; j: var int; lvl: int; result: var string)		732
+nim	renderCodeLang	rstgen.html#renderCodeLang,string,SourceLanguage,string,OutputTarget	proc renderCodeLang(result: var string; lang: SourceLanguage; code: string;\n               target: OutputTarget)		919
+nim	renderNimCode	rstgen.html#renderNimCode,string,string,OutputTarget	proc renderNimCode(result: var string; code: string; target: OutputTarget)		935
+nim	traverseForIndex	rstgen.html#traverseForIndex,PDoc,PRstNode	proc traverseForIndex(d: PDoc; n: PRstNode)		1108
+nim	formatNamedVars	rstgen.html#formatNamedVars,string,openArray[string],openArray[string]	proc formatNamedVars(frmt: string; varnames: openArray[string];\n                varvalues: openArray[string]): string		1384
+nim	defaultConfig	rstgen.html#defaultConfig	proc defaultConfig(): StringTableRef		1445
+nim	rstToHtml	rstgen.html#rstToHtml,string,RstParseOptions,StringTableRef,MsgHandler	proc rstToHtml(s: string; options: RstParseOptions; config: StringTableRef;\n          msgHandler: MsgHandler = rst.defaultMsgHandler): string		1513
+nim	rstToLatex	rstgen.html#rstToLatex,string,RstParseOptions	proc rstToLatex(rstSource: string; options: RstParseOptions): string		1555
+idx	reStructuredText	rstgen.html#restructuredtext_1	Module rstgen		0

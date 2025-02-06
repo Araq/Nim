@@ -1,0 +1,15 @@
+markupTitle	niminst User's manual	niminst.html	niminst User's manual		0
+heading	Introduction	niminst.html#introduction	 Introduction		0
+heading	Configuration file	niminst.html#configuration-file	 Configuration file		0
+heading	Project section	niminst.html#configuration-file-project-section	  Project section		0
+heading	nimfiles key	niminst.html#configuration-file-nimfiles-key	  <tt class="docutils literal"><span class="pre"><span class="Identifier">files</span></span></tt> key		0
+heading	Config section	niminst.html#configuration-file-config-section	  Config section		0
+heading	Documentation section	niminst.html#configuration-file-documentation-section	  Documentation section		0
+heading	Other section	niminst.html#configuration-file-other-section	  Other section		0
+heading	Lib section	niminst.html#configuration-file-lib-section	  Lib section		0
+heading	Windows section	niminst.html#configuration-file-windows-section	  Windows section		0
+heading	UnixBin section	niminst.html#configuration-file-unixbin-section	  UnixBin section		0
+heading	Unix section	niminst.html#configuration-file-unix-section	  Unix section		0
+heading	InnoSetup section	niminst.html#configuration-file-innosetup-section	  InnoSetup section		0
+heading	C_Compiler section	niminst.html#configuration-file-c-compiler-section	  C_Compiler section		0
+heading	Real-world example	niminst.html#realminusworld-example	 Real-world example		0

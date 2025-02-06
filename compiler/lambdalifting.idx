@@ -1,0 +1,16 @@
+nimTitle	lambdalifting	lambdalifting.html	module lambdalifting		0
+nim	upName	lambdalifting.html#upName	const upName		125
+nim	paramName	lambdalifting.html#paramName	const paramName		126
+nim	envName	lambdalifting.html#envName	const envName		127
+nim	createClosureIterStateType	lambdalifting.html#createClosureIterStateType,ModuleGraph,PSym,IdGenerator	proc createClosureIterStateType(g: ModuleGraph; iter: PSym; idgen: IdGenerator): PType		134
+nim	isIterator	lambdalifting.html#isIterator.t,PSym	template isIterator(owner: PSym): bool		148
+nim	getClosureIterResult	lambdalifting.html#getClosureIterResult,ModuleGraph,PSym,IdGenerator	proc getClosureIterResult(g: ModuleGraph; iter: PSym; idgen: IdGenerator): PSym		156
+nim	getEnvParam	lambdalifting.html#getEnvParam,PSym	proc getEnvParam(routine: PSym): PSym		177
+nim	makeClosure	lambdalifting.html#makeClosure,ModuleGraph,IdGenerator,PSym,PNode,TLineInfo	proc makeClosure(g: ModuleGraph; idgen: IdGenerator; prc: PSym; env: PNode;\n            info: TLineInfo): PNode		218
+nim	liftIterSym	lambdalifting.html#liftIterSym,ModuleGraph,PNode,IdGenerator,PSym	proc liftIterSym(g: ModuleGraph; n: PNode; idgen: IdGenerator; owner: PSym): PNode		251
+nim	getStateField	lambdalifting.html#getStateField,ModuleGraph,PSym	proc getStateField(g: ModuleGraph; owner: PSym): PSym		708
+nim	semCaptureSym	lambdalifting.html#semCaptureSym,PSym,PSym	proc semCaptureSym(s, owner: PSym)		823
+nim	liftIterToProc	lambdalifting.html#liftIterToProc,ModuleGraph,PSym,PNode,PType,IdGenerator	proc liftIterToProc(g: ModuleGraph; fn: PSym; body: PNode; ptrType: PType;\n               idgen: IdGenerator): PNode		860
+nim	liftLambdas	lambdalifting.html#liftLambdas,ModuleGraph,PSym,PNode,bool,IdGenerator,TransformFlags	proc liftLambdas(g: ModuleGraph; fn: PSym; body: PNode; tooEarly: var bool;\n            idgen: IdGenerator; flags: TransformFlags): PNode		875
+nim	liftLambdasForTopLevel	lambdalifting.html#liftLambdasForTopLevel,PSym,PNode	proc liftLambdasForTopLevel(module: PSym; body: PNode): PNode		908
+nim	liftForLoop	lambdalifting.html#liftForLoop,ModuleGraph,PNode,IdGenerator,PSym	proc liftForLoop(g: ModuleGraph; body: PNode; idgen: IdGenerator; owner: PSym): PNode		914

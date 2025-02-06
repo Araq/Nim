@@ -1,0 +1,21 @@
+nimTitle	commands	commands.html	module commands		0
+nim	passCmd1	commands.html#passCmd1	TCmdLinePass.passCmd1		44
+nim	passCmd2	commands.html#passCmd2	TCmdLinePass.passCmd2		44
+nim	passPP	commands.html#passPP	TCmdLinePass.passPP		44
+nim	TCmdLinePass	commands.html#TCmdLinePass	enum TCmdLinePass		44
+nim	writeCommandLineUsage	commands.html#writeCommandLineUsage,ConfigRef	proc writeCommandLineUsage(conf: ConfigRef)		110
+nim	processSpecificNote	commands.html#processSpecificNote,string,TSpecialWord,TCmdLinePass,TLineInfo,string,ConfigRef	proc processSpecificNote(arg: string; state: TSpecialWord; pass: TCmdLinePass;\n                    info: TLineInfo; orig: string; conf: ConfigRef)		185
+nim	testCompileOptionArg	commands.html#testCompileOptionArg,ConfigRef,string,string,TLineInfo	proc testCompileOptionArg(conf: ConfigRef; switch, arg: string; info: TLineInfo): bool		260
+nim	testCompileOption	commands.html#testCompileOption,ConfigRef,string,TLineInfo	proc testCompileOption(conf: ConfigRef; switch: string; info: TLineInfo): bool		318
+nim	handleStdinInput	commands.html#handleStdinInput,ConfigRef	proc handleStdinInput(conf: ConfigRef)		461
+nim	handleCmdInput	commands.html#handleCmdInput,ConfigRef	proc handleCmdInput(conf: ConfigRef)		466
+nim	parseCommand	commands.html#parseCommand,string	proc parseCommand(command: string): Command		470
+nim	setCmd	commands.html#setCmd,ConfigRef,Command	proc setCmd(conf: ConfigRef; cmd: Command)		501
+nim	setCommandEarly	commands.html#setCommandEarly,ConfigRef,string	proc setCommandEarly(conf: ConfigRef; command: string)		512
+nim	initOrcDefines	commands.html#initOrcDefines,ConfigRef	proc initOrcDefines(conf: ConfigRef)		539
+nim	unregisterArcOrc	commands.html#unregisterArcOrc,ConfigRef	proc unregisterArcOrc(conf: ConfigRef)		560
+nim	processSwitch	commands.html#processSwitch,string,string,TCmdLinePass,TLineInfo,ConfigRef	proc processSwitch(switch, arg: string; pass: TCmdLinePass; info: TLineInfo;\n              conf: ConfigRef)		629
+nim	processCommand	commands.html#processCommand,string,TCmdLinePass,ConfigRef	proc processCommand(switch: string; pass: TCmdLinePass; config: ConfigRef)		1161
+nim	processSwitch	commands.html#processSwitch,TCmdLinePass,OptParser,ConfigRef	proc processSwitch(pass: TCmdLinePass; p: OptParser; config: ConfigRef)		1167
+nim	processArgument	commands.html#processArgument,TCmdLinePass,OptParser,int,ConfigRef	proc processArgument(pass: TCmdLinePass; p: OptParser; argsCount: var int;\n                config: ConfigRef): bool		1178
+nimgrp	processswitch	commands.html#processSwitch-procs-all	proc		629

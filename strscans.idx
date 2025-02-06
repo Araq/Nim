@@ -1,0 +1,14 @@
+nimTitle	strscans	strscans.html	module std/strscans		0
+nim	scanf	strscans.html#scanf.m,string,static[string],varargs[typed]	macro scanf(input: string; pattern: static[string]; results: varargs[typed]): bool		316
+nim	scanTuple	strscans.html#scanTuple.m,untyped,static[string],varargs[untyped]	macro scanTuple(input: untyped; pattern: static[string];\n          matcherTypes: varargs[untyped]): untyped		473
+nim	atom	strscans.html#atom.t,string,int,char	template atom(input: string; idx: int; c: char): bool		521
+nim	atom	strscans.html#atom.t,string,int,set[char]	template atom(input: string; idx: int; s: set[char]): bool		526
+nim	hasNxt	strscans.html#hasNxt.t,string,int	template hasNxt(input: string; idx: int): bool		529
+nim	success	strscans.html#success.t,int	template success(x: int): bool		532
+nim	nxt	strscans.html#nxt.t,string,int,int	template nxt(input: string; idx: int; step: int = 1)		534
+nim	scanp	strscans.html#scanp.m,typed,typed,varargs[untyped]	macro scanp(input, idx: typed; pattern: varargs[untyped]): bool		536
+idx	scanf	strscans.html#scanf_1	Module strscans		0
+heading	Startswith vs full match	strscans.html#startswith-vs-full-match	 Startswith vs full match		0
+heading	User definable matchers	strscans.html#user-definable-matchers	 User definable matchers		0
+heading	The scanp macro	strscans.html#the-scanp-macro	 The scanp macro		0
+nimgrp	atom	strscans.html#atom-templates-all	template		521

@@ -1,0 +1,4 @@
+nimTitle	chains	chains.html	module std/chains		0
+nim	prepend	chains.html#prepend.t,,	template prepend(header, node)		14
+nim	append	chains.html#append.t,,	template append(header, node)		25
+nim	unlink	chains.html#unlink.t,,	template unlink(header, node)		36

@@ -1,0 +1,4 @@
+nimTitle	ssl_config	ssl_config.html	module std/ssl_config		0
+nim	CiphersModern	ssl_config.html#CiphersModern	const CiphersModern		8
+nim	CiphersIntermediate	ssl_config.html#CiphersIntermediate	const CiphersIntermediate		22
+nim	CiphersOld	ssl_config.html#CiphersOld	const CiphersOld		37

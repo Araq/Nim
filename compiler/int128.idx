@@ -1,0 +1,75 @@
+nimTitle	int128	int128.html	module int128		0
+nim	Int128	int128.html#Int128	object Int128		12
+nim	Zero	int128.html#Zero	const Zero		23
+nim	One	int128.html#One	const One		24
+nim	Ten	int128.html#Ten	const Ten		25
+nim	NegOne	int128.html#NegOne	const NegOne		28
+nim	low	int128.html#low.t,typedesc[Int128]	template low(t: typedesc[Int128]): Int128		30
+nim	high	int128.html#high.t,typedesc[Int128]	template high(t: typedesc[Int128]): Int128		31
+nim	`$`	int128.html#$,Int128	proc `$`(a: Int128): string		33
+nim	toInt128	int128.html#toInt128,T	proc toInt128[T: SomeInteger | bool](arg: T): Int128		35
+nim	toInt64	int128.html#toInt64,Int128	proc toInt64(arg: Int128): int64		65
+nim	toInt64Checked	int128.html#toInt64Checked,Int128,int64	proc toInt64Checked(arg: Int128; onError: int64): int64		75
+nim	toInt32	int128.html#toInt32,Int128	proc toInt32(arg: Int128): int32		84
+nim	toInt16	int128.html#toInt16,Int128	proc toInt16(arg: Int128): int16		96
+nim	toInt8	int128.html#toInt8,Int128	proc toInt8(arg: Int128): int8		108
+nim	toInt	int128.html#toInt,Int128	proc toInt(arg: Int128): int		120
+nim	toUInt64	int128.html#toUInt64,Int128	proc toUInt64(arg: Int128): uint64		126
+nim	toUInt32	int128.html#toUInt32,Int128	proc toUInt32(arg: Int128): uint32		131
+nim	toUInt16	int128.html#toUInt16,Int128	proc toUInt16(arg: Int128): uint16		137
+nim	toUInt8	int128.html#toUInt8,Int128	proc toUInt8(arg: Int128): uint8		143
+nim	toUInt	int128.html#toUInt,Int128	proc toUInt(arg: Int128): uint		149
+nim	castToInt64	int128.html#castToInt64,Int128	proc castToInt64(arg: Int128): int64		155
+nim	castToUInt64	int128.html#castToUInt64,Int128	proc castToUInt64(arg: Int128): uint64		159
+nim	addToHex	int128.html#addToHex,string,Int128	proc addToHex(result: var string; arg: Int128)		168
+nim	toHex	int128.html#toHex,Int128	proc toHex(arg: Int128): string		174
+nim	inc	int128.html#inc,Int128,uint32	proc inc(a: var Int128; y: uint32 = 1)		178
+nim	cmp	int128.html#cmp,Int128,Int128	proc cmp(a, b: Int128): int		188
+nim	`<`	int128.html#<,Int128,Int128	proc `<`(a, b: Int128): bool		198
+nim	`<=`	int128.html#<=,Int128,Int128	proc `<=`(a, b: Int128): bool		201
+nim	`==`	int128.html#==,Int128,Int128	proc `==`(a, b: Int128): bool		204
+nim	bitnot	int128.html#bitnot,Int128	proc bitnot(a: Int128): Int128		211
+nim	bitand	int128.html#bitand,Int128,Int128	proc bitand(a, b: Int128): Int128		218
+nim	bitor	int128.html#bitor,Int128,Int128	proc bitor(a, b: Int128): Int128		225
+nim	bitxor	int128.html#bitxor,Int128,Int128	proc bitxor(a, b: Int128): Int128		232
+nim	`shr`	int128.html#shr,Int128,int	proc `shr`(a: Int128; b: int): Int128		239
+nim	`shl`	int128.html#shl,Int128,int	proc `shl`(a: Int128; b: int): Int128		266
+nim	`+`	int128.html#+,Int128,Int128	proc `+`(a, b: Int128): Int128		290
+nim	`+=`	int128.html#+=,Int128,Int128	proc `+=`(a: var Int128; b: Int128)		301
+nim	`-`	int128.html#-,Int128	proc `-`(a: Int128): Int128		304
+nim	`-`	int128.html#-,Int128,Int128	proc `-`(a, b: Int128): Int128		308
+nim	`-=`	int128.html#-=,Int128,Int128	proc `-=`(a: var Int128; b: Int128)		311
+nim	abs	int128.html#abs,Int128	proc abs(a: Int128): Int128		314
+nim	`*`	int128.html#*,Int128,int32	proc `*`(a: Int128; b: int32): Int128		338
+nim	`*`	int128.html#*,Int128,Int128	proc `*`(lhs, rhs: Int128): Int128		359
+nim	`*=`	int128.html#*=,Int128,Int128	proc `*=`(a: var Int128; b: Int128)		368
+nim	fastLog2	int128.html#fastLog2,Int128	proc fastLog2(a: Int128): int		373
+nim	divMod	int128.html#divMod,Int128,Int128	proc divMod(dividend, divisor: Int128): tuple[quotient, remainder: Int128]		384
+nim	`div`	int128.html#div,Int128,Int128	proc `div`(a, b: Int128): Int128		436
+nim	`mod`	int128.html#mod,Int128,Int128	proc `mod`(a, b: Int128): Int128		440
+nim	addInt128	int128.html#addInt128,string,Int128	proc addInt128(result: var string; value: Int128)		444
+nim	parseDecimalInt128	int128.html#parseDecimalInt128,string,int	proc parseDecimalInt128(arg: string; pos: int = 0): Int128		472
+nim	`<`	int128.html#<,Int128,BiggestInt	proc `<`(a: Int128; b: BiggestInt): bool		493
+nim	`<`	int128.html#<,BiggestInt,Int128	proc `<`(a: BiggestInt; b: Int128): bool		496
+nim	`<=`	int128.html#<=,Int128,BiggestInt	proc `<=`(a: Int128; b: BiggestInt): bool		499
+nim	`<=`	int128.html#<=,BiggestInt,Int128	proc `<=`(a: BiggestInt; b: Int128): bool		502
+nim	`==`	int128.html#==,Int128,BiggestInt	proc `==`(a: Int128; b: BiggestInt): bool		505
+nim	`==`	int128.html#==,BiggestInt,Int128	proc `==`(a: BiggestInt; b: Int128): bool		508
+nim	`-`	int128.html#-,BiggestInt,Int128	proc `-`(a: BiggestInt; b: Int128): Int128		511
+nim	`-`	int128.html#-,Int128,BiggestInt	proc `-`(a: Int128; b: BiggestInt): Int128		514
+nim	`+`	int128.html#+,BiggestInt,Int128	proc `+`(a: BiggestInt; b: Int128): Int128		517
+nim	`+`	int128.html#+,Int128,BiggestInt	proc `+`(a: Int128; b: BiggestInt): Int128		520
+nim	toFloat64	int128.html#toFloat64,Int128	proc toFloat64(arg: Int128): float64		523
+nim	toInt128	int128.html#toInt128,float64	proc toInt128(arg: float64): Int128		538
+nim	maskUInt64	int128.html#maskUInt64,Int128	proc maskUInt64(arg: Int128): Int128		553
+nim	maskUInt32	int128.html#maskUInt32,Int128	proc maskUInt32(arg: Int128): Int128		560
+nim	maskUInt16	int128.html#maskUInt16,Int128	proc maskUInt16(arg: Int128): Int128		567
+nim	maskUInt8	int128.html#maskUInt8,Int128	proc maskUInt8(arg: Int128): Int128		574
+nim	maskBytes	int128.html#maskBytes,Int128,int	proc maskBytes(arg: Int128; numbytes: int): Int128		581
+nimgrp	-	int128.html#--procs-all	proc		304
+nimgrp	toint128	int128.html#toInt128-procs-all	proc		35
+nimgrp	<=	int128.html#<=-procs-all	proc		201
+nimgrp	<	int128.html#<-procs-all	proc		198
+nimgrp	==	int128.html#==-procs-all	proc		204
+nimgrp	+	int128.html#+-procs-all	proc		290
+nimgrp	*	int128.html#*-procs-all	proc		338

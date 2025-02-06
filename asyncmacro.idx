@@ -1,0 +1,6 @@
+nimTitle	asyncmacro	asyncmacro.html	module std/asyncmacro		0
+nim	await	asyncmacro.html#await.t,typed	template await(f: typed): untyped		161
+nim	await	asyncmacro.html#await.t,Future[T]	template await[T](f: Future[T]): auto		165
+nim	async	asyncmacro.html#async.m,untyped	macro async(prc: untyped): untyped		328
+nim	multisync	asyncmacro.html#multisync.m,untyped	macro multisync(prc: untyped): untyped		387
+nimgrp	await	asyncmacro.html#await-templates-all	template		161

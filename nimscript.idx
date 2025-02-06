@@ -1,0 +1,72 @@
+nimTitle	nimscript	nimscript.html	module system/nimscript		0
+nim	buildOS	nimscript.html#buildOS	const buildOS		16
+nim	buildCPU	nimscript.html#buildCPU	const buildCPU		20
+nim	getCurrentDir	nimscript.html#getCurrentDir	proc getCurrentDir(): string		50
+nim	paramStr	nimscript.html#paramStr,int	proc paramStr(i: int): string		59
+nim	paramCount	nimscript.html#paramCount	proc paramCount(): int		63
+nim	switch	nimscript.html#switch,string,string	proc switch(key: string; val = "")		67
+nim	warning	nimscript.html#warning,string,bool	proc warning(name: string; val: bool)		72
+nim	hint	nimscript.html#hint,string,bool	proc hint(name: string; val: bool)		77
+nim	patchFile	nimscript.html#patchFile,string,string,string	proc patchFile(package, filename, replacement: string)		82
+nim	getCommand	nimscript.html#getCommand	proc getCommand(): string		97
+nim	setCommand	nimscript.html#setCommand,string,string	proc setCommand(cmd: string; project = "")		102
+nim	cmpic	nimscript.html#cmpic,string,string	proc cmpic(a, b: string): int		110
+nim	getEnv	nimscript.html#getEnv,string,string	proc getEnv(key: string; default = ""): string		114
+nim	existsEnv	nimscript.html#existsEnv,string	proc existsEnv(key: string): bool		118
+nim	putEnv	nimscript.html#putEnv,string,string	proc putEnv(key, val: string)		122
+nim	delEnv	nimscript.html#delEnv,string	proc delEnv(key: string)		126
+nim	fileExists	nimscript.html#fileExists,string	proc fileExists(filename: string): bool		130
+nim	dirExists	nimscript.html#dirExists,string	proc dirExists(dir: string): bool		134
+nim	selfExe	nimscript.html#selfExe	proc selfExe(): string		139
+nim	toExe	nimscript.html#toExe,string	proc toExe(filename: string): string		143
+nim	toDll	nimscript.html#toDll,string	proc toDll(filename: string): string		147
+nim	`--`	nimscript.html#--.t,untyped,untyped	template `--`(key, val: untyped)		158
+nim	`--`	nimscript.html#--.t,untyped	template `--`(key: untyped)		168
+nim	ScriptMode	nimscript.html#ScriptMode	enum ScriptMode		177
+nim	mode	nimscript.html#mode	var mode		184
+nim	listDirs	nimscript.html#listDirs,string	proc listDirs(dir: string): seq[string]		200
+nim	listFiles	nimscript.html#listFiles,string	proc listFiles(dir: string): seq[string]		205
+nim	rmDir	nimscript.html#rmDir,string	proc rmDir(dir: string; checkDir = false)		210
+nim	rmFile	nimscript.html#rmFile,string	proc rmFile(file: string)		216
+nim	mkDir	nimscript.html#mkDir,string	proc mkDir(dir: string)		222
+nim	mvFile	nimscript.html#mvFile,string,string	proc mvFile(from, to: string)		229
+nim	mvDir	nimscript.html#mvDir,string,string	proc mvDir(from, to: string)		235
+nim	cpFile	nimscript.html#cpFile,string,string	proc cpFile(from, to: string)		241
+nim	cpDir	nimscript.html#cpDir,string,string	proc cpDir(from, to: string)		247
+nim	exec	nimscript.html#exec,string	proc exec(command: string)		253
+nim	exec	nimscript.html#exec,string,string,string	proc exec(command: string; input: string; cache = "")		267
+nim	selfExec	nimscript.html#selfExec,string	proc selfExec(command: string)		283
+nim	put	nimscript.html#put,string,string	proc put(key, value: string)		293
+nim	get	nimscript.html#get,string	proc get(key: string): string		297
+nim	exists	nimscript.html#exists,string	proc exists(key: string): bool		301
+nim	nimcacheDir	nimscript.html#nimcacheDir	proc nimcacheDir(): string		306
+nim	projectName	nimscript.html#projectName	proc projectName(): string		310
+nim	projectDir	nimscript.html#projectDir	proc projectDir(): string		314
+nim	projectPath	nimscript.html#projectPath	proc projectPath(): string		318
+nim	thisDir	nimscript.html#thisDir	proc thisDir(): string		322
+nim	cd	nimscript.html#cd,string	proc cd(dir: string)		328
+nim	findExe	nimscript.html#findExe,string	proc findExe(bin: string): string		338
+nim	withDir	nimscript.html#withDir.t,string,untyped	template withDir(dir: string; body: untyped): untyped		344
+nim	cppDefine	nimscript.html#cppDefine,string	proc cppDefine(define: string)		368
+nim	readLineFromStdin	nimscript.html#readLineFromStdin	proc readLineFromStdin(): string		381
+nim	readAllFromStdin	nimscript.html#readAllFromStdin	proc readAllFromStdin(): string		387
+nim	task	nimscript.html#task.t,untyped,string,untyped	template task(name: untyped; description: string; body: untyped): untyped		395
+nim	packageName	nimscript.html#packageName	var packageName		431
+nim	version	nimscript.html#version	var version		434
+nim	author	nimscript.html#author	var author		435
+nim	description	nimscript.html#description	var description		436
+nim	license	nimscript.html#license	var license		437
+nim	srcDir	nimscript.html#srcDir	var srcDir		438
+nim	binDir	nimscript.html#binDir	var binDir		439
+nim	backend	nimscript.html#backend	var backend		440
+nim	skipDirs	nimscript.html#skipDirs	var skipDirs		442
+nim	skipFiles	nimscript.html#skipFiles	var skipFiles		442
+nim	skipExt	nimscript.html#skipExt	var skipExt		442
+nim	installDirs	nimscript.html#installDirs	var installDirs		442
+nim	installFiles	nimscript.html#installFiles	var installFiles		442
+nim	installExt	nimscript.html#installExt	var installExt		442
+nim	bin	nimscript.html#bin	var bin		442
+nim	requiresData	nimscript.html#requiresData	var requiresData		444
+nim	requires	nimscript.html#requires,varargs[string]	proc requires(deps: varargs[string])		447
+nimgrp	exec	nimscript.html#exec-procs-all	proc		253
+nimgrp	--	nimscript.html#---templates-all	template		158

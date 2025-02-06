@@ -1,0 +1,11 @@
+nimTitle	vmgen	vmgen.html	module vmgen		0
+nim	debugEchoCode	vmgen.html#debugEchoCode	const debugEchoCode		44
+nim	echoCode	vmgen.html#echoCode,PCtx,int,int	proc echoCode(c: PCtx; start = 0; last = -1)		114
+nim	sameConstant	vmgen.html#sameConstant,PNode,PNode	proc sameConstant(a, b: PNode): bool		456
+nim	fitsRegister	vmgen.html#fitsRegister,PType	proc fitsRegister(t: PType): bool		1045
+nim	importcCondVar	vmgen.html#importcCondVar,PSym	proc importcCondVar(s: PSym): bool		1567
+nim	importcCond	vmgen.html#importcCond,PCtx,PSym	proc importcCond(c: PCtx; s: PSym): bool		1697
+nim	getNullValue	vmgen.html#getNullValue,PCtx,PType,TLineInfo,ConfigRef	proc getNullValue(c: PCtx; typ: PType; info: TLineInfo; conf: ConfigRef): PNode		1716
+nim	genProc	vmgen.html#genProc,PCtx,PSym	proc genProc(c: PCtx; s: PSym): int		2114
+nim	genStmt	vmgen.html#genStmt,PCtx,PNode	proc genStmt(c: PCtx; n: PNode): int		2310
+nim	genExpr	vmgen.html#genExpr,PCtx,PNode	proc genExpr(c: PCtx; n: PNode; requiresValue = true): int		2319

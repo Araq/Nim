@@ -1,0 +1,70 @@
+nimTitle	streams	streams.html	module std/streams		0
+nim	Stream	streams.html#Stream	type Stream		113
+nim	StreamObj	streams.html#StreamObj	object StreamObj		116
+nim	flush	streams.html#flush,Stream	proc flush(s: Stream)		147
+nim	close	streams.html#close,Stream	proc close(s: Stream)		176
+nim	atEnd	streams.html#atEnd,Stream	proc atEnd(s: Stream): bool		197
+nim	setPosition	streams.html#setPosition,Stream,int	proc setPosition(s: Stream; pos: int)		211
+nim	getPosition	streams.html#getPosition,Stream	proc getPosition(s: Stream): int		223
+nim	readData	streams.html#readData,Stream,pointer,int	proc readData(s: Stream; buffer: pointer; bufLen: int): int		234
+nim	readDataStr	streams.html#readDataStr,Stream,string,Slice[int]	proc readDataStr(s: Stream; buffer: var string; slice: Slice[int]): int		249
+nim	readAll	streams.html#readAll,Stream	proc readAll(s: Stream): string		280
+nim	peekData	streams.html#peekData,Stream,pointer,int	proc peekData(s: Stream; buffer: pointer; bufLen: int): int		313
+nim	writeData	streams.html#writeData,Stream,pointer,int	proc writeData(s: Stream; buffer: pointer; bufLen: int)		329
+nim	write	streams.html#write,Stream,T	proc write[T](s: Stream; x: T)		350
+nim	write	streams.html#write,Stream,string	proc write(s: Stream; x: string)		368
+nim	write	streams.html#write,Stream,varargs[string,]	proc write(s: Stream; args: varargs[string, `$`])		388
+nim	writeLine	streams.html#writeLine,Stream,varargs[string,]	proc writeLine(s: Stream; args: varargs[string, `$`])		400
+nim	read	streams.html#read,Stream,T	proc read[T](s: Stream; result: var T)		414
+nim	peek	streams.html#peek,Stream,T	proc peek[T](s: Stream; result: var T)		433
+nim	readChar	streams.html#readChar,Stream	proc readChar(s: Stream): char		452
+nim	peekChar	streams.html#peekChar,Stream	proc peekChar(s: Stream): char		473
+nim	readBool	streams.html#readBool,Stream	proc readBool(s: Stream): bool		492
+nim	peekBool	streams.html#peekBool,Stream	proc peekBool(s: Stream): bool		517
+nim	readInt8	streams.html#readInt8,Stream	proc readInt8(s: Stream): int8		544
+nim	peekInt8	streams.html#peekInt8,Stream	proc peekInt8(s: Stream): int8		563
+nim	readInt16	streams.html#readInt16,Stream	proc readInt16(s: Stream): int16		584
+nim	peekInt16	streams.html#peekInt16,Stream	proc peekInt16(s: Stream): int16		603
+nim	readInt32	streams.html#readInt32,Stream	proc readInt32(s: Stream): int32		624
+nim	peekInt32	streams.html#peekInt32,Stream	proc peekInt32(s: Stream): int32		643
+nim	readInt64	streams.html#readInt64,Stream	proc readInt64(s: Stream): int64		664
+nim	peekInt64	streams.html#peekInt64,Stream	proc peekInt64(s: Stream): int64		683
+nim	readUint8	streams.html#readUint8,Stream	proc readUint8(s: Stream): uint8		704
+nim	peekUint8	streams.html#peekUint8,Stream	proc peekUint8(s: Stream): uint8		723
+nim	readUint16	streams.html#readUint16,Stream	proc readUint16(s: Stream): uint16		744
+nim	peekUint16	streams.html#peekUint16,Stream	proc peekUint16(s: Stream): uint16		763
+nim	readUint32	streams.html#readUint32,Stream	proc readUint32(s: Stream): uint32		784
+nim	peekUint32	streams.html#peekUint32,Stream	proc peekUint32(s: Stream): uint32		804
+nim	readUint64	streams.html#readUint64,Stream	proc readUint64(s: Stream): uint64		825
+nim	peekUint64	streams.html#peekUint64,Stream	proc peekUint64(s: Stream): uint64		844
+nim	readFloat32	streams.html#readFloat32,Stream	proc readFloat32(s: Stream): float32		865
+nim	peekFloat32	streams.html#peekFloat32,Stream	proc peekFloat32(s: Stream): float32		884
+nim	readFloat64	streams.html#readFloat64,Stream	proc readFloat64(s: Stream): float64		905
+nim	peekFloat64	streams.html#peekFloat64,Stream	proc peekFloat64(s: Stream): float64		924
+nim	readStr	streams.html#readStr,Stream,int,string	proc readStr(s: Stream; length: int; str: var string)		957
+nim	readStr	streams.html#readStr,Stream,int	proc readStr(s: Stream; length: int): string		962
+nim	peekStr	streams.html#peekStr,Stream,int,string	proc peekStr(s: Stream; length: int; str: var string)		983
+nim	peekStr	streams.html#peekStr,Stream,int	proc peekStr(s: Stream; length: int): string		988
+nim	readLine	streams.html#readLine,Stream,string	proc readLine(s: Stream; line: var string): bool		1002
+nim	peekLine	streams.html#peekLine,Stream,string	proc peekLine(s: Stream; line: var string): bool		1045
+nim	readLine	streams.html#readLine,Stream	proc readLine(s: Stream): string		1076
+nim	peekLine	streams.html#peekLine,Stream	proc peekLine(s: Stream): string		1106
+nim	lines	streams.html#lines.i,Stream	iterator lines(s: Stream): string		1128
+nim	StringStream	streams.html#StringStream	type StringStream		1148
+nim	StringStreamObj	streams.html#StringStreamObj	object StringStreamObj		1150
+nim	newStringStream	streams.html#newStringStream,sinkstring	proc newStringStream(s: sink string = ""): owned StringStream		1287
+nim	FileStream	streams.html#FileStream	type FileStream		1325
+nim	FileStreamObj	streams.html#FileStreamObj	object FileStreamObj		1329
+nim	newFileStream	streams.html#newFileStream,File	proc newFileStream(f: File): owned FileStream		1362
+nim	newFileStream	streams.html#newFileStream,string,FileMode,int	proc newFileStream(filename: string; mode: FileMode = fmRead; bufSize: int = -1): owned\n    FileStream		1405
+nim	openFileStream	streams.html#openFileStream,string,FileMode,int	proc openFileStream(filename: string; mode: FileMode = fmRead; bufSize: int = -1): owned\n    FileStream		1444
+heading	Basic usage	streams.html#basic-usage	 Basic usage		0
+heading	StringStream example	streams.html#basic-usage-stringstream-example	  StringStream example		0
+heading	FileStream example	streams.html#basic-usage-filestream-example	  FileStream example		0
+heading	See also	streams.html#see-also	 See also		0
+nimgrp	peekstr	streams.html#peekStr-procs-all	proc		983
+nimgrp	readstr	streams.html#readStr-procs-all	proc		957
+nimgrp	peekline	streams.html#peekLine-procs-all	proc		1045
+nimgrp	newfilestream	streams.html#newFileStream-procs-all	proc		1362
+nimgrp	write	streams.html#write-procs-all	proc		350
+nimgrp	readline	streams.html#readLine-procs-all	proc		1002

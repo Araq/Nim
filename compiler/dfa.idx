@@ -1,0 +1,11 @@
+nimTitle	dfa	dfa.html	module dfa		0
+nim	goto	dfa.html#goto	InstrKind.goto		33
+nim	loop	dfa.html#loop	InstrKind.loop		33
+nim	fork	dfa.html#fork	InstrKind.fork		33
+nim	def	dfa.html#def	InstrKind.def		33
+nim	use	dfa.html#use	InstrKind.use		33
+nim	InstrKind	dfa.html#InstrKind	enum InstrKind		33
+nim	Instr	dfa.html#Instr	object Instr		35
+nim	ControlFlowGraph	dfa.html#ControlFlowGraph	type ControlFlowGraph		41
+nim	echoCfg	dfa.html#echoCfg,ControlFlowGraph,int,int	proc echoCfg(c: ControlFlowGraph; start = 0; last = -1)		88
+nim	constructCfg	dfa.html#constructCfg,PSym,PNode,PSym	proc constructCfg(s: PSym; body: PNode; root: PSym): ControlFlowGraph		479

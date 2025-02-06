@@ -1,0 +1,2 @@
+nimTitle	optimizer	optimizer.html	module optimizer		0
+nim	optimize	optimizer.html#optimize,PNode	proc optimize(n: PNode): PNode		264

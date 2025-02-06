@@ -1,0 +1,2 @@
+nimTitle	procfind	procfind.html	module procfind		0
+nim	searchForProc	procfind.html#searchForProc,PContext,PScope,PSym	proc searchForProc(c: PContext; scope: PScope; fn: PSym): tuple[proto: PSym,\n    comesFromShadowScope: bool]		55

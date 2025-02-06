@@ -1,0 +1,80 @@
+nimTitle	parseutils	parseutils.html	module std/parseutils		0
+nim	parseBin	parseutils.html#parseBin,openArray[char],T,int	proc parseBin[T: SomeInteger](s: openArray[char]; number: var T; maxLen = 0): int		63
+nim	parseOct	parseutils.html#parseOct,openArray[char],T,int	proc parseOct[T: SomeInteger](s: openArray[char]; number: var T; maxLen = 0): int		111
+nim	parseHex	parseutils.html#parseHex,openArray[char],T,int	proc parseHex[T: SomeInteger](s: openArray[char]; number: var T; maxLen = 0): int		159
+nim	parseIdent	parseutils.html#parseIdent,openArray[char],string	proc parseIdent(s: openArray[char]; ident: var string): int		214
+nim	parseIdent	parseutils.html#parseIdent,openArray[char]	proc parseIdent(s: openArray[char]): string		235
+nim	parseChar	parseutils.html#parseChar,openArray[char],char	proc parseChar(s: openArray[char]; c: var char): int		251
+nim	skipWhitespace	parseutils.html#skipWhitespace,openArray[char]	proc skipWhitespace(s: openArray[char]): int		267
+nim	skip	parseutils.html#skip,openArray[char],openArray[char]	proc skip(s, token: openArray[char]): int		278
+nim	skipIgnoreCase	parseutils.html#skipIgnoreCase,openArray[char],openArray[char]	proc skipIgnoreCase(s, token: openArray[char]): int		293
+nim	skipUntil	parseutils.html#skipUntil,openArray[char],set[char]	proc skipUntil(s: openArray[char]; until: set[char]): int		303
+nim	skipUntil	parseutils.html#skipUntil,openArray[char],char	proc skipUntil(s: openArray[char]; until: char): int		314
+nim	skipWhile	parseutils.html#skipWhile,openArray[char],set[char]	proc skipWhile(s: openArray[char]; toSkip: set[char]): int		326
+nim	parseUntil	parseutils.html#parseUntil,openArray[char],string,set[char]	proc parseUntil(s: openArray[char]; token: var string; until: set[char]): int		340
+nim	parseUntil	parseutils.html#parseUntil,openArray[char],string,char	proc parseUntil(s: openArray[char]; token: var string; until: char): int		358
+nim	parseUntil	parseutils.html#parseUntil,openArray[char],string,string	proc parseUntil(s: openArray[char]; token: var string; until: string): int		376
+nim	parseWhile	parseutils.html#parseWhile,openArray[char],string,set[char]	proc parseWhile(s: openArray[char]; token: var string; validChars: set[char]): int		402
+nim	captureBetween	parseutils.html#captureBetween,openArray[char],char,char	proc captureBetween(s: openArray[char]; first: char; second = '\x00'): string		418
+nim	parseBiggestInt	parseutils.html#parseBiggestInt,openArray[char],BiggestInt	proc parseBiggestInt(s: openArray[char]; number: var BiggestInt): int		466
+nim	parseInt	parseutils.html#parseInt,openArray[char],int	proc parseInt(s: openArray[char]; number: var int): int		484
+nim	parseSaturatedNatural	parseutils.html#parseSaturatedNatural,openArray[char],int	proc parseSaturatedNatural(s: openArray[char]; b: var int): int		501
+nim	parseBiggestUInt	parseutils.html#parseBiggestUInt,openArray[char],BiggestUInt	proc parseBiggestUInt(s: openArray[char]; number: var BiggestUInt): int		551
+nim	parseUInt	parseutils.html#parseUInt,openArray[char],uint	proc parseUInt(s: openArray[char]; number: var uint): int		569
+nim	parseBiggestFloat	parseutils.html#parseBiggestFloat,openArray[char],BiggestFloat	proc parseBiggestFloat(s: openArray[char]; number: var BiggestFloat): int		588
+nim	parseFloat	parseutils.html#parseFloat,openArray[char],float	proc parseFloat(s: openArray[char]; number: var float): int		594
+nim	parseSize	parseutils.html#parseSize,openArray[char],int64	proc parseSize(s: openArray[char]; size: var int64; alwaysBin = false): int		615
+nim	ikStr	parseutils.html#ikStr	InterpolatedKind.ikStr		678
+nim	ikDollar	parseutils.html#ikDollar	InterpolatedKind.ikDollar		678
+nim	ikVar	parseutils.html#ikVar	InterpolatedKind.ikVar		678
+nim	ikExpr	parseutils.html#ikExpr	InterpolatedKind.ikExpr		678
+nim	InterpolatedKind	parseutils.html#InterpolatedKind	enum InterpolatedKind		678
+nim	interpolatedFragments	parseutils.html#interpolatedFragments.i,openArray[char]	iterator interpolatedFragments(s: openArray[char]): tuple[kind: InterpolatedKind,\n    value: string]		686
+nim	parseBin	parseutils.html#parseBin,string,T,int,int	proc parseBin[T: SomeInteger](s: string; number: var T; start = 0; maxLen = 0): int		749
+nim	parseOct	parseutils.html#parseOct,string,T,int,int	proc parseOct[T: SomeInteger](s: string; number: var T; start = 0; maxLen = 0): int		781
+nim	parseHex	parseutils.html#parseHex,string,T,int,int	proc parseHex[T: SomeInteger](s: string; number: var T; start = 0; maxLen = 0): int		813
+nim	parseIdent	parseutils.html#parseIdent,string,string,int	proc parseIdent(s: string; ident: var string; start = 0): int		846
+nim	parseIdent	parseutils.html#parseIdent,string,int	proc parseIdent(s: string; start = 0): string		860
+nim	parseChar	parseutils.html#parseChar,string,char,int	proc parseChar(s: string; c: var char; start = 0): int		870
+nim	skipWhitespace	parseutils.html#skipWhitespace,string,int	proc skipWhitespace(s: string; start = 0): int		882
+nim	skip	parseutils.html#skip,string,string,int	proc skip(s, token: string; start = 0): int		892
+nim	skipIgnoreCase	parseutils.html#skipIgnoreCase,string,string,int	proc skipIgnoreCase(s, token: string; start = 0): int		903
+nim	skipUntil	parseutils.html#skipUntil,string,set[char],int	proc skipUntil(s: string; until: set[char]; start = 0): int		910
+nim	skipUntil	parseutils.html#skipUntil,string,char,int	proc skipUntil(s: string; until: char; start = 0): int		920
+nim	skipWhile	parseutils.html#skipWhile,string,set[char],int	proc skipWhile(s: string; toSkip: set[char]; start = 0): int		931
+nim	parseUntil	parseutils.html#parseUntil,string,string,set[char],int	proc parseUntil(s: string; token: var string; until: set[char]; start = 0): int		940
+nim	parseUntil	parseutils.html#parseUntil,string,string,char,int	proc parseUntil(s: string; token: var string; until: char; start = 0): int		955
+nim	parseUntil	parseutils.html#parseUntil,string,string,string,int	proc parseUntil(s: string; token: var string; until: string; start = 0): int		970
+nim	parseWhile	parseutils.html#parseWhile,string,string,set[char],int	proc parseWhile(s: string; token: var string; validChars: set[char]; start = 0): int		983
+nim	captureBetween	parseutils.html#captureBetween,string,char,char,int	proc captureBetween(s: string; first: char; second = '\x00'; start = 0): string		996
+nim	parseBiggestInt	parseutils.html#parseBiggestInt,string,BiggestInt,int	proc parseBiggestInt(s: string; number: var BiggestInt; start = 0): int		1005
+nim	parseInt	parseutils.html#parseInt,string,int,int	proc parseInt(s: string; number: var int; start = 0): int		1019
+nim	parseSaturatedNatural	parseutils.html#parseSaturatedNatural,string,int,int	proc parseSaturatedNatural(s: string; b: var int; start = 0): int		1032
+nim	parseBiggestUInt	parseutils.html#parseBiggestUInt,string,BiggestUInt,int	proc parseBiggestUInt(s: string; number: var BiggestUInt; start = 0): int		1045
+nim	parseUInt	parseutils.html#parseUInt,string,uint,int	proc parseUInt(s: string; number: var uint; start = 0): int		1057
+nim	parseBiggestFloat	parseutils.html#parseBiggestFloat,string,BiggestFloat,int	proc parseBiggestFloat(s: string; number: var BiggestFloat; start = 0): int		1069
+nim	parseFloat	parseutils.html#parseFloat,string,float,int	proc parseFloat(s: string; number: var float; start = 0): int		1075
+nim	interpolatedFragments	parseutils.html#interpolatedFragments.i,string	iterator interpolatedFragments(s: string): tuple[kind: InterpolatedKind, value: string]		1089
+idx	parseInt	parseutils.html#parseint_1	Module parseutils		0
+idx	parseInt	parseutils.html#parseint_2	Module parseutils		0
+nimgrp	parsebiggestfloat	parseutils.html#parseBiggestFloat-procs-all	proc		588
+nimgrp	parsehex	parseutils.html#parseHex-procs-all	proc		159
+nimgrp	skip	parseutils.html#skip-procs-all	proc		278
+nimgrp	parsebiggestint	parseutils.html#parseBiggestInt-procs-all	proc		466
+nimgrp	parsefloat	parseutils.html#parseFloat-procs-all	proc		594
+nimgrp	capturebetween	parseutils.html#captureBetween-procs-all	proc		418
+nimgrp	parsesaturatednatural	parseutils.html#parseSaturatedNatural-procs-all	proc		501
+nimgrp	parseuint	parseutils.html#parseUInt-procs-all	proc		569
+nimgrp	parsebiggestuint	parseutils.html#parseBiggestUInt-procs-all	proc		551
+nimgrp	parsebin	parseutils.html#parseBin-procs-all	proc		63
+nimgrp	parseoct	parseutils.html#parseOct-procs-all	proc		111
+nimgrp	parsewhile	parseutils.html#parseWhile-procs-all	proc		402
+nimgrp	skipwhitespace	parseutils.html#skipWhitespace-procs-all	proc		267
+nimgrp	parseident	parseutils.html#parseIdent-procs-all	proc		214
+nimgrp	skipuntil	parseutils.html#skipUntil-procs-all	proc		303
+nimgrp	parsechar	parseutils.html#parseChar-procs-all	proc		251
+nimgrp	parseint	parseutils.html#parseInt-procs-all	proc		484
+nimgrp	skipignorecase	parseutils.html#skipIgnoreCase-procs-all	proc		293
+nimgrp	parseuntil	parseutils.html#parseUntil-procs-all	proc		340
+nimgrp	skipwhile	parseutils.html#skipWhile-procs-all	proc		326
+nimgrp	interpolatedfragments	parseutils.html#interpolatedFragments-iterators-all	iterator		686

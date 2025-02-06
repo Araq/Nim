@@ -1,0 +1,15 @@
+nimTitle	monotimes	monotimes.html	module std/monotimes		0
+nim	MonoTime	monotimes.html#MonoTime	object MonoTime		42
+nim	getMonoTime	monotimes.html#getMonoTime	proc getMonoTime(): MonoTime		89
+nim	ticks	monotimes.html#ticks,MonoTime	proc ticks(t: MonoTime): int64		122
+nim	`$`	monotimes.html#$,MonoTime	proc `$`(t: MonoTime): string		127
+nim	`-`	monotimes.html#-,MonoTime,MonoTime	proc `-`(a, b: MonoTime): Duration		130
+nim	`+`	monotimes.html#+,MonoTime,Duration	proc `+`(a: MonoTime; b: Duration): MonoTime		134
+nim	`-`	monotimes.html#-,MonoTime,Duration	proc `-`(a: MonoTime; b: Duration): MonoTime		138
+nim	`<`	monotimes.html#<,MonoTime,MonoTime	proc `<`(a, b: MonoTime): bool		142
+nim	`<=`	monotimes.html#<=,MonoTime,MonoTime	proc `<=`(a, b: MonoTime): bool		146
+nim	`==`	monotimes.html#==,MonoTime,MonoTime	proc `==`(a, b: MonoTime): bool		150
+nim	high	monotimes.html#high,typedesc[MonoTime]	proc high(typ: typedesc[MonoTime]): MonoTime		154
+nim	low	monotimes.html#low,typedesc[MonoTime]	proc low(typ: typedesc[MonoTime]): MonoTime		158
+heading	See also	monotimes.html#see-also	 See also		0
+nimgrp	-	monotimes.html#--procs-all	proc		130

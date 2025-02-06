@@ -1,0 +1,43 @@
+nimTitle	jsfetch	jsfetch.html	module std/jsfetch		0
+nim	FetchOptions	jsfetch.html#FetchOptions	type FetchOptions		11
+nim	fmCors	jsfetch.html#fmCors	FetchModes.fmCors		17
+nim	fmNoCors	jsfetch.html#fmNoCors	FetchModes.fmNoCors		17
+nim	fmSameOrigin	jsfetch.html#fmSameOrigin	FetchModes.fmSameOrigin		17
+nim	FetchModes	jsfetch.html#FetchModes	enum FetchModes		17
+nim	fcInclude	jsfetch.html#fcInclude	FetchCredentials.fcInclude		22
+nim	fcSameOrigin	jsfetch.html#fcSameOrigin	FetchCredentials.fcSameOrigin		22
+nim	fcOmit	jsfetch.html#fcOmit	FetchCredentials.fcOmit		22
+nim	FetchCredentials	jsfetch.html#FetchCredentials	enum FetchCredentials		22
+nim	fchDefault	jsfetch.html#fchDefault	FetchCaches.fchDefault		27
+nim	fchNoStore	jsfetch.html#fchNoStore	FetchCaches.fchNoStore		27
+nim	fchReload	jsfetch.html#fchReload	FetchCaches.fchReload		27
+nim	fchNoCache	jsfetch.html#fchNoCache	FetchCaches.fchNoCache		27
+nim	fchForceCache	jsfetch.html#fchForceCache	FetchCaches.fchForceCache		27
+nim	FetchCaches	jsfetch.html#FetchCaches	enum FetchCaches		27
+nim	frFollow	jsfetch.html#frFollow	FetchRedirects.frFollow		34
+nim	frError	jsfetch.html#frError	FetchRedirects.frError		34
+nim	frManual	jsfetch.html#frManual	FetchRedirects.frManual		34
+nim	FetchRedirects	jsfetch.html#FetchRedirects	enum FetchRedirects		34
+nim	frpNoReferrer	jsfetch.html#frpNoReferrer	FetchReferrerPolicies.frpNoReferrer		39
+nim	frpNoReferrerWhenDowngrade	jsfetch.html#frpNoReferrerWhenDowngrade	FetchReferrerPolicies.frpNoReferrerWhenDowngrade		39
+nim	frpOrigin	jsfetch.html#frpOrigin	FetchReferrerPolicies.frpOrigin		39
+nim	frpOriginWhenCrossOrigin	jsfetch.html#frpOriginWhenCrossOrigin	FetchReferrerPolicies.frpOriginWhenCrossOrigin		39
+nim	frpUnsafeUrl	jsfetch.html#frpUnsafeUrl	FetchReferrerPolicies.frpUnsafeUrl		39
+nim	FetchReferrerPolicies	jsfetch.html#FetchReferrerPolicies	enum FetchReferrerPolicies		39
+nim	Response	jsfetch.html#Response	type Response		46
+nim	Request	jsfetch.html#Request	type Request		54
+nim	newResponse	jsfetch.html#newResponse	proc newResponse(body: cstring | FormData): Response		62
+nim	newRequest	jsfetch.html#newRequest,cstring	proc newRequest(url: cstring): Request		65
+nim	newRequest	jsfetch.html#newRequest,cstring,FetchOptions	proc newRequest(url: cstring; fetchOptions: FetchOptions): Request		68
+nim	clone	jsfetch.html#clone	proc clone(self: Response | Request): Response		71
+nim	text	jsfetch.html#text,Response	proc text(self: Response): Future[cstring]		74
+nim	json	jsfetch.html#json,Response	proc json(self: Response): Future[JsObject]		77
+nim	formData	jsfetch.html#formData,Response	proc formData(self: Response): Future[FormData]		80
+nim	unsafeNewFetchOptions	jsfetch.html#unsafeNewFetchOptions,cstring,cstring,cstring,cstring,cstring,cstring,bool,Headers	proc unsafeNewFetchOptions(metod, body, mode, credentials, cache, referrerPolicy: cstring;\n                      keepalive: bool; redirect = "follow".cstring;\n                      referrer = "client".cstring; integrity = "".cstring;\n                      headers: Headers = newHeaders()): FetchOptions		83
+nim	newfetchOptions	jsfetch.html#newfetchOptions,cstring,Headers	proc newfetchOptions(metod = HttpGet; body: cstring = nil; mode = fmCors;\n                credentials = fcSameOrigin; cache = fchDefault;\n                referrerPolicy = frpNoReferrerWhenDowngrade; keepalive = false;\n                redirect = frFollow; referrer = "client".cstring;\n                integrity = "".cstring; headers: Headers = newHeaders()): FetchOptions		88
+nim	fetch	jsfetch.html#fetch	proc fetch(url: cstring | Request): Future[Response]		108
+nim	fetch	jsfetch.html#fetch,,FetchOptions	proc fetch(url: cstring | Request; options: FetchOptions): Future[Response]		111
+nim	toCstring	jsfetch.html#toCstring	proc toCstring(self: Request | Response | FetchOptions): cstring		114
+nim	`$`	jsfetch.html#$	proc `$`(self: Request | Response | FetchOptions): string		116
+nimgrp	fetch	jsfetch.html#fetch-procs-all	proc		108
+nimgrp	newrequest	jsfetch.html#newRequest-procs-all	proc		65
