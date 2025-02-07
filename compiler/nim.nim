@@ -28,6 +28,10 @@ import
   commands, options, msgs, extccomp, main, idents, lineinfos, cmdlinehelper,
   pathutils, modulegraphs
 
+when defined(testNifImports):
+  # temporary until nif is actually used in the compiler
+  import ../dist/nif/src/[nifler/nifler, xelim/xelim, nifgram/nifgram, gear2/gear2]
+
 from std/browsers import openDefaultBrowser
 from nodejs import findNodeJs
 
