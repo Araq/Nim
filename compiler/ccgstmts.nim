@@ -161,13 +161,13 @@ proc genVarTuple(p: BProc, n: PNode) =
       typ = NimBool,
       initializer = NimFalse)
     for curr in hcrGlobals:
-      let rc = rdLoc(curr.loc)
+      let tc = getTypeDesc(p.module, curr.loc.t)
       p.s(cpsLocals).addInPlaceOp(BitOr, NimBool,
         hcrCond,
         cCall("hcrRegisterGlobal",
           getModuleDllPath(p.module, n[0].sym),
           '"' & curr.loc.snippet & '"',
-          cSizeof(rc),
+          cSizeof(tc),
           curr.tp,
           cCast(ptrType(CPointer), cAddr(curr.loc.snippet))))
 
@@ -434,11 +434,11 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
   if forHcr and targetProc.blocks.len > 3 and v.owner.kind == skModule:
     # put it in the locals section - mainly because of loops which
     # use the var in a call to resetLoc() in the statements section
-    let rv = rdLoc(v.loc)
+    let tv = getTypeDesc(p.module, v.loc.t)
     p.s(cpsLocals).addCallStmt("hcrRegisterGlobal",
       getModuleDllPath(p.module, v),
       '"' & v.loc.snippet & '"',
-      cSizeof(rv),
+      cSizeof(tv),
       traverseProc,
       cCast(ptrType(CPointer), cAddr(v.loc.snippet)))
     # nothing special left to do later on - let's avoid closing and reopening blocks
@@ -449,12 +449,13 @@ proc genSingleVar(p: BProc, v: PSym; vn, value: PNode) =
   # be able to re-run it but without the top level code - just the init of globals
   var hcrInit = default(IfBuilder)
   if forHcr:
+    let tv = getTypeDesc(p.module, v.loc.t)
     startBlockWith(targetProc):
       hcrInit = initIfStmt(p.s(cpsStmts))
       initElifBranch(p.s(cpsStmts), hcrInit, cCall("hcrRegisterGlobal",
         getModuleDllPath(p.module, v),
         '"' & v.loc.snippet & '"',
-        cSizeof(rdLoc(v.loc)),
+        cSizeof(tv),
         traverseProc,
         cCast(ptrType(CPointer), cAddr(v.loc.snippet))))
   if value.kind != nkEmpty and valueAsRope.len == 0:
