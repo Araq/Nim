@@ -128,3 +128,8 @@ block: # issue #24484, tuple version
     doAssert t == (T(0), 5)
   bar[uint8]()
 
+block: # issue #24672
+  func initArray[T](arg: array[1, T] = [T.high]): array[1, T] =
+    return arg
+
+  discard initArray[float]()  # this would compile and print [inf] in previous versions.
