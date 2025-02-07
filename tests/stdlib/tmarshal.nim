@@ -3,7 +3,7 @@ discard """
 """
 
 import std/marshal
-import std/[assertions, objectdollar, streams]
+import std/[assertions, objectdollar, objectequals, streams]
 
 # TODO: add static tests
 

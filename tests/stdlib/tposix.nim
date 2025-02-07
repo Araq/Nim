@@ -8,7 +8,7 @@ discard """
 when not defined(windows):
 
   import posix
-  import std/[assertions, syncio]
+  import std/[assertions, syncio, objectequals]
 
   var
     u: Utsname

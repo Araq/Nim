@@ -18,6 +18,7 @@ import std/strutils
 
 when defined(nimPreviewSlimSystem):
   import std/[assertions, syncio]
+  from std/objectequals import nil
 
 
 type
@@ -41,6 +42,10 @@ proc `$`*(s: LangSymbol): string =  # for debug
    "parametersProvided=$6, parameters=$7, outType=$8)") % [
       s.symKind, s.symTypeKind , s.name, s.generics, $s.isGroup,
       $s.parametersProvided, $s.parameters, s.outType]
+
+when defined(nimPreviewSlimSystem):
+  proc `==`*(a, b: LangSymbol): bool {.inline.} =
+    result = objectequals.`==`(a, b)
 
 func nimIdentBackticksNormalize*(s: string): string =
   ## Normalizes the string `s` as a Nim identifier.

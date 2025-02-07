@@ -4,6 +4,7 @@ discard """
 
 import algorithm
 import unittest
+import std/objectequals
 
 
 suite "test sort, sorted, and isSorted procs":

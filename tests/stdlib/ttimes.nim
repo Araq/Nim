@@ -3,7 +3,7 @@ discard """
 """
 
 import times, strutils, unittest
-import std/assertions
+import std/[assertions, objectequals]
 
 when not defined(js):
   import os

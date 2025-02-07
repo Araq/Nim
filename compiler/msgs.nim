@@ -448,12 +448,6 @@ proc handleError(conf: ConfigRef; msg: TMsgKind, eh: TErrorHandling, s: string, 
     elif eh == doRaise:
       raiseRecoverableError(s)
 
-proc `==`*(a, b: TLineInfo): bool =
-  result = a.line == b.line and a.fileIndex == b.fileIndex
-
-proc exactEquals*(a, b: TLineInfo): bool =
-  result = a.fileIndex == b.fileIndex and a.line == b.line and a.col == b.col
-
 proc writeContext(conf: ConfigRef; lastinfo: TLineInfo) =
   const instantiationFrom = "template/generic instantiation from here"
   const instantiationOfFrom = "template/generic instantiation of `$1` from here"

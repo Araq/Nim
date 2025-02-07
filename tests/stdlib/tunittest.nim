@@ -23,7 +23,7 @@ matrix: "--mm:refc; --mm:orc"
 targets: "c js"
 """
 
-import std/[unittest, sequtils, assertions]
+import std/[unittest, sequtils, assertions, objectequals]
 from std/unittest {.all.} import matchFilter
 
 proc doThings(spuds: var int): int =

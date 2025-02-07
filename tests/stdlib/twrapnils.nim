@@ -4,7 +4,7 @@ discard """
 
 import std/wrapnils
 from std/options import get, isSome
-import std/assertions
+import std/[assertions, objectequals]
 
 proc checkNotZero(x: float): float =
   doAssert x != 0

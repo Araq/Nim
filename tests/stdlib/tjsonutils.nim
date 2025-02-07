@@ -8,7 +8,7 @@ import std/json
 from std/math import isNaN, signbit
 from std/fenv import epsilon
 from stdtest/testutils import whenRuntimeJs
-import std/[assertions, objectdollar]
+import std/[assertions, objectdollar, objectequals]
 
 proc testRoundtrip[T](t: T, expected: string) =
   # checks that `T => json => T2 => json2` is such that json2 = json

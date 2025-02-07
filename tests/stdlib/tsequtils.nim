@@ -8,7 +8,7 @@ discard """
 import std/sequtils
 import strutils
 from algorithm import sorted
-import std/assertions
+import std/[assertions, objectequals]
 
 {.experimental: "strictEffects".}
 {.push warningAsError[Effect]: on.}

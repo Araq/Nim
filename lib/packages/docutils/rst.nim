@@ -2661,6 +2661,9 @@ type
     first, last: int
   ColSeq = seq[ColumnLimits]
 
+proc `==`*(a, b: ColSpec): bool {.inline.} =
+  a.start == b.start and a.stop == b.stop
+
 proc tokStart(p: RstParser, idx: int): int =
   result = p.tok[idx].col
 

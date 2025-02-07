@@ -6,7 +6,7 @@ x + y = 30
 '''
 """
 import std/[sugar, algorithm, random, sets, tables, strutils, sequtils]
-import std/[syncio, assertions]
+import std/[syncio, assertions, objectequals]
 
 type # for capture test, ref #20679
   FooCapture = ref object

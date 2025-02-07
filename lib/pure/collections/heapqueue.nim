@@ -264,3 +264,7 @@ proc `$`*[T](heap: HeapQueue[T]): string =
     if result.len > 1: result.add(", ")
     result.addQuoted(x)
   result.add("]")
+
+proc `==`*[T](a, b: HeapQueue[T]): bool {.inline.} =
+  ## Equality operator for heaps.
+  result = a.data == b.data

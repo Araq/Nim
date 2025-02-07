@@ -7,7 +7,7 @@ discard """
 # test atomic operations
 
 import std/[atomics, bitops]
-import std/assertions
+import std/[assertions, objectequals]
 
 
 type

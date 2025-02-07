@@ -3,7 +3,7 @@ discard """
 """
 
 import tables, hashes
-import std/assertions
+import std/[assertions, objectequals]
 
 type
   Person = object

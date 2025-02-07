@@ -2,7 +2,7 @@ discard """
   joinable: false # to avoid messing with global rand state
   matrix: "--mm:refc; --mm:orc; --backend:js --jsbigint64:off -d:nimStringHash2; --backend:js --jsbigint64:on"
 """
-import std/[assertions, formatfloat]
+import std/[assertions, formatfloat, objectequals]
 import std/[random, math, stats, sets, tables]
 import std/private/jsutils
 when not defined(js):

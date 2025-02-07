@@ -1796,12 +1796,26 @@ proc pop*[T](s: var seq[T]): T {.inline, noSideEffect.} =
     result = s[L]
     setLen(s, L)
 
-proc `==`*[T: tuple|object](x, y: T): bool =
-  ## Generic `==` operator for tuples that is lifted from the components.
-  ## of `x` and `y`.
-  for a, b in fields(x, y):
-    if a != b: return false
-  return true
+proc `==`*[T, U](x, y: HSlice[T, U]): bool {.inline.} =
+  ## Equality operator for slices.
+  mixin `==`
+  result = x.a == y.a and x.b == y.b
+
+when defined(nimPreviewSlimSystem):
+  # no `object`, moved to std/objectequals
+  proc `==`*[T: tuple](x, y: T): bool =
+    ## Generic `==` operator for tuples that is lifted from the components.
+    ## of `x` and `y`.
+    for a, b in fields(x, y):
+      if a != b: return false
+    return true
+else:
+  proc `==`*[T: tuple|object](x, y: T): bool =
+    ## Generic `==` operator for tuples that is lifted from the components.
+    ## of `x` and `y`.
+    for a, b in fields(x, y):
+      if a != b: return false
+    return true
 
 proc `<=`*[T: tuple](x, y: T): bool =
   ## Generic lexicographic `<=` operator for tuples that is lifted from the

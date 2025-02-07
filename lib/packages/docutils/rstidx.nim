@@ -31,6 +31,9 @@ type
     module*: string        ## origin file, NOT a field in ``.idx`` file
     aux*: string           ## auxuliary field, NOT a field in ``.idx`` file
 
+proc `==`*(a, b: IndexEntry): bool =
+  a.keyword == b.keyword and a.link == b.link
+
 proc isDocumentationTitle*(hyperlink: string): bool =
   ## Returns true if the hyperlink is actually a documentation title.
   ##

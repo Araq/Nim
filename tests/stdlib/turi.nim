@@ -6,7 +6,7 @@ discard """
 import std/uri
 from std/uri {.all.} as uri2 import removeDotSegments
 from std/sequtils import toSeq
-import std/assertions
+import std/[assertions, objectequals]
 
 template main() =
   block: # encodeUrl, decodeUrl

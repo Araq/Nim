@@ -2,7 +2,7 @@ discard """
   matrix: "--mm:refc; --mm:orc"
 """
 
-import std/[importutils, assertions]
+import std/[importutils, assertions, objectequals]
 import stdtest/testutils
 import mimportutils
 

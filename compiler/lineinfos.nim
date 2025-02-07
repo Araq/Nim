@@ -316,6 +316,12 @@ type
 
 proc `==`*(a, b: FileIndex): bool {.borrow.}
 
+proc `==`*(a, b: TLineInfo): bool {.inline.} =
+  result = a.line == b.line and a.fileIndex == b.fileIndex
+
+proc exactEquals*(a, b: TLineInfo): bool {.inline.} =
+  result = a.fileIndex == b.fileIndex and a.line == b.line and a.col == b.col
+
 proc hash*(i: TLineInfo): Hash =
   hash (i.line.int, i.col.int, i.fileIndex.int)
 

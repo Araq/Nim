@@ -32,6 +32,9 @@ type
     module*: LitId       # 0 if it's this module
     item*: int32         # same as the in-memory representation
 
+proc `==`*(a, b: PackedItemId): bool {.inline.} =
+  a.module == b.module and a.item == b.item
+
 const
   nilItemId* = PackedItemId(module: LitId(0), item: 0.int32)
 
