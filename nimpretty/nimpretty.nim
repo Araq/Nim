@@ -102,6 +102,20 @@ proc prettyPrint*(infile, outfile: string; opt: PrettyOptions) =
     when defined(nimpretty):
       closeEmitter(parser.em, fullAst, finalCheck)
 
+proc handleStdinInput(opt: PrettyOptions) =
+  var content = readAll(stdin)
+
+  var (cfile, path) = createTempFile("nimpretty_", ".nim")
+
+  writeFile(path, content)
+
+  prettyPrint(path, path, opt)
+
+  echo(readAll(cfile))
+
+  close(cfile)
+  removeFile(path)
+
 proc main =
   var outfile, outdir: string
 
@@ -142,19 +156,7 @@ proc main =
     of cmdEnd: assert(false) # cannot happen
 
   if isStdin:
-    var content = readAll(stdin)
-
-    var (cfile, path) = createTempFile("nimpretty_", ".nim")
-
-    writeFile(path, content)
-
-    prettyPrint(path, path, opt)
-
-    echo(readAll(cfile))
-
-    close(cfile)
-    removeFile(path)
-
+    handleStdinInput(opt)
     return
 
   if infiles.len == 0:
