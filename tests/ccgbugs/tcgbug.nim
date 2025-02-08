@@ -140,7 +140,7 @@ block: # bug #9940
 typedef struct { int base; } S;
 """.}
 
-  type S {.importc: "S", completeStruct.} = object
+  type S {.importc: "S", nodecl, completeStruct.} = object
     base: cint
   proc init(x:ptr S) =
     x.base = 1

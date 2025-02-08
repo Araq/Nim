@@ -30,11 +30,11 @@ var s = bork()
 import tables
 
 type
-  cdbl {.importc: "double".} = object
+  cdbl {.importc: "double", nodecl.} = object
 
   MyObject = ref object of RootObj
     y: Table[string, cdbl]
-        
+
 
 proc test =
   var x = new(MyObject)
