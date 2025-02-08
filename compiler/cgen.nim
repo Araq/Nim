@@ -777,6 +777,7 @@ proc assignParam(p: BProc, s: PSym, retType: PType) =
   scopeMangledParam(p, s)
 
 proc fillProcLoc(m: BModule; n: PNode) =
+  let n = skipPostfix(n)
   let sym = n.sym
   if sym.loc.k == locNone:
     fillBackendName(m, sym)

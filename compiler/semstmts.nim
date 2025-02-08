@@ -942,12 +942,22 @@ proc semVarOrLet(c: PContext, n: PNode, symkind: TSymKind): PNode =
         if importantComments(c.config):
           # keep documentation information:
           b.comment = a.comment
-        # postfix not generated here (to generate, get rid of it in transf)
         if a[j].kind == nkPragmaExpr:
-          var p = newNodeI(nkPragmaExpr, a.info)
-          p.add newSymNode(v)
+          var p = newNodeI(nkPragmaExpr, a[j].info)
+          if a[j][0].kind == nkPostfix:
+            var pf = newNodeI(nkPostfix, a[j][0].info)
+            pf.add a[j][0][0]
+            pf.add newSymNode(v)
+            p.add pf
+          else:
+            p.add newSymNode(v)
           p.add a[j][1]
           b.add p
+        elif a[j].kind == nkPostfix:
+          var pf = newNodeI(nkPostfix, a[j].info)
+          pf.add a[j][0]
+          pf.add newSymNode(v)
+          b.add pf
         else:
           b.add newSymNode(v)
         # keep type desc for doc generator
@@ -1055,12 +1065,22 @@ proc semConst(c: PContext, n: PNode): PNode =
           setVarType(c, v, typ)
         b = newNodeI(nkConstDef, a.info)
         if importantComments(c.config): b.comment = a.comment
-        # postfix not generated here (to generate, get rid of it in transf)
         if a[j].kind == nkPragmaExpr:
-          var p = newNodeI(nkPragmaExpr, a.info)
-          p.add newSymNode(v)
+          var p = newNodeI(nkPragmaExpr, a[j].info)
+          if a[j][0].kind == nkPostfix:
+            var pf = newNodeI(nkPostfix, a[j][0].info)
+            pf.add a[j][0][0]
+            pf.add newSymNode(v)
+            p.add pf
+          else:
+            p.add newSymNode(v)
           p.add a[j][1].copyTree
           b.add p
+        elif a[j].kind == nkPostfix:
+          var pf = newNodeI(nkPostfix, a[j].info)
+          pf.add a[j][0]
+          pf.add newSymNode(v)
+          b.add pf
         else:
           b.add newSymNode(v)
         b.add a[1]
@@ -2411,7 +2431,10 @@ proc semProcAux(c: PContext, n: PNode, kind: TSymKind,
     # name isn't changed (see taccent_highlight). We don't want to check if this is the
     # defintion yet since we are missing some info (comments, side effects)
     s = semIdentDef(c, n[namePos], kind, reportToNimsuggest=isHighlight)
-    n[namePos] = newSymNode(s)
+    if n[namePos].kind == nkPostfix:
+      n[namePos][1] = newSymNode(s)
+    else:
+      n[namePos] = newSymNode(s)
     when false:
       # disable for now
       if sfNoForward in c.module.flags and
@@ -2559,8 +2582,9 @@ proc semProcAux(c: PContext, n: PNode, kind: TSymKind,
     n[genericParamsPos] = proto.ast[genericParamsPos]
     n[paramsPos] = proto.ast[paramsPos]
     n[pragmasPos] = proto.ast[pragmasPos]
-    if n[namePos].kind != nkSym: internalError(c.config, n.info, "semProcAux")
-    n[namePos].sym = proto
+    let name = skipPostfix(n[namePos])
+    if name.kind != nkSym: internalError(c.config, n.info, "semProcAux")
+    name.sym = proto
     if importantComments(c.config) and proto.ast.comment.len > 0:
       n.comment = proto.ast.comment
     proto.ast = n             # needed for code generation
@@ -2679,7 +2703,7 @@ proc semIterator(c: PContext, n: PNode): PNode =
   # nkIteratorDef aynmore, return. The iterator then might have been
   # sem'checked already. (Or not, if the macro skips it.)
   if result.kind != n.kind: return
-  var s = result[namePos].sym
+  let s = skipPostfix(result[namePos]).sym
   var t = s.typ
   if t.returnType == nil and s.typ.callConv != ccClosure:
     localError(c.config, n.info, "iterator needs a return type")
@@ -2713,7 +2737,7 @@ proc semMethod(c: PContext, n: PNode): PNode =
   # nkIteratorDef aynmore, return. The iterator then might have been
   # sem'checked already. (Or not, if the macro skips it.)
   if result.kind != nkMethodDef: return
-  var s = result[namePos].sym
+  let s = skipPostfix(result[namePos]).sym
   # we need to fix the 'auto' return type for the dispatcher here (see tautonotgeneric
   # test case):
   let disp = getDispatcher(s)
@@ -2734,7 +2758,7 @@ proc semConverterDef(c: PContext, n: PNode): PNode =
   # nkIteratorDef aynmore, return. The iterator then might have been
   # sem'checked already. (Or not, if the macro skips it.)
   if result.kind != nkConverterDef: return
-  var s = result[namePos].sym
+  let s = skipPostfix(result[namePos]).sym
   var t = s.typ
   if t.returnType == nil: localError(c.config, n.info, errXNeedsReturnType % "converter")
   if t.len != 2: localError(c.config, n.info, "a converter takes exactly one argument")
@@ -2748,7 +2772,7 @@ proc semMacroDef(c: PContext, n: PNode): PNode =
   # nkIteratorDef aynmore, return. The iterator then might have been
   # sem'checked already. (Or not, if the macro skips it.)
   if result.kind != nkMacroDef: return
-  var s = result[namePos].sym
+  let s = skipPostfix(result[namePos]).sym
   var t = s.typ
   var allUntyped = true
   var nullary = true

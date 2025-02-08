@@ -130,8 +130,10 @@ proc aliveCode(c: var AliveContext; g: PackedModuleGraph; tree: PackedTree; n: N
   of nkChckRangeF, nkChckRange64, nkChckRange:
     rangeCheckAnalysis(c, g, tree, n)
   of nkProcDef, nkConverterDef, nkMethodDef, nkFuncDef, nkIteratorDef:
-    if n.firstSon.kind == nkSym and isNotGeneric(n):
-      let item = tree[n.firstSon].soperand
+    var name = n.firstSon
+    if name.kind == nkPostfix: name = tree.ithSon(name, 1)
+    if name.kind == nkSym and isNotGeneric(n):
+      let item = tree[name].soperand
       if isExportedToC(c, g, item):
         # This symbol is alive and everything its body references.
         followLater(c, g, c.thisModule, item)

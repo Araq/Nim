@@ -170,7 +170,7 @@ proc newProc(globals: PGlobals, module: BModule, procDef: PNode,
     procDef: procDef,
     g: globals,
     extraIndent: int(procDef != nil))
-  if procDef != nil: result.prc = procDef[namePos].sym
+  if procDef != nil: result.prc = skipPostfix(procDef[namePos]).sym
 
 proc initProcOptions(module: BModule): TOptions =
   result = module.config.options
