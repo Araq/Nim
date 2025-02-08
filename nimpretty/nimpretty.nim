@@ -117,13 +117,10 @@ proc main =
     # --backup was un-documented (rely on git instead).
   var opt = PrettyOptions(indWidth: 0, maxLineLen: 80)
 
-
   for kind, key, val in getopt():
     case kind
     of cmdArgument:
-      if key == "-":
-        isStdin = true
-      elif dirExists(key):
+      if dirExists(key):
         for file in walkDirRec(key, skipSpecial = true):
           if file.endsWith(".nim") or file.endsWith(".nimble"):
             infiles.add(file)
@@ -139,7 +136,8 @@ proc main =
       of "outDir", "outdir": outdir = val
       of "indent": opt.indWidth = parseInt(val)
       of "maxlinelen": opt.maxLineLen = parseInt(val)
-      of "stdin": isStdin = true
+      # "" is equal to '-' as input
+      of "stdin", "": isStdin = true
       else: writeHelp()
     of cmdEnd: assert(false) # cannot happen
 
@@ -152,12 +150,11 @@ proc main =
 
     prettyPrint(path, path, opt)
 
-    var prettyPrinted = readAll(cfile)
+    echo(readAll(cfile))
 
     close(cfile)
     removeFile(path)
 
-    echo(prettyPrinted)
     return
 
   if infiles.len == 0:
