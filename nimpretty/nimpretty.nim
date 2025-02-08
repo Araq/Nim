@@ -16,6 +16,8 @@ import ../compiler / [idents, llstream, ast, msgs, syntaxes, options, pathutils,
 
 import parseopt, strutils, os, sequtils
 
+import std/tempfiles
+
 const
   Version = "0.2"
   Usage = "nimpretty - Nim Pretty Printer Version " & Version & """
@@ -26,6 +28,7 @@ Usage:
 Options:
   --out:file            set the output file (default: overwrite the input file)
   --outDir:dir          set the output dir (default: overwrite the input files)
+  --stdin               read input from stdin and write output to stdout
   --indent:N[=0]        set the number of spaces that is used for indentation
                         --indent:0 means autodetection (default behaviour)
   --maxLineLen:N        set the desired maximum line length (default: 80)
@@ -84,7 +87,7 @@ proc finalCheck(content: string; origAst: PNode): bool {.nimcall.} =
   closeParser(parser)
   result = conf.errorCounter == oldErrors # and goodEnough(newAst, origAst)
 
-proc prettyPrint*(infile, outfile: string, opt: PrettyOptions) =
+proc prettyPrint*(infile, outfile: string; opt: PrettyOptions) =
   var conf = newConfigRef()
   let fileIdx = fileInfoIdx(conf, AbsoluteFile infile)
   let f = splitFile(outfile.expandTilde)
@@ -105,6 +108,8 @@ proc main =
   var infiles = newSeq[string]()
   var outfiles = newSeq[string]()
 
+  var isStdin = false
+
   var backup = false
     # when `on`, create a backup file of input in case
     # `prettyPrint` could overwrite it (note that the backup may happen even
@@ -116,7 +121,9 @@ proc main =
   for kind, key, val in getopt():
     case kind
     of cmdArgument:
-      if dirExists(key):
+      if key == "-":
+        isStdin = true
+      elif dirExists(key):
         for file in walkDirRec(key, skipSpecial = true):
           if file.endsWith(".nim") or file.endsWith(".nimble"):
             infiles.add(file)
@@ -132,8 +139,27 @@ proc main =
       of "outDir", "outdir": outdir = val
       of "indent": opt.indWidth = parseInt(val)
       of "maxlinelen": opt.maxLineLen = parseInt(val)
+      of "stdin": isStdin = true
       else: writeHelp()
     of cmdEnd: assert(false) # cannot happen
+
+  if isStdin:
+    var content = readAll(stdin)
+
+    var (cfile, path) = createTempFile("nimpretty_", ".nim")
+
+    writeFile(path, content)
+
+    prettyPrint(path, path, opt)
+
+    var prettyPrinted = readAll(cfile)
+
+    close(cfile)
+    removeFile(path)
+
+    echo(prettyPrinted)
+    return
+
   if infiles.len == 0:
     quit "[Error] no input file."
 
