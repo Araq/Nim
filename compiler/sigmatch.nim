@@ -2604,34 +2604,50 @@ proc paramTypesMatch*(m: var TCandidate, f, a: PType,
   if arg == nil or arg.kind notin nkSymChoices:
     result = paramTypesMatchAux(m, f, a, arg, argOrig)
   else:
-    # symbol kinds that don't participate in symchoice type disambiguation:
-    let matchSet = {low(TSymKind)..high(TSymKind)} - {skModule, skPackage}
+    # code to resolve symchoices based on type match
+    # should be moved to own proc but will mess up commit history
 
-    var best = -1
+    var best: PNode = nil
+    proc getNode(choice: PNode, i: int, s: PSym): PNode {.inline.} =
+      # return ith node corresponding to symbol s in symchoice,
+      # if s is outside the symchoice, create new symbol node
+      if i < choice.len:
+        result = choice[i]
+      else:
+        result = newSymNode(s, choice.info)
     result = arg
 
     var actingF = f
     if f.kind == tyVarargs:
       if m.calleeSym.kind in {skTemplate, skMacro}:
         actingF = f[0]
-    if actingF.kind in {tyTyped, tyUntyped}:
+    if actingF.kind == tyUntyped:
+      return
+    if actingF.kind == tyTyped:
       var
         bestScope = -1
         counts = 0
-      for i in 0..<arg.len:
-        if arg[i].sym.kind in matchSet:
-          let thisScope = cmpScopes(m.c, arg[i].sym)
+      var o: TOverloadIter = default(TOverloadIter)
+      var currentSym = initOverloadIter(o, m.c, arg)
+      var i = 0
+      while currentSym != nil:
+        block currentMatch:
+          if currentSym.kind in {skModule, skPackage}:
+            break currentMatch
+          let thisScope = cmpScopes(m.c, currentSym)
           if thisScope > bestScope:
-            best = i
+            best = getNode(arg, i, currentSym)
             bestScope = thisScope
             counts = 0
           elif thisScope == bestScope:
             inc counts
-      if best == -1:
+        currentSym = nextOverloadIter(o, m.c, arg)
+        inc i
+      if best == nil:
         result = nil
       elif counts > 0:
         m.genericMatches = 1
-        best = -1
+        best = nil
     else:
       # CAUTION: The order depends on the used hashing scheme. Thus it is
       # incorrect to simply use the first fitting match. However, to implement
@@ -2646,38 +2662,47 @@ proc paramTypesMatch*(m: var TCandidate, f, a: PType,
       y.calleeSym = m.calleeSym
       z.calleeSym = m.calleeSym
 
-      for i in 0..<arg.len:
-        if arg[i].sym.kind in matchSet:
+      var o: TOverloadIter = default(TOverloadIter)
+      var currentSym = initOverloadIter(o, c, arg)
+      var i = 0
+      while currentSym != nil:
+        block currentMatch:
+          if currentSym.kind in {skModule, skPackage}:
+            break currentMatch
           # we can shallow copy the bindings since they won't be used
           shallowCopyCandidate(z, m)
-          z.callee = arg[i].typ
-          if arg[i].sym.kind == skType and z.callee.kind != tyTypeDesc:
+          z.callee = currentSym.typ
+          if currentSym.kind == skType and z.callee.kind != tyTypeDesc:
             # creating the symchoice with the type sym having typedesc type
             # breaks a lot of stuff, so we make the typedesc type here
             # mirrored from `newSymNodeTypeDesc`
-            z.callee = newType(tyTypeDesc, c.idgen, arg[i].sym.owner)
-            z.callee.addSonSkipIntLit(arg[i].sym.typ, c.idgen)
-          if tfUnresolved in z.callee.flags: continue
-          z.calleeSym = arg[i].sym
-          z.calleeScope = cmpScopes(m.c, arg[i].sym)
+            z.callee = newType(tyTypeDesc, c.idgen, currentSym.owner)
+            z.callee.addSonSkipIntLit(currentSym.typ, c.idgen)
+          if tfUnresolved in z.callee.flags:
+            break currentMatch
+          z.calleeSym = currentSym
+          z.calleeScope = cmpScopes(m.c, currentSym)
           # XXX this is still all wrong: (T, T) should be 2 generic matches
           # and  (int, int) 2 exact matches, etc. Essentially you cannot call
           # typeRel here and expect things to work!
-          let r = staticAwareTypeRel(z, f, arg[i])
+          var node = getNode(arg, i, currentSym)
+          let r = staticAwareTypeRel(z, f, node)
           incMatches(z, r, 2)
           if r != isNone:
             z.state = csMatch
             case x.state
             of csEmpty, csNoMatch:
               x = z
-              best = i
+              best = node
             of csMatch:
               let cmp = cmpCandidates(x, z, isFormal=false)
               if cmp < 0:
-                best = i
+                best = node
                 x = z
               elif cmp == 0:
                 y = z           # z is as good as x
+        currentSym = nextOverloadIter(o, c, arg)
+        inc i
 
       if x.state == csEmpty:
         result = nil
@@ -2685,11 +2710,11 @@ proc paramTypesMatch*(m: var TCandidate, f, a: PType,
         if x.state != csMatch:
           internalError(m.c.graph.config, arg.info, "x.state is not csMatch")
         result = nil
-    if best > -1 and result != nil:
+    if best != nil and result != nil:
       # only one valid interpretation found:
-      markUsed(m.c, arg.info, arg[best].sym)
-      onUse(arg.info, arg[best].sym)
-      result = paramTypesMatchAux(m, f, arg[best].typ, arg[best], argOrig)
+      markUsed(m.c, arg.info, best.sym)
+      onUse(arg.info, best.sym)
+      result = paramTypesMatchAux(m, f, best.typ, best, argOrig)
   when false:
     if m.calleeSym != nil and m.calleeSym.name.s == "[]":
       echo m.c.config $ arg.info, " for ", m.calleeSym.name.s, " ", m.c.config $ m.calleeSym.info
