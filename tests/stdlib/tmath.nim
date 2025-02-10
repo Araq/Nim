@@ -545,3 +545,8 @@ when not defined(js) and not defined(danger):
       doAssertRaises(OverflowDefect):
         discard sum(x)
 
+block: # bug #24673
+  let x: Natural = 5
+  let y: Natural = 3
+
+  doAssert divmod(x, y) == (Natural 1, Natural 2)
