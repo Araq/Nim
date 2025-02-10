@@ -55,3 +55,10 @@ block:
       attr: MyBaseObj[string]
 
   var myObj: MyObj
+
+
+proc main =
+  let COMMA = 1
+  doAssert COMMA == 1
+
+main()
