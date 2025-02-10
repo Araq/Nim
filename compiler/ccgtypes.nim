@@ -1024,7 +1024,7 @@ proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDes
       else:
         result = cppNameAsRope & "<"
         for needsComma, a in tt.genericInstParams:
-          if needsComma: result.add(" _NIM_MACRO_COMMA ")
+          if needsComma: result.add(" NIM_MACRO_COMMA ")
           addResultType(a)
         result.add("> ")
       # always call for sideeffects:
