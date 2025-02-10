@@ -261,7 +261,7 @@ __EMSCRIPTEN__
 
 /* ----------------------------------------------------------------------- */
 
-#define COMMA ,
+#define NIM_MACRO_COMMA ,
 
 #include <limits.h>
 #include <stddef.h>
