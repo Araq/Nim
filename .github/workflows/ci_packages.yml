@@ -18,9 +18,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13, ubuntu-22.04-arm]
+        os: [ubuntu-22.04, macos-13]
         cpu: [amd64]
         batch: ["allowed_failures", "0_3", "1_3", "2_3"] # list of `index_num`
+        include:
+          - os: ubuntu-22.04-arm
+            cpu: arm64
+            batch: "0_3"
+          - os: ubuntu-22.04-arm
+            cpu: arm64
+            batch: "1_3"
+          - os: ubuntu-22.04-arm
+            cpu: arm64
+            batch: "2_3"
     name: '${{ matrix.os }} (batch: ${{ matrix.batch }})'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60 # refs bug #18178
