@@ -196,6 +196,19 @@ proc main() =
         let x = none(cstring)
         doAssert x.isNone
         doAssert $x == "none(cstring)"
+    
+    # Store option's value in a variable, and return a bool
+    block:
+      let
+        x = some(1984)
+        y = none(int)
+
+      var a, b: int
+
+      doAssert x.unpack(a)
+      doAssert a == 1984
+
+      doAssert not y.unpack(b)
 
 static: main()
 main()
