@@ -37,3 +37,10 @@ block: # bug #16771
   a.foo b
   doAssert a.n == 42
   doAssert b.n == 1
+
+block:
+  var v = newSeq[int](100)
+  v[99]= 444
+  v.setLen(5)
+  v.setLen(100)
+  doAssert v[99] == 0
