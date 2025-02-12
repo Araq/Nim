@@ -1961,8 +1961,9 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
     if result.isNil:
       result = qualifiedLookUp(c, n, {checkAmbiguity, checkUndeclared})
     if result != nil:
-      markUsed(c, n.info, result)
-      onUse(n.info, result)
+      let symInfo = getCallLineInfo(n)
+      markUsed(c, symInfo, result)
+      onUse(symInfo, result)
 
       # alias syntax, see semSym for skTemplate, skMacro
       if result.kind in {skTemplate, skMacro} and sfNoalias notin result.flags:
