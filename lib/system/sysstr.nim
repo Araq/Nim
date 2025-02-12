@@ -300,7 +300,7 @@ proc setLengthSeq(seq: PGenericSeq, elemSize, elemAlign, newLen: int): PGenericS
     zeroMem(dataPointer(result, elemAlign, elemSize, newLen), (result.len-%newLen) *% elemSize)
   result.len = newLen
 
-proc setLengthSeqV2(s: PGenericSeq, typ: PNimType, newLen: int): PGenericSeq {.
+proc setLengthSeqV2(s: PGenericSeq, typ: PNimType, newLen: int, isTrivial: bool): PGenericSeq {.
     compilerRtl.} =
   sysAssert typ.kind == tySequence, "setLengthSeqV2: type is not a seq"
   if s == nil:
@@ -334,7 +334,7 @@ proc setLengthSeqV2(s: PGenericSeq, typ: PNimType, newLen: int): PGenericSeq {.
       # presence of user defined destructors, the user will expect the cell to be
       # "destroyed" thus creating the same problem. We can destroy the cell in the
       # finalizer of the sequence, but this makes destruction non-deterministic.
-      if typ.base.kind notin tyInt..tyUInt64: # optimization for trivial types
+      if not isTrivial: # optimization for trivial types
         zeroMem(dataPointer(result, elemAlign, elemSize, newLen), (result.len-%newLen) *% elemSize)
     else:
       result = s
