@@ -1047,12 +1047,14 @@ else:
     ## field but kept as raw numbers via `JString`.
     ## If `rawFloats` is true, floating point literals will not be converted to a `JFloat`
     ## field but kept as raw numbers via `JString`.
-    var stream: StringStream
+    var stream: StringStream = nil
     try:
       stream = newStringStream(buffer)
       result = parseJson(stream, "input", rawIntegers, rawFloats)
     finally:
-      stream.close
+      if stream != nil:
+        stream.close()
+        stream = nil  # Clear the reference
 
   proc parseFile*(filename: string): JsonNode =
     ## Parses `file` into a `JsonNode`.
