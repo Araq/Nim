@@ -903,29 +903,45 @@ proc parseJson(p: var JsonParser; rawIntegers, rawFloats: bool, depth = 0): Json
   of tkCurlyLe:
     if depth > DepthLimit:
       raiseParseErr(p, "}")
-    result = newJObject()
-    discard getTok(p)
-    while p.tok != tkCurlyRi:
-      if p.tok != tkString:
-        raiseParseErr(p, "string literal as key")
-      var key = p.a
+    var obj: JsonNode = nil
+    try:
+      obj = newJObject()
       discard getTok(p)
-      eat(p, tkColon)
-      var val = parseJson(p, rawIntegers, rawFloats, depth+1)
-      result[key] = val
-      if p.tok != tkComma: break
-      discard getTok(p)
-    eat(p, tkCurlyRi)
+      while p.tok != tkCurlyRi:
+        if p.tok != tkString:
+          raiseParseErr(p, "string literal as key")
+        var key = p.a
+        discard getTok(p)
+        eat(p, tkColon)
+        var val = parseJson(p, rawIntegers, rawFloats, depth+1)
+        obj[key] = val
+        if p.tok != tkComma: break
+        discard getTok(p)
+      eat(p, tkCurlyRi)
+      result = obj
+      obj = nil
+    except JsonParsingError:
+      if obj != nil:
+        obj = nil
+      raise
   of tkBracketLe:
     if depth > DepthLimit:
       raiseParseErr(p, "]")
-    result = newJArray()
-    discard getTok(p)
-    while p.tok != tkBracketRi:
-      result.add(parseJson(p, rawIntegers, rawFloats, depth+1))
-      if p.tok != tkComma: break
+    var arr: JsonNode = nil
+    try:
+      arr = newJArray()
       discard getTok(p)
-    eat(p, tkBracketRi)
+      while p.tok != tkBracketRi:
+        arr.add(parseJson(p, rawIntegers, rawFloats, depth+1))
+        if p.tok != tkComma: break
+        discard getTok(p)
+      eat(p, tkBracketRi)
+      result = arr
+      arr = nil
+    except JsonParsingError:
+      if arr != nil:
+        arr = nil
+      raise
   of tkError, tkCurlyRi, tkBracketRi, tkColon, tkComma, tkEof:
     raiseParseErr(p, "{")
 
@@ -1047,7 +1063,14 @@ else:
     ## field but kept as raw numbers via `JString`.
     ## If `rawFloats` is true, floating point literals will not be converted to a `JFloat`
     ## field but kept as raw numbers via `JString`.
-    result = parseJson(newStringStream(buffer), "input", rawIntegers, rawFloats)
+    var stream: StringStream = nil
+    try:
+      stream = newStringStream(buffer)
+      result = parseJson(stream, "input", rawIntegers, rawFloats)
+    finally:
+      if stream != nil:
+        stream.close()
+        stream = nil  # Clear the reference
 
   proc parseFile*(filename: string): JsonNode =
     ## Parses `file` into a `JsonNode`.
