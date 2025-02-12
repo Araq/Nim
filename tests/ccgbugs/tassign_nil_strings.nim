@@ -1,7 +1,7 @@
 discard """
   matrix: "--mm:refc"
   output: "Hello"
-  ccodecheck: "\\i@'a = ((NimStringDesc*) NIM_NIL)'"
+  ccodecheck: "\\i@'a_1 = ((NimStringDesc*) NIM_NIL)'"
 """
 
 proc main() =

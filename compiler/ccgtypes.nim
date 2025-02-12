@@ -115,7 +115,7 @@ proc fillLocalName(p: BProc; s: PSym) =
     if s.kind == skTemp:
       # speed up conflict search for temps (these are quite common):
       if counter != 0: result.add "_" & rope(counter+1)
-    elif counter != 0 or isKeyword(s.name) or p.module.g.config.cppDefines.contains(key):
+    elif s.kind != skResult:
       result.add "_" & rope(counter+1)
     p.sigConflicts.inc(key)
     s.loc.snippet = result

@@ -1,5 +1,5 @@
 discard """
-  ccodecheck: "'Result[(i - 0)] = eqdup'"
+  ccodecheck: "'Result[(i_1 - 0)] = eqdup'"
 """
 
 # issue #24626
