@@ -2020,6 +2020,27 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
       localError(c.config, n.info, "identifier expected")
       result = errorSym(c, n)
 
+proc identSymToType(c: PContext; n: PNode; prev: PType; s: PSym): PType =
+  assert s.typ != nil
+  if s.kind == skParam and s.typ.kind == tyTypeDesc:
+    internalAssert c.config, s.typ.base.kind != tyNone
+    result = s.typ.base
+  elif prev == nil:
+    result = s.typ
+  else:
+    let alias = maybeAliasType(c, s.typ, prev)
+    if alias != nil:
+      result = alias
+    elif prev.kind == tyGenericBody:
+      result = s.typ
+    else:
+      assignType(prev, s.typ)
+      # bugfix: keep the fresh id for aliases to integral types:
+      if s.typ.kind notin {tyBool, tyChar, tyInt..tyInt64, tyFloat..tyFloat128,
+                            tyUInt..tyUInt64}:
+        prev.itemId = s.typ.itemId
+      result = prev
+
 proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
   result = nil
   inc c.inTypeContext
@@ -2196,50 +2217,16 @@ proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
       else: result = semGeneric(c, n, s, prev)
     else: result = semGeneric(c, n, s, prev)
   of nkDotExpr:
-    let typeExpr = semExpr(c, n)
-    if typeExpr.typ.isNil:
-      localError(c.config, n.info, "object constructor needs an object type;" &
-          " for named arguments use '=' instead of ':'")
-      result = errorType(c)
-    elif typeExpr.typ.kind == tyFromExpr:
-      result = typeExpr.typ
-    elif typeExpr.typ.kind != tyTypeDesc:
-      localError(c.config, n.info, errTypeExpected)
-      result = errorType(c)
+    var s = qualifiedLookUp(c, n, {})
+    if s != nil:
+      s = semTypeIdent(c, n)
+    if s == nil or s.typ == nil:
+      result = semTypeExpr(c, n, prev)
     else:
-      result = typeExpr.typ.base
-      if result.isMetaType and
-         result.kind != tyUserTypeClass:
-           # the dot expression may refer to a concept type in
-           # a different module. allow a normal alias then.
-        let preprocessed = semGenericStmt(c, n)
-        result = makeTypeFromExpr(c, preprocessed.copyTree)
-      else:
-        let alias = maybeAliasType(c, result, prev)
-        if alias != nil: result = alias
+      result = identSymToType(c, n, prev, s)
   of nkIdent, nkAccQuoted:
-    var s = semTypeIdent(c, n)
-    if s.typ == nil:
-      if s.kind != skError: localError(c.config, n.info, errTypeExpected)
-      result = newOrPrevType(tyError, prev, c)
-    elif s.kind == skParam and s.typ.kind == tyTypeDesc:
-      internalAssert c.config, s.typ.base.kind != tyNone
-      result = s.typ.base
-    elif prev == nil:
-      result = s.typ
-    else:
-      let alias = maybeAliasType(c, s.typ, prev)
-      if alias != nil:
-        result = alias
-      elif prev.kind == tyGenericBody:
-        result = s.typ
-      else:
-        assignType(prev, s.typ)
-        # bugfix: keep the fresh id for aliases to integral types:
-        if s.typ.kind notin {tyBool, tyChar, tyInt..tyInt64, tyFloat..tyFloat128,
-                             tyUInt..tyUInt64}:
-          prev.itemId = s.typ.itemId
-        result = prev
+    let s = semTypeIdent(c, n)
+    result = identSymToType(c, n, prev, s)
   of nkSym:
     let s = getGenSym(c, n.sym)
     if s.typ != nil and (s.kind == skType or s.typ.kind == tyTypeDesc):
