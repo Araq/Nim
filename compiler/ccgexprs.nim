@@ -2198,6 +2198,13 @@ proc genArrayLen(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
     else: putIntoDest(p, d, e, cIntValue(lengthOrd(p.config, typ)))
   else: internalError(p.config, e.info, "genArrayLen()")
 
+proc isTrivialTypesToSnippet(t: PType): Snippet =
+  if containsGarbageCollectedRef(t) or
+                     hasDestructor(t):
+    result = NimFalse
+  else:
+    result = NimTrue
+
 proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
   if optSeqDestructors in p.config.globalOptions:
     e[1] = makeAddr(e[1], p.module.idgen)
@@ -2220,7 +2227,8 @@ proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
     pExpr = cIfExpr(ra, cAddr(derefField(ra, "Sup")), NimNil)
   else:
     pExpr = ra
-  call.snippet = cCast(rt, cgCall(p, "setLengthSeqV2", pExpr, rti, rb))
+  call.snippet = cCast(rt, cgCall(p, "setLengthSeqV2", pExpr, rti, rb,
+          isTrivialTypesToSnippet(t.skipTypes(abstractInst)[0])))
 
   genAssignment(p, a, call, {})
   gcUsage(p.config, e)
