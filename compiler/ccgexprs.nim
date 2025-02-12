@@ -2201,9 +2201,9 @@ proc genArrayLen(p: BProc, e: PNode, d: var TLoc, op: TMagic) =
 proc isTrivialTypesToSnippet(t: PType): Snippet =
   if containsGarbageCollectedRef(t) or
                      hasDestructor(t):
-    result = NIM_FALSE
+    result = NimFalse
   else:
-    result = NIM_TRUE
+    result = NimTrue
 
 proc genSetLengthSeq(p: BProc, e: PNode, d: var TLoc) =
   if optSeqDestructors in p.config.globalOptions:
