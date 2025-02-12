@@ -919,10 +919,10 @@ proc parseJson(p: var JsonParser; rawIntegers, rawFloats: bool, depth = 0): Json
         discard getTok(p)
       eat(p, tkCurlyRi)
       result = obj
+      obj = nil
     except JsonParsingError:
       if obj != nil:
-        # Ensure proper cleanup of the object if parsing fails
-        GC_unref(obj)
+        obj = nil
       raise
   of tkBracketLe:
     if depth > DepthLimit:
@@ -937,9 +937,10 @@ proc parseJson(p: var JsonParser; rawIntegers, rawFloats: bool, depth = 0): Json
         discard getTok(p)
       eat(p, tkBracketRi)
       result = arr
+      arr = nil
     except JsonParsingError:
       if arr != nil:
-        GC_unref(arr)
+        arr = nil
       raise
   of tkError, tkCurlyRi, tkBracketRi, tkColon, tkComma, tkEof:
     raiseParseErr(p, "{")
