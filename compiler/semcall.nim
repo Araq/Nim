@@ -56,7 +56,7 @@ proc initCandidateSymbols(c: PContext, headSymbol: PNode,
           proc name[T: static proc()]() = T()
           name[proc() = echo"hello"]()
       ]#
-      for paramSym in searchInScopesAllCandidatesFilterBy(c, symx.name, {skConst}):
+      for paramSym in searchScopesAll(c, symx.name, {skConst}):
         let paramTyp = paramSym.typ
         if paramTyp.n.kind == nkSym and paramTyp.n.sym.kind in filter:
           result.add((paramTyp.n.sym, o.lastOverloadScope))
@@ -68,6 +68,39 @@ proc initCandidateSymbols(c: PContext, headSymbol: PNode,
     alt = initCandidate(c, result[0].s, initialBinding,
                   result[0].scope, diagnostics)
     best.state = csNoMatch
+
+proc isAttachableRoutineTo(prc: PSym, arg: PType): bool =
+  result = false
+  if arg.owner != prc.owner: return false
+  for i in 1 ..< prc.typ.len:
+    if prc.typ.n[i].kind == nkSym and prc.typ.n[i].sym.ast != nil:
+      # has default value, parameter is not considered in type attachment
+      continue
+    let t = nominalRoot(prc.typ[i])
+    if t != nil and t.itemId == arg.itemId:
+      # parameter `i` is a nominal type in this module
+      # attachable if the nominal root `t` has the same id as `arg`
+      return true
+
+proc addTypeBoundSymbols(graph: ModuleGraph, arg: PType, name: PIdent,
+                         filter: TSymKinds, marker: var IntSet,
+                         syms: var seq[tuple[s: PSym, scope: int]]) =
+  # add type bound ops for `name` based on the argument type `arg`
+  if arg != nil:
+    # argument must be typed first, meaning arguments always
+    # matching `untyped` are ignored
+    let t = nominalRoot(arg)
+    if t != nil and t.owner.kind == skModule:
+      # search module for routines attachable to `t`
+      let module = t.owner
+      var iter = default(ModuleIter)
+      var s = initModuleIter(iter, graph, module, name)
+      while s != nil:
+        if s.kind in filter and s.isAttachableRoutineTo(t) and
+            not containsOrIncl(marker, s.id):
+          # least priority scope, less than explicit imports:
+          syms.add((s, -2))
+        s = nextModuleIter(iter, graph)
 
 proc pickBestCandidate(c: PContext, headSymbol: PNode,
                        n, orig: PNode,
@@ -88,9 +121,22 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
                                   best, alt, o, diagnosticsFlag)
   if len(syms) == 0:
     return
+  let allowTypeBoundOps = typeBoundOps in c.features and
+    # qualified or bound symbols cannot refer to type bound ops
+    headSymbol.kind in {nkIdent, nkAccQuoted, nkOpenSymChoice, nkOpenSym}
+  var symMarker = initIntSet()
+  for s in syms:
+    symMarker.incl(s.s.id)
   # current overload being considered
   var sym = syms[0].s
+  let name = sym.name
   var scope = syms[0].scope
+
+  if allowTypeBoundOps:
+    for a in 1 ..< n.len:
+      # for every already typed argument, add type bound ops
+      let arg = n[a]
+      addTypeBoundSymbols(c.graph, arg.typ, name, filter, symMarker, syms)
 
   # starts at 1 because 0 is already done with setup, only needs checking
   var nextSymIndex = 1
@@ -105,6 +151,14 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
     if c.currentScope.symbols.counter == symCount:
       # may introduce new symbols with caveats described in recalc branch
       matches(c, n, orig, z)
+
+      if allowTypeBoundOps:
+        # this match may have given some arguments new types,
+        # in which case add their type bound ops as well
+        # type bound ops of arguments always matching `untyped` are not considered
+        for x in z.newlyTypedOperands:
+          let arg = n[x]
+          addTypeBoundSymbols(c.graph, arg.typ, name, filter, symMarker, syms)
 
       if z.state == csMatch:
         # little hack so that iterators are preferred over everything else:
@@ -136,7 +190,14 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
       # before any further candidate init and compare. SLOW, but rare case.
       syms = initCandidateSymbols(c, headSymbol, initialBinding, filter,
                                   best, alt, o, diagnosticsFlag)
-
+      symMarker = initIntSet()
+      for s in syms:
+        symMarker.incl(s.s.id)
+      if allowTypeBoundOps:
+        for a in 1 ..< n.len:
+          # for every already typed argument, add type bound ops
+          let arg = n[a]
+          addTypeBoundSymbols(c.graph, arg.typ, name, filter, symMarker, syms)
       # reset counter because syms may be in a new order
       symCount = c.currentScope.symbols.counter
       nextSymIndex = 0
@@ -636,7 +697,7 @@ proc instGenericConvertersArg*(c: PContext, a: PNode, x: TCandidate) =
     if s.isGenericRoutineStrict:
       let finalCallee = generateInstance(c, s, x.bindings, a.info)
       a[0].sym = finalCallee
-      a[0].typ = finalCallee.typ
+      a[0].typ() = finalCallee.typ
       #a.typ = finalCallee.typ.returnType
 
 proc instGenericConvertersSons*(c: PContext, n: PNode, x: TCandidate) =
@@ -671,13 +732,13 @@ proc inferWithMetatype(c: PContext, formal: PType,
     # This almost exactly replicates the steps taken by the compiler during
     # param matching. It performs an embarrassing amount of back-and-forth
     # type jugling, but it's the price to pay for consistency and correctness
-    result.typ = generateTypeInstance(c, m.bindings, arg.info,
+    result.typ() = generateTypeInstance(c, m.bindings, arg.info,
                                       formal.skipTypes({tyCompositeTypeClass}))
   else:
     typeMismatch(c.config, arg.info, formal, arg.typ, arg)
     # error correction:
     result = copyTree(arg)
-    result.typ = formal
+    result.typ() = formal
 
 proc updateDefaultParams(c: PContext, call: PNode) =
   # In generic procs, the default parameter may be unique for each
@@ -700,7 +761,7 @@ proc updateDefaultParams(c: PContext, call: PNode) =
         pushInfoContext(c.config, call.info, call[0].sym.detailedInfo)
         typeMismatch(c.config, def.info, formal.typ, def.typ, formal.ast)
         popInfoContext(c.config)
-        def.typ = errorType(c)
+        def.typ() = errorType(c)
       call[i] = def
 
 proc getCallLineInfo(n: PNode): TLineInfo =
@@ -784,7 +845,7 @@ proc semResolvedCall(c: PContext, x: var TCandidate,
     result = x.call
     result[0] = newSymNode(finalCallee, getCallLineInfo(result[0]))
     if containsGenericType(result.typ):
-      result.typ = newTypeS(tyError, c)
+      result.typ() = newTypeS(tyError, c)
       incl result.typ.flags, tfCheckedForDestructor
     return
   let gp = finalCallee.ast[genericParamsPos]
@@ -811,7 +872,7 @@ proc semResolvedCall(c: PContext, x: var TCandidate,
           # this node will be used in template substitution,
           # pretend this is an untyped node and let regular sem handle the type
           # to prevent problems where a generic parameter is treated as a value
-          tn.typ = nil
+          tn.typ() = nil
           x.call.add tn
         else:
           internalAssert c.config, false
@@ -821,7 +882,7 @@ proc semResolvedCall(c: PContext, x: var TCandidate,
   markConvertersUsed(c, result)
   result[0] = newSymNode(finalCallee, getCallLineInfo(result[0]))
   if finalCallee.magic notin {mArrGet, mArrPut}:
-    result.typ = finalCallee.typ.returnType
+    result.typ() = finalCallee.typ.returnType
   updateDefaultParams(c, result)
 
 proc canDeref(n: PNode): bool {.inline.} =
@@ -830,7 +891,7 @@ proc canDeref(n: PNode): bool {.inline.} =
 
 proc tryDeref(n: PNode): PNode =
   result = newNodeI(nkHiddenDeref, n.info)
-  result.typ = n.typ.skipTypes(abstractInst)[0]
+  result.typ() = n.typ.skipTypes(abstractInst)[0]
   result.add n
 
 proc semOverloadedCall(c: PContext, n, nOrig: PNode,
@@ -849,7 +910,7 @@ proc semOverloadedCall(c: PContext, n, nOrig: PNode,
   else:
     if c.inGenericContext > 0 and c.matchedConcept == nil:
       result = semGenericStmt(c, n)
-      result.typ = makeTypeFromExpr(c, result.copyTree)
+      result.typ() = makeTypeFromExpr(c, result.copyTree)
     elif efExplain notin flags:
       # repeat the overload resolution,
       # this time enabling all the diagnostic output (this should fail again)
@@ -864,7 +925,7 @@ proc explicitGenericInstError(c: PContext; n: PNode): PNode =
   localError(c.config, getCallLineInfo(n), errCannotInstantiateX % renderTree(n))
   result = n
 
-proc explicitGenericSym(c: PContext, n: PNode, s: PSym): PNode =
+proc explicitGenericSym(c: PContext, n: PNode, s: PSym, errors: var CandidateErrors, doError: bool): PNode =
   if s.kind in {skTemplate, skMacro}:
     internalError c.config, n.info, "cannot get explicitly instantiated symbol of " &
       (if s.kind == skTemplate: "template" else: "macro")
@@ -874,6 +935,11 @@ proc explicitGenericSym(c: PContext, n: PNode, s: PSym): PNode =
   if m.state != csMatch:
     # state is csMatch only if *all* generic params were matched,
     # including implicit parameters
+    if doError:
+      errors.add(CandidateError(
+        sym: s,
+        firstMismatch: m.firstMismatch,
+        diagnostics: m.diagnostics))
     return nil
   var newInst = generateInstance(c, s, m.bindings, n.info)
   newInst.typ.flags.excl tfUnresolved
@@ -893,46 +959,57 @@ proc setGenericParams(c: PContext, n, expectedParams: PNode) =
           nil
       e = semExprWithType(c, n[i], expectedType = constraint)
     if e.typ == nil:
-      n[i].typ = errorType(c)
+      n[i].typ() = errorType(c)
     else:
-      n[i].typ = e.typ.skipTypes({tyTypeDesc})
+      n[i].typ() = e.typ.skipTypes({tyTypeDesc})
 
-proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym): PNode =
+proc explicitGenericInstantiation(c: PContext, n: PNode, s: PSym, doError: bool): PNode =
   assert n.kind == nkBracketExpr
   setGenericParams(c, n, s.ast[genericParamsPos])
   var s = s
   var a = n[0]
+  var errors: CandidateErrors = @[]
   if a.kind == nkSym:
     # common case; check the only candidate has the right
     # number of generic type parameters:
-    if s.ast[genericParamsPos].safeLen != n.len-1:
-      let expected = s.ast[genericParamsPos].safeLen
-      localError(c.config, getCallLineInfo(n), errGenerated, "cannot instantiate: '" & renderTree(n) &
-         "'; got " & $(n.len-1) & " typeof(s) but expected " & $expected)
-      return n
-    result = explicitGenericSym(c, n, s)
-    if result == nil: result = explicitGenericInstError(c, n)
+    result = explicitGenericSym(c, n, s, errors, doError)
+    if result == nil:
+      if c.inGenericContext > 0:
+        # same as in semOverloadedCall, make expression untyped,
+        # may have failed match due to unresolved types
+        result = semGenericStmt(c, n)
+        result.typ() = makeTypeFromExpr(c, result.copyTree)
+      elif doError:
+        notFoundError(c, n, errors)
   elif a.kind in {nkClosedSymChoice, nkOpenSymChoice}:
     # choose the generic proc with the proper number of type parameters.
-    # XXX I think this could be improved by reusing sigmatch.paramTypesMatch.
-    # It's good enough for now.
     result = newNodeI(a.kind, getCallLineInfo(n))
     for i in 0..<a.len:
       var candidate = a[i].sym
       if candidate.kind in {skProc, skMethod, skConverter,
                             skFunc, skIterator}:
-        # it suffices that the candidate has the proper number of generic
-        # type parameters:
-        if candidate.ast[genericParamsPos].safeLen == n.len-1:
-          let x = explicitGenericSym(c, n, candidate)
-          if x != nil: result.add(x)
+        let x = explicitGenericSym(c, n, candidate, errors, doError)
+        if x != nil: result.add(x)
+        elif c.inGenericContext > 0:
+          # same as in semOverloadedCall, make expression untyped,
+          # may have failed match due to unresolved types
+          # any failing match stops building the symchoice for correctness,
+          # can also make it untyped from the start
+          result = semGenericStmt(c, n)
+          result.typ() = makeTypeFromExpr(c, result.copyTree)
+          return
     # get rid of nkClosedSymChoice if not ambiguous:
-    if result.len == 1 and a.kind == nkClosedSymChoice:
-      result = result[0]
-    elif result.len == 0: result = explicitGenericInstError(c, n)
-    # candidateCount != 1: return explicitGenericInstError(c, n)
+    if result.len == 0:
+      result = nil
+      if doError:
+        notFoundError(c, n, errors)
   else:
-    result = explicitGenericInstError(c, n)
+    # probably unreachable: we are trying to instantiate `a` which is not
+    # a sym/symchoice
+    if doError:
+      result = explicitGenericInstError(c, n)
+    else:
+      result = nil
 
 proc searchForBorrowProc(c: PContext, startScope: PScope, fn: PSym): tuple[s: PSym, state: TBorrowState] =
   # Searches for the fn in the symbol table. If the parameter lists are suitable

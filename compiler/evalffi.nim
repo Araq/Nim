@@ -275,7 +275,7 @@ proc unpackObject(conf: ConfigRef, x: pointer, typ: PType, n: PNode): PNode =
   # the nkPar node:
   if n.isNil:
     result = newNode(nkTupleConstr)
-    result.typ = typ
+    result.typ() = typ
     if typ.n.isNil:
       internalError(conf, "cannot unpack unnamed tuple")
     unpackObjectAdd(conf, x, typ.n, result)
@@ -298,7 +298,7 @@ proc unpackObject(conf: ConfigRef, x: pointer, typ: PType, n: PNode): PNode =
 proc unpackArray(conf: ConfigRef, x: pointer, typ: PType, n: PNode): PNode =
   if n.isNil:
     result = newNode(nkBracket)
-    result.typ = typ
+    result.typ() = typ
     newSeq(result.sons, lengthOrd(conf, typ).toInt)
   else:
     result = n
@@ -319,7 +319,7 @@ proc unpack(conf: ConfigRef, x: pointer, typ: PType, n: PNode): PNode =
   template aw(k, v, field: untyped): untyped =
     if n.isNil:
       result = newNode(k)
-      result.typ = typ
+      result.typ() = typ
     else:
       # check we have the right field:
       result = n
@@ -333,12 +333,12 @@ proc unpack(conf: ConfigRef, x: pointer, typ: PType, n: PNode): PNode =
   template setNil() =
     if n.isNil:
       result = newNode(nkNilLit)
-      result.typ = typ
+      result.typ() = typ
     else:
       reset n[]
       result = n
       result[] = TNode(kind: nkNilLit)
-      result.typ = typ
+      result.typ() = typ
 
   template awi(kind, v: untyped): untyped = aw(kind, v, intVal)
   template awf(kind, v: untyped): untyped = aw(kind, v, floatVal)
@@ -427,7 +427,7 @@ proc fficast*(conf: ConfigRef, x: PNode, destTyp: PType): PNode =
     # cast through a pointer needs a new inner object:
     let y = if x.kind == nkRefTy: newNodeI(nkRefTy, x.info, 1)
             else: x.copyTree
-    y.typ = x.typ
+    y.typ() = x.typ
     result = unpack(conf, a, destTyp, y)
     dealloc a
 
@@ -481,7 +481,7 @@ proc callForeignFunction*(conf: ConfigRef, fn: PNode, fntyp: PType,
     if aTyp.isNil:
       internalAssert conf, i+1 < fntyp.len
       aTyp = fntyp[i+1]
-      args[i+start].typ = aTyp
+      args[i+start].typ() = aTyp
     sig[i] = mapType(conf, aTyp)
     if sig[i].isNil: globalError(conf, info, "cannot map FFI type")
 

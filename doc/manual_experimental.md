@@ -1919,136 +1919,6 @@ restrictions / changes:
   yet performed for ordinary slices outside of a `parallel` section.
 
 
-Strict definitions and `out` parameters
-=======================================
-
-With `experimental: "strictDefs"` *every* local variable must be initialized explicitly before it can be used:
-
-  ```nim
-  {.experimental: "strictDefs".}
-
-  proc test =
-    var s: seq[string]
-    s.add "abc" # invalid!
-
-  ```
-
-Needs to be written as:
-
-  ```nim
-  {.experimental: "strictDefs".}
-
-  proc test =
-    var s: seq[string] = @[]
-    s.add "abc" # valid!
-
-  ```
-
-A control flow analysis is performed in order to prove that a variable has been written to
-before it is used. Thus the following is valid:
-
-  ```nim
-  {.experimental: "strictDefs".}
-
-  proc test(cond: bool) =
-    var s: seq[string]
-    if cond:
-      s = @["y"]
-    else:
-      s = @[]
-    s.add "abc" # valid!
-  ```
-
-In this example every path does set `s` to a value before it is used.
-
-  ```nim
-  {.experimental: "strictDefs".}
-
-  proc test(cond: bool) =
-    let s: seq[string]
-    if cond:
-      s = @["y"]
-    else:
-      s = @[]
-  ```
-
-With `experimental: "strictDefs"`, `let` statements are allowed to not have an initial value, but every path should set `s` to a value before it is used.
-
-
-`out` parameters
-----------------
-
-An `out` parameter is like a `var` parameter but it must be written to before it can be used:
-
-  ```nim
-  proc myopen(f: out File; name: string): bool =
-    f = default(File)
-    result = open(f, name)
-  ```
-
-While it is usually the better style to use the return type in order to return results API and ABI
-considerations might make this infeasible. Like for `var T` Nim maps `out T` to a hidden pointer.
-For example POSIX's `stat` routine can be wrapped as:
-
-  ```nim
-  proc stat*(a1: cstring, a2: out Stat): cint {.importc, header: "<sys/stat.h>".}
-  ```
-
-When the implementation of a routine with output parameters is analysed, the compiler
-checks that every path before the (implicit or explicit) return does set every output
-parameter:
-
-  ```nim
-  proc p(x: out int; y: out string; cond: bool) =
-    x = 4
-    if cond:
-      y = "abc"
-    # error: not every path initializes 'y'
-  ```
-
-
-Out parameters and exception handling
--------------------------------------
-
-The analysis should take exceptions into account (but currently does not):
-
-  ```nim
-  proc p(x: out int; y: out string; cond: bool) =
-    x = canRaise(45)
-    y = "abc" # <-- error: not every path initializes 'y'
-  ```
-
-Once the implementation takes exceptions into account it is easy enough to
-use `outParam = default(typeof(outParam))` in the beginning of the proc body.
-
-Out parameters and inheritance
-------------------------------
-
-It is not valid to pass an lvalue of a supertype to an `out T` parameter:
-
-  ```nim
-  type
-    Superclass = object of RootObj
-      a: int
-    Subclass = object of Superclass
-      s: string
-
-  proc init(x: out Superclass) =
-    x = Superclass(a: 8)
-
-  var v: Subclass
-  init v
-  use v.s # the 's' field was never initialized!
-  ```
-
-However, in the future this could be allowed and provide a better way to write object
-constructors that take inheritance into account.
-
-
-**Note**: The implementation of "strict definitions" and "out parameters" is experimental but the concept
-is solid and it is expected that eventually this mode becomes the default in later versions.
-
-
 Strict case objects
 ===================
 
@@ -2667,3 +2537,114 @@ proc nothing() =
 ```
 
 The current C(C++) backend implementation cannot generate code for gcc and for vcc at the same time. For example, `{.asmSyntax: "vcc".}` with the ICC compiler will not generate code with intel asm syntax, even though ICC can use both gcc-like and vcc-like asm.
+
+Type-bound overloads
+====================
+
+With the experimental option `--experimental:typeBoundOps`, each "root"
+nominal type (namely `object`, `enum`, `distinct`, direct `Foo = ref object`
+types as well as their generic versions) can have operations attached to it.
+Exported top-level routines declared in the same scope as a nominal type
+with a parameter having a type directly deriving from that nominal type (i.e.
+with `var`/`sink`/`typedesc` modifiers or being in a generic constraint)
+are considered "attached" to the respective nominal type.
+This applies to every parameter regardless of placement.
+
+When a call to a symbol is openly overloaded and overload matching starts,
+for all arguments in the call that have already undergone type checking,
+routines with the same name attached to the root nominal type (if it exists)
+of each given argument are added as a candidate to the overload match.
+This also happens as arguments gradually get typed after every match to an overload.
+This is so that the only overloads considered out of scope are
+attached to the types of the given arguments, and that matches to
+`untyped` or missing parameters are not influenced by outside overloads.
+
+If no overloads with a given name are in scope, then overload matching
+will not begin, and so type-bound overloads are not considered for that name.
+Similarly, if the only overloads with a given name require a parameter to be
+`untyped` or missing, then type-bound overloads will not be considered for
+the argument in that position.
+Generally this means that a "base" overload with a compliant signature should
+be in scope so that type-bound overloads can be used.
+
+In the case of ambiguity between distinct local/imported and type-bound symbols
+in overload matching, type-bound symbols are considered as a less specific
+scope than imports.
+
+An example with the `hash` interface in the standard library is as follows:
+
+```nim
+# objs.nim
+import std/hashes
+
+type
+  Obj* = object
+    x*, y*: int
+    z*: string # to be ignored for equality
+
+proc `==`*(a, b: Obj): bool =
+  a.x == b.x and a.y == b.y
+
+proc hash*(a: Obj): Hash =
+  $!(hash(a.x) &! hash(a.y))
+
+# here both `==` and `hash` are attached to Obj
+# 1. they are both exported
+# 2. they are in the same scope as Obj
+# 3. they have parameters with types directly deriving from Obj
+# 4. Obj is nominal
+```
+
+```nim
+# main.nim
+{.experimental: "typeBoundOps".}
+from objs import Obj # objs.hash, objs.`==` not imported
+import std/tables
+# tables use `hash`, only using the overloads in `std/hashes` and
+# the ones in instantiation scope (in this case, there are none)
+
+var t: Table[Obj, int]
+# because tables use `hash` and `==` in a compliant way,
+# the overloads bound to Obj are also considered, and in this case match best
+t[Obj(x: 3, y: 4, z: "debug")] = 34
+# if `hash` for all objects as in `std/hashes` was used, this would error: 
+echo t[Obj(x: 3, y: 4, z: "ignored")] # 34
+```
+
+Another example, this time with `$` and indirect imports:
+
+```nim
+# foo.nim
+type Foo* = object
+  x*, y*: int
+
+proc `$`*(f: Foo): string =
+  "Foo(" & $f.x & ", " & $f.y & ")"
+```
+
+```nim
+# bar.nim
+import foo
+
+proc makeFoo*(x, y: int): Foo =
+  Foo(x: x, y: y)
+
+proc useFoo*(f: Foo) =
+  echo "used: ", f # directly calls `foo.$` from scope
+```
+
+```nim
+# debugger.nim
+proc debug*[T](obj: T) =
+  echo "debugging: ", obj # calls generic `$`
+```
+
+```nim
+# main.nim
+{.experimental: "typeBoundOps".}
+import bar, debugger # `foo` not imported, so `foo.$` not in scope
+
+let f = makeFoo(123, 456)
+useFoo(f) # used: Foo(123, 456)
+debug(f) # debugging: Foo(123, 456)
+```

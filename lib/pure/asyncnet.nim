@@ -850,7 +850,7 @@ proc sendTo*(socket: AsyncSocket, address: string, port: Port, data: string,
   var
     it = aiList
     success = false
-    lastException: ref Exception
+    lastException: ref Exception = nil
 
   while it != nil:
     let fut = sendTo(socket.fd.AsyncFD, cstring(data), len(data), it.ai_addr,
@@ -915,16 +915,16 @@ proc recvFrom*(socket: AsyncSocket, data: FutureVar[string], size: int,
          "Cannot `recvFrom` on a TCP socket. Use `recv` or `recvInto` instead")
   assert(not socket.closed, "Cannot `recvFrom` on a closed socket")
   assert(size == len(data.mget()),
-         "`date` was not initialized correctly. `size` != `len(data.mget())`")
+         "`data` was not initialized correctly. `size` != `len(data.mget())`")
   assert(46 == len(address.mget()),
          "`address` was not initialized correctly. 46 != `len(address.mget())`")
 
   case socket.domain
   of AF_INET6:
-    var sAddr: Sockaddr_in6
+    var sAddr: Sockaddr_in6 = default(Sockaddr_in6)
     adaptRecvFromToDomain(AF_INET6)
   of AF_INET:
-    var sAddr: Sockaddr_in
+    var sAddr: Sockaddr_in = default(Sockaddr_in)
     adaptRecvFromToDomain(AF_INET)
   else:
     raise newException(ValueError, "Unknown socket address family")

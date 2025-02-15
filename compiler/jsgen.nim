@@ -1585,15 +1585,8 @@ proc genAddr(p: PProc, n: PNode, r: var TCompRes) =
         else: internalError(p.config, n[0].info, "expr(nkBracketExpr, " & $kindOfIndexedExpr & ')')
     of nkObjDownConv:
       gen(p, n[0], r)
-    of nkHiddenDeref:
+    of nkHiddenDeref, nkDerefExpr:
       gen(p, n[0], r)
-    of nkDerefExpr:
-      var x = n[0]
-      if n.kind == nkHiddenAddr:
-        x = n[0][0]
-        if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-          x.typ = n.typ
-      gen(p, x, r)
     of nkHiddenAddr:
       gen(p, n[0], r)
     of nkConv:
@@ -2458,6 +2451,7 @@ proc genMagic(p: PProc, n: PNode, r: var TCompRes) =
   of mMulSet: binaryExpr(p, n, r, "SetMul", "SetMul($1, $2)")
   of mPlusSet: binaryExpr(p, n, r, "SetPlus", "SetPlus($1, $2)")
   of mMinusSet: binaryExpr(p, n, r, "SetMinus", "SetMinus($1, $2)")
+  of mXorSet: binaryExpr(p, n, r, "SetXor", "SetXor($1, $2)")
   of mIncl: binaryExpr(p, n, r, "", "$1[$2] = true")
   of mExcl: binaryExpr(p, n, r, "", "delete $1[$2]")
   of mInSet:

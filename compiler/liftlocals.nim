@@ -32,12 +32,12 @@ proc interestingVar(s: PSym): bool {.inline.} =
 proc lookupOrAdd(c: var Ctx; s: PSym; info: TLineInfo): PNode =
   let field = addUniqueField(c.objType, s, c.cache, c.idgen)
   var deref = newNodeI(nkHiddenDeref, info)
-  deref.typ = c.objType
+  deref.typ() = c.objType
   deref.add(newSymNode(c.partialParam, info))
   result = newNodeI(nkDotExpr, info)
   result.add(deref)
   result.add(newSymNode(field))
-  result.typ = field.typ
+  result.typ() = field.typ
 
 proc liftLocals(n: PNode; i: int; c: var Ctx) =
   let it = n[i]

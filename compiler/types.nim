@@ -102,6 +102,9 @@ const
   # typedescX is used if we're sure tyTypeDesc should be included (or skipped)
   typedescPtrs* = abstractPtrs + {tyTypeDesc}
   typedescInst* = abstractInst + {tyTypeDesc, tyOwned, tyUserTypeClass}
+  
+  # incorrect definition of `[]` and `[]=` for these types in system.nim
+  arrPutGetMagicApplies* = {tyArray, tyOpenArray, tyString, tySequence, tyCstring, tyTuple}
 
 proc invalidGenericInst*(f: PType): bool =
   result = f.kind == tyGenericInst and skipModifier(f) == nil
@@ -1201,17 +1204,19 @@ proc sameChildrenAux(a, b: PType, c: var TSameTypeClosure): bool =
     if not result: return
 
 proc isGenericAlias*(t: PType): bool =
-  return t.kind == tyGenericInst and t.skipModifier.kind == tyGenericInst
+  return t.kind == tyGenericInst and t.skipModifier.skipTypes({tyAlias}).kind == tyGenericInst
 
 proc genericAliasDepth*(t: PType): int =
   result = 0
-  var it = t
+  var it = t.skipTypes({tyAlias})
   while it.isGenericAlias:
-    it = it.skipModifier
+    it = it.skipModifier.skipTypes({tyAlias})
     inc result
 
 proc skipGenericAlias*(t: PType): PType =
-  return if t.isGenericAlias: t.skipModifier else: t
+  result = t.skipTypes({tyAlias})
+  if result.isGenericAlias:
+    result = result.skipModifier.skipTypes({tyAlias})
 
 proc sameFlags*(a, b: PType): bool {.inline.} =
   result = eqTypeFlags*a.flags == eqTypeFlags*b.flags
@@ -1304,16 +1309,34 @@ proc sameTypeAux(x, y: PType, c: var TSameTypeClosure): bool =
       cycleCheck()
       result = sameTypeAux(a.skipModifier, b.skipModifier, c)
   of tyObject:
-    withoutShallowFlags:
+    result = sameFlags(a, b)
+    if result:
       ifFastObjectTypeCheckFailed(a, b):
         cycleCheck()
-        result = sameObjectStructures(a, b, c) and sameFlags(a, b)
+        # should be generic, and belong to the same generic head type:
+        assert a.typeInst != nil, "generic object " & $a & " has no typeInst"
+        assert b.typeInst != nil, "generic object " & $b & " has no typeInst"
+        if result:
+          withoutShallowFlags:
+            # this is required because of generic `ref object`s,
+            # the value of their dereferences are not wrapped in `tyGenericInst`,
+            # so we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
   of tyDistinct:
     cycleCheck()
     if c.cmp == dcEq:
-      if sameFlags(a, b):
+      result = sameFlags(a, b)
+      if result:
         ifFastObjectTypeCheckFailed(a, b):
-          result = sameTypeAux(a.elementType, b.elementType, c)
+          # should be generic, and belong to the same generic head type:
+          assert a.typeInst != nil, "generic distinct type " & $a & " has no typeInst"
+          assert b.typeInst != nil, "generic distinct type " & $b & " has no typeInst"
+          withoutShallowFlags:
+            # just in case `tyGenericInst` was skipped at some point,
+            # we need to check the generic parameters here
+            for ff, aa in underspecifiedPairs(a.typeInst, b.typeInst, 1, -1):
+              if not sameTypeAux(ff, aa, c): return false
     else:
       result = sameTypeAux(a.elementType, b.elementType, c) and sameFlags(a, b)
   of tyEnum, tyForward:
@@ -1685,7 +1708,7 @@ proc skipHidden*(n: PNode): PNode =
 
 proc skipConvTakeType*(n: PNode): PNode =
   result = n.skipConv
-  result.typ = n.typ
+  result.typ() = n.typ
 
 proc isEmptyContainer*(t: PType): bool =
   case t.kind
@@ -1725,7 +1748,7 @@ proc skipHiddenSubConv*(n: PNode; g: ModuleGraph; idgen: IdGenerator): PNode =
       result = n
     else:
       result = copyTree(result)
-      result.typ = dest
+      result.typ() = dest
   else:
     result = n
 
@@ -1935,3 +1958,125 @@ proc isCharArrayPtr*(t: PType; allowPointerToChar: bool): bool =
       result = false
   else:
     result = false
+
+proc isRefPtrObject*(t: PType): bool =
+  t.kind in {tyRef, tyPtr} and tfRefsAnonObj in t.flags
+
+proc nominalRoot*(t: PType): PType =
+  ## the "name" type of a given instance of a nominal type,
+  ## i.e. the type directly associated with the symbol where the root
+  ## nominal type of `t` was defined, skipping things like generic instances,
+  ## aliases, `var`/`sink`/`typedesc` modifiers
+  ## 
+  ## instead of returning the uninstantiated body of a generic type,
+  ## returns the type of the symbol instead (with tyGenericBody type)
+  result = nil
+  case t.kind
+  of tyAlias, tyVar, tySink:
+    # varargs?
+    result = nominalRoot(t.skipModifier)
+  of tyTypeDesc:
+    # for proc foo(_: type T)
+    result = nominalRoot(t.skipModifier)
+  of tyGenericInvocation, tyGenericInst:
+    result = t
+    # skip aliases, so this works in the same module but not in another module:
+    # type Foo[T] = object
+    # type Bar[T] = Foo[T]
+    # proc foo[T](x: Bar[T]) = ... # attached to type
+    while result.skipModifier.kind in {tyGenericInvocation, tyGenericInst}:
+      result = result.skipModifier
+    result = nominalRoot(result[0])
+  of tyGenericBody:
+    result = t
+    # this time skip the aliases but take the generic body
+    while result.skipModifier.kind in {tyGenericInvocation, tyGenericInst}:
+      result = result.skipModifier[0]
+    let val = result.skipModifier
+    if val.kind in {tyDistinct, tyEnum, tyObject} or
+        isRefPtrObject(val):
+      # atomic nominal types, this generic body is attached to them
+      discard
+    else:
+      result = nominalRoot(val)
+  of tyCompositeTypeClass:
+    # parameter with type Foo
+    result = nominalRoot(t.skipModifier)
+  of tyGenericParam:
+    if t.genericParamHasConstraints:
+      # T: Foo
+      result = nominalRoot(t.genericConstraint)
+    else:
+      result = nil
+  of tyDistinct, tyEnum, tyObject:
+    result = t
+  of tyPtr, tyRef:
+    if tfRefsAnonObj in t.flags:
+      # in the case that we have `type Foo = ref object` etc
+      result = t
+    else:
+      # we could allow this in general, but there's things like `seq[Foo]`
+      #result = nominalRoot(t.skipModifier)
+      result = nil
+  of tyStatic:
+    result = nominalRoot(t.base)
+  else:
+    # skips all typeclasses
+    # is this correct for `concept`?
+    result = nil
+
+proc genericRoot*(t: PType): PType =
+  ## gets the root generic type (`tyGenericBody`) from `t`,
+  ## if `t` is a generic type or the body of a generic instantiation
+  case t.kind
+  of tyGenericBody:
+    result = t
+  of tyGenericInst, tyGenericInvocation:
+    result = t.genericHead
+  else:
+    if t.typeInst != nil:
+      result = t.typeInst.genericHead
+    elif t.sym != nil and t.sym.typ.kind == tyGenericBody:
+      # can happen if `t` is the last child (body) of the generic body
+      result = t.sym.typ
+    else:
+      result = nil
+
+proc reduceToBase*(f: PType): PType =
+  #[
+    Returns the lowest order (most general) type that that is compatible with the input.
+    E.g.
+    A[T] = ptr object ... A -> ptr object
+    A[N: static[int]] = array[N, int] ... A -> array
+  ]#
+  case f.kind:
+  of tyGenericParam:
+    if f.len <= 0 or f.skipModifier == nil:
+      result = f
+    else:
+      result = reduceToBase(f.skipModifier)
+  of tyGenericInvocation:
+    result = reduceToBase(f.baseClass)
+  of tyCompositeTypeClass, tyAlias:
+    if not f.hasElementType or f.elementType == nil:
+      result = f
+    else:
+      result = reduceToBase(f.elementType)
+  of tyGenericInst:
+    result = reduceToBase(f.skipModifier)
+  of tyGenericBody:
+    result = reduceToBase(f.typeBodyImpl)
+  of tyUserTypeClass:
+    if f.isResolvedUserTypeClass:
+      result = f.base  # ?? idk if this is right
+    else:
+      result = f.skipModifier
+  of tyStatic, tyOwned, tyVar, tyLent, tySink:
+    result = reduceToBase(f.base)
+  of tyInferred:
+    # This is not true "After a candidate type is selected"
+    result = reduceToBase(f.base)
+  of tyRange:
+    result = f.elementType
+  else:
+    result = f

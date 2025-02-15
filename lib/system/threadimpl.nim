@@ -68,7 +68,7 @@ else:
         when defined(nimV2):
           thrd.dataFn(thrd.data)
         else:
-          var x: TArg
+          var x: TArg = default(TArg)
           deepCopy(x, thrd.data)
           thrd.dataFn(x)
     except:

@@ -44,12 +44,12 @@ proc test() =
   doAssert(parseSaturatedNatural("1_000_000", value) == 9)
   doAssert value == 1_000_000
 
-  var i64Value: int64
+  var i64Value: int64 = 0'i64
   discard parseBiggestInt("9223372036854775807", i64Value)
   doAssert i64Value == 9223372036854775807
 
   block:
-    var f: float
+    var f: float = 0.0
     let res = collect:
       for x in ["9.123456789012345+","11.123456789012345+","9.123456789012345-","8.123456789012345+","9.12345678901234-","9.123456789012345"]:
         (parseFloat(x, f, 0), $f)

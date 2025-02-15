@@ -41,6 +41,7 @@ proc newFuture(s: string): Future =
 var q: HeapQueue[tuple[finishAt: int64, fut: Future]]
 
 proc sleep(f: int64): Future =
+  result = nil
   q.push (finishAt: f, fut: newFuture("async-sleep"))
 
 proc processTimers =

@@ -143,6 +143,7 @@ else:
                  # avoid calling 'getTicks' too frequently
 
   proc requestedHook(): bool {.nimcall.} =
+    result = false
     if interval == 0: result = true
     elif gTicker == 0:
       gTicker = 500
@@ -174,7 +175,7 @@ proc writeProfile() {.noconv.} =
     system.profilerHook = nil
   const filename = "profile_results.txt"
   echo "writing " & filename & "..."
-  var f: File
+  var f: File = default(File)
   if open(f, filename, fmWrite):
     sort(profileData, cmpEntries)
     writeLine(f, "total executions of each stack trace:")

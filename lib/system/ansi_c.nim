@@ -27,6 +27,8 @@ proc c_strcmp*(a, b: cstring): cint {.
   importc: "strcmp", header: "<string.h>", noSideEffect.}
 proc c_strlen*(a: cstring): csize_t {.
   importc: "strlen", header: "<string.h>", noSideEffect.}
+proc c_strstr*(haystack, needle: cstring): cstring {.
+    importc: "strstr", header: "<string.h>", noSideEffect.}
 proc c_abort*() {.
   importc: "abort", header: "<stdlib.h>", noSideEffect, noreturn.}
 
@@ -76,19 +78,14 @@ elif defined(haiku):
     SIGTERM* = cint(15)
     SIGPIPE* = cint(7)
     SIG_DFL* = CSighandlerT(nil)
-else:
-  when defined(nimscript):
-    {.error: "SIGABRT not ported to your platform".}
-  else:
-    var
-      SIGINT* {.importc: "SIGINT", nodecl.}: cint
-      SIGSEGV* {.importc: "SIGSEGV", nodecl.}: cint
-      SIGABRT* {.importc: "SIGABRT", nodecl.}: cint
-      SIGFPE* {.importc: "SIGFPE", nodecl.}: cint
-      SIGILL* {.importc: "SIGILL", nodecl.}: cint
-      SIG_DFL* {.importc: "SIG_DFL", nodecl.}: CSighandlerT
-    when defined(macosx) or defined(linux):
-      var SIGPIPE* {.importc: "SIGPIPE", nodecl.}: cint
+elif not defined(nimscript):
+  var
+    SIGINT* {.importc: "SIGINT", nodecl.}: cint
+    SIGSEGV* {.importc: "SIGSEGV", nodecl.}: cint
+    SIGABRT* {.importc: "SIGABRT", nodecl.}: cint
+    SIGFPE* {.importc: "SIGFPE", nodecl.}: cint
+    SIGILL* {.importc: "SIGILL", nodecl.}: cint
+    SIG_DFL* {.importc: "SIG_DFL", nodecl.}: CSighandlerT
 
 when defined(macosx):
   const SIGBUS* = cint(10)

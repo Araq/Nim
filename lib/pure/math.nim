@@ -105,7 +105,7 @@ when not defined(js) and not defined(nimscript): # C
       when compileOption("overflowChecks"):
         if y == 0:
           raise new(DivByZeroDefect)
-        elif (x == T.low and y == -1.T):
+        elif (x == T.low and int64(y) == -1):
           raise new(OverflowDefect)
       let res = divmod_c(x, y)
       result[0] = res.quot
@@ -989,8 +989,9 @@ func frexp*[T: float32|float64](x: T): tuple[frac: T, exp: int] {.inline.} =
       doAssert frexp(Inf).frac == Inf # +- Inf preserved
       doAssert frexp(NaN).frac.isNaN
 
+  result = default(tuple[frac: T, exp: int])
   when not defined(js):
-    var exp: cint
+    var exp: cint = cint(0)
     result.frac = c_frexp2(x, exp)
     result.exp = exp
   else:
@@ -1068,10 +1069,8 @@ func splitDecimal*[T: float32|float64](x: T): tuple[intpart: T, floatpart: T] =
   runnableExamples:
     doAssert splitDecimal(5.25) == (intpart: 5.0, floatpart: 0.25)
     doAssert splitDecimal(-2.73) == (intpart: -2.0, floatpart: -0.73)
-
-  var
-    absolute: T
-  absolute = abs(x)
+  result = default(tuple[intpart: T, floatpart: T])
+  var absolute: T = abs(x)
   result.intpart = floor(absolute)
   result.floatpart = absolute - result.intpart
   if x < 0:
@@ -1128,7 +1127,7 @@ func sum*[T](x: openArray[T]): T =
   runnableExamples:
     doAssert sum([1, 2, 3, 4]) == 10
     doAssert sum([-4, 3, 5]) == 4
-
+  result = default(T)
   for i in items(x): result = result + i
 
 func prod*[T](x: openArray[T]): T =
@@ -1146,6 +1145,37 @@ func prod*[T](x: openArray[T]): T =
   result = T(1)
   for i in items(x): result = result * i
 
+func cumprod*[T](x: var openArray[T]) =
+  ## Transforms ``x`` in-place (must be declared as `var`) into its
+  ## product.
+  ##
+  ## See also:
+  ## * `prod proc <#sum,openArray[T]>`_
+  ## * `cumproded proc <#cumproded,openArray[T]>`_ for a version which
+  ##   returns cumproded sequence
+  runnableExamples:
+    var a = [1, 2, 3, 4]
+    cumprod(a)
+    doAssert a == @[1, 2, 6, 24]
+  for i in 1 ..< x.len: x[i] = x[i-1] * x[i]
+
+func cumproded*[T](x: openArray[T]): seq[T] =
+  ## Return cumulative (aka prefix) product of ``x``.
+  ##
+  ## See also:
+  ## * `prod proc <#prod,openArray[T]>`_
+  ## * `cumprod proc <#cumprod,openArray[T]>`_ for the in-place version
+  runnableExamples:
+    let a = [1, 2, 3, 4]
+    doAssert cumproded(a) == @[1, 2, 6, 24]
+  result = @[]
+  let xLen = x.len
+  if xLen == 0:
+    return @[]
+  result.setLen(xLen)
+  result[0] = x[0]
+  for i in 1 ..< xLen: result[i] = result[i-1] * x[i]
+
 func cumsummed*[T](x: openArray[T]): seq[T] =
   ## Returns the cumulative (aka prefix) summation of `x`.
   ##
@@ -1156,7 +1186,7 @@ func cumsummed*[T](x: openArray[T]): seq[T] =
   ## * `cumsum func <#cumsum,openArray[T]>`_ for the in-place version
   runnableExamples:
     doAssert cumsummed([1, 2, 3, 4]) == @[1, 3, 6, 10]
-
+  result = @[]
   let xLen = x.len
   if xLen == 0:
     return @[]
@@ -1354,3 +1384,4 @@ func lcm*[T](x: openArray[T]): T {.since: (1, 1).} =
   result = x[0]
   for i in 1 ..< x.len:
     result = lcm(result, x[i])
+

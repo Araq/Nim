@@ -15,6 +15,7 @@ __TINYC__
 __clang__
 __AVR__
 __arm__
+__riscv
 __EMSCRIPTEN__
 */
 
@@ -472,7 +473,8 @@ typedef char* NCSTRING;
 /* declared size of a sequence/variable length array: */
 #if defined(__cplusplus) && defined(__clang__)
 #  define SEQ_DECL_SIZE 1
-#elif defined(__GNUC__) || defined(_MSC_VER)
+#elif defined(__GNUC__) || defined(_MSC_VER) || defined(__TINYC__) || \
+        (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)) // C99
 #  define SEQ_DECL_SIZE /* empty is correct! */
 #else
 #  define SEQ_DECL_SIZE 1000000
@@ -579,8 +581,8 @@ NIM_STATIC_ASSERT(sizeof(NI) == sizeof(void*) && NIM_INTBITS == sizeof(NI)*8, "P
   #define nimMulInt64(a, b, res) __builtin_smulll_overflow(a, b, (long long int*)res)
 
   #if NIM_INTBITS == 32
-    #if defined(__arm__) && defined(__GNUC__)
-      /* arm-none-eabi-gcc targets defines int32_t as long int */
+    #if (defined(__arm__) || defined(__riscv)) && defined(__GNUC__)
+      /* arm-none-eabi-gcc and riscv32-unknown-elf-gcc targets define int32_t as long int */
       #define nimAddInt(a, b, res) __builtin_saddl_overflow(a, b, res)
       #define nimSubInt(a, b, res) __builtin_ssubl_overflow(a, b, res)
       #define nimMulInt(a, b, res) __builtin_smull_overflow(a, b, res)

@@ -84,6 +84,7 @@ proc semEnum(c: PContext, n: PNode, prev: PType): PType =
   let isPure = result.sym != nil and sfPure in result.sym.flags
   var symbols: TStrTable = initStrTable()
   var hasNull = false
+  var needsReorder = false
   for i in 1..<n.len:
     if n[i].kind == nkEmpty: continue
     var useAutoCounter = false
@@ -122,7 +123,9 @@ proc semEnum(c: PContext, n: PNode, prev: PType): PType =
         else:
           localError(c.config, v.info, errOrdinalTypeExpected % typeToString(v.typ, preferDesc))
       if i != 1:
-        if x != counter: incl(result.flags, tfEnumHasHoles)
+        if x != counter:
+          needsReorder = true
+          incl(result.flags, tfEnumHasHoles)
       e.ast = strVal # might be nil
       counter = x
     of nkSym:
@@ -173,6 +176,13 @@ proc semEnum(c: PContext, n: PNode, prev: PType): PType =
         localError(c.config, n[i].info, errOverflowInEnumX % [e.name.s, $high(typeof(counter))])
     else:
       inc(counter)
+
+  if needsReorder:
+    result.n.sons.sort(
+      proc (x, y: PNode): int =
+        result = cmp(x.sym.position, y.sym.position)
+    )
+
   if isPure and sfExported in result.sym.flags:
     addPureEnum(c, LazySym(sym: result.sym))
   if tfNotNil in e.typ.flags and not hasNull:
@@ -247,27 +257,39 @@ proc isRecursiveType(t: PType, cycleDetector: var IntSet): bool =
   else:
     return false
 
-proc fitDefaultNode(c: PContext, n: PNode): PType =
-  inc c.inStaticContext
-  let expectedType = if n[^2].kind != nkEmpty: semTypeNode(c, n[^2], nil) else: nil
-  n[^1] = semConstExpr(c, n[^1], expectedType = expectedType)
-  let oldType = n[^1].typ
-  n[^1].flags.incl nfSem
-  if n[^2].kind != nkEmpty:
-    if expectedType != nil and oldType != expectedType:
-      n[^1] = fitNodeConsiderViewType(c, expectedType, n[^1], n[^1].info)
-      changeType(c, n[^1], expectedType, true) # infer types for default fields value
-        # bug #22926; be cautious that it uses `semConstExpr` to
-        # evaulate the default fields; it's only natural to use
-        # `changeType` to infer types for constant values
-        # that's also the reason why we don't use `semExpr` to check
-        # the type since two overlapping error messages might be produced
-    result = n[^1].typ
+proc annotateClosureConv(n: PNode) =
+  case n.kind
+  of {nkNone..nkNilLit}:
+    discard
+  of nkTupleConstr:
+    if n.typ.kind == tyProc and n.typ.callConv == ccClosure and
+        n[0].typ.kind == tyProc and n[0].typ.callConv != ccClosure:
+      # restores `transf.generateThunk`
+      n[0] = newTreeIT(nkHiddenSubConv, n[0].info, n.typ,
+                       newNodeI(nkEmpty, n[0].info), n[0])
+      n.transitionSonsKind(nkClosure)
+      n.flags.incl nfTransf
   else:
-    result = n[^1].typ
+    for i in 0..<n.len:
+      annotateClosureConv(n[i])
+
+proc fitDefaultNode(c: PContext, n: var PNode, expectedType: PType) =
+  inc c.inStaticContext
+  n = semConstExpr(c, n, expectedType = expectedType)
+  let oldType = n.typ
+  n.flags.incl nfSem
+  if expectedType != nil and oldType != expectedType:
+    n = fitNodeConsiderViewType(c, expectedType, n, n.info)
+    changeType(c, n, expectedType, true) # infer types for default fields value
+      # bug #22926; be cautious that it uses `semConstExpr` to
+      # evaulate the default fields; it's only natural to use
+      # `changeType` to infer types for constant values
+      # that's also the reason why we don't use `semExpr` to check
+      # the type since two overlapping error messages might be produced
+  annotateClosureConv(n)
   # xxx any troubles related to defaults fields, consult `semConst` for a potential answer
-  if n[^1].kind != nkNilLit:
-    typeAllowedCheck(c, n.info, result, skConst, {taProcContextIsNotMacro, taIsDefaultField})
+  if n.kind != nkNilLit:
+    typeAllowedCheck(c, n.info, n.typ, skConst, {taProcContextIsNotMacro, taIsDefaultField})
   dec c.inStaticContext
 
 proc isRecursiveType*(t: PType): bool =
@@ -387,8 +409,12 @@ proc semArrayIndex(c: PContext, n: PNode): PType =
       result = makeRangeWithStaticExpr(c, e.typ.n)
     elif e.kind in {nkIntLit..nkUInt64Lit}:
       if e.intVal < 0:
-        localError(c.config, n.info,
-          "Array length can't be negative, but was " & $e.intVal)
+        if e.kind in {nkIntLit..nkInt64Lit}:
+          localError(c.config, n.info,
+            "Array length can't be negative, but was " & $e.intVal)
+        else:
+          localError(c.config, n.info,
+            "Array length can't exceed its maximum value (9223372036854775807), but was " & $cast[BiggestUInt](e.intVal))
       result = makeRangeType(c, 0, e.intVal-1, n.info, e.typ)
     elif e.kind == nkSym and (e.typ.kind == tyStatic or e.typ.kind == tyTypeDesc):
       if e.typ.kind == tyStatic:
@@ -480,7 +506,7 @@ proc firstRange(config: ConfigRef, t: PType): PNode =
     result = newFloatNode(nkFloatLit, firstFloat(t))
   else:
     result = newIntNode(nkIntLit, firstOrd(config, t))
-  result.typ = t
+  result.typ() = t
 
 proc semTuple(c: PContext, n: PNode, prev: PType): PType =
   var typ: PType
@@ -494,7 +520,14 @@ proc semTuple(c: PContext, n: PNode, prev: PType): PType =
     checkMinSonsLen(a, 3, c.config)
     var hasDefaultField = a[^1].kind != nkEmpty
     if hasDefaultField:
-      typ = fitDefaultNode(c, a)
+      typ = if a[^2].kind != nkEmpty: semTypeNode(c, a[^2], nil) else: nil
+      if c.inGenericContext > 0:
+        a[^1] = semExprWithType(c, a[^1], {efDetermineType, efAllowSymChoice}, typ)
+        if typ == nil:
+          typ = a[^1].typ
+      else:
+        fitDefaultNode(c, a[^1], typ)
+        typ = a[^1].typ
     elif a[^2].kind != nkEmpty:
       typ = semTypeNode(c, a[^2], nil)
       if c.graph.config.isDefined("nimPreviewRangeDefault") and typ.skipTypes(abstractInst).kind == tyRange:
@@ -858,8 +891,15 @@ proc semRecordNodeAux(c: PContext, n: PNode, check: var IntSet, pos: var int,
     var typ: PType
     var hasDefaultField = n[^1].kind != nkEmpty
     if hasDefaultField:
-      typ = fitDefaultNode(c, n)
-      propagateToOwner(rectype, typ)
+      typ = if n[^2].kind != nkEmpty: semTypeNode(c, n[^2], nil) else: nil
+      if c.inGenericContext > 0:
+        n[^1] = semExprWithType(c, n[^1], {efDetermineType, efAllowSymChoice}, typ)
+        if typ == nil:
+          typ = n[^1].typ
+      else:
+        fitDefaultNode(c, n[^1], typ)
+        typ = n[^1].typ
+        propagateToOwner(rectype, typ)
     elif n[^2].kind == nkEmpty:
       localError(c.config, n.info, errTypeExpected)
       typ = errorType(c)
@@ -1096,7 +1136,7 @@ proc addParamOrResult(c: PContext, param: PSym, kind: TSymKind) =
     if sfGenSym in param.flags:
       # bug #XXX, fix the gensym'ed parameters owner:
       if param.owner == nil:
-        param.owner = getCurrOwner(c)
+        setOwner(param, getCurrOwner(c))
     else: addDecl(c, param)
 
 template shouldHaveMeta(t) =
@@ -1381,7 +1421,7 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
           elif hasUnresolvedArgs(c, def):
             # template default value depends on other parameter
             # don't do any typechecking
-            def.typ = makeTypeFromExpr(c, def.copyTree)
+            def.typ() = makeTypeFromExpr(c, def.copyTree)
             break determineType
           elif typ != nil and typ.kind == tyTyped:
             canBeVoid = true
@@ -1519,7 +1559,7 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
         # XXX This rather hacky way keeps 'tflatmap' compiling:
         if tfHasMeta notin oldFlags:
           result.flags.excl tfHasMeta
-      result.n.typ = r
+      result.n.typ() = r
 
   if isCurrentlyGeneric():
     for n in genericParams:
@@ -1536,8 +1576,8 @@ proc semStmtListType(c: PContext, n: PNode, prev: PType): PType =
     n[i] = semStmt(c, n[i], {})
   if n.len > 0:
     result = semTypeNode(c, n[^1], prev)
-    n.typ = result
-    n[^1].typ = result
+    n.typ() = result
+    n[^1].typ() = result
   else:
     result = nil
 
@@ -1550,15 +1590,15 @@ proc semBlockType(c: PContext, n: PNode, prev: PType): PType =
   if n[0].kind notin {nkEmpty, nkSym}:
     addDecl(c, newSymS(skLabel, n[0], c))
   result = semStmtListType(c, n[1], prev)
-  n[1].typ = result
-  n.typ = result
+  n[1].typ() = result
+  n.typ() = result
   closeScope(c)
   c.p.breakInLoop = oldBreakInLoop
   dec(c.p.nestedBlockCounter)
 
 proc semGenericParamInInvocation(c: PContext, n: PNode): PType =
   result = semTypeNode(c, n, nil)
-  n.typ = makeTypeDesc(c, result)
+  n.typ() = makeTypeDesc(c, result)
 
 proc trySemObjectTypeForInheritedGenericInst(c: PContext, n: PNode, t: PType): bool =
   var
@@ -1631,6 +1671,11 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       var err = "cannot instantiate "
       err.addTypeHeader(c.config, t)
       err.add "\ngot: <$1>\nbut expected: <$2>" % [describeArgs(c, n), describeArgs(c, t.n, 0)]
+      if m.firstMismatch.kind == kTypeMismatch and m.firstMismatch.arg < n.len:
+        let nArg = n[m.firstMismatch.arg]
+        if nArg.kind in nkSymChoices:
+          err.add "\n"
+          err.add ambiguousIdentifierMsg(nArg)
       localError(c.config, n.info, errGenerated, err)
       return newOrPrevType(tyError, prev, c)
 
@@ -1831,7 +1876,7 @@ proc applyTypeSectionPragmas(c: PContext; pragmas, operand: PNode): PNode =
           x.add(operand.copyTreeWithoutNode(p))
           # recursion assures that this works for multiple macro annotations too:
           var r = semOverloadedCall(c, x, x, {skMacro, skTemplate}, {efNoUndeclared})
-          if r != nil:
+          if r != nil and (r.typ == nil or r.typ.kind != tyFromExpr):
             doAssert r[0].kind == nkSym
             let m = r[0].sym
             case m.kind
@@ -1970,7 +2015,7 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
         n.transitionNoneToSym()
         n.sym = result
         n.info = oldInfo
-        n.typ = result.typ
+        n.typ() = result.typ
     else:
       localError(c.config, n.info, "identifier expected")
       result = errorSym(c, n)
@@ -2269,7 +2314,7 @@ proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
     when false:
       localError(c.config, n.info, "type expected, but got: " & renderTree(n))
       result = newOrPrevType(tyError, prev, c)
-  n.typ = result
+  n.typ() = result
   dec c.inTypeContext
 
 proc setMagicType(conf: ConfigRef; m: PSym, kind: TTypeKind, size: int) =
@@ -2416,7 +2461,7 @@ proc semGenericParamList(c: PContext, n: PNode, father: PType = nil): PNode =
         else:
           # the following line fixes ``TV2*[T:SomeNumber=TR] = array[0..1, T]``
           # from manyloc/named_argument_bug/triengine:
-          def.typ = def.typ.skipTypes({tyTypeDesc})
+          def.typ() = def.typ.skipTypes({tyTypeDesc})
           if not containsGenericType(def.typ):
             def = fitNode(c, typ, def, def.info)
 

@@ -336,7 +336,7 @@ since (1, 1):
     genericParamsImpl(T2)
 
 
-proc hasClosureImpl(n: NimNode): bool = discard "see compiler/vmops.nim"
+proc hasClosureImpl(n: NimNode): bool = raiseAssert "see compiler/vmops.nim"
 
 proc hasClosure*(fn: NimNode): bool {.since: (1, 5, 1).} =
   ## Returns true if the func/proc/etc `fn` has `closure`.

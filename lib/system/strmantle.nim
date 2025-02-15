@@ -32,6 +32,7 @@ proc ltStrings(a, b: string): bool {.inline, compilerproc.} =
   cmpStrings(a, b) < 0
 
 proc eqStrings(a, b: string): bool {.inline, compilerproc.} =
+  result = false
   let alen = a.len
   let blen = b.len
   if alen == blen:

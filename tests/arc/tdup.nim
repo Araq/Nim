@@ -35,6 +35,7 @@ type
     id: ptr int
 
 proc `=dup`(x: RefCustom): RefCustom =
+  result = RefCustom()
   result.id = x.id
 
 proc inc(x: sink Ref) =

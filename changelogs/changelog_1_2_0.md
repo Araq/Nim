@@ -169,7 +169,7 @@ echo f
 - The Nim compiler now supports a new pragma called ``.localPassc`` to
   pass specific compiler options to the C(++) backend for the C(++) file
   that was produced from the current Nim module.
-- The compiler now inferes "sink parameters". To disable this for a specific routine,
+- The compiler now infers "sink parameters". To disable this for a specific routine,
   annotate it with `.nosinks`. To disable it for a section of code, use
   `{.push sinkInference: off.}`...`{.pop.}`.
 - The compiler now supports a new switch `--panics:on` that turns runtime
@@ -261,7 +261,7 @@ echo f
   ([#12812](https://github.com/nim-lang/Nim/issues/12812))
 - Fixed "Produce static/const initializations for variables when possible"
   ([#12216](https://github.com/nim-lang/Nim/issues/12216))
-- Fixed "Assigning descriminator field leads to internal assert with --gc:destructors"
+- Fixed "Assigning discriminator field leads to internal assert with --gc:destructors"
   ([#12821](https://github.com/nim-lang/Nim/issues/12821))
 - Fixed "nimsuggest `use` command does not return all instances of symbol"
   ([#12832](https://github.com/nim-lang/Nim/issues/12832))

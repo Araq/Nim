@@ -125,18 +125,38 @@ proc unsafeAddr*[T](x: T): ptr T {.magic: "Addr", noSideEffect.} =
 
 const ThisIsSystem = true
 
-proc new*[T](a: var ref T, finalizer: proc (x: ref T) {.nimcall.}) {.
-  magic: "NewFinalize", noSideEffect.}
-  ## Creates a new object of type `T` and returns a safe (traced)
-  ## reference to it in `a`.
-  ##
-  ## When the garbage collector frees the object, `finalizer` is called.
-  ## The `finalizer` may not keep a reference to the
-  ## object pointed to by `x`. The `finalizer` cannot prevent the GC from
-  ## freeing the object.
-  ##
-  ## **Note**: The `finalizer` refers to the type `T`, not to the object!
-  ## This means that for each object of type `T` the finalizer will be called!
+const arcLikeMem = defined(gcArc) or defined(gcAtomicArc) or defined(gcOrc)
+
+when defined(nimAllowNonVarDestructor) and arcLikeMem:
+  proc new*[T](a: var ref T, finalizer: proc (x: T) {.nimcall.}) {.
+    magic: "NewFinalize", noSideEffect.}
+    ## Creates a new object of type `T` and returns a safe (traced)
+    ## reference to it in `a`.
+    ##
+    ## When the garbage collector frees the object, `finalizer` is called.
+    ## The `finalizer` may not keep a reference to the
+    ## object pointed to by `x`. The `finalizer` cannot prevent the GC from
+    ## freeing the object.
+    ##
+    ## **Note**: The `finalizer` refers to the type `T`, not to the object!
+    ## This means that for each object of type `T` the finalizer will be called!
+
+  proc new*[T](a: var ref T, finalizer: proc (x: ref T) {.nimcall.}) {.
+    magic: "NewFinalize", noSideEffect, deprecated: "pass a finalizer of the 'proc (x: T) {.nimcall.}' type".}
+
+else:
+  proc new*[T](a: var ref T, finalizer: proc (x: ref T) {.nimcall.}) {.
+    magic: "NewFinalize", noSideEffect.}
+    ## Creates a new object of type `T` and returns a safe (traced)
+    ## reference to it in `a`.
+    ##
+    ## When the garbage collector frees the object, `finalizer` is called.
+    ## The `finalizer` may not keep a reference to the
+    ## object pointed to by `x`. The `finalizer` cannot prevent the GC from
+    ## freeing the object.
+    ##
+    ## **Note**: The `finalizer` refers to the type `T`, not to the object!
+    ## This means that for each object of type `T` the finalizer will be called!
 
 proc `=wasMoved`*[T](obj: var T) {.magic: "WasMoved", noSideEffect.} =
   ## Generic `wasMoved`:idx: implementation that can be overridden.
@@ -361,8 +381,6 @@ proc arrGet[I: Ordinal;T](a: T; i: I): T {.
   noSideEffect, magic: "ArrGet".}
 proc arrPut[I: Ordinal;T,S](a: T; i: I;
   x: S) {.noSideEffect, magic: "ArrPut".}
-
-const arcLikeMem = defined(gcArc) or defined(gcAtomicArc) or defined(gcOrc)
 
 
 when defined(nimAllowNonVarDestructor) and arcLikeMem and defined(nimPreviewNonVarDestructor):
@@ -2125,7 +2143,7 @@ when not defined(js) and declared(alloc0) and declared(dealloc):
     let x = cast[ptr UncheckedArray[string]](a)
     for i in 0 .. a.high:
       result[i] = cast[cstring](alloc0(x[i].len+1))
-      copyMem(result[i], addr(x[i][0]), x[i].len)
+      copyMem(result[i], x[i].cstring, x[i].len)
 
   proc deallocCStringArray*(a: cstringArray) =
     ## Frees a NULL terminated cstringArray.
@@ -2339,7 +2357,7 @@ when notJSnotNims:
       else:
         let c3 = cast[proc(y: int; env: pointer): int {.nimcall.}](p)
         echo c3(3, e)
-
+    result = nil
     {.emit: """
     `result` = (void*)`x`.ClP_0;
     """.}
@@ -2347,12 +2365,14 @@ when notJSnotNims:
   proc rawEnv*[T: proc {.closure.} | iterator {.closure.}](x: T): pointer {.noSideEffect, inline.} =
     ## Retrieves the raw environment pointer of the closure `x`. See also `rawProc`.
     ## This is not available for the JS target.
+    result = nil
     {.emit: """
     `result` = `x`.ClE_0;
     """.}
 
 proc finished*[T: iterator {.closure.}](x: T): bool {.noSideEffect, inline, magic: "Finished".} =
   ## It can be used to determine if a first class iterator has finished.
+  result = false
   when defined(js):
     # TODO: mangle `:state`
     {.emit: """
@@ -2670,7 +2690,7 @@ proc locals*(): RootObj {.magic: "Plugin", noSideEffect.} =
 
 when hasAlloc and notJSnotNims:
   # XXX how to implement 'deepCopy' is an open problem.
-  proc deepCopy*[T](x: var T, y: T) {.noSideEffect, magic: "DeepCopy".} =
+  proc deepCopy*[T](x: out T, y: T) {.noSideEffect, magic: "DeepCopy".} =
     ## Performs a deep copy of `y` and copies it into `x`.
     ##
     ## This is also used by the code generator
@@ -2945,11 +2965,16 @@ when notJSnotNims and not defined(nimSeqsV2):
       assert y == "abcgh"
     discard
 
-proc arrayWith*[T](y: T, size: static int): array[size, T] {.raises: [].} =
+proc arrayWith*[T](y: T, size: static int): array[size, T] {.noinit, nodestroy, raises: [].} =
   ## Creates a new array filled with `y`.
   for i in 0..size-1:
-    when nimvm:
-      result[i] = y
+    when (NimMajor, NimMinor, NimPatch) >= (2, 3, 1):
+      result[i] = `=dup`(y)
     else:
-      # TODO: fixme it should be `=dup`
-      result[i] = y
+      wasMoved(result[i])
+      `=copy`(result[i], y)
+
+proc arrayWithDefault*[T](size: static int): array[size, T] {.noinit, nodestroy, raises: [].} =
+  ## Creates a new array filled with `default(T)`.
+  for i in 0..size-1:
+    result[i] = default(T)

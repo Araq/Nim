@@ -11,6 +11,9 @@
 ## The `std/envvars` module implements environment variable handling.
 import std/oserrors
 
+when defined(nimPreviewSlimSystem):
+  import std/assertions
+
 type
   ReadEnvEffect* = object of ReadIOEffect   ## Effect that denotes a read
                                             ## from an environment variable.
@@ -200,7 +203,7 @@ when not defined(nimscript):
           let p = find(kv, '=')
           yield (substr(kv, 0, p-1), substr(kv, p+1))
 
-proc envPairsImplSeq(): seq[tuple[key, value: string]] = discard # vmops
+proc envPairsImplSeq(): seq[tuple[key, value: string]] = raiseAssert "implemented in the vmops" # vmops
 
 iterator envPairs*(): tuple[key, value: string] {.tags: [ReadEnvEffect].} =
   ## Iterate over all `environments variables`:idx:.

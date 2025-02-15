@@ -42,9 +42,9 @@ triggers:
 
 proc genBuildExtras(echoRun, koch, nim: string): string =
   result = fmt"""
-{echoRun} {nim} c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch
-{echoRun} {koch} boot -d:release --skipUserCfg --skipParentCfg --hints:off
-{echoRun} {koch} tools --skipUserCfg --skipParentCfg --hints:off
+{echoRun}{nim} c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch
+{echoRun}{koch} boot -d:release --skipUserCfg --skipParentCfg --hints:off
+{echoRun}{koch} tools --skipUserCfg --skipParentCfg --hints:off
 """
 
 proc genWindowsScript(buildAll: bool): string =
@@ -95,7 +95,7 @@ set -e # exit on first error
 . ci/funs.sh
 nimBuildCsourcesIfNeeded "$@"
 
-{genBuildExtras("echo_run", "./koch", "bin/nim")}
+{genBuildExtras("echo_run ", "./koch", "bin/nim")}
 """
 
 proc main()=

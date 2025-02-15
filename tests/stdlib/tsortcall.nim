@@ -15,6 +15,7 @@ suite "test sort, sorted, and isSorted procs":
       age: int
 
   func newUser(name: string, age: int): User =
+    result = default(User)
     result.name = name
     result.age = age
 

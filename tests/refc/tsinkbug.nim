@@ -1,5 +1,5 @@
 discard """
-  matrix: "--gc:refc; --gc:arc"
+  matrix: "--mm:refc; --mm:arc"
   output: '''
 Value is: 42
 Value is: 42'''

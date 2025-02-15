@@ -249,7 +249,7 @@ which will likely make your program crash at runtime.
 The name `NimMain` can be influenced via the `--nimMainPrefix:prefix` switch.
 Use `--nimMainPrefix:MyLib` and the function to call is named `MyLibNimMain`.
 
-When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors.
+When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors. It is influenced by the `--nimMainPrefix:prefix` switch, too.
 
 
 ### Nim invocation example from C
@@ -358,7 +358,7 @@ Memory management
 
 In the previous sections, the `NimMain()` function reared its head. Since
 JavaScript already provides automatic memory management, you can freely pass
-objects between the two languages without problems. In C and derivate languages
+objects between the two languages without problems. In C and derivative languages
 you need to be careful about what you do and how you share memory. The
 previous examples only dealt with simple scalar values, but passing a Nim
 string to C, or reading back a C string in Nim already requires you to be

@@ -26,7 +26,7 @@ proc handleHexChar*(c: char): int {.inline.} =
   of '0'..'9': result = (ord(c) - ord('0'))
   of 'a'..'f': result = (ord(c) - ord('a') + 10)
   of 'A'..'F': result = (ord(c) - ord('A') + 10)
-  else: discard
+  else: result = 0
 
 proc decodePercent*(s: openArray[char], i: var int): char =
   ## Converts `%xx` hexadecimal to the character with ordinal number `xx`.

@@ -1,5 +1,5 @@
 discard """
-  errormsg: "index 2 not in 0 .. 1"
+  errormsg: "conversion from int literal(2) to range 0..1(int) is invalid"
   line: 18
 """
 block:

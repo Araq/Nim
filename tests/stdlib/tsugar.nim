@@ -291,7 +291,7 @@ template main() =
 
   block: # bug #20704
     proc test() =
-      var xs, ys: seq[int]
+      var xs, ys: seq[int] = @[]
       for i in 0..5:
         xs.add(i)
 

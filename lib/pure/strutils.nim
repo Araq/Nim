@@ -998,9 +998,9 @@ func toHex*[T: SomeInteger](x: T, len: Positive): string =
     doAssert b.toHex(4) == "1001"
     doAssert toHex(62, 3) == "03E"
     doAssert toHex(-8, 6) == "FFFFF8"
-  whenJsNoBigInt64:
+  when jsNoBigInt64:
     toHexImpl(cast[BiggestUInt](x), len, x < 0)
-  do:
+  else:
     when T is SomeSignedInt:
       toHexImpl(cast[BiggestUInt](BiggestInt(x)), len, x < 0)
     else:
@@ -1011,9 +1011,9 @@ func toHex*[T: SomeInteger](x: T): string =
   runnableExamples:
     doAssert toHex(1984'i64) == "00000000000007C0"
     doAssert toHex(1984'i16) == "07C0"
-  whenJsNoBigInt64:
+  when jsNoBigInt64:
     toHexImpl(cast[BiggestUInt](x), 2*sizeof(T), x < 0)
-  do:
+  else:
     when T is SomeSignedInt:
       toHexImpl(cast[BiggestUInt](BiggestInt(x)), 2*sizeof(T), x < 0)
     else:
@@ -1643,6 +1643,7 @@ func startsWith*(s, prefix: string): bool {.rtl, extern: "nsuStartsWith".} =
     let a = "abracadabra"
     doAssert a.startsWith("abra") == true
     doAssert a.startsWith("bra") == false
+  result = false
   startsWithImpl(s, prefix)
 
 func endsWith*(s: string, suffix: char): bool {.inline.} =
@@ -1671,6 +1672,7 @@ func endsWith*(s, suffix: string): bool {.rtl, extern: "nsuEndsWith".} =
     let a = "abracadabra"
     doAssert a.endsWith("abra") == true
     doAssert a.endsWith("dab") == false
+  result = false
   endsWithImpl(s, suffix)
 
 func continuesWith*(s, substr: string, start: Natural): bool {.rtl,
@@ -1687,6 +1689,7 @@ func continuesWith*(s, substr: string, start: Natural): bool {.rtl,
     doAssert a.continuesWith("ca", 4) == true
     doAssert a.continuesWith("ca", 5) == false
     doAssert a.continuesWith("dab", 6) == true
+  result = false
   var i = 0
   while true:
     if i >= substr.len: return true
@@ -1947,8 +1950,8 @@ func find*(a: SkipTable, s, sub: string, start: Natural = 0, last = -1): int {.
     inc skip, a[s[skip + subLast]]
 
 when not (defined(js) or defined(nimdoc) or defined(nimscript)):
-  func c_memchr(cstr: pointer, c: char, n: csize_t): pointer {.
-                importc: "memchr", header: "<string.h>".}
+  from system/ansi_c import c_memchr
+
   const hasCStringBuiltin = true
 else:
   const hasCStringBuiltin = false
@@ -1979,7 +1982,7 @@ func find*(s: string, sub: char, start: Natural = 0, last = -1): int {.rtl,
     when hasCStringBuiltin:
       let length = last-start+1
       if length > 0:
-        let found = c_memchr(s[start].unsafeAddr, sub, cast[csize_t](length))
+        let found = c_memchr(s[start].unsafeAddr, cint(sub), cast[csize_t](length))
         if not found.isNil:
           return cast[int](found) -% cast[int](s.cstring)
     else:
@@ -2340,7 +2343,7 @@ func insertSep*(s: string, sep = '_', digits = 3): string {.rtl,
     doAssert insertSep("1000000") == "1_000_000"
   result = newStringOfCap(s.len)
   let hasPrefix = isDigit(s[s.low]) == false
-  var idx: int
+  var idx: int = 0
   if hasPrefix:
     result.add s[s.low]
     for i in (s.low + 1)..s.high:
@@ -2445,7 +2448,7 @@ func validIdentifier*(s: string): bool {.rtl, extern: "nsuValidIdentifier".} =
   ## and is followed by any number of characters of the set `IdentChars`.
   runnableExamples:
     doAssert "abc_def08".validIdentifier
-
+  result = false
   if s.len > 0 and s[0] in IdentStartChars:
     for i in 1..s.len-1:
       if s[i] notin IdentChars: return false

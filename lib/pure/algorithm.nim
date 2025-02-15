@@ -143,6 +143,7 @@ proc reversed*[T](a: openArray[T]): seq[T] {.inline.} =
   runnableExamples:
     assert [10, 11, 12].reversed == @[12, 11, 10]
     assert seq[string].default.reversed == @[]
+  result = @[]
   let n = a.len
   result.setLen(n)
   for i in 0..<n: result[i] = a[n - (i + 1)]

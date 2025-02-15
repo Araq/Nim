@@ -78,10 +78,10 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
           if result.kind == nkSym:
             result = newOpenSym(result)
           else:
-            result.typ = nil
+            result.typ() = nil
         else:
           result.flags.incl nfDisabledOpenSym
-          result.typ = nil
+          result.typ() = nil
   case s.kind
   of skUnknown:
     # Introduced in this pass! Leave it as an identifier.
@@ -116,7 +116,7 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
             result = newOpenSym(result)
           else:
             result.flags.incl nfDisabledOpenSym
-            result.typ = nil
+            result.typ() = nil
       else:
         result = n
     else:
@@ -126,7 +126,7 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
           result = newOpenSym(result)
         else:
           result.flags.incl nfDisabledOpenSym
-          result.typ = nil
+          result.typ() = nil
     onUse(n.info, s)
   of skParam:
     result = n
@@ -145,7 +145,7 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
           result = newOpenSym(result)
         else:
           result.flags.incl nfDisabledOpenSym
-          result.typ = nil
+          result.typ() = nil
     elif c.inGenericContext > 0 and withinConcept notin flags:
       # don't leave generic param as identifier node in generic type,
       # sigmatch will try to instantiate generic type AST without all params
@@ -157,7 +157,7 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
           result = newOpenSym(result)
         else:
           result.flags.incl nfDisabledOpenSym
-          result.typ = nil
+          result.typ() = nil
     else:
       result = n
     onUse(n.info, s)
@@ -168,7 +168,7 @@ proc semGenericStmtSymbol(c: PContext, n: PNode, s: PSym,
         result = newOpenSym(result)
       else:
         result.flags.incl nfDisabledOpenSym
-        result.typ = nil
+        result.typ() = nil
     onUse(n.info, s)
 
 proc lookup(c: PContext, n: PNode, flags: TSemGenericFlags,
@@ -218,7 +218,7 @@ proc fuzzyLookup(c: PContext, n: PNode, flags: TSemGenericFlags,
     let ident = considerQuotedIdent(c, n)
     # could be type conversion if like a.T and not a.T()
     let symKinds = if inCall: routineKinds else: routineKinds+{skType}
-    var candidates = searchInScopesFilterBy(c, ident, symKinds)
+    var candidates = selectFromScopesElseAll(c, ident, symKinds)
     if candidates.len > 0:
       let s = candidates[0] # XXX take into account the other candidates!
       isMacro = s.kind in {skTemplate, skMacro}

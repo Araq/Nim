@@ -234,8 +234,7 @@ func `*`*(a: Peg): Peg {.rtl, extern: "npegsGreedyRep".} =
   ## constructs a "greedy repetition" for the PEG `a`
   case a.kind
   of pkGreedyRep, pkGreedyRepChar, pkGreedyRepSet, pkGreedyAny, pkOption:
-    assert false
-    # produces endless loop!
+    raiseAssert "unreachable"  # produces endless loop!
   of pkChar:
     result = Peg(kind: pkGreedyRepChar, ch: a.ch)
   of pkCharChoice:
@@ -334,7 +333,7 @@ func backrefIgnoreStyle*(index: range[1..MaxSubpatterns], reverse: bool = false)
 
 func spaceCost(n: Peg): int =
   case n.kind
-  of pkEmpty: discard
+  of pkEmpty: result = 0
   of pkTerminal, pkTerminalIgnoreCase, pkTerminalIgnoreStyle, pkChar,
      pkGreedyRepChar, pkCharChoice, pkGreedyRepSet,
      pkAny..pkWhitespace, pkGreedyAny, pkBackRef..pkBackRefIgnoreStyle:
@@ -343,6 +342,7 @@ func spaceCost(n: Peg): int =
     # we cannot inline a rule with a non-terminal
     result = InlineThreshold+1
   else:
+    result = 0
     for i in 0..n.len-1:
       inc(result, spaceCost(n.sons[i]))
       if result >= InlineThreshold: break
@@ -563,6 +563,8 @@ template matchOrParse(mopProc: untyped) =
   # are provided which just return *discard*.
 
   proc mopProc(s: string, p: Peg, start: int, c: var Captures): int {.gcsafe, raises: [].} =
+    result = 0
+
     proc matchBackRef(s: string, p: Peg, start: int, c: var Captures): int =
       # Parse handler code must run in an *of* clause of its own for each
       # *PegKind*, so we encapsulate the identical clause body for
@@ -579,7 +581,7 @@ template matchOrParse(mopProc: untyped) =
         n = Peg(kind: pkTerminalIgnoreStyle, term: s.substr(a, b))
       of pkBackRefIgnoreCase:
         n = Peg(kind: pkTerminalIgnoreCase, term: s.substr(a, b))
-      else: assert(false, "impossible case")
+      else: raiseAssert "impossible case"
       mopProc(s, n, start, c)
 
     case p.kind
@@ -695,7 +697,7 @@ template matchOrParse(mopProc: untyped) =
       enter(pkTerminalIgnoreStyle, s, p, start)
       var
         i = 0
-        a, b: Rune
+        a, b: Rune = default(Rune)
       result = start
       while i < len(p.term):
         while i < len(p.term):
@@ -1067,7 +1069,7 @@ template eventParser*(pegAst, handlers: untyped): (proc(s: string): int) =
   proc parser(s: string): int {.gensym.} =
     # the proc to be returned
     var
-      ms: array[MaxSubpatterns, (int, int)]
+      ms: array[MaxSubpatterns, (int, int)] = default(array[MaxSubpatterns, (int, int)])
       cs = Captures(matches: ms, ml: 0, origStart: 0)
     rawParse(s, pegAst, 0, cs)
   parser
@@ -1087,8 +1089,7 @@ func matchLen*(s: string, pattern: Peg, matches: var openArray[string],
   ## if there is no match, -1 is returned. Note that a match length
   ## of zero can happen. It's possible that a suffix of `s` remains
   ## that does not belong to the match.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   result = rawMatch(s, pattern, start, c)
   if result >= 0: fillMatches(s, matches, c)
 
@@ -1098,8 +1099,7 @@ func matchLen*(s: string, pattern: Peg,
   ## if there is no match, -1 is returned. Note that a match length
   ## of zero can happen. It's possible that a suffix of `s` remains
   ## that does not belong to the match.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   result = rawMatch(s, pattern, start, c)
 
 func match*(s: string, pattern: Peg, matches: var openArray[string],
@@ -1121,8 +1121,7 @@ func find*(s: string, pattern: Peg, matches: var openArray[string],
   ## returns the starting position of ``pattern`` in ``s`` and the captured
   ## substrings in the array ``matches``. If it does not match, nothing
   ## is written into ``matches`` and -1 is returned.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   for i in start .. s.len-1:
     c.ml = 0
     if rawMatch(s, pattern, i, c) >= 0:
@@ -1138,8 +1137,7 @@ func findBounds*(s: string, pattern: Peg, matches: var openArray[string],
   ## and the captured
   ## substrings in the array ``matches``. If it does not match, nothing
   ## is written into ``matches`` and (-1,0) is returned.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   for i in start .. s.len-1:
     c.ml = 0
     var L = rawMatch(s, pattern, i, c)
@@ -1152,16 +1150,14 @@ func find*(s: string, pattern: Peg,
            start = 0): int {.rtl, extern: "npegs$1".} =
   ## returns the starting position of ``pattern`` in ``s``. If it does not
   ## match, -1 is returned.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   for i in start .. s.len-1:
     if rawMatch(s, pattern, i, c) >= 0: return i
   return -1
 
 iterator findAll*(s: string, pattern: Peg, start = 0): string =
   ## yields all matching *substrings* of `s` that match `pattern`.
-  var c: Captures
-  c.origStart = start
+  var c: Captures = Captures(origStart: start)
   var i = start
   while i < s.len:
     c.ml = 0
@@ -1221,8 +1217,8 @@ func startsWith*(s: string, prefix: Peg, start = 0): bool {.
 func endsWith*(s: string, suffix: Peg, start = 0): bool {.
   rtl, extern: "npegs$1".} =
   ## returns true if `s` ends with the pattern `suffix`
-  var c: Captures
-  c.origStart = start
+  result = false
+  var c: Captures = Captures(origStart: start)
   for i in start .. s.len-1:
     if rawMatch(s, suffix, i, c) == s.len - i: return true
 
@@ -1242,8 +1238,8 @@ func replacef*(s: string, sub: Peg, by: string): string {.
   ##   ```
   result = ""
   var i = 0
-  var caps: array[0..MaxSubpatterns-1, string]
-  var c: Captures
+  var caps: array[0..MaxSubpatterns-1, string] = default(array[0..MaxSubpatterns-1, string])
+  var c: Captures = default(Captures)
   while i < s.len:
     c.ml = 0
     var x = rawMatch(s, sub, i, c)
@@ -1262,7 +1258,7 @@ func replace*(s: string, sub: Peg, by = ""): string {.
   ## in `by`.
   result = ""
   var i = 0
-  var c: Captures
+  var c: Captures = default(Captures)
   while i < s.len:
     var x = rawMatch(s, sub, i, c)
     if x <= 0:
@@ -1280,8 +1276,8 @@ func parallelReplace*(s: string, subs: varargs[
   ## applied in parallel.
   result = ""
   var i = 0
-  var c: Captures
-  var caps: array[0..MaxSubpatterns-1, string]
+  var c: Captures = default(Captures)
+  var caps: array[0..MaxSubpatterns-1, string] = default(array[0..MaxSubpatterns-1, string])
   while i < s.len:
     block searchSubs:
       for j in 0..high(subs):
@@ -1328,8 +1324,8 @@ func replace*(s: string, sub: Peg, cb: proc(
   ##   ```
   result = ""
   var i = 0
-  var caps: array[0..MaxSubpatterns-1, string]
-  var c: Captures
+  var caps: array[0..MaxSubpatterns-1, string] = default(array[0..MaxSubpatterns-1, string])
+  var c: Captures = default(Captures)
   var m = 0
   while i < s.len:
     c.ml = 0
@@ -1376,7 +1372,7 @@ iterator split*(s: string, sep: Peg): string =
   ##   "an"
   ##   "example"
   ##   ```
-  var c: Captures
+  var c: Captures = default(Captures)
   var
     first = 0
     last = 0
@@ -1826,7 +1822,7 @@ type
     identIsVerbatim: bool
     skip: Peg
 
-func pegError(p: PegParser, msg: string, line = -1, col = -1) =
+func pegError(p: PegParser, msg: string, line = -1, col = -1) {.noreturn.} =
   var e = (ref EInvalidPeg)(msg: errorStr(p, msg, line, col))
   raise e
 
@@ -1966,7 +1962,7 @@ func primary(p: var PegParser): Peg =
     getTok(p)
   else:
     pegError(p, "expression expected, but found: " & p.tok.literal)
-    getTok(p) # we must consume a token here to prevent endless loops!
+    # getTok(p) # we must consume a token here to prevent endless loops!
   while true:
     case p.tok.kind
     of tkOption:
@@ -2050,7 +2046,7 @@ func parsePeg*(pattern: string, filename = "pattern", line = 1, col = 0): Peg =
   ## constructs a Peg object from `pattern`. `filename`, `line`, `col` are
   ## used for error messages, but they only provide start offsets. `parsePeg`
   ## keeps track of line and column numbers within `pattern`.
-  var p: PegParser
+  var p: PegParser = default(PegParser)
   init(PegLexer(p), pattern, filename, line, col)
   p.tok.kind = tkInvalid
   p.tok.modifier = modNone

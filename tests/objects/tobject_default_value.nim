@@ -673,11 +673,11 @@ template main {.dirty.} =
         result = v
 
       proc failed(): Result[int, string] =
-        discard
+        result = default(Result[int, string])
 
       proc calling(): Result[int, string] =
         let _ = ? failed()
-        doAssert false
+        raiseAssert "false"
 
       let r = calling()
       doAssert assigned
@@ -775,6 +775,39 @@ template main {.dirty.} =
     type limited_int = range[1..20]
     var d: limited_int;
     doAssert d == 1
+
+  block: # bug #23545
+    proc evaluate(params: int) =
+        discard
+
+    proc evaluate() =
+        discard
+
+    type SearchInfo = object
+      evaluation: proc() = evaluate
+
+    var a = SearchInfo()
+    a.evaluation()
+
+  block: # bug #23770
+    type
+      Enum = enum A, B
+      Object = object
+        case a: Enum
+        of A:
+          integer: int = 200
+        of B:
+          time: string
+      Simple = object
+        v = -1
+      Another = object
+        o = Object(a: A)
+        v: Simple
+
+    let s1 = Object(a: A)
+    let s2 = Another()
+    doAssert s1.integer == 200 and s2.o.integer == 200
+
 
 static: main()
 main()

@@ -20,3 +20,13 @@ block: # issue #22839
     var y: Node[NotComparable])
   proc `<`(a, b: NotComparable): bool = false
   var z: Node[NotComparable]
+
+
+block: # bug #24040
+  type
+    Xable = concept
+      proc x(y: Self): int
+    A[T: Xable] = tuple
+      foo: T
+    B[T: Xable] = object
+      a: A[T]

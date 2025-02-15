@@ -590,7 +590,7 @@ proc processCompile(c: PContext, n: PNode) =
     var customArgs = ""
     if n.kind in nkCallKinds:
       s = getStrLit(c, n, 1)
-      if n.len <= 3:
+      if n.len == 3:
         customArgs = getStrLit(c, n, 2)
       else:
         localError(c.config, n.info, "'.compile' pragma takes up 2 arguments")
@@ -637,7 +637,10 @@ proc semAsmOrEmit*(con: PContext, n: PNode, marker: char): PNode =
         # XXX what to do here if 'amb' is true?
         if e != nil:
           incl(e.flags, sfUsed)
-          result.add newSymNode(e)
+          if isDefined(con.config, "nimPreviewAsmSemSymbol"):
+            result.add con.semExprWithType(con, newSymNode(e), {efTypeAllowed})
+          else:
+            result.add newSymNode(e)
         else:
           result.add newStrNode(nkStrLit, sub)
       else:
@@ -722,12 +725,12 @@ proc processPragma(c: PContext, n: PNode, i: int) =
 proc pragmaRaisesOrTags(c: PContext, n: PNode) =
   proc processExc(c: PContext, x: PNode) =
     if c.hasUnresolvedArgs(c, x):
-      x.typ = makeTypeFromExpr(c, x)
+      x.typ() = makeTypeFromExpr(c, x)
     else:
       var t = skipTypes(c.semTypeNode(c, x, nil), skipPtrs)
       if t.kind notin {tyObject, tyOr}:
         localError(c.config, x.info, errGenerated, "invalid type for raises/tags list")
-      x.typ = t
+      x.typ() = t
 
   if n.kind in nkPragmaCallKinds and n.len == 2:
     let it = n[1]

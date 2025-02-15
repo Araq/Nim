@@ -770,11 +770,10 @@ div.topic {
 
 div.search_results {
   background-color: var(--third-background);
-  margin: 3vh 5vw;
   padding: 1em;
   border: 1px solid #4d4d4d;
-  position: fixed;
-  top: 10px;
+  position: sticky;
+  top: 1em;
   isolation: isolate;
   max-width: calc(100vw - 6em);
   z-index: 1;

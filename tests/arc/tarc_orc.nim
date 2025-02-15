@@ -17,6 +17,7 @@ block:
       private: PrivateKey
 
   proc initKeyPair(): KeyPair =
+    result = KeyPair()
     ed25519_create_keypair(result.public.addr, result.private.addr)
 
   let keys = initKeyPair()
@@ -52,6 +53,7 @@ type Obj = tuple
   arr: seq[int]
 
 proc bug(): seq[Obj] =
+  result = @[]
   result.add (value: 0, arr: @[])
   result[^1].value = 1
   result[^1].arr.add 1

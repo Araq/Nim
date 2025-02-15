@@ -19,6 +19,7 @@ c_cursor = tmpTuple_cursor[2]
 func fooLeaks(refTuple: tuple[a,
                               b,
                               c: seq[float]]): float =
+  result = 0.0
   let (a, b, c) = refTuple
 
 let refset = (a: newSeq[float](25_000_000),
