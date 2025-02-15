@@ -2217,14 +2217,14 @@ proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
       of "owned": result = semAnyRef(c, n, tyOwned, prev)
       else: result = semGeneric(c, n, s, prev)
     else: result = semGeneric(c, n, s, prev)
-  of nkDotExpr:
-    var s = qualifiedLookUp(c, n, {})
-    if s != nil:
-      s = semTypeIdent(c, n)
-    if s == nil or s.typ == nil:
-      result = semTypeExpr(c, n, prev)
-    else:
-      result = identSymToType(c, n, prev, s)
+  #of nkDotExpr:
+  #  var s = qualifiedLookUp(c, n, {})
+  #  if s != nil:
+  #    s = semTypeIdent(c, n)
+  #  if s == nil or s.typ == nil:
+  #    result = semTypeExpr(c, n, prev)
+  #  else:
+  #    result = identSymToType(c, n, prev, s)
   of nkIdent, nkAccQuoted:
     let s = semTypeIdent(c, n)
     result = identSymToType(c, n, prev, s)
