@@ -10,7 +10,7 @@
 ## This module contains the type definitions for the new evaluation engine.
 ## An instruction is 1-3 int32s in memory, it is a register based VM.
 
-import std/[tables, strutils]
+import std/[tables, strutils, intsets]
 
 import ast, idents, options, modulegraphs, lineinfos
 
@@ -272,6 +272,7 @@ type
     vmstateDiff*: seq[(PSym, PNode)] # we remember the "diff" to global state here (feature for IC)
     procToCodePos*: Table[int, int]
     cannotEval*: bool
+    locals*: IntSet
 
   PStackFrame* = ref TStackFrame
   TStackFrame* {.acyclic.} = object

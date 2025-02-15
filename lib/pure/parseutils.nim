@@ -527,7 +527,6 @@ proc parseSaturatedNatural*(s: openArray[char], b: var int): int {.
 proc rawParseUInt(s: openArray[char], b: var BiggestUInt): int =
   var
     res = 0.BiggestUInt
-    prev = 0.BiggestUInt
     i = 0
   if i < s.len - 1 and s[i] == '-' and s[i + 1] in {'0'..'9'}:
     integerOutOfRangeError()
@@ -535,8 +534,11 @@ proc rawParseUInt(s: openArray[char], b: var BiggestUInt): int =
   if i < s.len and s[i] in {'0'..'9'}:
     b = 0
     while i < s.len and s[i] in {'0'..'9'}:
-      prev = res
-      res = res * 10 + (ord(s[i]) - ord('0')).BiggestUInt
+      if res > BiggestUInt.high div 10: # Highest value that you can multiply 10 without overflow
+        integerOutOfRangeError()
+      res = res * 10
+      let prev = res
+      res += (ord(s[i]) - ord('0')).BiggestUInt
       if prev > res:
         integerOutOfRangeError()
       inc(i)
