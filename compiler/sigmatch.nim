@@ -1794,7 +1794,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           depth = -1
 
       if depth >= 0:
-        if fobj.kind == tyObject and tfFinal notin fobj.flags:
+        if aobj.kind == tyObject and tfFinal notin aobj.flags:
           inc c.inheritancePenalty, depth + int(c.inheritancePenalty < 0)
         # bug #4863: We still need to bind generic alias crap, so
         # we cannot return immediately:
