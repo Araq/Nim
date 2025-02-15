@@ -1745,23 +1745,9 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     elif x.kind == tyGenericInst and concpt.kind == tyConcept:
       result = if concepts.conceptMatch(c.c, concpt, x, c.bindings, f): isGeneric
                else: isNone
-    elif x.kind == tyGenericBody:
-      # pretend we are matching against invocation type
-      let base = x[0]
-      if base == f[0]:
-        for i in 1..<f.len:
-          if i >= base.len-1: return
-          # least specific type that the parameter satisfies:
-          let constraint =
-            if base[i].genericParamHasConstraints:
-              base[i].genericConstraint
-            else:
-              # same as in liftParamType
-              newTypeS(tyAnything, c.c)
-          # match against constraint
-          let tr = typeRel(c, f[i], constraint, {trDontBind})
-          if tr <= isSubtype: return
-        result = isGeneric
+    elif x.kind == tyGenericBody and f[0] == x:
+      # not specific enough
+      result = isNone
     else:
       let genericBody = f[0]
       var askip = skippedNone
