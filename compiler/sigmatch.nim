@@ -1689,10 +1689,11 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           elif aAsObject.kind == fKind:
             aAsObject = aAsObject.base
 
-        if aAsObject.kind == tyObject and tfFinal notin aAsObject.flags and trIsOutParam notin flags:
+        if aAsObject.kind == tyObject and trIsOutParam notin flags:
           let baseType = aAsObject.base
           if baseType != nil:
-            inc c.inheritancePenalty, 1 + int(c.inheritancePenalty < 0)
+            if tfFinal notin aAsObject.flags:
+              inc c.inheritancePenalty, 1 + int(c.inheritancePenalty < 0)
             let ret = typeRel(c, f, baseType, flags)
             return if ret in {isEqual,isGeneric}: isSubtype else: ret
 
@@ -1792,8 +1793,9 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         if not (genericSubtype and aobj.sym.id != fobj.sym.id) and aOrig.kind != tyGenericBody:
           depth = -1
 
-      if depth >= 0 and fobj.kind == tyObject and tfFinal notin fobj.flags:
-        inc c.inheritancePenalty, depth + int(c.inheritancePenalty < 0)
+      if depth >= 0:
+        if fobj.kind == tyObject and tfFinal notin fobj.flags:
+          inc c.inheritancePenalty, depth + int(c.inheritancePenalty < 0)
         # bug #4863: We still need to bind generic alias crap, so
         # we cannot return immediately:
         result = if depth == 0: isGeneric else: isSubtype
