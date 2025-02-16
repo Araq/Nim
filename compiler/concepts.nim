@@ -107,14 +107,21 @@ proc existingBinding(m: MatchCon; key: PType): PType =
   if result == nil:
     result = key
 
+const
+    ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyAlias, tyInferred}
+
 proc unrollGenericParam(param: PType): PType =
-  result = param
+  result = param.skipTypes(ignorableForArgType)
   while result.kind in {tyGenericParam, tyTypeDesc} and result.hasElementType and result.elementType.kind != tyNone:
     result = result.elementType
 
 proc bindParam(c: PContext, m: var MatchCon; key, v: PType): bool {. discardable .} =
+  if v.kind == tyTypeDesc:
+    return false
   var value = unrollGenericParam(v)
-  if value.kind in {tyStatic, tyGenericParam} or v.kind == tyTypeDesc:
+  if value.kind == tyGenericParam:
+    value = existingBinding(m, value)
+  if value.kind in {tyStatic, tyGenericParam}:
     return false
 
   if m.magic in {mArrPut, mArrGet} and value.kind in arrPutGetMagicApplies:
@@ -275,8 +282,6 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
-  const
-    ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyAlias, tyInferred}
   
   var
     a = ao
