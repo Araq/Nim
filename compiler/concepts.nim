@@ -11,7 +11,7 @@
 ## for details. Note this is a first implementation and only the "Concept matching"
 ## section has been implemented.
 
-import ast, semdata, lookups, lineinfos, idents, msgs, renderer, types, layeredtable
+import ast, astalgo, semdata, lookups, lineinfos, idents, msgs, renderer, types, layeredtable
 
 import std/intsets
 
@@ -19,7 +19,7 @@ when defined(nimPreviewSlimSystem):
   import std/assertions
 
 const
-  logBindings = false
+  logBindings = when defined(debugConcepts): true else: false
 
 ## Code dealing with Concept declarations
 ## --------------------------------------
@@ -70,26 +70,79 @@ proc semConceptDeclaration*(c: PContext; n: PNode): PNode =
 ## ----------------
 
 type
+  MatchFlags* = enum
+    mfDontBind  # Do not bind generic parameters
+    mfCheckGeneric  # formal <- formal comparison as opposed to formal <- operand
+  
   MatchCon = object ## Context we pass around during concept matching.
-    inferred: seq[(PType, PType)] ## we need a seq here so that we can easily undo inferences \
-      ## that turned out to be wrong.
+    bindings: LayeredIdTable
     marker: IntSet ## Some protection against wild runaway recursions.
     potentialImplementation: PType ## the concrete type that might match the concept we try to match.
     magic: TMagic  ## mArrGet and mArrPut is wrong in system.nim and
                    ## cannot be fixed that easily.
                    ## Thus we special case it here.
-    concpt: PType
+    concpt: PType  ## current concept being evaluated
+    depthCount = 0
+    flags: set[MatchFlags]
+    
+  MatchKind = enum
+    mkIndeterminate, mkNoMatch, mkSubset, mkSame
+
+const
+  asymmetricConceptParamMods = {tyVar, tySink, tyLent, tyOwned, tyAlias, tyInferred} # param modifiers that to not have to match implementation -> concept
+  bindableTypes = {tyGenericParam, tyOr, tyTypeDesc}
+
+proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
+
+proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool
+
+proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool
+
+proc processConcept(c: PContext; concpt, invocation: PType, bindings: var LayeredIdTable; m: var MatchCon): bool
 
 proc existingBinding(m: MatchCon; key: PType): PType =
   ## checks if we bound the type variable 'key' already to some
   ## concrete type.
-  for i in 0..<m.inferred.len:
-    if m.inferred[i][0] == key: return m.inferred[i][1]
-  return nil
+  result = m.bindings.lookup(key)
+  if result == nil:
+    result = key
 
-proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
+proc unrollGenericParam(param: PType): PType =
+  result = param
+  while result.kind in {tyGenericParam, tyTypeDesc} and result.hasElementType and result.elementType.kind != tyNone:
+    result = result.elementType
 
-proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool
+proc bindParam(c: PContext, m: var MatchCon; key, v: PType): bool {. discardable .} =
+  var value = unrollGenericParam(v)
+  if value.kind in {tyStatic, tyGenericParam} or v.kind == tyTypeDesc:
+    return false
+
+  if m.magic in {mArrPut, mArrGet} and value.kind in arrPutGetMagicApplies:
+    value = value.last
+  
+  let old = existingBinding(m, key)
+  if old != key:
+    # check previously bound value
+    when defined(debugConcepts):
+      echo "checking previous T"
+    if matchType(c, old, value, m) == false:
+      return false
+  elif key.hasElementType and key.elementType.kind != tyNone:
+    # check constaint
+    when defined(debugConcepts):
+      echo "checking T constraint"
+    if matchType(c, unrollGenericParam(key), value, m) == false:
+      return false
+  
+  when logBindings: echo "bind table adding '", key, "', ", value
+  assert value != nil
+  assert value.kind != tyVoid
+  m.bindings.put(key, value)
+  return true
+
+proc defSignatureType(n: PNode): PType = n[0].sym.typ
+
+proc conceptBody*(n: PType): PNode = n.n.lastSon
 
 proc acceptsAllTypes(t: PType): bool=
   result = false
@@ -98,87 +151,176 @@ proc acceptsAllTypes(t: PType): bool=
   elif t.kind == tyGenericParam:
     if tfImplicitTypeParam in t.flags:
       result = true
-    if not t.hasElementType or t.elementType.kind == tyNone:
+    if not(t.hasElementType) or t.elementType.kind == tyNone:
       result = true
+
+iterator travStmts(n: PNode): PNode {. closure .} =
+  if n.kind in {nkStmtList, nkStmtListExpr}:
+    for i in 0..<n.len:
+      for sn in travStmts(n[i]):
+        yield sn
+  else:
+    yield n
+
+proc procDefSignature(s: PSym): PNode {. deprecated .} = 
+  var nc = s.ast.copyNode()
+  for i in 0 .. 5:
+    nc.add s.ast[i]
+  nc
 
 proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
   result = true
-  for i in start..<f.kidsLen - ord(f.kind == tyGenericInst):
+  for i in start ..< f.kidsLen - ord(f.kind in {tyGenericInst, tyGenericInvocation}):
     if not matchType(c, f[i], a[i], m): return false
+
+iterator traverseTyOr(t: PType): PType {. closure .}=
+  for i in t.kids:
+    case i.kind:
+    of tyGenericParam:
+      if i.hasElementType:
+        for s in traverseTyOr(i.elementType):
+          yield s
+      else:
+        yield i
+    else:
+      yield i
+
+proc matchConceptToImpl(c: PContext, f, potentialImpl: PType; m: var MatchCon): bool =
+  assert not(potentialImpl.reduceToBase.kind == tyConcept)
+  let concpt = f.reduceToBase
+  if m.depthCount > 0:
+    # concepts that are more then 2 levels deep are treated like
+    # tyAnything to stop dependencies from getting out of control
+    when defined(debugConcepts):
+      echo "matchConceptToImpl converted to auto"
+    return true
+  var efPot = potentialImpl
+  if potentialImpl.isSelf:
+    if m.concpt.n == concpt.n:
+      return true
+    efPot = m.potentialImplementation
+  
+  var oldBindings = m.bindings
+  m.bindings = newTypeMapLayer(m.bindings)
+  let oldPotentialImplementation = m.potentialImplementation
+  m.potentialImplementation = efPot
+  let oldConcept = m.concpt
+  m.concpt = concpt
+  
+  when defined(debugConcepts):
+    echo "<><><><><><><><><>"
+    echo "new cncpt:", renderTree(concpt.n)
+  
+  var invocation: PType = nil
+  if f.kind == tyGenericInvocation:
+    invocation = f
+  inc m.depthCount
+  result = processConcept(c, concpt, invocation, oldBindings, m)
+  dec m.depthCount
+  m.potentialImplementation = oldPotentialImplementation
+  m.concpt = oldConcept
+
+proc cmpConceptDefs(c: PContext, fn, an: PNode, m: var MatchCon): bool=
+  if fn.kind != an.kind:
+    return false
+  if fn[namePos].sym.name != an[namePos].sym.name:
+    return false
+  let
+    ft = fn.defSignatureType
+    at = an.defSignatureType
+  if ft.len != at.len:
+    return false
+  when defined(debugConcepts):
+    echo "cmpConceptDefs, ", fn, " <- ", an
+  for i in 1 ..< ft.n.len:
+    m.bindings = m.bindings.newTypeMapLayer()
+    when defined(debugConcepts):
+      echo "cmp: ", ft.n[i].typ, " : ", at.n[i].typ
+    
+    let aType = at.n[i].typ
+    let fType = ft.n[i].typ
+    
+    if aType.isSelf and fType.isSelf:
+      continue
+    
+    if not matchType(c, fType, aType, m):
+      m.bindings.setToPreviousLayer()
+      return false
+  result = true
+  if not matchReturnType(c, ft.returnType, at.returnType, m):
+    m.bindings.setToPreviousLayer()
+    result = false
+
+proc conceptsMatch(c: PContext, fc, ac: PType; m: var MatchCon): MatchKind =
+  # XXX: In the future this may need extra parameters to carry info for container types
+  if fc.n == ac.n:
+    # This will have to take generic parameters into account at some point
+    return mkSame
+  let
+    fn = fc.conceptBody
+    an = ac.conceptBody
+    sameLen = fc.len == ac.len
+  var match = false
+  for fdef in fn:
+    var cmpResult = false
+    for ia, ndef in an:
+      match = cmpConceptDefs(c, fdef, ndef, m)
+      if match:
+        break
+    if not match:
+      return mkNoMatch
+  return mkSubset
 
 proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
   const
-    ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyGenericInst, tyAlias, tyInferred}
+    ignorableForArgType = {tyVar, tySink, tyLent, tyOwned, tyAlias, tyInferred}
   
-  var a = ao
+  var
+    a = ao
+    f = fo
   
-  case a.kind
-  of tyGenericParam:
-    let binding = m.existingBinding(a)
-    if binding != nil:
-      a = binding
-  else:
-    discard
+  if a.kind in bindableTypes:
+    a = existingBinding(m, ao)
+    when defined(debugConcepts):
+      if ao != a:
+        echo "Swapping: `", ao, "' for bound: '", a, "'"
+    if a == ao and a.kind == tyGenericParam and a.hasElementType and a.elementType.kind != tyNone:
+      a = a.elementType
   
+  if f.isConcept:
+    if a.acceptsAllTypes:
+      return false
+    if a.isConcept:
+      # if f is a subset of a then any match to a will also match f. Not the other way around
+      return conceptsMatch(c, a.reduceToBase, f.reduceToBase, m) >= mkSubset
+    else:
+      return matchConceptToImpl(c, f.reduceToBase, a, m)
+  
+  result = false
+
   case f.kind
   of tyAlias:
     result = matchType(c, f.skipModifier, a, m)
   of tyTypeDesc:
     if isSelf(f):
+      let ua = a.skipTypes(asymmetricConceptParamMods)
       if m.magic in {mArrPut, mArrGet}:
-        result = false
         if m.potentialImplementation.reduceToBase.kind in arrPutGetMagicApplies:
-          m.inferred.add((a, last m.potentialImplementation))
+          bindParam(c, m, a, last m.potentialImplementation)
           result = true
+      #elif ua.isConcept:
+      #  result = matchType(c, m.concpt, ua, m)
       else:
-        result = matchType(c, a, m.potentialImplementation, m)
+        result = matchType(c, a.skipTypes(ignorableForArgType), m.potentialImplementation, m)
     else:
-      if a.kind == tyTypeDesc and f.hasElementType == a.hasElementType:
-        if f.hasElementType:
+      if a.kind == tyTypeDesc:
+        if not(a.hasElementType) or a.elementType.kind == tyNone:
+          result = true
+        elif f.hasElementType:
           result = matchType(c, f.elementType, a.elementType, m)
-        else:
-          result = true # both lack it
-      else:
-        result = false
-  of tyGenericInvocation:
-    result = false
-    if a.kind == tyGenericInst and a.genericHead.kind == tyGenericBody:
-      if sameType(f.genericHead, a.genericHead) and f.kidsLen == a.kidsLen-1:
-        result = matchKids(c, f, a, m, start=FirstGenericParamAt)
-  of tyGenericParam:
-    let ak = a.skipTypes({tyVar, tySink, tyLent, tyOwned})
-    if ak.kind in {tyTypeDesc, tyStatic} and not isSelf(ak):
-      result = false
-    else:
-      let old = existingBinding(m, f)
-      if old == nil:
-        if f.hasElementType and f.elementType.kind != tyNone:
-          # also check the generic's constraints:
-          let oldLen = m.inferred.len
-          result = matchType(c, f.elementType, a, m)
-          m.inferred.setLen oldLen
-          if result:
-            when logBindings: echo "A adding ", f, " ", ak
-            m.inferred.add((f, ak))
-        elif m.magic == mArrGet and ak.kind in {tyArray, tyOpenArray, tySequence, tyVarargs, tyCstring, tyString}:
-          when logBindings: echo "B adding ", f, " ", last ak
-          m.inferred.add((f, last ak))
-          result = true
-        else:
-          when logBindings: echo "C adding ", f, " ", ak
-          m.inferred.add((f, ak))
-          #echo "binding ", typeToString(ak), " to ", typeToString(f)
-          result = true
-      elif not m.marker.containsOrIncl(old.id):
-        result = matchType(c, old, ak, m)
-        if m.magic == mArrPut and ak.kind == tyGenericParam:
-          result = true
-      else:
-        result = false
-    #echo "B for ", result, " to ", typeToString(a), " to ", typeToString(m.potentialImplementation)
   of tyVar, tySink, tyLent, tyOwned:
     # modifiers in the concept must be there in the actual implementation
     # too but not vice versa.
@@ -186,91 +328,41 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
       result = matchType(c, f.elementType, a.elementType, m)
     elif m.magic == mArrPut:
       result = matchType(c, f.elementType, a, m)
-    else:
-      result = false
   of tyEnum, tyObject, tyDistinct:
-    result = sameType(f, a)
+    if a.kind in ignorableForArgType:
+      result = matchType(c, f, a.skipTypes(ignorableForArgType), m)
+    else:
+      result = sameType(f, a)
   of tyEmpty, tyString, tyCstring, tyPointer, tyNil, tyUntyped, tyTyped, tyVoid:
     result = a.skipTypes(ignorableForArgType).kind == f.kind
   of tyBool, tyChar, tyInt..tyUInt64:
     let ak = a.skipTypes(ignorableForArgType)
     result = ak.kind == f.kind or ak.kind == tyOrdinal or
-       (ak.kind == tyGenericParam and ak.hasElementType and ak.elementType.kind == tyOrdinal)
-  of tyConcept:
-    if a.kind == tyConcept and f.n == a.n:
-      result = true
-    elif m.concpt.size == szIllegalRecursion:
-      result = false
-    else:
-      let oldLen = m.inferred.len
-      let oldPotentialImplementation = m.potentialImplementation
-      m.potentialImplementation = a
-      m.concpt.size = szIllegalRecursion
-      let oldConcept = m.concpt
-      m.concpt = f
-      result = conceptMatchNode(c, f.n.lastSon, m)
-      m.potentialImplementation = oldPotentialImplementation
-      m.concpt = oldConcept
-      m.concpt.size = szUnknownSize
-      if not result:
-        m.inferred.setLen oldLen
-  of tyGenericBody:
-    var ak = a
-    if a.kind == tyGenericBody:
-      ak = last(a)
-    result = matchType(c, last(f), ak, m)
-  of tyCompositeTypeClass:
-    var ak = if a.kind == tyCompositeTypeClass: a.last else: a
-    result = matchType(c, last(f), ak, m)
-  of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr,
-     tyGenericInst:
-    # ^ XXX Rewrite this logic, it's more complex than it needs to be.
-    if f.kind == tyArray and f.kidsLen == 3:
+      (ak.kind == tyGenericParam and ak.hasElementType and ak.elementType.kind == tyOrdinal)
+  of tyArray, tyTuple, tyVarargs, tyOpenArray, tyRange, tySequence, tyRef, tyPtr:
+    if f.kind == tyArray and f.kidsLen == 3 and a.kind == tyArray:
       # XXX: this is a work-around!
       # system.nim creates these for the magic array typeclass
       result = true
     else:
-      result = false
       let ak = a.skipTypes(ignorableForArgType - {f.kind})
       if ak.kind == f.kind and f.kidsLen == ak.kidsLen:
         result = matchKids(c, f, ak, m)
-  of tyOr:
-    let oldLen = m.inferred.len
-    if a.kind == tyOr:
-      # say the concept requires 'int|float|string' if the potentialImplementation
-      # says 'int|string' that is good enough.
-      var covered = 0
-      for ff in f.kids:
-        for aa in a.kids:
-          let oldLenB = m.inferred.len
-          let r = matchType(c, ff, aa, m)
-          if r:
-            inc covered
+  of tyGenericInvocation, tyGenericInst:
+    result = false
+    let ea = a.skipTypes(ignorableForArgType)
+    if ea.kind in {tyGenericInst, tyGenericInvocation}:
+      var
+        k1 = f.kidsLen - ord(f.kind == tyGenericInst)
+        k2 = ea.kidsLen - ord(ea.kind == tyGenericInst)
+      if sameType(f.genericHead, ea.genericHead) and k1 == k2:
+        for i in 1 ..< k2:
+          if not matchType(c, f[i], ea[i], m):
             break
-          m.inferred.setLen oldLenB
-
-      result = covered >= a.kidsLen
-      if not result:
-        m.inferred.setLen oldLen
-    else:
-      result = false
-      for ff in f.kids:
-        result = matchType(c, ff, a, m)
-        if result: break # and remember the binding!
-        m.inferred.setLen oldLen
-  of tyNot:
-    if a.kind == tyNot:
-      result = matchType(c, f.elementType, a.elementType, m)
-    else:
-      let oldLen = m.inferred.len
-      result = not matchType(c, f.elementType, a, m)
-      m.inferred.setLen oldLen
-  of tyAnything:
-    result = true
+        result = true
   of tyOrdinal:
     result = isOrdinalType(a, allowEnumWithHoles = false) or a.kind == tyGenericParam
   of tyStatic:
-    result = false
     var scomp = f.base
     if scomp.kind == tyGenericParam:
       if f.base.kidsLen > 0:
@@ -279,8 +371,65 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
       result = matchType(c, scomp, a.base, m)
     else:
       result = matchType(c, scomp, a, m)
+  of tyGenericParam:
+    if a.acceptsAllTypes:
+      result = f.acceptsAllTypes
+    else:
+      result = bindParam(c, m, f, a)
+  of tyAnything:
+    result = true
+  of tyNot:
+    if a.kind == tyNot:
+      result = matchType(c, f.elementType, a.elementType, m)
+    else:
+      m.bindings = m.bindings.newTypeMapLayer()
+      result = not matchType(c, f.elementType, a, m)
+      m.bindings.setToPreviousLayer()
+  of tyAnd:
+    m.bindings = m.bindings.newTypeMapLayer()
+    result = true
+    for ff in traverseTyOr(f):
+      let r = matchType(c, ff, a, m)
+      if not r:
+        m.bindings.setToPreviousLayer()
+        result = false
+        break
+  of tyGenericBody:
+    var ak = a
+    if a.kind == tyGenericBody:
+      ak = last(a)
+    result = matchType(c, last(f), ak, m)
+  of tyCompositeTypeClass:
+    if a.kind == tyCompositeTypeClass:
+      result = matchKids(c, f, a, m)
+    else:
+      result = matchType(c, last(f), a, m)
+  of tyOr:
+    if a.kind == tyOr:
+      var covered = 0
+      for ff in traverseTyOr(f):
+        for aa in traverseTyOr(a):
+          m.bindings = m.bindings.newTypeMapLayer()
+          let r = matchType(c, ff, aa, m)
+          if r:
+            inc covered
+            break
+          m.bindings.setToPreviousLayer()
+
+      result = covered >= a.kidsLen
+    else:
+      for ff in f.kids:
+        m.bindings = m.bindings.newTypeMapLayer()
+        result = matchType(c, ff, a, m)
+        if result: break # and remember the binding!
+        m.bindings.setToPreviousLayer()
   else:
     result = false
+  if result and ao.kind == tyGenericParam:
+    let bf = if f.isSelf: m.potentialImplementation else: f
+    if bindParam(c, m, ao, bf):
+      when logBindings: echo " ^ reverse binding"
+
 proc stypeToString(a: PType): string=
   if a == nil:
     return "nil"
@@ -296,6 +445,19 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     echo prep, "matchType(", ctrlc ,"): ","RETURNED: ", result
     ctrlc -= 1
 
+proc checkConstraint(c: PContext; f, a: PType; m: var MatchCon): bool =
+  # this allows more abstract implementations to match for more specific arguments
+  # e.g. an candidate p[T](a: auto, b: T) can match for a constraint p(a: Self, b: int) here
+  when defined(debugConcepts):
+    echo "base con <- arg"
+  result = matchType(c, f, a, m)
+  if not(result or mfCheckGeneric in m.flags):
+    # this allows container concepts' generic variables to match and bind, as well as supporting "good enough" matches
+    # for abstractions not captured by generic variables
+    when defined(debugConcepts):
+      echo "ext arg <- con"
+    result = matchType(c, a, f, m)
+
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
   ## Like 'matchType' but with extra logic dealing with proc return types
   ## which can be nil or the 'void' type.
@@ -304,30 +466,38 @@ proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
   elif a == nil:
     result = false
   else:
-    result = matchType(c, f, a, m)
+    result = checkConstraint(c, f, a, m)
 
 proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
   ## Checks if 'candidate' matches 'n' from the concept body. 'n' is a nkProcDef
   ## or similar.
 
   # watch out: only add bindings after a completely successful match.
-  let oldLen = m.inferred.len
+  m.bindings = m.bindings.newTypeMapLayer()
 
   let can = candidate.typ.n
-  let con = n[0].sym.typ.n
-
+  let con = defSignatureType(n).n
   if can.len < con.len:
     # too few arguments, cannot be a match:
     return false
-
+  
+  if can.len > con.len:
+    # too many arguments (not optional)
+    for i in con.len ..< can.len:
+      if can[i].sym.ast == nil:
+        return false
+  
+  when defined(debugConcepts):
+    echo "considering: ", renderTree(candidate.procDefSignature), " ", candidate.magic
+  
   let common = min(can.len, con.len)
   for i in 1 ..< common:
-    if not matchType(c, con[i].typ, can[i].typ, m):
-      m.inferred.setLen oldLen
+    if not checkConstraint(c, con[i].typ, can[i].typ, m):
+      m.bindings.setToPreviousLayer()
       return false
-
-  if not matchReturnType(c, n[0].sym.typ.returnType, candidate.typ.returnType, m):
-    m.inferred.setLen oldLen
+  
+  if not matchReturnType(c, n.defSignatureType.returnType, candidate.typ.returnType, m):
+    m.bindings.setToPreviousLayer()
     return false
 
   # all other parameters have to be optional parameters:
@@ -335,7 +505,7 @@ proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
     assert can[i].kind == nkSym
     if can[i].sym.ast == nil:
       # has too many arguments one of which is not optional:
-      m.inferred.setLen oldLen
+      m.bindings.setToPreviousLayer()
       return false
 
   return true
@@ -343,6 +513,7 @@ proc matchSym(c: PContext; candidate: PSym, n: PNode; m: var MatchCon): bool =
 proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bool =
   ## Walk the current scope, extract candidates which the same name as 'n[namePos]',
   ## 'n' is the nkProcDef or similar from the concept that we try to match.
+  result = false
   var candidates = searchScopes(c, n[namePos].sym.name, kinds)
   searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
   when defined(debugConcepts):
@@ -350,8 +521,10 @@ proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bo
     echo "implementation: ", m.potentialImplementation
     echo "concept def: ", n
   for candidate in candidates:
-    #echo "considering ", typeToString(candidate.typ), " ", candidate.magic
     m.magic = candidate.magic
+    if matchSym(c, candidate, n, m):
+      result = true
+      break
   when defined(debugConcepts):
     echo "implementation: ", m.potentialImplementation
     echo "concept def: ", n
@@ -360,6 +533,62 @@ proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bo
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
   ## Traverse the concept's AST ('n') and see if every declaration inside 'n'
   ## can be matched with the current scope.
+  result = false
+  for sn in travStmts(n):
+    result = case sn.kind
+      of nkProcDef, nkFuncDef:
+        # procs match any of: proc, template, macro, func, method, converter.
+        # The others are more specific.
+        # XXX: Enforce .noSideEffect for 'nkFuncDef'? But then what are the use cases...
+        const filter = {skProc, skTemplate, skMacro, skFunc, skMethod, skConverter}
+        matchSyms(c, sn, filter, m)
+      of nkTemplateDef:
+        matchSyms(c, sn, {skTemplate}, m)
+      of nkMacroDef:
+        matchSyms(c, sn, {skMacro}, m)
+      of nkConverterDef:
+        matchSyms(c, sn, {skConverter}, m)
+      of nkMethodDef:
+        matchSyms(c, sn, {skMethod}, m)
+      of nkIteratorDef:
+        matchSyms(c, sn, {skIterator}, m)
+      of nkCommentStmt:
+        true
+      else:
+        false # error was reported earlier.
+    if not result:
+      break
+
+proc fixBindings(bindings: var LayeredIdTable; concpt: PType; invocation: PType; m: var MatchCon) =
+  # invocation != nil means we have a non-atomic concept:
+  if invocation != nil and invocation.kind == tyGenericInvocation:
+    assert concpt.sym.typ.kind == tyGenericBody
+    
+    for i in 0 .. concpt.sym.typ.len - 1:
+      let thisSym = concpt.sym.typ[i]
+      if lookup(bindings, thisSym) != nil:
+        # dont trust the bindings over existing ones
+        continue
+      let found = m.bindings.lookup(thisSym)
+      if found != nil:
+        when logBindings: echo "Invocation bind: ", thisSym, " ", found
+        bindings.put(thisSym, found)
+    
+    # bind even more generic parameters
+    let genBody = invocation.base
+    assert genBody.kind == tyGenericBody
+    for i in FirstGenericParamAt ..< invocation.kidsLen:
+      let bpram = genBody[i - 1]
+      if lookup(bindings, invocation[i]) != nil:
+        # dont trust the bindings over existing ones
+        continue
+      let boundV = lookup(bindings, bpram)
+      when logBindings: echo "generic body bind: '", invocation[i], "' '", boundV, "'"
+      if boundV != nil:
+        bindings.put(invocation[i], boundV)
+  bindings.put(concpt, m.potentialImplementation)
+
+proc processConcept(c: PContext; concpt, invocation: PType, bindings: var LayeredIdTable; m: var MatchCon): bool =
   when defined(debugConcepts):
     let prep = prepC()
     echo prep, "<<<<< processConcept enter >>>>>>"
@@ -369,6 +598,19 @@ proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
     defer:
       echo prep, "processConcept exit: ", result
       ctrlc -= 1
+  #debug(concpt)
+  m.bindings = m.bindings.newTypeMapLayer()
+  if invocation != nil and invocation.kind == tyGenericInst:
+    let genericBody = invocation.base
+    for i in 1..<invocation.kidsLen-1:
+      # instGenericContainer can bind `tyVoid`
+      if invocation[i].kind != tyVoid:
+        bindParam(c, m, genericBody[i-1], invocation[i])
+  result = conceptMatchNode(c, concpt.conceptBody, m)
+  if result and mfDontBind notin m.flags:
+    fixBindings(bindings, concpt, invocation, m)
+
+proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable; invocation: PType, flags: set[MatchFlags] = {}): bool =
   ## Entry point from sigmatch. 'concpt' is the concept we try to match (here still a PType but
   ## we extract its AST via 'concpt.n.lastSon'). 'arg' is the type that might fulfill the
   ## concept's requirements. If so, we return true and fill the 'bindings' with pairs of
@@ -377,28 +619,15 @@ proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
   ## `C[S, T]` parent type that we look for. We need this because we need to store bindings
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
-  if arg.containsUnresolvedType:
+  var m = MatchCon(bindings: bindings, potentialImplementation: arg, concpt: concpt, flags: flags)
+  # bind `Self` to the potential implementation
+  # bindParam(c, m, concpt.n[0].typ, arg)
+  if arg.isConcept:
+    # TODO: This pre-check needs to be beefed up - generic parameters and such
+    return conceptsMatch(c, concpt.reduceToBase, arg.reduceToBase, m) >= mkSubset
+  elif arg.acceptsAllTypes:
+    # XXX: I think this is wrong, or at least partially wrong. Can still test ambiguous types
     return false
-  var m = MatchCon(inferred: @[], potentialImplementation: arg, concpt: concpt)
-  result = conceptMatchNode(c, concpt.n.lastSon, m)
-  if result:
-    for (a, b) in m.inferred:
-      if b.kind == tyGenericParam:
-        var dest = b
-        while true:
-          dest = existingBinding(m, dest)
-          if dest == nil or dest.kind != tyGenericParam: break
-        if dest != nil:
-          bindings.put(a, dest)
-          when logBindings: echo "A bind ", a, " ", dest
-      else:
-        bindings.put(a, b)
-        when logBindings: echo "B bind ", a, " ", b
-    # we have a match, so bind 'arg' itself to 'concpt':
-    bindings.put(concpt, arg)
-    # invocation != nil means we have a non-atomic concept:
-    if invocation != nil and arg.kind == tyGenericInst and invocation.kidsLen == arg.kidsLen-1:
-      # bind even more generic parameters
-      assert invocation.kind == tyGenericInvocation
-      for i in FirstGenericParamAt ..< invocation.kidsLen:
-        bindings.put(invocation[i], arg[i])
+  result = processConcept(c, concpt, invocation, bindings, m)
+
+  

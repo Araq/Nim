@@ -195,7 +195,7 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
       # 1) new symbols are discovered but the loop ends before we recalc
       # 2) new symbols are discovered and resemmed forever
       # not 100% sure if these are possible though as they would rely
-      #  on somehow introducing a new overload during overload resolution
+      # on somehow introducing a new overload during overload resolution
 
       # Symbol table has been modified. Restart and pre-calculate all syms
       # before any further candidate init and compare. SLOW, but rare case.

@@ -1,4 +1,4 @@
-import std/tables
+import std/[tables, assertions]
 import ast
 
 type
@@ -52,6 +52,15 @@ proc setToPreviousLayer*(pt: var LayeredIdTable) {.inline.} =
       # workaround refc
       let tmp = pt.nextLayer[]
       pt = tmp
+
+iterator pairs*(pt: LayeredIdTable): (ItemId, PType) =
+  var tm = pt
+  while true:
+    for (k, v) in pairs(tm.topLayer):
+      yield (k, v)
+    if tm.nextLayer == nil:
+      break
+    tm.setToPreviousLayer
 
 proc lookup(typeMap: ref LayeredIdTableObj, key: ItemId): PType =
   result = nil

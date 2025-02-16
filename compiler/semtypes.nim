@@ -1289,12 +1289,14 @@ proc liftParamType(c: PContext, procKind: TSymKind, genericParams: PNode,
         paramType[i] = lifted
         result = paramType
         result.last.shouldHaveMeta
-
-    let liftBody = recurse(paramType.skipModifier, true)
-    if liftBody != nil:
-      result = liftBody
-      result.flags.incl tfHasMeta
-      #result.shouldHaveMeta
+    if paramType.isConcept:
+      return addImplicitGeneric(c, paramType, paramTypId, info, genericParams, paramName)
+    else:
+      let liftBody = recurse(paramType.skipModifier, true)
+      if liftBody != nil:
+        result = liftBody
+        result.flags.incl tfHasMeta
+        #result.shouldHaveMeta
 
   of tyGenericInvocation:
     result = nil
@@ -1308,7 +1310,6 @@ proc liftParamType(c: PContext, procKind: TSymKind, genericParams: PNode,
       # this may happen for proc type appearing in a type section
       # before one of its param types
       return
-
     if body.last.kind == tyUserTypeClass:
       let expanded = instGenericContainer(c, info, paramType,
                                           allowMetaTypes = true)
@@ -2194,7 +2195,8 @@ proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
       of "sink": result = semAnyRef(c, n, tySink, prev)
       of "owned": result = semAnyRef(c, n, tyOwned, prev)
       else: result = semGeneric(c, n, s, prev)
-    else: result = semGeneric(c, n, s, prev)
+    else:
+      result = semGeneric(c, n, s, prev)
   of nkDotExpr:
     let typeExpr = semExpr(c, n)
     if typeExpr.typ.isNil:
