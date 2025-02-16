@@ -106,7 +106,7 @@ proc matchKids(c: PContext; f, a: PType; m: var MatchCon, start=0): bool=
   for i in start..<f.kidsLen - ord(f.kind == tyGenericInst):
     if not matchType(c, f[i], a[i], m): return false
 
-proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool =
+proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
@@ -281,6 +281,20 @@ proc matchType(c: PContext; f, ao: PType; m: var MatchCon): bool =
       result = matchType(c, scomp, a, m)
   else:
     result = false
+proc stypeToString(a: PType): string=
+  if a == nil:
+    return "nil"
+  else:
+    return $a.kind & "(" & typeToString(a) & ")"
+
+proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
+  when defined(debugConcepts):
+    let prep = prepC()
+    echo prep, "matchType(", ctrlc ,"): ", stypeToString(f), " <- ", stypeToString(a)
+  result =  matchTypeM(c, f, a, m)
+  when defined(debugConcepts):
+    echo prep, "matchType(", ctrlc ,"): ","RETURNED: ", result
+    ctrlc -= 1
 
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
   ## Like 'matchType' but with extra logic dealing with proc return types
@@ -331,44 +345,30 @@ proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bo
   ## 'n' is the nkProcDef or similar from the concept that we try to match.
   var candidates = searchScopes(c, n[namePos].sym.name, kinds)
   searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
+  when defined(debugConcepts):
+    echo "----------------------->"
+    echo "implementation: ", m.potentialImplementation
+    echo "concept def: ", n
   for candidate in candidates:
     #echo "considering ", typeToString(candidate.typ), " ", candidate.magic
     m.magic = candidate.magic
-    if matchSym(c, candidate, n, m): return true
-  result = false
+  when defined(debugConcepts):
+    echo "implementation: ", m.potentialImplementation
+    echo "concept def: ", n
+    echo "<----------------------- ", result
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
   ## Traverse the concept's AST ('n') and see if every declaration inside 'n'
   ## can be matched with the current scope.
-  case n.kind
-  of nkStmtList, nkStmtListExpr:
-    for i in 0..<n.len:
-      if not conceptMatchNode(c, n[i], m):
-        return false
-    return true
-  of nkProcDef, nkFuncDef:
-    # procs match any of: proc, template, macro, func, method, converter.
-    # The others are more specific.
-    # XXX: Enforce .noSideEffect for 'nkFuncDef'? But then what are the use cases...
-    const filter = {skProc, skTemplate, skMacro, skFunc, skMethod, skConverter}
-    result = matchSyms(c, n, filter, m)
-  of nkTemplateDef:
-    result = matchSyms(c, n, {skTemplate}, m)
-  of nkMacroDef:
-    result = matchSyms(c, n, {skMacro}, m)
-  of nkConverterDef:
-    result = matchSyms(c, n, {skConverter}, m)
-  of nkMethodDef:
-    result = matchSyms(c, n, {skMethod}, m)
-  of nkIteratorDef:
-    result = matchSyms(c, n, {skIterator}, m)
-  of nkCommentStmt:
-    result = true
-  else:
-    # error was reported earlier.
+  when defined(debugConcepts):
+    let prep = prepC()
+    echo prep, "<<<<< processConcept enter >>>>>>"
+    echo typeToString(concpt)
+    echo concpt.n
     result = false
-
-proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable; invocation: PType): bool =
+    defer:
+      echo prep, "processConcept exit: ", result
+      ctrlc -= 1
   ## Entry point from sigmatch. 'concpt' is the concept we try to match (here still a PType but
   ## we extract its AST via 'concpt.n.lastSon'). 'arg' is the type that might fulfill the
   ## concept's requirements. If so, we return true and fill the 'bindings' with pairs of

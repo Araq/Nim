@@ -47,6 +47,11 @@ proc initCandidateSymbols(c: PContext, headSymbol: PNode,
   result = @[]
   var symx = initOverloadIter(o, c, headSymbol)
   while symx != nil:
+    when defined(debugTypeRel):
+      if `??`(c.config, headSymbol.info, "nimscraps.nim") or true:
+        echo "==========================================="
+        echo "symx: ", renderTree(symx.ast)
+        echo "==========================================="
     if symx.kind in filter:
       result.add((symx, o.lastOverloadScope))
     elif symx.kind == skGenericParam:
@@ -144,7 +149,13 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
   while true:
     determineType(c, sym)
     z = initCandidate(c, sym, initialBinding, scope, diagnosticsFlag)
-
+    when defined(debugTypeRel):
+      if `??`(c.config, n.info, "nimscraps.nim") or true:
+        echo "==========================================="
+        echo "BEST: ", $best.callee, "' at ", best.c.config $ best.calleeSym.info
+        echo "-------------------------------------------"
+        echo "Compare: ", $z.callee, "' at ", z.c.config $ z.calleeSym.info
+        echo "==========================================="
     # this is kinda backwards as without a check here the described
     # problems in recalc would not happen, but instead it 100%
     # does check forever in some cases
@@ -214,6 +225,9 @@ proc pickBestCandidate(c: PContext, headSymbol: PNode,
     sym = syms[nextSymIndex].s
     scope = syms[nextSymIndex].scope
     inc(nextSymIndex)
+  when defined(debugTypeRel):
+    echo "BEST: ", renderTree(best.calleeSym.ast)
+    echo "==== END: pickBestCandidate ====="
 
 
 proc effectProblem(f, a: PType; result: var string; c: PContext) =

@@ -585,6 +585,14 @@ proc hash*(x: ItemId): Hash =
   result = !$h
 
 
+var ctrlc* = 0
+proc prepC*(ic=true): string=
+  result = newString(ctrlc)
+  for i in 0..<result.len:
+    result[i] = ' '
+  if ic:
+    ctrlc += 1
+
 type
   PNode* = ref TNode
   TNodeSeq* = seq[PNode]
