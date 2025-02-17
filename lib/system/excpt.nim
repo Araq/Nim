@@ -269,7 +269,7 @@ template addFrameEntry(s: var string, f: StackTraceEntry|PFrame) =
       for i in first..<f.frameMsgLen: add(s, frameMsgBuf[i])
   add(s, "\n")
 
-proc `$`(stackTraceEntries: seq[StackTraceEntry]): string =
+proc `$`(stackTraceEntries: seq[StackTraceEntry]): string {.sideEffect.} =
   when defined(nimStackTraceOverride):
     let s = addDebuggingInfo(stackTraceEntries)
   else:
