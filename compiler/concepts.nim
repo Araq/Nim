@@ -73,6 +73,7 @@ type
   MatchFlags* = enum
     mfDontBind  # Do not bind generic parameters
     mfCheckGeneric  # formal <- formal comparison as opposed to formal <- operand
+    mfConceptToConcept # remove this
   
   MatchCon = object ## Context we pass around during concept matching.
     bindings: LayeredIdTable
@@ -459,7 +460,8 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     ctrlc -= 1
 
 proc checkConstraint(c: PContext; f, a: PType; m: var MatchCon): bool =
-  assert mfCheckGeneric notin m.flags
+  # TODO: remove assertion and mfConceptToConcept flag
+  assert mfConceptToConcept in m.flags or mfCheckGeneric notin m.flags
   result = matchType(c, f, a, m) or matchType(c, a, f, m)
 
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
@@ -628,6 +630,7 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   # bindParam(c, m, concpt.n[0].typ, arg)
   if arg.isConcept:
     # TODO: This pre-check needs to be beefed up - generic parameters and such
+    m.flags.incl mfConceptToConcept
     result = conceptsMatch(c, concpt.reduceToBase, arg.reduceToBase, m) >= mkSubset
   elif arg.acceptsAllTypes:
     # XXX: I think this is wrong, or at least partially wrong. Can still test ambiguous types
