@@ -1890,6 +1890,17 @@ proc join*[T: not string](a: openArray[T], sep: string = ""): string =
       add(result, sep)
     add(result, $x)
 
+proc join*[T](a: set[T], sep: string = ""): string =
+  ## Converts all elements in the container `a` to strings using `$`,
+  ## and concatenates them with `sep`.
+  result = ""
+  var i = 0
+  for x in a:
+    if i > 0:
+      add(result, sep)
+    add(result, $x)
+    inc i
+
 type
   SkipTable* = array[char, int] ## Character table for efficient substring search.
 

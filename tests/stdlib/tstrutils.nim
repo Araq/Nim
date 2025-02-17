@@ -885,6 +885,7 @@ bar
     doAssert join(@["foo", "bar", "baz"], ", ") == "foo, bar, baz"
     doAssert join([1, 2, 3]) == "123"
     doAssert join(@[1, 2, 3], ", ") == "1, 2, 3"
+    doAssert join({1, 2, 3}, ", ") == "1, 2, 3"
 
   block: # startsWith / endsWith
     var s = "abcdef"
