@@ -19,17 +19,16 @@ iterator countdown*[T](a, b: T, step: Positive = 1): T {.inline.} =
 
     assert x == @[7, 6, 5, 4, 3]
 
-    let y = collect(newseq):
+    let y = collect(newSeq):
       for i in countdown(9, 2, 3):
         i
     assert y == @[9, 6, 3]
-  when T is (uint|uint64):
-    var res = a
-    while res >= b:
-      yield res
-      if res == b: break
-      dec(res, step)
-  elif T is IntLikeForCount and T is Ordinal:
+
+    let z = collect(newSeq):
+      for i in countdown(5.uint32, 0.uint32, 2):
+        i
+    assert z == @[5.uint32, 3, 1]
+  when T is IntLikeForCount and T is Ordinal:
     var res = int(a)
     while res >= int(b):
       when defined(nimHasCastExtendedVm):
@@ -41,6 +40,7 @@ iterator countdown*[T](a, b: T, step: Positive = 1): T {.inline.} =
     var res = a
     while res >= b:
       yield res
+      if res <= succ(b, step.Natural - 1): break
       dec(res, step)
 
 iterator countup*[T](a, b: T, step: Positive = 1): T {.inline.} =
@@ -56,7 +56,7 @@ iterator countup*[T](a, b: T, step: Positive = 1): T {.inline.} =
     let x = collect(newSeq):
       for i in countup(3, 7):
         i
-    
+
     assert x == @[3, 4, 5, 6, 7]
 
     let y = collect(newseq):
