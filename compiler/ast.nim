@@ -1086,13 +1086,17 @@ proc extractPragma*(s: PSym): PNode =
     result = nil
   assert result == nil or result.kind == nkPragma
 
-proc skipPragmaExpr*(n: PNode): PNode =
-  ## if pragma expr, give the node the pragmas are applied to,
-  ## otherwise give node itself
-  if n.kind == nkPragmaExpr:
-    result = n[0]
-  else:
-    result = n
+proc skipPostfix*(n: PNode): PNode {.inline.} =
+  ## if postfix, give the operand, otherwise give node itself
+  result = n
+  if result.kind == nkPostfix: result = result[1]
+
+proc skipPragmaExpr*(n: PNode): PNode {.inline.} =
+  ## if pragma expr, take the node the pragmas are applied to,
+  ## otherwise take node itself; then skip postfix
+  result = n
+  if result.kind == nkPragmaExpr: result = result[0]
+  result = skipPostfix(result)
 
 proc setInfoRecursive*(n: PNode, info: TLineInfo) =
   ## set line info recursively

@@ -935,6 +935,16 @@ proc semRecordNodeAux(c: PContext, n: PNode, check: var IntSet, pos: var int,
         fSym.sym.ast.flags.incl nfSkipFieldChecking
       if a.kind == nkEmpty: father.add fSym
       else: a.add fSym
+      if n[i].kind == nkPragmaExpr:
+        if n[i][0].kind == nkPostfix:
+          n[i][0][1] = fSym
+        else:
+          n[i][0] = fSym
+      else:
+        if n[i].kind == nkPostfix:
+          n[i][1] = fSym
+        else:
+          n[i] = fSym
       styleCheckDef(c, f)
       onDef(f.info, f)
     if a.kind != nkEmpty: father.add a
@@ -1624,8 +1634,10 @@ proc trySemObjectTypeForInheritedGenericInst(c: PContext, n: PNode, t: PType): b
 proc containsGenericInvocationWithForward(n: PNode): bool =
   if n.kind == nkSym and n.sym.ast != nil and n.sym.ast.len > 1 and n.sym.ast[2].kind == nkObjectTy:
     for p in n.sym.ast[2][^1]:
-      if p.kind == nkIdentDefs and p[1].typ != nil and p[1].typ.kind == tyGenericInvocation and
-        p[1][0].kind == nkSym and p[1][0].typ.kind == tyForward:
+      if p.kind == nkIdentDefs:
+        let pTyp = p[^2].typ
+        if pTyp != nil and pTyp.kind == tyGenericInvocation and
+            pTyp.base.kind == tyForward:
           return true
   return false
 

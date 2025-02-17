@@ -11,6 +11,15 @@ rounding guarantees (via the
 - The `default` parameter of `tables.getOrDefault` has been renamed to `def` to
   avoid conflicts with `system.default`, so named argument usage for this
   parameter like `getOrDefault(..., default = ...)` will have to be changed.
+- `bindMethod` in `std/jsffi` is deprecated, don't use it with closures.
+
+- JS backend now supports lambda lifting for closures. Use `--legacy:jsNoLambdaLifting` to emulate old behavior.
+
+- `owner` in `std/macros` is deprecated.
+- Typed AST of type, variable and routine declarations including symbol
+  implementations now retain the postfix export marker node on the name.
+  Macros that examine the name node of these declarations may now need to skip
+  `nnkPostfix` nodes. 
 
 - With `-d:nimPreviewCheckedClose`, the `close` function in the `std/syncio` module now raises an IO exception in case of an error.
 

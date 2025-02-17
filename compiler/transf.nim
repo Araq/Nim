@@ -194,6 +194,7 @@ proc transformVarSection(c: PTransf, v: PNode): PNode =
     elif it.kind == nkIdentDefs:
       var vn = it[0]
       if vn.kind == nkPragmaExpr: vn = vn[0]
+      if vn.kind == nkPostfix: vn = vn[1]
       if vn.kind == nkSym:
         internalAssert(c.graph.config, it.len == 3)
         let x = freshVar(c, vn.sym)
@@ -216,12 +217,13 @@ proc transformVarSection(c: PTransf, v: PNode): PNode =
         internalError(c.graph.config, it.info, "transformVarSection: not nkVarTuple")
       var defs = newTransNode(it.kind, it.info, it.len)
       for j in 0..<it.len-2:
-        if it[j].kind == nkSym:
-          let x = freshVar(c, it[j].sym)
-          c.transCon.mapping[it[j].sym.itemId] = x
+        let name = skipPostfix(it[j])
+        if name.kind == nkSym:
+          let x = freshVar(c, name.sym)
+          c.transCon.mapping[name.sym.itemId] = x
           defs[j] = x
         else:
-          defs[j] = transform(c, it[j])
+          defs[j] = transform(c, name)
       assert(it[^2].kind == nkEmpty)
       defs[^2] = newNodeI(nkEmpty, it.info)
       defs[^1] = transform(c, it[^1])
@@ -330,8 +332,10 @@ proc introduceNewLocalVars(c: PTransf, n: PNode): PNode =
     return n
   of nkProcDef: # todo optimize nosideeffects?
     result = newTransNode(n)
-    let x = newSymNode(copySym(n[namePos].sym, c.idgen))
-    c.transCon.mapping[n[namePos].sym.itemId] = x
+    var name = n[namePos]
+    if name.kind == nkPostfix: name = name[1]
+    let x = newSymNode(copySym(name.sym, c.idgen))
+    c.transCon.mapping[name.sym.itemId] = x
     result[namePos] = x # we have to copy proc definitions for iters
     for i in 1..<n.len:
       result[i] = introduceNewLocalVars(c, n[i])
@@ -1046,13 +1050,16 @@ proc transform(c: PTransf, n: PNode, noConstFold = false): PNode =
     result = n
   of nkBracketExpr: result = transformArrayAccess(c, n)
   of procDefs:
-    var s = n[namePos].sym
+    let name = skipPostfix(n[0])
+    let s = name.sym
     if n.typ != nil and s.typ.callConv == ccClosure:
-      result = transformSym(c, n[namePos])
+      let t = transformSym(c, name)
       # use the same node as before if still a symbol:
-      if result.kind == nkSym: result = n
-    else:
-      result = n
+      if t.kind != nkSym:
+        return t
+    result = newTransNode(n)
+    result[0] = name
+    for i in 1 ..< n.len: result[i] = n[i]
   of nkMacroDef:
     # XXX no proper closure support yet:
     when false:
