@@ -619,10 +619,9 @@ proc semIs(c: PContext, n: PNode, flags: TExprFlags): PNode =
     if liftLhs:
       n[1] = makeTypeSymNode(c, lhsType, n[1].info)
       lhsType = n[1].typ
-  else:
-    if c.inGenericContext > 0 and lhsType.base.containsUnresolvedType:
-      # BUGFIX: don't evaluate this too early: ``T is void``
-      return
+  if c.inGenericContext > 0 and lhsType.containsUnresolvedType:
+    # BUGFIX: don't evaluate this too early: ``T is void``
+    return
 
   result = isOpImpl(c, n, flags)
 
