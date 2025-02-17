@@ -1728,14 +1728,19 @@ proc genOutFile(d: PDoc, groupedToc = false): string =
                  elif d.hasToc: "doc.body_toc"
                  else: "doc.body_no_toc"
   let seeSrc = genSeeSrc(d, d.filename, 1)
+  let theindexhref = relLink(d.conf.outDir, d.destFile.AbsoluteFile,
+                             theindexFname.RelativeFile)
+  var maindir = splitPath(theindexhref)[0]
+  if maindir == "": maindir = "."
   content = getConfigVar(d.conf, bodyname) % [
       "title", title, "subtitle", subtitle,
       "tableofcontents", toc, "moduledesc", d.modDescFinal, "date", getDateStr(),
       "time", getClockStr(), "content", code,
       "deprecationMsg", d.modDeprecationMsg,
-      "theindexhref", relLink(d.conf.outDir, d.destFile.AbsoluteFile,
-                              theindexFname.RelativeFile),
-      "body_toc_groupsection", groupsection, "seeSrc", seeSrc]
+      "theindexhref", theindexhref,
+      "body_toc_groupsection", groupsection, "seeSrc", seeSrc,
+      "maindir", maindir
+      ]
   if optCompileOnly notin d.conf.globalOptions:
     # XXX what is this hack doing here? 'optCompileOnly' means raw output!?
     code = getConfigVar(d.conf, "doc.file") % [
