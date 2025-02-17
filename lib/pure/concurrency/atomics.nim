@@ -100,7 +100,7 @@ when (defined(cpp) and defined(nimUseCppAtomics)) or defined(nimdoc):
 
   # Access operations
 
-  proc load*[T](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.importcpp: "#.load(@)".}
+  proc load*[T](location: Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.importcpp: "#.load(@)".}
     ## Atomically obtains the value of the atomic object.
 
   proc store*[T](location: var Atomic[T]; desired: T; order: MemoryOrder = moSequentiallyConsistent) {.importcpp: "#.store(@)".}
@@ -247,7 +247,7 @@ else:
     proc clear*(location: var AtomicFlag; order: MemoryOrder = moSequentiallyConsistent) =
       discard interlockedAnd(addr(location), 0'i8)
 
-    proc load*[T: Trivial](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
+    proc load*[T: Trivial](location: Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
       cast[T](interlockedOr(addr(location.value), (nonAtomicType(T))0))
     proc store*[T: Trivial](location: var Atomic[T]; desired: T; order: MemoryOrder = moSequentiallyConsistent) {.inline.} =
       discard interlockedExchange(addr(location.value), cast[nonAtomicType(T)](desired))
@@ -350,7 +350,7 @@ else:
 
     {.pop.}
 
-    proc load*[T: Trivial](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
+    proc load*[T: Trivial](location: Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
       cast[T](atomic_load_explicit[nonAtomicType(T), typeof(location.value)](addr(location.value), order))
     proc store*[T: Trivial](location: var Atomic[T]; desired: T; order: MemoryOrder = moSequentiallyConsistent) {.inline.} =
       atomic_store_explicit(addr(location.value), cast[nonAtomicType(T)](desired), order)
@@ -378,15 +378,22 @@ else:
     proc fetchXor*[T: SomeInteger](location: var Atomic[T]; value: T; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
       cast[T](atomic_fetch_xor_explicit(addr(location.value), cast[nonAtomicType(T)](value), order))
 
-  template withLock[T: not Trivial](location: var Atomic[T]; order: MemoryOrder; body: untyped): untyped =
+  template withLock[T: not Trivial](location: Atomic[T]; order: MemoryOrder; body: untyped): untyped =
     while testAndSet(location.guard, moAcquire): discard
     try:
       body
     finally:
       clear(location.guard, moRelease)
 
-  proc load*[T: not Trivial](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
-    withLock(location, order):
+  template withLockR[T: not Trivial](location: Atomic[T]; order: MemoryOrder; body: untyped): untyped =
+    while testAndSet(addr(location.guard)[], moAcquire): discard
+    try:
+      body
+    finally:
+      clear(addr(location.guard)[], moRelease)
+
+  proc load*[T: not Trivial](location: Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.inline.} =
+    withLockR(location, order):
       result = location.nonAtomicValue
 
   proc store*[T: not Trivial](location: var Atomic[T]; desired: T; order: MemoryOrder = moSequentiallyConsistent) {.inline.} =
