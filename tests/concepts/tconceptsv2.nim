@@ -415,3 +415,20 @@ block:
   proc spring(x: var C1) = discard
   var d = B()
   d.spring()
+
+block:
+  type
+    A = object
+    C1 = concept
+      proc p(s: Self; x: auto)
+    C2[T: int] = concept
+      proc p(s: Self; x: T)
+    Impl = object
+
+  proc p(n: Impl; i: int) = discard
+
+  proc spring(x: C1): int = 1
+  proc spring(x: C2): int = 2
+
+  assert spring(Impl()) == 2
+

@@ -121,7 +121,12 @@ proc bindParam(c: PContext, m: var MatchCon; key, v: PType): bool {. discardable
   var value = unrollGenericParam(v)
   if value.kind == tyGenericParam:
     value = existingBinding(m, value)
-  if value.kind in {tyStatic, tyGenericParam}:
+    if value.kind == tyGenericParam:
+      if value.hasElementType:
+        value = value.elementType
+      else:
+        return true
+  if value.kind == tyStatic:
     return false
 
   if m.magic in {mArrPut, mArrGet} and value.kind in arrPutGetMagicApplies:
@@ -409,6 +414,9 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
       result = matchKids(c, f, a, m)
     else:
       result = matchType(c, last(f), a, m)
+  of tyBuiltInTypeClass:
+    let target = f.genericHead.kind
+    result = a.skipTypes(ignorableForArgType).reduceToBase.kind == target
   of tyOr:
     if a.kind == tyOr:
       var covered = 0
@@ -451,17 +459,8 @@ proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
     ctrlc -= 1
 
 proc checkConstraint(c: PContext; f, a: PType; m: var MatchCon): bool =
-  # this allows more abstract implementations to match for more specific arguments
-  # e.g. an candidate p[T](a: auto, b: T) can match for a constraint p(a: Self, b: int) here
-  when defined(debugConcepts):
-    echo "base con <- arg"
-  result = matchType(c, f, a, m)
-  if not(result or mfCheckGeneric in m.flags):
-    # this allows container concepts' generic variables to match and bind, as well as supporting "good enough" matches
-    # for abstractions not captured by generic variables
-    when defined(debugConcepts):
-      echo "ext arg <- con"
-    result = matchType(c, a, f, m)
+  assert mfCheckGeneric notin m.flags
+  result = matchType(c, f, a, m) or matchType(c, a, f, m)
 
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
   ## Like 'matchType' but with extra logic dealing with proc return types
@@ -629,10 +628,14 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   # bindParam(c, m, concpt.n[0].typ, arg)
   if arg.isConcept:
     # TODO: This pre-check needs to be beefed up - generic parameters and such
-    return conceptsMatch(c, concpt.reduceToBase, arg.reduceToBase, m) >= mkSubset
+    result = conceptsMatch(c, concpt.reduceToBase, arg.reduceToBase, m) >= mkSubset
   elif arg.acceptsAllTypes:
     # XXX: I think this is wrong, or at least partially wrong. Can still test ambiguous types
-    return false
-  result = processConcept(c, concpt, invocation, bindings, m)
+    result = false
+  elif mfCheckGeneric in m.flags:
+    # prioritize concepts the least. Specifically if the arg is not a catch all as per above
+    result = true
+  else:
+    result = processConcept(c, concpt, invocation, bindings, m)
 
   

@@ -1509,7 +1509,8 @@ proc getSize*(conf: ConfigRef; typ: PType): BiggestInt =
 proc isConcept*(t: PType): bool=
   case t.kind
   of tyConcept: true
-  of tyCompositeTypeClass: t.hasElementType and t.elementType.kind == tyConcept
+  of tyCompositeTypeClass:
+    t.hasElementType and isConcept(t.elementType)
   of tyGenericBody:
     return t.typeBodyImpl.kind == tyConcept
   of tyGenericInvocation, tyGenericInst:
