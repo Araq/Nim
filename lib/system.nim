@@ -184,6 +184,10 @@ when defined(nimHasEnsureMove):
         doAssert y == "Hello"
       foo()
     discard "implemented in injectdestructors"
+else:
+  template ensureMove*[T](x: T): T =
+    # no-op for bootstrapping
+    x
 
 type
   range*[T]{.magic: "Range".}         ## Generic type to construct range types.
