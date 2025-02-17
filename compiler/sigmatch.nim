@@ -365,12 +365,21 @@ proc sumGeneric(t: PType): int =
     else:
       break
 
-proc complexDisambiguation(a, b: PType): int =
+proc sumGenericConsiderDefault(t: PType, n: PNode, i: int): int =
+  if i < n.len and nfDefaultParam in n[i].flags:
+    # inserted param, consider nonexistant in disambiguation
+    result = 0
+  else:
+    result = sumGeneric(t)
+
+proc complexDisambiguation(a, b: PType, aNode, bNode: PNode): int =
   # 'a' matches better if *every* argument matches better or equal than 'b'.
   var winner = 0
+  var i = 1
   for ai, bi in underspecifiedPairs(a, b, 1):
-    let x = ai.sumGeneric
-    let y = bi.sumGeneric
+    let x = sumGenericConsiderDefault(ai, aNode, i)
+    let y = sumGenericConsiderDefault(bi, bNode, i)
+    inc i
     if x != y:
       if winner == 0:
         if x > y: winner = 1
@@ -425,7 +434,7 @@ proc cmpCandidates*(a, b: TCandidate, isFormal=true): int =
     result = checkGeneric(a, b)
     if result != 0: return
     # prefer more specialized generic over more general generic:
-    result = complexDisambiguation(a.callee, b.callee)
+    result = complexDisambiguation(a.callee, b.callee, a.call, b.call)
   if result != 0: return
   # only as a last resort, consider scoping:
   result = a.calleeScope - b.calleeScope
@@ -3024,8 +3033,11 @@ proc matches*(c: PContext, n, nOrig: PNode, m: var TCandidate) =
           # container node kind accordingly
           let cnKind = if formal.typ.isVarargsUntyped: nkArgList else: nkBracket
           var container = newNodeIT(cnKind, n.info, arrayConstr(c, n.info))
-          setSon(m.call, formal.position + 1,
-                 implicitConv(nkHiddenStdConv, formal.typ, container, m, c))
+          var arg = implicitConv(nkHiddenStdConv, formal.typ, container, m, c)
+          # inserted, so treat as inserted param, i.e.
+          # `varargs[T]` has default value `[]`:
+          arg.flags.incl nfDefaultParam
+          setSon(m.call, formal.position + 1, arg)
         else:
           # no default value
           m.state = csNoMatch
