@@ -310,9 +310,7 @@ proc checkGeneric(a, b: TCandidate): int =
       winner = -1
   result = winner
 
-proc sumGeneric(t: PType): int 
-
-proc sumGenericM(t: PType): int =
+proc sumGeneric(t: PType): int =
   result = 0
   var t = t
   while true:
@@ -368,16 +366,7 @@ proc sumGenericM(t: PType): int =
         result += t.reduceToBase.conceptBody.len
       break
 
-proc sumGeneric(t: PType): int =
-  when defined(debugTypeRel):
-    let prep = prepC()
-  result = sumGenericM(t)
-  when defined(debugTypeRel):
-    echo prep,"------> sumGeneric: ", t, ": ", t.kind, " -> ", result
-    ctrlc -= 1
-
-proc complexDisambiguation(a, b: PType): int
-proc complexDisambiguationM(a, b: PType): int =
+proc complexDisambiguation(a, b: PType): int =
   # 'a' matches better if *every* argument matches better or equal than 'b'.
   var winner = 0
   for ai, bi in underspecifiedPairs(a, b, 1):
@@ -400,13 +389,6 @@ proc complexDisambiguationM(a, b: PType): int =
     for i in 1..<a.len: x += ai.sumGeneric
     for i in 1..<b.len: y += bi.sumGeneric
     result = x - y
-proc complexDisambiguation(a, b: PType): int =
-  when defined(debugTypeRel):
-    let prep = prepC()
-  result = complexDisambiguationM(a, b)
-  when defined(debugTypeRel):
-    echo prep,"------> complexDisambiguation"
-    ctrlc -= 1
 
 proc writeMatches*(c: TCandidate) =
   echo "Candidate '", c.calleeSym.name.s, "' at ", c.c.config $ c.calleeSym.info
@@ -427,12 +409,6 @@ proc cmpInheritancePenalty(a, b: int): int =
   eb - ea
 
 proc cmpCandidates*(a, b: TCandidate, isFormal=true): int =
-  when defined(debugTypeRel):
-    echo " ---S--- "
-    writeMatches(a)
-    echo " ------ "
-    writeMatches(b)
-    echo " ---E--- "
   result = a.exactMatches - b.exactMatches
   if result != 0: return
   result = a.genericMatches - b.genericMatches
@@ -1186,7 +1162,7 @@ when false:
 template skipOwned(a) =
   if a.kind == tyOwned: a = a.skipTypes({tyOwned, tyGenericInst})
 
-proc typeRelM(c: var TCandidate, f, aOrig: PType,
+proc typeRel(c: var TCandidate, f, aOrig: PType,
              flags: TTypeRelFlags = {}): TTypeRelation =
   # typeRel can be used to establish various relationships between types:
   #
@@ -2153,20 +2129,6 @@ proc typeRelM(c: var TCandidate, f, aOrig: PType,
     if a.kind == tyNone: result = isEqual
   else:
     internalError c.c.graph.config, " unknown type kind " & $f.kind
-
-proc typeRel(c: var TCandidate, f, aOrig: PType,
-             flags: TTypeRelFlags = {}): TTypeRelation =
-  when defined(debugTypeRel):
-    let prep = prepC()
-    if aOrig == nil:
-      echo prep, "TYPEREL(", ctrlc ,"): ", f, "  <>  ", f.kind, "  <fits?-  nil"
-    else:
-      echo prep, "TYPEREL(", ctrlc ,"): ", f.kind, "(", f, ") <- ",aOrig.kind, "(", aOrig, ")"
-  var ret =  typeRelM(c, f,aOrig,flags=flags)
-  when defined(debugTypeRel):
-    echo prep, "TYPEREL(", ctrlc ,"): ","RETURNED: ", ret
-    ctrlc -= 1
-  return ret
 
 when false:
   var nowDebug = false

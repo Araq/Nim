@@ -73,7 +73,6 @@ type
   MatchFlags* = enum
     mfDontBind  # Do not bind generic parameters
     mfCheckGeneric  # formal <- formal comparison as opposed to formal <- operand
-    mfConceptToConcept # remove this
   
   MatchCon = object ## Context we pass around during concept matching.
     bindings: LayeredIdTable
@@ -95,7 +94,7 @@ const
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool
 
-proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool
+proc matchType(c: PContext; fo, ao: PType; m: var MatchCon): bool
 
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool
 
@@ -136,14 +135,10 @@ proc bindParam(c: PContext, m: var MatchCon; key, v: PType): bool {. discardable
   let old = existingBinding(m, key)
   if old != key:
     # check previously bound value
-    when defined(debugConcepts):
-      echo "checking previous T"
     if matchType(c, old, value, m) == false:
       return false
   elif key.hasElementType and key.elementType.kind != tyNone:
     # check constaint
-    when defined(debugConcepts):
-      echo "checking T constraint"
     if matchType(c, unrollGenericParam(key), value, m) == false:
       return false
   
@@ -204,8 +199,6 @@ proc matchConceptToImpl(c: PContext, f, potentialImpl: PType; m: var MatchCon): 
   if m.depthCount > 0:
     # concepts that are more then 2 levels deep are treated like
     # tyAnything to stop dependencies from getting out of control
-    when defined(debugConcepts):
-      echo "matchConceptToImpl converted to auto"
     return true
   var efPot = potentialImpl
   if potentialImpl.isSelf:
@@ -219,10 +212,6 @@ proc matchConceptToImpl(c: PContext, f, potentialImpl: PType; m: var MatchCon): 
   m.potentialImplementation = efPot
   let oldConcept = m.concpt
   m.concpt = concpt
-  
-  when defined(debugConcepts):
-    echo "<><><><><><><><><>"
-    echo "new cncpt:", renderTree(concpt.n)
   
   var invocation: PType = nil
   if f.kind == tyGenericInvocation:
@@ -243,12 +232,9 @@ proc cmpConceptDefs(c: PContext, fn, an: PNode, m: var MatchCon): bool=
     at = an.defSignatureType
   if ft.len != at.len:
     return false
-  when defined(debugConcepts):
-    echo "cmpConceptDefs, ", fn, " <- ", an
+  
   for i in 1 ..< ft.n.len:
     m.bindings = m.bindings.newTypeMapLayer()
-    when defined(debugConcepts):
-      echo "cmp: ", ft.n[i].typ, " : ", at.n[i].typ
     
     let aType = at.n[i].typ
     let fType = ft.n[i].typ
@@ -284,7 +270,7 @@ proc conceptsMatch(c: PContext, fc, ac: PType; m: var MatchCon): MatchKind =
       return mkNoMatch
   return mkSubset
 
-proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
+proc matchType(c: PContext; fo, ao: PType; m: var MatchCon): bool =
   ## The heart of the concept matching process. 'f' is the formal parameter of some
   ## routine inside the concept that we're looking for. 'a' is the formal parameter
   ## of a routine that might match.
@@ -295,9 +281,6 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
   
   if a.kind in bindableTypes:
     a = existingBinding(m, ao)
-    when defined(debugConcepts):
-      if ao != a:
-        echo "Swapping: `", ao, "' for bound: '", a, "'"
     if a == ao and a.kind == tyGenericParam and a.hasElementType and a.elementType.kind != tyNone:
       a = a.elementType
   
@@ -444,24 +427,7 @@ proc matchTypeM(c: PContext; fo, ao: PType; m: var MatchCon): bool =
     if bindParam(c, m, ao, bf):
       when logBindings: echo " ^ reverse binding"
 
-proc stypeToString(a: PType): string=
-  if a == nil:
-    return "nil"
-  else:
-    return $a.kind & "(" & typeToString(a) & ")"
-
-proc matchType(c: PContext; f, a: PType; m: var MatchCon): bool =
-  when defined(debugConcepts):
-    let prep = prepC()
-    echo prep, "matchType(", ctrlc ,"): ", stypeToString(f), " <- ", stypeToString(a)
-  result =  matchTypeM(c, f, a, m)
-  when defined(debugConcepts):
-    echo prep, "matchType(", ctrlc ,"): ","RETURNED: ", result
-    ctrlc -= 1
-
 proc checkConstraint(c: PContext; f, a: PType; m: var MatchCon): bool =
-  # TODO: remove assertion and mfConceptToConcept flag
-  assert mfConceptToConcept in m.flags or mfCheckGeneric notin m.flags
   result = matchType(c, f, a, m) or matchType(c, a, f, m)
 
 proc matchReturnType(c: PContext; f, a: PType; m: var MatchCon): bool =
@@ -522,19 +488,11 @@ proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bo
   result = false
   var candidates = searchScopes(c, n[namePos].sym.name, kinds)
   searchImportsAll(c, n[namePos].sym.name, kinds, candidates)
-  when defined(debugConcepts):
-    echo "----------------------->"
-    echo "implementation: ", m.potentialImplementation
-    echo "concept def: ", n
   for candidate in candidates:
     m.magic = candidate.magic
     if matchSym(c, candidate, n, m):
       result = true
       break
-  when defined(debugConcepts):
-    echo "implementation: ", m.potentialImplementation
-    echo "concept def: ", n
-    echo "<----------------------- ", result
 
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
   ## Traverse the concept's AST ('n') and see if every declaration inside 'n'
@@ -595,16 +553,6 @@ proc fixBindings(bindings: var LayeredIdTable; concpt: PType; invocation: PType;
   bindings.put(concpt, m.potentialImplementation)
 
 proc processConcept(c: PContext; concpt, invocation: PType, bindings: var LayeredIdTable; m: var MatchCon): bool =
-  when defined(debugConcepts):
-    let prep = prepC()
-    echo prep, "<<<<< processConcept enter >>>>>>"
-    echo typeToString(concpt)
-    echo concpt.n
-    result = false
-    defer:
-      echo prep, "processConcept exit: ", result
-      ctrlc -= 1
-  #debug(concpt)
   m.bindings = m.bindings.newTypeMapLayer()
   if invocation != nil and invocation.kind == tyGenericInst:
     let genericBody = invocation.base
@@ -626,11 +574,7 @@ proc conceptMatch*(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable
   ## for 'S' and 'T' inside 'bindings' on a successful match. It is very important that
   ## we do not add any bindings at all on an unsuccessful match!
   var m = MatchCon(bindings: bindings, potentialImplementation: arg, concpt: concpt, flags: flags)
-  # bind `Self` to the potential implementation
-  # bindParam(c, m, concpt.n[0].typ, arg)
   if arg.isConcept:
-    # TODO: This pre-check needs to be beefed up - generic parameters and such
-    m.flags.incl mfConceptToConcept
     result = conceptsMatch(c, concpt.reduceToBase, arg.reduceToBase, m) >= mkSubset
   elif arg.acceptsAllTypes:
     # XXX: I think this is wrong, or at least partially wrong. Can still test ambiguous types
