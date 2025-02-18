@@ -1207,6 +1207,8 @@ proc produceSym(g: ModuleGraph; c: PContext; typ: PType; kind: TTypeAttachedOp;
     result.ast[pragmasPos].add newTree(nkExprColonExpr,
         newIdentNode(g.cache.getIdent("raises"),  info), newNodeI(nkBracket, info))
 
+  if kind == attachedDestructor:
+    incl result.options, optQuirky
   completePartialOp(g, idgen.module, typ, kind, result)
 
 
