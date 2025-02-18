@@ -1322,7 +1322,7 @@ proc singlePragma(c: PContext, sym: PSym, n: PNode, i: var int,
         sym.flags.incl sfNeverRaises
       of wQuirky:
         sym.flags.incl sfNeverRaises
-        if sym.kind in {skProc, skMethod, skConverter}:
+        if sym.kind in {skProc, skMethod, skConverter, skFunc, skIterator}:
           sym.options.incl optQuirky
       of wSystemRaisesDefect:
         sym.flags.incl sfSystemRaisesDefect
