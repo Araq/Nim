@@ -87,6 +87,9 @@ else:
   template count(x: Cell): untyped =
     x.rc shr rcShift
 
+when not defined(nimHasQuirky):
+  {.pragma: quirky.}
+
 proc nimNewObj(size, alignment: int): pointer {.compilerRtl.} =
   let hdrSize = align(sizeof(RefHeader), alignment)
   let s = size + hdrSize
