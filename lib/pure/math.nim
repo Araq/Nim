@@ -105,7 +105,7 @@ when not defined(js) and not defined(nimscript): # C
       when compileOption("overflowChecks"):
         if y == 0:
           raise new(DivByZeroDefect)
-        elif (x == T.low and y == -1.T):
+        elif (x == T.low and int64(y) == -1):
           raise new(OverflowDefect)
       let res = divmod_c(x, y)
       result[0] = res.quot
