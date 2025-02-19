@@ -2740,7 +2740,9 @@ proc semWhen(c: PContext, n: PNode, semCheck = true): PNode =
       checkSonsLen(it, 2, c.config)
       if whenNimvm:
         if semCheck:
+          openScope(c)
           it[1] = semExpr(c, it[1], flags)
+          closeScope(c)
           typ = commonType(c, typ, it[1].typ)
         result = n # when nimvm is not elimited until codegen
       elif c.inGenericContext > 0:
@@ -2771,10 +2773,12 @@ proc semWhen(c: PContext, n: PNode, semCheck = true): PNode =
         discard
       elif result == nil or whenNimvm:
         if semCheck:
+          if whenNimvm: openScope(c)
           it[0] = semExpr(c, it[0], flags)
           typ = commonType(c, typ, it[0].typ)
           if typ != nil and typ.kind != tyUntyped:
             it[0] = fitNode(c, typ, it[0], it[0].info)
+          if whenNimvm: closeScope(c)
         if result == nil:
           result = it[0]
     else: illFormedAst(n, c.config)
