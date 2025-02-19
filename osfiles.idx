@@ -1,0 +1,24 @@
+nimTitle	osfiles	osfiles.html	module std/private/osfiles		0
+nim	fpUserExec	osfiles.html#fpUserExec	FilePermission.fpUserExec		42
+nim	fpUserWrite	osfiles.html#fpUserWrite	FilePermission.fpUserWrite		42
+nim	fpUserRead	osfiles.html#fpUserRead	FilePermission.fpUserRead		42
+nim	fpGroupExec	osfiles.html#fpGroupExec	FilePermission.fpGroupExec		42
+nim	fpGroupWrite	osfiles.html#fpGroupWrite	FilePermission.fpGroupWrite		42
+nim	fpGroupRead	osfiles.html#fpGroupRead	FilePermission.fpGroupRead		42
+nim	fpOthersExec	osfiles.html#fpOthersExec	FilePermission.fpOthersExec		42
+nim	fpOthersWrite	osfiles.html#fpOthersWrite	FilePermission.fpOthersWrite		42
+nim	fpOthersRead	osfiles.html#fpOthersRead	FilePermission.fpOthersRead		42
+nim	FilePermission	osfiles.html#FilePermission	enum FilePermission		42
+nim	getFilePermissions	osfiles.html#getFilePermissions,string	proc getFilePermissions(filename: string): set[FilePermission]		58
+nim	setFilePermissions	osfiles.html#setFilePermissions,string,set[FilePermission]	proc setFilePermissions(filename: string; permissions: set[FilePermission];\n                   followSymlinks = true)		93
+nim	cfSymlinkAsIs	osfiles.html#cfSymlinkAsIs	CopyFlag.cfSymlinkAsIs		167
+nim	cfSymlinkFollow	osfiles.html#cfSymlinkFollow	CopyFlag.cfSymlinkFollow		167
+nim	cfSymlinkIgnore	osfiles.html#cfSymlinkIgnore	CopyFlag.cfSymlinkIgnore		167
+nim	CopyFlag	osfiles.html#CopyFlag	enum CopyFlag		167
+nim	copyFile	osfiles.html#copyFile,string,string,int	proc copyFile(source, dest: string; options = {cfSymlinkFollow}; bufferSize = 16384)		174
+nim	copyFileToDir	osfiles.html#copyFileToDir,string,string,int	proc copyFileToDir(source, dir: string; options = {cfSymlinkFollow};\n              bufferSize = 16384)		268
+nim	copyFileWithPermissions	osfiles.html#copyFileWithPermissions,string,string	proc copyFileWithPermissions(source, dest: string; ignorePermissionErrors = true;\n                        options = {cfSymlinkFollow})		286
+nim	tryRemoveFile	osfiles.html#tryRemoveFile,string	proc tryRemoveFile(file: string): bool		339
+nim	removeFile	osfiles.html#removeFile,string	proc removeFile(file: string)		368
+nim	moveFile	osfiles.html#moveFile,string,string	proc moveFile(source, dest: string)		385
+idx	rename files	osfiles.html#rename-files_1	Module osfiles		0

@@ -1,0 +1,33 @@
+nimTitle	selectors	selectors.html	module std/selectors		0
+nim	ioselSupportedPlatform	selectors.html#ioselSupportedPlatform	const ioselSupportedPlatform		38
+nim	Selector	selectors.html#Selector	type Selector		51
+nim	IOSelectorsException	selectors.html#IOSelectorsException	object IOSelectorsException		54
+nim	Event	selectors.html#Event	enum Event		57
+nim	ReadyKey	selectors.html#ReadyKey	object ReadyKey		75
+nim	SelectEvent	selectors.html#SelectEvent	object SelectEvent		82
+nim	newSelector	selectors.html#newSelector	proc newSelector[T](): Selector[T]		85
+nim	close	selectors.html#close,Selector[T]	proc close[T](s: Selector[T])		88
+nim	registerHandle	selectors.html#registerHandle,Selector[T],,set[Event],T	proc registerHandle[T](s: Selector[T]; fd: int | SocketHandle; events: set[Event];\n                  data: T)		91
+nim	updateHandle	selectors.html#updateHandle,Selector[T],,set[Event]	proc updateHandle[T](s: Selector[T]; fd: int | SocketHandle; events: set[Event])		97
+nim	registerTimer	selectors.html#registerTimer,Selector[T],int,bool,T	proc registerTimer[T](s: Selector[T]; timeout: int; oneshot: bool; data: T): int		102
+nim	registerSignal	selectors.html#registerSignal,Selector[T],int,T	proc registerSignal[T](s: Selector[T]; signal: int; data: T): int		116
+nim	registerProcess	selectors.html#registerProcess,Selector[T],int,T	proc registerProcess[T](s: Selector[T]; pid: int; data: T): int		128
+nim	registerEvent	selectors.html#registerEvent,Selector[T],SelectEvent,T	proc registerEvent[T](s: Selector[T]; ev: SelectEvent; data: T)		138
+nim	registerVnode	selectors.html#registerVnode,Selector[T],cint,set[Event],T	proc registerVnode[T](s: Selector[T]; fd: cint; events: set[Event]; data: T)		144
+nim	newSelectEvent	selectors.html#newSelectEvent	proc newSelectEvent(): SelectEvent		153
+nim	trigger	selectors.html#trigger,SelectEvent	proc trigger(ev: SelectEvent)		156
+nim	close	selectors.html#close,SelectEvent	proc close(ev: SelectEvent)		159
+nim	unregister	selectors.html#unregister,Selector[T],SelectEvent	proc unregister[T](s: Selector[T]; ev: SelectEvent)		162
+nim	unregister	selectors.html#unregister,Selector[T],	proc unregister[T](s: Selector[T]; fd: int | SocketHandle | cint)		165
+nim	selectInto	selectors.html#selectInto,Selector[T],int,openArray[ReadyKey]	proc selectInto[T](s: Selector[T]; timeout: int; results: var openArray[ReadyKey]): int		168
+nim	select	selectors.html#select,Selector[T],int	proc select[T](s: Selector[T]; timeout: int): seq[ReadyKey]		179
+nim	getData	selectors.html#getData,Selector[T],	proc getData[T](s: Selector[T]; fd: SocketHandle | int): var T		188
+nim	setData	selectors.html#setData,Selector[T],,T	proc setData[T](s: Selector[T]; fd: SocketHandle | int; data: var T): bool		193
+nim	isEmpty	selectors.html#isEmpty.t,Selector[T]	template isEmpty[T](s: Selector[T]): bool		198
+nim	withData	selectors.html#withData.t,Selector[T],,untyped,untyped	template withData[T](s: Selector[T]; fd: SocketHandle | int; value, body: untyped)		202
+nim	withData	selectors.html#withData.t,Selector[T],,untyped,untyped,untyped	template withData[T](s: Selector[T]; fd: SocketHandle | int; value, body1, body2: untyped)		214
+nim	contains	selectors.html#contains,Selector[T],	proc contains[T](s: Selector[T]; fd: SocketHandle | int): bool		229
+nim	getFd	selectors.html#getFd,Selector[T]	proc getFd[T](s: Selector[T]): int		232
+nimgrp	close	selectors.html#close-procs-all	proc		88
+nimgrp	unregister	selectors.html#unregister-procs-all	proc		162
+nimgrp	withdata	selectors.html#withData-templates-all	template		202

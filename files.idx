@@ -1,0 +1,5 @@
+nimTitle	files	files.html	module std/files		0
+nim	fileExists	files.html#fileExists,Path	proc fileExists(filename: Path): bool		12
+nim	removeFile	files.html#removeFile,Path	proc removeFile(file: Path)		18
+nim	moveFile	files.html#moveFile,Path,Path	proc moveFile(source, dest: Path)		31
+idx	rename files	files.html#rename-files_1	Module files		0

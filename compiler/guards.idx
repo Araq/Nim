@@ -1,0 +1,28 @@
+nimTitle	guards	guards.html	module guards		0
+nim	interestingCaseExpr	guards.html#interestingCaseExpr,PNode	proc interestingCaseExpr(m: PNode): bool		93
+nim	buildCall	guards.html#buildCall,PSym,PNode	proc buildCall(op: PSym; a: PNode): PNode		151
+nim	buildCall	guards.html#buildCall,PSym,PNode,PNode	proc buildCall(op: PSym; a, b: PNode): PNode		156
+nim	lowBound	guards.html#lowBound,ConfigRef,PNode	proc lowBound(conf: ConfigRef; x: PNode): PNode		202
+nim	highBound	guards.html#highBound,ConfigRef,PNode,Operators	proc highBound(conf: ConfigRef; x: PNode; o: Operators): PNode		206
+nim	buildLe	guards.html#buildLe,Operators,PNode,PNode	proc buildLe(o: Operators; a, b: PNode): PNode		244
+nim	canon	guards.html#canon,PNode,Operators	proc canon(n: PNode; o: Operators): PNode		247
+nim	buildAdd	guards.html#buildAdd,PNode,BiggestInt,Operators	proc buildAdd(a: PNode; b: BiggestInt; o: Operators): PNode		324
+nim	TModel	guards.html#TModel	object TModel		415
+nim	addFact	guards.html#addFact,TModel,PNode	proc addFact(m: var TModel; nn: PNode)		420
+nim	addFactNeg	guards.html#addFactNeg,TModel,PNode	proc addFactNeg(m: var TModel; n: PNode)		433
+nim	sameTree	guards.html#sameTree,PNode,PNode	proc sameTree(a, b: PNode): bool		449
+nim	invalidateFacts	guards.html#invalidateFacts,seq[PNode],PNode	proc invalidateFacts(s: var seq[PNode]; n: PNode)		484
+nim	invalidateFacts	guards.html#invalidateFacts,TModel,PNode	proc invalidateFacts(m: var TModel; n: PNode)		505
+nim	doesImply	guards.html#doesImply,TModel,PNode	proc doesImply(facts: TModel; prop: PNode): TImplication		842
+nim	impliesNotNil	guards.html#impliesNotNil,TModel,PNode	proc impliesNotNil(m: TModel; arg: PNode): TImplication		851
+nim	simpleSlice	guards.html#simpleSlice,PNode,PNode	proc simpleSlice(a, b: PNode): BiggestInt		854
+nim	proveLe	guards.html#proveLe,TModel,PNode,PNode	proc proveLe(m: TModel; a, b: PNode): TImplication		1084
+nim	addFactLe	guards.html#addFactLe,TModel,PNode,PNode	proc addFactLe(m: var TModel; a, b: PNode)		1093
+nim	addFactLt	guards.html#addFactLt,TModel,PNode,PNode	proc addFactLt(m: var TModel; a, b: PNode)		1096
+nim	addDiscriminantFact	guards.html#addDiscriminantFact,TModel,PNode	proc addDiscriminantFact(m: var TModel; n: PNode)		1127
+nim	addAsgnFact	guards.html#addAsgnFact,TModel,PNode,PNode	proc addAsgnFact(m: var TModel; key, value: PNode)		1134
+nim	sameSubexprs	guards.html#sameSubexprs,TModel,PNode,PNode	proc sameSubexprs(m: TModel; a, b: PNode): bool		1141
+nim	addCaseBranchFacts	guards.html#addCaseBranchFacts,TModel,PNode,int	proc addCaseBranchFacts(m: var TModel; n: PNode; i: int)		1157
+nim	checkFieldAccess	guards.html#checkFieldAccess,TModel,PNode,ConfigRef,bool	proc checkFieldAccess(m: TModel; n: PNode; conf: ConfigRef; produceError: bool)		1182
+nimgrp	buildcall	guards.html#buildCall-procs-all	proc		151
+nimgrp	invalidatefacts	guards.html#invalidateFacts-procs-all	proc		484

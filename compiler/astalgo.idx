@@ -1,0 +1,48 @@
+nimTitle	astalgo	astalgo.html	module astalgo		0
+nim	hashNode	astalgo.html#hashNode,RootRef	proc hashNode(p: RootRef): Hash		26
+nim	debug	astalgo.html#debug,PSym,ConfigRef	proc debug(n: PSym; conf: ConfigRef = nil)		30
+nim	debug	astalgo.html#debug,PType,ConfigRef	proc debug(n: PType; conf: ConfigRef = nil)		31
+nim	debug	astalgo.html#debug,PNode,ConfigRef	proc debug(n: PNode; conf: ConfigRef = nil)		32
+nim	debug	astalgo.html#debug.t	template debug(x: PSym | PType | PNode)		34
+nim	debug	astalgo.html#debug.t,auto	template debug(x: auto)		42
+nim	mdbg	astalgo.html#mdbg.t	template mdbg(): bool		45
+nim	lookupInRecord	astalgo.html#lookupInRecord,PNode,PIdent	proc lookupInRecord(n: PNode; field: PIdent): PSym		70
+nim	mustRehash	astalgo.html#mustRehash,int,int	proc mustRehash(length, counter: int): bool		71
+nim	nextTry	astalgo.html#nextTry,Hash,Hash	proc nextTry(h, maxHash: Hash): Hash		72
+nim	InvalidKey	astalgo.html#InvalidKey	const InvalidKey		76
+nim	TIIPair	astalgo.html#TIIPair	object TIIPair		79
+nim	TIIPairSeq	astalgo.html#TIIPairSeq	type TIIPairSeq		82
+nim	TIITable	astalgo.html#TIITable	object TIITable		83
+nim	initIITable	astalgo.html#initIITable,TIITable	proc initIITable(x: var TIITable)		88
+nim	iiTableGet	astalgo.html#iiTableGet,TIITable,int	proc iiTableGet(t: TIITable; key: int): int		89
+nim	iiTablePut	astalgo.html#iiTablePut,TIITable,int,int	proc iiTablePut(t: var TIITable; key, val: int)		90
+nim	skipConvCastAndClosure	astalgo.html#skipConvCastAndClosure,PNode	proc skipConvCastAndClosure(n: PNode): PNode		94
+nim	sameValue	astalgo.html#sameValue,PNode,PNode	proc sameValue(a, b: PNode): bool		105
+nim	leValue	astalgo.html#leValue,PNode,PNode	proc leValue(a, b: PNode): bool		119
+nim	weakLeValue	astalgo.html#weakLeValue,PNode,PNode	proc weakLeValue(a, b: PNode): TImplication		134
+nim	getModule	astalgo.html#getModule,PSym	proc getModule(s: PSym): PSym		161
+nim	fromSystem	astalgo.html#fromSystem,PSym	proc fromSystem(op: PSym): bool		166
+nim	getSymFromList	astalgo.html#getSymFromList,PNode,PIdent,int	proc getSymFromList(list: PNode; ident: PIdent; start: int = 0): PSym		167
+nim	getNamedParamFromList	astalgo.html#getNamedParamFromList,PNode,PIdent	proc getNamedParamFromList(list: PNode; ident: PIdent): PSym		202
+nim	objectSetContains	astalgo.html#objectSetContains,TObjectSet,RootRef	proc objectSetContains(t: TObjectSet; obj: RootRef): bool		493
+nim	objectSetIncl	astalgo.html#objectSetIncl,TObjectSet,RootRef	proc objectSetIncl(t: var TObjectSet; obj: RootRef)		517
+nim	objectSetContainsOrIncl	astalgo.html#objectSetContainsOrIncl,TObjectSet,RootRef	proc objectSetContainsOrIncl(t: var TObjectSet; obj: RootRef): bool		522
+nim	strTableContains	astalgo.html#strTableContains,TStrTable,PSym	proc strTableContains(t: TStrTable; n: PSym): bool		540
+nim	symTabReplace	astalgo.html#symTabReplace,TStrTable,PSym,PSym	proc symTabReplace(t: var TStrTable; prevSym: PSym; newSym: PSym)		569
+nim	strTableAdd	astalgo.html#strTableAdd,TStrTable,PSym	proc strTableAdd(t: var TStrTable; n: PSym)		579
+nim	strTableInclReportConflict	astalgo.html#strTableInclReportConflict,TStrTable,PSym	proc strTableInclReportConflict(t: var TStrTable; n: PSym; onConflictKeepOld = false): PSym		584
+nim	strTableIncl	astalgo.html#strTableIncl,TStrTable,PSym	proc strTableIncl(t: var TStrTable; n: PSym; onConflictKeepOld = false): bool		617
+nim	strTableGet	astalgo.html#strTableGet,TStrTable,PIdent	proc strTableGet(t: TStrTable; name: PIdent): PSym		621
+nim	TIdentIter	astalgo.html#TIdentIter	object TIdentIter		631
+nim	nextIdentIter	astalgo.html#nextIdentIter,TIdentIter,TStrTable	proc nextIdentIter(ti: var TIdentIter; tab: TStrTable): PSym		635
+nim	initIdentIter	astalgo.html#initIdentIter,TIdentIter,TStrTable,PIdent	proc initIdentIter(ti: var TIdentIter; tab: TStrTable; s: PIdent): PSym		653
+nim	nextIdentExcluding	astalgo.html#nextIdentExcluding,TIdentIter,TStrTable,IntSet	proc nextIdentExcluding(ti: var TIdentIter; tab: TStrTable; excluding: IntSet): PSym		659
+nim	firstIdentExcluding	astalgo.html#firstIdentExcluding,TIdentIter,TStrTable,PIdent,IntSet	proc firstIdentExcluding(ti: var TIdentIter; tab: TStrTable; s: PIdent;\n                    excluding: IntSet): PSym		675
+nim	TTabIter	astalgo.html#TTabIter	object TTabIter		683
+nim	nextIter	astalgo.html#nextIter,TTabIter,TStrTable	proc nextIter(ti: var TTabIter; tab: TStrTable): PSym		686
+nim	initTabIter	astalgo.html#initTabIter,TTabIter,TStrTable	proc initTabIter(ti: var TTabIter; tab: TStrTable): PSym		702
+nim	items	astalgo.html#items.i,TStrTable	iterator items(tab: TStrTable): PSym		709
+nim	listSymbolNames	astalgo.html#listSymbolNames,openArray[PSym]	proc listSymbolNames(symbols: openArray[PSym]): string		761
+nim	isDiscriminantField	astalgo.html#isDiscriminantField,PNode	proc isDiscriminantField(n: PNode): bool		768
+nimgrp	debug	astalgo.html#debug-procs-all	proc		30
+nimgrp	debug	astalgo.html#debug-templates-all	template		34

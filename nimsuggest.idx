@@ -1,0 +1,9 @@
+markupTitle	Nim IDE Integration Guide	nimsuggest.html	Nim IDE Integration Guide		0
+heading	Installation	nimsuggest.html#installation	 Installation		0
+heading	Nimsuggest invocation	nimsuggest.html#nimsuggest-invocation	 Nimsuggest invocation		0
+heading	Specifying the location of the query	nimsuggest.html#nimsuggest-invocation-specifying-the-location-of-the-query	  Specifying the location of the query		0
+heading	Definitions	nimsuggest.html#nimsuggest-invocation-definitions	  Definitions		0
+heading	Suggestions	nimsuggest.html#nimsuggest-invocation-suggestions	  Suggestions		0
+heading	Invocation context	nimsuggest.html#nimsuggest-invocation-invocation-context	  Invocation context		0
+heading	Symbol usages	nimsuggest.html#nimsuggest-invocation-symbol-usages	  Symbol usages		0
+heading	Parsing nimsuggest output	nimsuggest.html#parsing-nimsuggest-output	 Parsing nimsuggest output		0

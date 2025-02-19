@@ -1,0 +1,2 @@
+nimTitle	objectdollar	objectdollar.html	module std/objectdollar		0
+nim	`$`	objectdollar.html#$,T	proc `$`[T: object](x: T): string		5

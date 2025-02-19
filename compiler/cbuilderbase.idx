@@ -1,0 +1,73 @@
+nimTitle	cbuilderbase	cbuilderbase.html	module cbuilderbase		0
+nim	Snippet	cbuilderbase.html#Snippet	type Snippet		4
+nim	Builder	cbuilderbase.html#Builder	object Builder		5
+nim	newBuilder	cbuilderbase.html#newBuilder.t,string	template newBuilder(s: string): Builder		9
+nim	extract	cbuilderbase.html#extract,Builder	proc extract(builder: Builder): Snippet		12
+nim	add	cbuilderbase.html#add,Builder,string	proc add(builder: var Builder; s: string)		15
+nim	add	cbuilderbase.html#add,Builder,char	proc add(builder: var Builder; s: char)		18
+nim	addNewline	cbuilderbase.html#addNewline,Builder	proc addNewline(builder: var Builder)		21
+nim	addLineEnd	cbuilderbase.html#addLineEnd,Builder,string	proc addLineEnd(builder: var Builder; s: string)		26
+nim	addLineEndIndent	cbuilderbase.html#addLineEndIndent,Builder,string	proc addLineEndIndent(builder: var Builder; s: string)		30
+nim	addDedent	cbuilderbase.html#addDedent,Builder,string	proc addDedent(builder: var Builder; s: string)		35
+nim	addLineEndDedent	cbuilderbase.html#addLineEndDedent,Builder,string	proc addLineEndDedent(builder: var Builder; s: string)		41
+nim	addLineComment	cbuilderbase.html#addLineComment,Builder,string	proc addLineComment(builder: var Builder; comment: string)		45
+nim	addIntValue	cbuilderbase.html#addIntValue,Builder,int	proc addIntValue(builder: var Builder; val: int)		51
+nim	addIntValue	cbuilderbase.html#addIntValue,Builder,int64	proc addIntValue(builder: var Builder; val: int64)		54
+nim	addIntValue	cbuilderbase.html#addIntValue,Builder,uint64	proc addIntValue(builder: var Builder; val: uint64)		57
+nim	addIntValue	cbuilderbase.html#addIntValue,Builder,Int128	proc addIntValue(builder: var Builder; val: Int128)		60
+nim	cIntValue	cbuilderbase.html#cIntValue.t,int	template cIntValue(val: int): Snippet		63
+nim	cIntValue	cbuilderbase.html#cIntValue.t,int64	template cIntValue(val: int64): Snippet		64
+nim	cIntValue	cbuilderbase.html#cIntValue.t,uint64	template cIntValue(val: uint64): Snippet		65
+nim	cIntValue	cbuilderbase.html#cIntValue.t,Int128	template cIntValue(val: Int128): Snippet		66
+nim	cUintValue	cbuilderbase.html#cUintValue.t,uint	template cUintValue(val: uint): Snippet		68
+nim	addFloatValue	cbuilderbase.html#addFloatValue,Builder,float	proc addFloatValue(builder: var Builder; val: float)		72
+nim	cFloatValue	cbuilderbase.html#cFloatValue.t,float	template cFloatValue(val: float): Snippet		75
+nim	addInt64Literal	cbuilderbase.html#addInt64Literal,Builder,BiggestInt	proc addInt64Literal(result: var Builder; i: BiggestInt)		77
+nim	addUint64Literal	cbuilderbase.html#addUint64Literal,Builder,uint64	proc addUint64Literal(result: var Builder; i: uint64)		83
+nim	addIntLiteral	cbuilderbase.html#addIntLiteral,Builder,BiggestInt	proc addIntLiteral(result: var Builder; i: BiggestInt)		86
+nim	addIntLiteral	cbuilderbase.html#addIntLiteral,Builder,Int128	proc addIntLiteral(result: var Builder; i: Int128)		97
+nim	cInt64Literal	cbuilderbase.html#cInt64Literal,BiggestInt	proc cInt64Literal(i: BiggestInt): Snippet		100
+nim	cUint64Literal	cbuilderbase.html#cUint64Literal,uint64	proc cUint64Literal(i: uint64): Snippet		106
+nim	cIntLiteral	cbuilderbase.html#cIntLiteral,BiggestInt	proc cIntLiteral(i: BiggestInt): Snippet		109
+nim	cIntLiteral	cbuilderbase.html#cIntLiteral,Int128	proc cIntLiteral(i: Int128): Snippet		120
+nim	NimInt	cbuilderbase.html#NimInt	const NimInt		124
+nim	NimInt8	cbuilderbase.html#NimInt8	const NimInt8		125
+nim	NimInt16	cbuilderbase.html#NimInt16	const NimInt16		126
+nim	NimInt32	cbuilderbase.html#NimInt32	const NimInt32		127
+nim	NimInt64	cbuilderbase.html#NimInt64	const NimInt64		128
+nim	CInt	cbuilderbase.html#CInt	const CInt		129
+nim	NimUint	cbuilderbase.html#NimUint	const NimUint		130
+nim	NimUint8	cbuilderbase.html#NimUint8	const NimUint8		131
+nim	NimUint16	cbuilderbase.html#NimUint16	const NimUint16		132
+nim	NimUint32	cbuilderbase.html#NimUint32	const NimUint32		133
+nim	NimUint64	cbuilderbase.html#NimUint64	const NimUint64		134
+nim	NimFloat	cbuilderbase.html#NimFloat	const NimFloat		135
+nim	NimFloat32	cbuilderbase.html#NimFloat32	const NimFloat32		136
+nim	NimFloat64	cbuilderbase.html#NimFloat64	const NimFloat64		137
+nim	NimFloat128	cbuilderbase.html#NimFloat128	const NimFloat128		138
+nim	NimNan	cbuilderbase.html#NimNan	const NimNan		139
+nim	NimInf	cbuilderbase.html#NimInf	const NimInf		140
+nim	NimBool	cbuilderbase.html#NimBool	const NimBool		141
+nim	NimTrue	cbuilderbase.html#NimTrue	const NimTrue		142
+nim	NimFalse	cbuilderbase.html#NimFalse	const NimFalse		143
+nim	NimChar	cbuilderbase.html#NimChar	const NimChar		144
+nim	CChar	cbuilderbase.html#CChar	const CChar		145
+nim	NimCstring	cbuilderbase.html#NimCstring	const NimCstring		146
+nim	NimNil	cbuilderbase.html#NimNil	const NimNil		147
+nim	CNil	cbuilderbase.html#CNil	const CNil		148
+nim	NimStrlitFlag	cbuilderbase.html#NimStrlitFlag	const NimStrlitFlag		149
+nim	CVoid	cbuilderbase.html#CVoid	const CVoid		150
+nim	CPointer	cbuilderbase.html#CPointer	const CPointer		151
+nim	CConstPointer	cbuilderbase.html#CConstPointer	const CConstPointer		152
+nim	cIntType	cbuilderbase.html#cIntType,BiggestInt	proc cIntType(bits: BiggestInt): Snippet		154
+nim	cUintType	cbuilderbase.html#cUintType,BiggestInt	proc cUintType(bits: BiggestInt): Snippet		157
+nim	WaitingIf	cbuilderbase.html#WaitingIf	IfBuilderState.WaitingIf		161
+nim	WaitingElseIf	cbuilderbase.html#WaitingElseIf	IfBuilderState.WaitingElseIf		161
+nim	InBlock	cbuilderbase.html#InBlock	IfBuilderState.InBlock		161
+nim	IfBuilderState	cbuilderbase.html#IfBuilderState	enum IfBuilderState		161
+nim	IfBuilder	cbuilderbase.html#IfBuilder	object IfBuilder		163
+nimgrp	cintliteral	cbuilderbase.html#cIntLiteral-procs-all	proc		109
+nimgrp	addintvalue	cbuilderbase.html#addIntValue-procs-all	proc		51
+nimgrp	addintliteral	cbuilderbase.html#addIntLiteral-procs-all	proc		86
+nimgrp	add	cbuilderbase.html#add-procs-all	proc		15
+nimgrp	cintvalue	cbuilderbase.html#cIntValue-templates-all	template		63

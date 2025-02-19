@@ -1,0 +1,20 @@
+nimTitle	macrocache	macrocache.html	module std/macrocache		0
+nim	CacheSeq	macrocache.html#CacheSeq	type CacheSeq		51
+nim	CacheTable	macrocache.html#CacheTable	type CacheTable		53
+nim	CacheCounter	macrocache.html#CacheCounter	type CacheCounter		57
+nim	value	macrocache.html#value,CacheCounter	proc value(c: CacheCounter): int		60
+nim	inc	macrocache.html#inc,CacheCounter,int	proc inc(c: CacheCounter; by = 1)		71
+nim	add	macrocache.html#add,CacheSeq,NimNode	proc add(s: CacheSeq; value: NimNode)		81
+nim	incl	macrocache.html#incl,CacheSeq,NimNode	proc incl(s: CacheSeq; value: NimNode)		94
+nim	len	macrocache.html#len,CacheSeq	proc len(s: CacheSeq): int		109
+nim	`[]`	macrocache.html#[],CacheSeq,int	proc `[]`(s: CacheSeq; i: int): NimNode		123
+nim	`[]`	macrocache.html#[],CacheSeq,BackwardsIndex	proc `[]`(s: CacheSeq; i: BackwardsIndex): NimNode		133
+nim	items	macrocache.html#items.i,CacheSeq	iterator items(s: CacheSeq): NimNode		146
+nim	`[]=`	macrocache.html#[]=,CacheTable,string,NimNode	proc `[]=`(t: CacheTable; key: string; value: NimNode)		162
+nim	len	macrocache.html#len,CacheTable	proc len(t: CacheTable): int		178
+nim	`[]`	macrocache.html#[],CacheTable,string	proc `[]`(t: CacheTable; key: string): NimNode		188
+nim	hasKey	macrocache.html#hasKey,CacheTable,string	proc hasKey(t: CacheTable; key: string): bool		200
+nim	contains	macrocache.html#contains,CacheTable,string	proc contains(t: CacheTable; key: string): bool		215
+nim	pairs	macrocache.html#pairs.i,CacheTable	iterator pairs(t: CacheTable): (string, NimNode)		229
+nimgrp	[]	macrocache.html#[]-procs-all	proc		123
+nimgrp	len	macrocache.html#len-procs-all	proc		109

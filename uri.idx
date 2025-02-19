@@ -1,0 +1,25 @@
+nimTitle	uri	uri.html	module std/uri		0
+nim	Url	uri.html#Url	type Url		49
+nim	Uri	uri.html#Uri	object Uri		51
+nim	UriParseError	uri.html#UriParseError	object UriParseError		57
+nim	uriParseError	uri.html#uriParseError,string	proc uriParseError(msg: string)		60
+nim	encodeUrl	uri.html#encodeUrl,string	proc encodeUrl(s: string; usePlus = true): string		64
+nim	decodeUrl	uri.html#decodeUrl,string	proc decodeUrl(s: string; decodePlus = true): string		93
+nim	encodeQuery	uri.html#encodeQuery,openArray[],char	proc encodeQuery(query: openArray[(string, string)]; usePlus = true; omitEq = true;\n            sep = '&'): string		130
+nim	decodeQuery	uri.html#decodeQuery.i,string,char	iterator decodeQuery(data: string; sep = '&'): tuple[key, value: string]		160
+nim	initUri	uri.html#initUri	proc initUri(isIpv6 = false): Uri		250
+nim	parseUri	uri.html#parseUri,string,Uri	proc parseUri(uri: string; result: var Uri)		272
+nim	parseUri	uri.html#parseUri,string	proc parseUri(uri: string): Uri		320
+nim	combine	uri.html#combine,Uri,Uri	proc combine(base: Uri; reference: Uri): Uri		382
+nim	combine	uri.html#combine,varargs[Uri]	proc combine(uris: varargs[Uri]): Uri		433
+nim	isAbsolute	uri.html#isAbsolute,Uri	proc isAbsolute(uri: Uri): bool		447
+nim	`/`	uri.html#/,Uri,string	proc `/`(x: Uri; path: string): Uri		454
+nim	`?`	uri.html#?,Uri,openArray[]	proc `?`(u: Uri; query: openArray[(string, string)]): Uri		488
+nim	`$`	uri.html#$,Uri	proc `$`(u: Uri): string		496
+nim	getDataUri	uri.html#getDataUri,string,string,string	proc getDataUri(data, mime: string; encoding = "utf-8"): string		556
+heading	Basic usage	uri.html#basic-usage	 Basic usage		0
+heading	Combine URIs	uri.html#basic-usage-combine-uris	  Combine URIs		0
+heading	Access URI item	uri.html#basic-usage-access-uri-item	  Access URI item		0
+heading	Data URI Base64	uri.html#basic-usage-data-uri-base64	  Data URI Base64		0
+nimgrp	parseuri	uri.html#parseUri-procs-all	proc		272
+nimgrp	combine	uri.html#combine-procs-all	proc		382

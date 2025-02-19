@@ -1,0 +1,52 @@
+nimTitle	db_common	db_common.html	module src/db_connector/db_common		0
+nim	DbError	db_common.html#DbError	object DbError		17
+nim	SqlQuery	db_common.html#SqlQuery	type SqlQuery		19
+nim	DbEffect	db_common.html#DbEffect	object DbEffect		22
+nim	ReadDbEffect	db_common.html#ReadDbEffect	object ReadDbEffect		23
+nim	WriteDbEffect	db_common.html#WriteDbEffect	object WriteDbEffect		24
+nim	dbUnknown	db_common.html#dbUnknown	DbTypeKind.dbUnknown		26
+nim	dbSerial	db_common.html#dbSerial	DbTypeKind.dbSerial		26
+nim	dbNull	db_common.html#dbNull	DbTypeKind.dbNull		26
+nim	dbBit	db_common.html#dbBit	DbTypeKind.dbBit		26
+nim	dbBool	db_common.html#dbBool	DbTypeKind.dbBool		26
+nim	dbBlob	db_common.html#dbBlob	DbTypeKind.dbBlob		26
+nim	dbFixedChar	db_common.html#dbFixedChar	DbTypeKind.dbFixedChar		26
+nim	dbVarchar	db_common.html#dbVarchar	DbTypeKind.dbVarchar		26
+nim	dbJson	db_common.html#dbJson	DbTypeKind.dbJson		26
+nim	dbXml	db_common.html#dbXml	DbTypeKind.dbXml		26
+nim	dbInt	db_common.html#dbInt	DbTypeKind.dbInt		26
+nim	dbUInt	db_common.html#dbUInt	DbTypeKind.dbUInt		26
+nim	dbDecimal	db_common.html#dbDecimal	DbTypeKind.dbDecimal		26
+nim	dbFloat	db_common.html#dbFloat	DbTypeKind.dbFloat		26
+nim	dbDate	db_common.html#dbDate	DbTypeKind.dbDate		26
+nim	dbTime	db_common.html#dbTime	DbTypeKind.dbTime		26
+nim	dbDatetime	db_common.html#dbDatetime	DbTypeKind.dbDatetime		26
+nim	dbTimestamp	db_common.html#dbTimestamp	DbTypeKind.dbTimestamp		26
+nim	dbTimeInterval	db_common.html#dbTimeInterval	DbTypeKind.dbTimeInterval		26
+nim	dbEnum	db_common.html#dbEnum	DbTypeKind.dbEnum		26
+nim	dbSet	db_common.html#dbSet	DbTypeKind.dbSet		26
+nim	dbArray	db_common.html#dbArray	DbTypeKind.dbArray		26
+nim	dbComposite	db_common.html#dbComposite	DbTypeKind.dbComposite		26
+nim	dbUrl	db_common.html#dbUrl	DbTypeKind.dbUrl		26
+nim	dbUuid	db_common.html#dbUuid	DbTypeKind.dbUuid		26
+nim	dbInet	db_common.html#dbInet	DbTypeKind.dbInet		26
+nim	dbMacAddress	db_common.html#dbMacAddress	DbTypeKind.dbMacAddress		26
+nim	dbGeometry	db_common.html#dbGeometry	DbTypeKind.dbGeometry		26
+nim	dbPoint	db_common.html#dbPoint	DbTypeKind.dbPoint		26
+nim	dbLine	db_common.html#dbLine	DbTypeKind.dbLine		26
+nim	dbLseg	db_common.html#dbLseg	DbTypeKind.dbLseg		26
+nim	dbBox	db_common.html#dbBox	DbTypeKind.dbBox		26
+nim	dbPath	db_common.html#dbPath	DbTypeKind.dbPath		26
+nim	dbPolygon	db_common.html#dbPolygon	DbTypeKind.dbPolygon		26
+nim	dbCircle	db_common.html#dbCircle	DbTypeKind.dbCircle		26
+nim	dbUser1	db_common.html#dbUser1	DbTypeKind.dbUser1		26
+nim	dbUser2	db_common.html#dbUser2	DbTypeKind.dbUser2		26
+nim	dbUser3	db_common.html#dbUser3	DbTypeKind.dbUser3		26
+nim	dbUser4	db_common.html#dbUser4	DbTypeKind.dbUser4		26
+nim	dbUser5	db_common.html#dbUser5	DbTypeKind.dbUser5		26
+nim	DbTypeKind	db_common.html#DbTypeKind	enum DbTypeKind		26
+nim	DbType	db_common.html#DbType	object DbType		70
+nim	DbColumn	db_common.html#DbColumn	object DbColumn		80
+nim	DbColumns	db_common.html#DbColumns	type DbColumns		86
+nim	sql	db_common.html#sql.t,string	template sql(query: string): SqlQuery		88
+nim	dbError	db_common.html#dbError,string	proc dbError(msg: string)		97

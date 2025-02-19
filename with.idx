@@ -1,0 +1,3 @@
+nimTitle	with	with.html	module std/with		0
+nim	with	with.html#with.m,typed,varargs[untyped]	macro with(arg: typed; calls: varargs[untyped]): untyped		19
+idx	chaining	with.html#chaining_1	Module with		0

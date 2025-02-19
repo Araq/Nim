@@ -1,0 +1,21 @@
+nimTitle	linenoise	linenoise.html	module std/linenoise		0
+nim	Completions	linenoise.html#Completions	object Completions		11
+nim	CompletionCallback	linenoise.html#CompletionCallback	type CompletionCallback		15
+nim	setCompletionCallback	linenoise.html#setCompletionCallback,CompletionCallback	proc setCompletionCallback(a2: CompletionCallback)		19
+nim	addCompletion	linenoise.html#addCompletion,ptr.Completions,cstring	proc addCompletion(a2: ptr Completions; a3: cstring)		21
+nim	readLine	linenoise.html#readLine,cstring	proc readLine(prompt: cstring): cstring		23
+nim	historyAdd	linenoise.html#historyAdd,cstring	proc historyAdd(line: cstring): cint		24
+nim	historySetMaxLen	linenoise.html#historySetMaxLen,cint	proc historySetMaxLen(len: cint): cint		26
+nim	historySave	linenoise.html#historySave,cstring	proc historySave(filename: cstring): cint		27
+nim	historyLoad	linenoise.html#historyLoad,cstring	proc historyLoad(filename: cstring): cint		28
+nim	clearScreen	linenoise.html#clearScreen	proc clearScreen()		29
+nim	setMultiLine	linenoise.html#setMultiLine,cint	proc setMultiLine(ml: cint)		30
+nim	printKeyCodes	linenoise.html#printKeyCodes	proc printKeyCodes()		31
+nim	free	linenoise.html#free,cstring	proc free(s: cstring)		33
+nim	LinenoiseData	linenoise.html#LinenoiseData	object LinenoiseData		42
+nim	lnCtrlUnkown	linenoise.html#lnCtrlUnkown	Status.lnCtrlUnkown		48
+nim	lnCtrlC	linenoise.html#lnCtrlC	Status.lnCtrlC		48
+nim	lnCtrlD	linenoise.html#lnCtrlD	Status.lnCtrlD		48
+nim	Status	linenoise.html#Status	enum Status		48
+nim	ReadLineResult	linenoise.html#ReadLineResult	object ReadLineResult		53
+nim	readLineStatus	linenoise.html#readLineStatus,string,ReadLineResult	proc readLineStatus(prompt: string; result: var ReadLineResult)		57

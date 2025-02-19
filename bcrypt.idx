@@ -1,0 +1,13 @@
+nimTitle	bcrypt	bcrypt.html	module src/checksums/bcrypt		0
+nim	CostFactor	bcrypt.html#CostFactor	type CostFactor		191
+nim	Salt	bcrypt.html#Salt	object Salt		199
+nim	Hash	bcrypt.html#Hash	type Hash		206
+nim	SaltedHash	bcrypt.html#SaltedHash	tuple SaltedHash		209
+nim	`$`	bcrypt.html#$,Salt	proc `$`(s: Salt): string		301
+nim	`$`	bcrypt.html#$,Hash	proc `$`(s: Hash): string		306
+nim	`$`	bcrypt.html#$,SaltedHash	proc `$`(s: SaltedHash): string		310
+nim	parseSalt	bcrypt.html#parseSalt,string	proc parseSalt(salt: string): Salt		387
+nim	generateSalt	bcrypt.html#generateSalt,CostFactor	proc generateSalt(cost: CostFactor): Salt		427
+nim	bcrypt	bcrypt.html#bcrypt,openArray[char],Salt	proc bcrypt(password: openArray[char]; salt: Salt): SaltedHash		442
+nim	verify	bcrypt.html#verify,openArray[char],string	proc verify(password: openArray[char]; knownGood: string): bool		499
+nimgrp	$	bcrypt.html#$-procs-all	proc		301

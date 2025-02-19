@@ -1,0 +1,76 @@
+nimTitle	sexp	sexp.html	module sexp		0
+nim	sexpError	sexp.html#sexpError	SexpEventKind.sexpError		21
+nim	sexpEof	sexp.html#sexpEof	SexpEventKind.sexpEof		21
+nim	sexpString	sexp.html#sexpString	SexpEventKind.sexpString		21
+nim	sexpSymbol	sexp.html#sexpSymbol	SexpEventKind.sexpSymbol		21
+nim	sexpInt	sexp.html#sexpInt	SexpEventKind.sexpInt		21
+nim	sexpFloat	sexp.html#sexpFloat	SexpEventKind.sexpFloat		21
+nim	sexpNil	sexp.html#sexpNil	SexpEventKind.sexpNil		21
+nim	sexpDot	sexp.html#sexpDot	SexpEventKind.sexpDot		21
+nim	sexpListStart	sexp.html#sexpListStart	SexpEventKind.sexpListStart		21
+nim	sexpListEnd	sexp.html#sexpListEnd	SexpEventKind.sexpListEnd		21
+nim	SexpEventKind	sexp.html#SexpEventKind	enum SexpEventKind		21
+nim	errNone	sexp.html#errNone	SexpError.errNone		46
+nim	errInvalidToken	sexp.html#errInvalidToken	SexpError.errInvalidToken		46
+nim	errParensRiExpected	sexp.html#errParensRiExpected	SexpError.errParensRiExpected		46
+nim	errQuoteExpected	sexp.html#errQuoteExpected	SexpError.errQuoteExpected		46
+nim	errEofExpected	sexp.html#errEofExpected	SexpError.errEofExpected		46
+nim	SexpError	sexp.html#SexpError_2	enum SexpError		46
+nim	SexpParser	sexp.html#SexpParser	object SexpParser		53
+nim	close	sexp.html#close,SexpParser	proc close(my: var SexpParser)		79
+nim	str	sexp.html#str,SexpParser	proc str(my: SexpParser): string		83
+nim	getInt	sexp.html#getInt,SexpParser	proc getInt(my: SexpParser): BiggestInt		89
+nim	getFloat	sexp.html#getFloat,SexpParser	proc getFloat(my: SexpParser): float		94
+nim	kind	sexp.html#kind,SexpParser	proc kind(my: SexpParser): SexpEventKind		99
+nim	getColumn	sexp.html#getColumn,SexpParser	proc getColumn(my: SexpParser): int		103
+nim	getLine	sexp.html#getLine,SexpParser	proc getLine(my: SexpParser): int		107
+nim	errorMsg	sexp.html#errorMsg,SexpParser	proc errorMsg(my: SexpParser): string		111
+nim	errorMsgExpected	sexp.html#errorMsgExpected,SexpParser,string	proc errorMsgExpected(my: SexpParser; e: string): string		116
+nim	SNil	sexp.html#SNil	SexpNodeKind.SNil		254
+nim	SInt	sexp.html#SInt	SexpNodeKind.SInt		254
+nim	SFloat	sexp.html#SFloat	SexpNodeKind.SFloat		254
+nim	SString	sexp.html#SString	SexpNodeKind.SString		254
+nim	SSymbol	sexp.html#SSymbol	SexpNodeKind.SSymbol		254
+nim	SList	sexp.html#SList	SexpNodeKind.SList		254
+nim	SCons	sexp.html#SCons	SexpNodeKind.SCons		254
+nim	SexpNodeKind	sexp.html#SexpNodeKind	enum SexpNodeKind		254
+nim	SexpNode	sexp.html#SexpNode	type SexpNode		263
+nim	SexpNodeObj	sexp.html#SexpNodeObj	object SexpNodeObj		264
+nim	SexpParsingError	sexp.html#SexpParsingError	object SexpParsingError		284
+nim	raiseParseErr	sexp.html#raiseParseErr,SexpParser,string	proc raiseParseErr(p: SexpParser; msg: string)		286
+nim	newSString	sexp.html#newSString,string	proc newSString(s: string): SexpNode		290
+nim	newSInt	sexp.html#newSInt,BiggestInt	proc newSInt(n: BiggestInt): SexpNode		294
+nim	newSFloat	sexp.html#newSFloat,float	proc newSFloat(n: float): SexpNode		298
+nim	newSNil	sexp.html#newSNil	proc newSNil(): SexpNode		302
+nim	newSCons	sexp.html#newSCons,SexpNode,SexpNode	proc newSCons(car, cdr: SexpNode): SexpNode		306
+nim	newSList	sexp.html#newSList	proc newSList(): SexpNode		310
+nim	newSSymbol	sexp.html#newSSymbol,string	proc newSSymbol(s: string): SexpNode		314
+nim	getStr	sexp.html#getStr,SexpNode,string	proc getStr(n: SexpNode; default: string = ""): string		317
+nim	getNum	sexp.html#getNum,SexpNode,BiggestInt	proc getNum(n: SexpNode; default: BiggestInt = 0): BiggestInt		324
+nim	getFNum	sexp.html#getFNum,SexpNode,float	proc getFNum(n: SexpNode; default: float = 0.0): float		331
+nim	getSymbol	sexp.html#getSymbol,SexpNode,string	proc getSymbol(n: SexpNode; default: string = ""): string		338
+nim	getElems	sexp.html#getElems,SexpNode,seq[SexpNode]	proc getElems(n: SexpNode; default: seq[SexpNode] = @[]): seq[SexpNode]		345
+nim	getCons	sexp.html#getCons,SexpNode,Cons	proc getCons(n: SexpNode; defaults: Cons = (newSNil(), newSNil())): Cons		353
+nim	sexp	sexp.html#sexp,string	proc sexp(s: string): SexpNode		361
+nim	sexp	sexp.html#sexp,BiggestInt	proc sexp(n: BiggestInt): SexpNode		365
+nim	sexp	sexp.html#sexp,float	proc sexp(n: float): SexpNode		369
+nim	sexp	sexp.html#sexp,bool	proc sexp(b: bool): SexpNode		373
+nim	sexp	sexp.html#sexp,openArray[SexpNode]	proc sexp(elements: openArray[SexpNode]): SexpNode		381
+nim	sexp	sexp.html#sexp,SexpNode	proc sexp(s: SexpNode): SexpNode		387
+nim	convertSexp	sexp.html#convertSexp.m,untyped	macro convertSexp(x: untyped): untyped		402
+nim	`==`	sexp.html#==,SexpNode,SexpNode	proc `==`(a, b: SexpNode): bool		407
+nim	hash	sexp.html#hash,SexpNode	proc hash(n: SexpNode): Hash		431
+nim	len	sexp.html#len,SexpNode	proc len(n: SexpNode): int		449
+nim	`[]`	sexp.html#[],SexpNode,int	proc `[]`(node: SexpNode; index: int): SexpNode		457
+nim	add	sexp.html#add,SexpNode,SexpNode	proc add(father, child: SexpNode)		464
+nim	escapeJson	sexp.html#escapeJson,string	proc escapeJson(s: string): string		481
+nim	copy	sexp.html#copy,SexpNode	proc copy(p: SexpNode): SexpNode		498
+nim	pretty	sexp.html#pretty,SexpNode,int	proc pretty(node: SexpNode; indent = 2): string		561
+nim	`$`	sexp.html#$,SexpNode	proc `$`(node: SexpNode): string		567
+nim	items	sexp.html#items.i,SexpNode	iterator items(node: SexpNode): SexpNode		572
+nim	mitems	sexp.html#mitems.i,SexpNode	iterator mitems(node: var SexpNode): var SexpNode		578
+nim	open	sexp.html#open,SexpParser,Stream	proc open(my: var SexpParser; input: Stream)		624
+nim	parseSexp	sexp.html#parseSexp,Stream	proc parseSexp(s: Stream): SexpNode		630
+nim	parseSexp	sexp.html#parseSexp,string	proc parseSexp(buffer: string): SexpNode		638
+nimgrp	sexp	sexp.html#sexp-procs-all	proc		361
+nimgrp	parsesexp	sexp.html#parseSexp-procs-all	proc		630

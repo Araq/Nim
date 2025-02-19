@@ -1,0 +1,44 @@
+nimTitle	asyncnet	asyncnet.html	module std/asyncnet		0
+nim	AsyncSocket	asyncnet.html#AsyncSocket	type AsyncSocket		135
+nim	newAsyncSocket	asyncnet.html#newAsyncSocket,AsyncFD,Domain,SockType,Protocol	proc newAsyncSocket(fd: AsyncFD; domain: Domain = AF_INET;\n               sockType: SockType = SOCK_STREAM;\n               protocol: Protocol = IPPROTO_TCP; buffered = true;\n               inheritable = defined(nimInheritHandles)): owned(AsyncSocket)		137
+nim	newAsyncSocket	asyncnet.html#newAsyncSocket,Domain,SockType,Protocol	proc newAsyncSocket(domain: Domain = AF_INET; sockType: SockType = SOCK_STREAM;\n               protocol: Protocol = IPPROTO_TCP; buffered = true;\n               inheritable = defined(nimInheritHandles)): owned(AsyncSocket)		165
+nim	getLocalAddr	asyncnet.html#getLocalAddr,AsyncSocket	proc getLocalAddr(socket: AsyncSocket): (string, Port)		180
+nim	getPeerAddr	asyncnet.html#getPeerAddr,AsyncSocket	proc getPeerAddr(socket: AsyncSocket): (string, Port)		187
+nim	newAsyncSocket	asyncnet.html#newAsyncSocket,cint,cint,cint	proc newAsyncSocket(domain, sockType, protocol: cint; buffered = true;\n               inheritable = defined(nimInheritHandles)): owned(AsyncSocket)		193
+nim	dial	asyncnet.html#dial,string,Port	proc dial(address: string; port: Port; protocol = IPPROTO_TCP; buffered = true): owned(\n    Future[AsyncSocket])		290
+nim	connect	asyncnet.html#connect,AsyncSocket,string,Port	proc connect(socket: AsyncSocket; address: string; port: Port): owned(\n    Future[void])		301
+nim	recvInto	asyncnet.html#recvInto,AsyncSocket,pointer,int	proc recvInto(socket: AsyncSocket; buf: pointer; size: int; flags = {SafeDisconn}): owned(\n    Future[int])		343
+nim	recv	asyncnet.html#recv,AsyncSocket,int	proc recv(socket: AsyncSocket; size: int; flags = {SafeDisconn}): owned(\n    Future[string])		391
+nim	send	asyncnet.html#send,AsyncSocket,pointer,int	proc send(socket: AsyncSocket; buf: pointer; size: int; flags = {SafeDisconn}): owned(\n    Future[void])		444
+nim	send	asyncnet.html#send,AsyncSocket,string	proc send(socket: AsyncSocket; data: string; flags = {SafeDisconn}): owned(\n    Future[void])		458
+nim	acceptAddr	asyncnet.html#acceptAddr,AsyncSocket	proc acceptAddr(socket: AsyncSocket; flags = {SafeDisconn};\n           inheritable = defined(nimInheritHandles)): owned(\n    Future[tuple[address: string, client: AsyncSocket]])		471
+nim	accept	asyncnet.html#accept,AsyncSocket	proc accept(socket: AsyncSocket; flags = {SafeDisconn}): owned(Future[AsyncSocket])		495
+nim	recvLineInto	asyncnet.html#recvLineInto,AsyncSocket,FutureVar[string]	proc recvLineInto(socket: AsyncSocket; resString: FutureVar[string];\n             flags = {SafeDisconn}; maxLength = MaxLineLength): owned(\n    Future[void])		514
+nim	recvLine	asyncnet.html#recvLine,AsyncSocket	proc recvLine(socket: AsyncSocket; flags = {SafeDisconn}; maxLength = MaxLineLength): owned(\n    Future[string])		606
+nim	listen	asyncnet.html#listen,AsyncSocket	proc listen(socket: AsyncSocket; backlog = SOMAXCONN)		634
+nim	bindAddr	asyncnet.html#bindAddr,AsyncSocket,string	proc bindAddr(socket: AsyncSocket; port = Port(0); address = "")		643
+nim	hasDataBuffered	asyncnet.html#hasDataBuffered,AsyncSocket	proc hasDataBuffered(s: AsyncSocket): bool		663
+nim	connectUnix	asyncnet.html#connectUnix,AsyncSocket,string	proc connectUnix(socket: AsyncSocket; path: string): owned(Future[void])		670
+nim	bindUnix	asyncnet.html#bindUnix,AsyncSocket,string	proc bindUnix(socket: AsyncSocket; path: string)		701
+nim	close	asyncnet.html#close,AsyncSocket	proc close(socket: AsyncSocket)		723
+nim	sslHandle	asyncnet.html#sslHandle,AsyncSocket	proc sslHandle(self: AsyncSocket): SslPtr		749
+nim	wrapSocket	asyncnet.html#wrapSocket,SslContext,AsyncSocket	proc wrapSocket(ctx: SslContext; socket: AsyncSocket)		754
+nim	wrapConnectedSocket	asyncnet.html#wrapConnectedSocket,SslContext,AsyncSocket,SslHandshakeType,string	proc wrapConnectedSocket(ctx: SslContext; socket: AsyncSocket;\n                    handshake: SslHandshakeType; hostname: string = "")		772
+nim	getPeerCertificates	asyncnet.html#getPeerCertificates,AsyncSocket	proc getPeerCertificates(socket: AsyncSocket): seq[Certificate]		797
+nim	getSockOpt	asyncnet.html#getSockOpt,AsyncSocket,SOBool	proc getSockOpt(socket: AsyncSocket; opt: SOBool; level = SOL_SOCKET): bool		808
+nim	setSockOpt	asyncnet.html#setSockOpt,AsyncSocket,SOBool,bool	proc setSockOpt(socket: AsyncSocket; opt: SOBool; value: bool; level = SOL_SOCKET)		814
+nim	isSsl	asyncnet.html#isSsl,AsyncSocket	proc isSsl(socket: AsyncSocket): bool		820
+nim	getFd	asyncnet.html#getFd,AsyncSocket	proc getFd(socket: AsyncSocket): SocketHandle		824
+nim	isClosed	asyncnet.html#isClosed,AsyncSocket	proc isClosed(socket: AsyncSocket): bool		828
+nim	sendTo	asyncnet.html#sendTo,AsyncSocket,string,Port,string	proc sendTo(socket: AsyncSocket; address: string; port: Port; data: string;\n       flags = {SafeDisconn}): owned(Future[void])		834
+nim	recvFrom	asyncnet.html#recvFrom,AsyncSocket,FutureVar[string],int,FutureVar[string],FutureVar[Port]	proc recvFrom(socket: AsyncSocket; data: FutureVar[string]; size: int;\n         address: FutureVar[string]; port: FutureVar[Port];\n         flags = {SafeDisconn}): owned(Future[int])		881
+nim	recvFrom	asyncnet.html#recvFrom,AsyncSocket,int	proc recvFrom(socket: AsyncSocket; size: int; flags = {SafeDisconn}): owned(\n    Future[tuple[data: string, address: string, port: Port]])		935
+heading	Asynchronous IO in Nim	asyncnet.html#asynchronous-io-in-nim	 Asynchronous IO in Nim		0
+heading	SSL	asyncnet.html#ssl	 SSL		0
+heading	Examples	asyncnet.html#examples	 Examples		0
+heading	Chat server	asyncnet.html#examples-chat-server	  Chat server		0
+idx	getpeername	asyncnet.html#getpeername_1	Chat server		0
+idx	getsockname	asyncnet.html#getsockname_1	Chat server		0
+nimgrp	recvfrom	asyncnet.html#recvFrom-procs-all	proc		878
+nimgrp	newasyncsocket	asyncnet.html#newAsyncSocket-procs-all	proc		137
+nimgrp	send	asyncnet.html#send-procs-all	proc		443

@@ -1,0 +1,27 @@
+nimTitle	llstream	llstream.html	module llstream		0
+nim	TLLRepl	llstream.html#TLLRepl	type TLLRepl		25
+nim	OnPrompt	llstream.html#OnPrompt	type OnPrompt		26
+nim	llsNone	llstream.html#llsNone	TLLStreamKind.llsNone		27
+nim	llsString	llstream.html#llsString	TLLStreamKind.llsString		27
+nim	llsFile	llstream.html#llsFile	TLLStreamKind.llsFile		27
+nim	llsStdIn	llstream.html#llsStdIn	TLLStreamKind.llsStdIn		27
+nim	TLLStreamKind	llstream.html#TLLStreamKind	enum TLLStreamKind		27
+nim	TLLStream	llstream.html#TLLStream	object TLLStream		32
+nim	PLLStream	llstream.html#PLLStream	type PLLStream		41
+nim	llStreamOpen	llstream.html#llStreamOpen,sinkstring	proc llStreamOpen(data: sink string): PLLStream		43
+nim	llStreamOpen	llstream.html#llStreamOpen,File	proc llStreamOpen(f: File): PLLStream		46
+nim	llStreamOpen	llstream.html#llStreamOpen,AbsoluteFile,FileMode	proc llStreamOpen(filename: AbsoluteFile; mode: FileMode): PLLStream		49
+nim	llStreamOpen	llstream.html#llStreamOpen	proc llStreamOpen(): PLLStream		53
+nim	llStreamOpenStdIn	llstream.html#llStreamOpenStdIn,TLLRepl,OnPrompt	proc llStreamOpenStdIn(r: TLLRepl = llReadFromStdin; onPrompt: OnPrompt = nil): PLLStream		57
+nim	llStreamClose	llstream.html#llStreamClose,PLLStream	proc llStreamClose(s: PLLStream)		60
+nim	endsWith	llstream.html#endsWith,string,set[char]	proc endsWith(x: string; s: set[char]): bool		77
+nim	endsWithOpr	llstream.html#endsWithOpr,string	proc endsWithOpr(x: string): bool		90
+nim	llStreamRead	llstream.html#llStreamRead,PLLStream,pointer,int	proc llStreamRead(s: PLLStream; buf: pointer; bufLen: int): int		123
+nim	llStreamReadLine	llstream.html#llStreamReadLine,PLLStream,string	proc llStreamReadLine(s: PLLStream; line: var string): bool		138
+nim	llStreamWrite	llstream.html#llStreamWrite,PLLStream,string	proc llStreamWrite(s: PLLStream; data: string)		162
+nim	llStreamWriteln	llstream.html#llStreamWriteln,PLLStream,string	proc llStreamWriteln(s: PLLStream; data: string)		172
+nim	llStreamWrite	llstream.html#llStreamWrite,PLLStream,char	proc llStreamWrite(s: PLLStream; data: char)		176
+nim	llStreamWrite	llstream.html#llStreamWrite,PLLStream,pointer,int	proc llStreamWrite(s: PLLStream; buf: pointer; buflen: int)		188
+nim	llStreamReadAll	llstream.html#llStreamReadAll,PLLStream	proc llStreamReadAll(s: PLLStream): string		200
+nimgrp	llstreamwrite	llstream.html#llStreamWrite-procs-all	proc		162
+nimgrp	llstreamopen	llstream.html#llStreamOpen-procs-all	proc		43

@@ -1,0 +1,7 @@
+nimTitle	saturate	saturate.html	module saturate		0
+nim	`|+|`	saturate.html#|+|,BiggestInt,BiggestInt	proc `|+|`(a, b: BiggestInt): BiggestInt		12
+nim	`|-|`	saturate.html#|-|,BiggestInt,BiggestInt	proc `|-|`(a, b: BiggestInt): BiggestInt		22
+nim	`|abs|`	saturate.html#|abs|,BiggestInt	proc `|abs|`(a: BiggestInt): BiggestInt		31
+nim	`|div|`	saturate.html#|div|,BiggestInt,BiggestInt	proc `|div|`(a, b: BiggestInt): BiggestInt		38
+nim	`|mod|`	saturate.html#|mod|,BiggestInt,BiggestInt	proc `|mod|`(a, b: BiggestInt): BiggestInt		48
+nim	`|*|`	saturate.html#|*|,BiggestInt,BiggestInt	proc `|*|`(a, b: BiggestInt): BiggestInt		54

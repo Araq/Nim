@@ -1,0 +1,4 @@
+nimTitle	depends	depends.html	module depends		0
+nim	addDotDependency	depends.html#addDotDependency,PPassContext,PNode	proc addDotDependency(c: PPassContext; n: PNode): PNode		86
+nim	generateDot	depends.html#generateDot,ModuleGraph,AbsoluteFile	proc generateDot(graph: ModuleGraph; project: AbsoluteFile)		101
+nim	setupDependPass	depends.html#setupDependPass,ModuleGraph,PSym,IdGenerator	proc setupDependPass(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		107

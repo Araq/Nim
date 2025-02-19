@@ -1,0 +1,35 @@
+nimTitle	asyncftpclient	asyncftpclient.html	module src/asyncftpclient		0
+nim	AsyncFtpClient	asyncftpclient.html#AsyncFtpClient	type AsyncFtpClient		110
+nim	JRetrText	asyncftpclient.html#JRetrText	FtpJobType.JRetrText		124
+nim	JRetr	asyncftpclient.html#JRetr	FtpJobType.JRetr		124
+nim	JStore	asyncftpclient.html#JStore	FtpJobType.JStore		124
+nim	FtpJobType	asyncftpclient.html#FtpJobType	enum FtpJobType		124
+nim	EvTransferProgress	asyncftpclient.html#EvTransferProgress	FtpEventType.EvTransferProgress		141
+nim	EvLines	asyncftpclient.html#EvLines	FtpEventType.EvLines		141
+nim	EvRetr	asyncftpclient.html#EvRetr	FtpEventType.EvRetr		141
+nim	EvStore	asyncftpclient.html#EvStore	FtpEventType.EvStore		141
+nim	FtpEventType	asyncftpclient.html#FtpEventType	enum FtpEventType		141
+nim	FtpEvent	asyncftpclient.html#FtpEvent	object FtpEvent		144
+nim	ReplyError	asyncftpclient.html#ReplyError	object ReplyError		157
+nim	ProgressChangedProc	asyncftpclient.html#ProgressChangedProc	type ProgressChangedProc		159
+nim	send	asyncftpclient.html#send,AsyncFtpClient,string	proc send(ftp: AsyncFtpClient; m: string): Future[string]		177
+nim	connect	asyncftpclient.html#connect,AsyncFtpClient	proc connect(ftp: AsyncFtpClient): owned(Future[void])		224
+nim	pwd	asyncftpclient.html#pwd,AsyncFtpClient	proc pwd(ftp: AsyncFtpClient): Future[string]		259
+nim	cd	asyncftpclient.html#cd,AsyncFtpClient,string	proc cd(ftp: AsyncFtpClient; dir: string): owned(Future[void])		265
+nim	cdup	asyncftpclient.html#cdup,AsyncFtpClient	proc cdup(ftp: AsyncFtpClient): owned(Future[void])		269
+nim	listDirs	asyncftpclient.html#listDirs,AsyncFtpClient,string	proc listDirs(ftp: AsyncFtpClient; dir = ""): Future[seq[string]]		286
+nim	fileExists	asyncftpclient.html#fileExists,AsyncFtpClient,string	proc fileExists(ftp: AsyncFtpClient; file: string): Future[bool]		297
+nim	createDir	asyncftpclient.html#createDir,AsyncFtpClient,string	proc createDir(ftp: AsyncFtpClient; dir: string; recursive = false): owned(\n    Future[void])		303
+nim	chmod	asyncftpclient.html#chmod,AsyncFtpClient,string,set[FilePermission]	proc chmod(ftp: AsyncFtpClient; path: string; permissions: set[FilePermission]): owned(\n    Future[void])		321
+nim	list	asyncftpclient.html#list,AsyncFtpClient,string	proc list(ftp: AsyncFtpClient; dir = ""): Future[string]		342
+nim	retrText	asyncftpclient.html#retrText,AsyncFtpClient,string	proc retrText(ftp: AsyncFtpClient; file: string): Future[string]		352
+nim	defaultOnProgressChanged	asyncftpclient.html#defaultOnProgressChanged,BiggestInt,BiggestInt,float	proc defaultOnProgressChanged(total, progress: BiggestInt; speed: float): Future[void]		388
+nim	retrFile	asyncftpclient.html#retrFile,AsyncFtpClient,string,string,ProgressChangedProc	proc retrFile(ftp: AsyncFtpClient; file, dest: string;\n         onProgressChanged: ProgressChangedProc = defaultOnProgressChanged): owned(\n    Future[void])		396
+nim	store	asyncftpclient.html#store,AsyncFtpClient,string,string,ProgressChangedProc	proc store(ftp: AsyncFtpClient; file, dest: string;\n      onProgressChanged: ProgressChangedProc = defaultOnProgressChanged): owned(\n    Future[void])		448
+nim	rename	asyncftpclient.html#rename,AsyncFtpClient,string,string	proc rename(ftp: AsyncFtpClient; nameFrom: string; nameTo: string): owned(\n    Future[void])		463
+nim	removeFile	asyncftpclient.html#removeFile,AsyncFtpClient,string	proc removeFile(ftp: AsyncFtpClient; filename: string): owned(Future[void])		469
+nim	removeDir	asyncftpclient.html#removeDir,AsyncFtpClient,string	proc removeDir(ftp: AsyncFtpClient; dir: string): owned(Future[void])		473
+nim	newAsyncFtpClient	asyncftpclient.html#newAsyncFtpClient,string,string,string,int,SslContext	proc newAsyncFtpClient(address: string; port = Port(21); user, pass = "";\n                  progressInterval: int = 1000; useTls = false;\n                  sslContext: SslContext = nil): AsyncFtpClient		477
+heading	Connecting to an FTP server	asyncftpclient.html#connecting-to-an-ftp-server	 Connecting to an FTP server		0
+heading	Uploading a new file	asyncftpclient.html#uploading-a-new-file	 Uploading a new file		0
+heading	Checking the progress of a file transfer	asyncftpclient.html#checking-the-progress-of-a-file-transfer	 Checking the progress of a file transfer		0

@@ -1,0 +1,57 @@
+nimTitle	parsexml	parsexml.html	module std/parsexml		0
+nim	xmlError	parsexml.html#xmlError	XmlEventKind.xmlError		160
+nim	xmlEof	parsexml.html#xmlEof	XmlEventKind.xmlEof		160
+nim	xmlCharData	parsexml.html#xmlCharData	XmlEventKind.xmlCharData		160
+nim	xmlWhitespace	parsexml.html#xmlWhitespace	XmlEventKind.xmlWhitespace		160
+nim	xmlComment	parsexml.html#xmlComment	XmlEventKind.xmlComment		160
+nim	xmlPI	parsexml.html#xmlPI	XmlEventKind.xmlPI		160
+nim	xmlElementStart	parsexml.html#xmlElementStart	XmlEventKind.xmlElementStart		160
+nim	xmlElementEnd	parsexml.html#xmlElementEnd	XmlEventKind.xmlElementEnd		160
+nim	xmlElementOpen	parsexml.html#xmlElementOpen	XmlEventKind.xmlElementOpen		160
+nim	xmlAttribute	parsexml.html#xmlAttribute	XmlEventKind.xmlAttribute		160
+nim	xmlElementClose	parsexml.html#xmlElementClose	XmlEventKind.xmlElementClose		160
+nim	xmlCData	parsexml.html#xmlCData	XmlEventKind.xmlCData		160
+nim	xmlEntity	parsexml.html#xmlEntity	XmlEventKind.xmlEntity		160
+nim	xmlSpecial	parsexml.html#xmlSpecial	XmlEventKind.xmlSpecial		160
+nim	XmlEventKind	parsexml.html#XmlEventKind	enum XmlEventKind		160
+nim	errNone	parsexml.html#errNone	XmlErrorKind.errNone		176
+nim	errEndOfCDataExpected	parsexml.html#errEndOfCDataExpected	XmlErrorKind.errEndOfCDataExpected		176
+nim	errNameExpected	parsexml.html#errNameExpected	XmlErrorKind.errNameExpected		176
+nim	errSemicolonExpected	parsexml.html#errSemicolonExpected	XmlErrorKind.errSemicolonExpected		176
+nim	errQmGtExpected	parsexml.html#errQmGtExpected	XmlErrorKind.errQmGtExpected		176
+nim	errGtExpected	parsexml.html#errGtExpected	XmlErrorKind.errGtExpected		176
+nim	errEqExpected	parsexml.html#errEqExpected	XmlErrorKind.errEqExpected		176
+nim	errQuoteExpected	parsexml.html#errQuoteExpected	XmlErrorKind.errQuoteExpected		176
+nim	errEndOfCommentExpected	parsexml.html#errEndOfCommentExpected	XmlErrorKind.errEndOfCommentExpected		176
+nim	errAttributeValueExpected	parsexml.html#errAttributeValueExpected	XmlErrorKind.errAttributeValueExpected		176
+nim	XmlErrorKind	parsexml.html#XmlErrorKind	enum XmlErrorKind		176
+nim	reportWhitespace	parsexml.html#reportWhitespace	XmlParseOption.reportWhitespace		191
+nim	reportComments	parsexml.html#reportComments	XmlParseOption.reportComments		191
+nim	allowUnquotedAttribs	parsexml.html#allowUnquotedAttribs	XmlParseOption.allowUnquotedAttribs		191
+nim	allowEmptyAttribs	parsexml.html#allowEmptyAttribs	XmlParseOption.allowEmptyAttribs		191
+nim	XmlParseOption	parsexml.html#XmlParseOption	enum XmlParseOption		191
+nim	XmlParser	parsexml.html#XmlParser	object XmlParser		197
+nim	open	parsexml.html#open,XmlParser,Stream,string,set[XmlParseOption]	proc open(my: var XmlParser; input: Stream; filename: string;\n     options: set[XmlParseOption] = {})		220
+nim	close	parsexml.html#close,XmlParser	proc close(my: var XmlParser)		238
+nim	kind	parsexml.html#kind,XmlParser	proc kind(my: XmlParser): XmlEventKind		242
+nim	charData	parsexml.html#charData.t,XmlParser	template charData(my: XmlParser): string		246
+nim	elementName	parsexml.html#elementName.t,XmlParser	template elementName(my: XmlParser): string		256
+nim	entityName	parsexml.html#entityName.t,XmlParser	template entityName(my: XmlParser): string		265
+nim	attrKey	parsexml.html#attrKey.t,XmlParser	template attrKey(my: XmlParser): string		273
+nim	attrValue	parsexml.html#attrValue.t,XmlParser	template attrValue(my: XmlParser): string		281
+nim	piName	parsexml.html#piName.t,XmlParser	template piName(my: XmlParser): string		289
+nim	piRest	parsexml.html#piRest.t,XmlParser	template piRest(my: XmlParser): string		297
+nim	rawData	parsexml.html#rawData,XmlParser	proc rawData(my: var XmlParser): lent string		305
+nim	rawData2	parsexml.html#rawData2,XmlParser	proc rawData2(my: var XmlParser): lent string		310
+nim	getColumn	parsexml.html#getColumn,XmlParser	proc getColumn(my: XmlParser): int		315
+nim	getLine	parsexml.html#getLine,XmlParser	proc getLine(my: XmlParser): int		319
+nim	getFilename	parsexml.html#getFilename,XmlParser	proc getFilename(my: XmlParser): string		323
+nim	errorMsg	parsexml.html#errorMsg,XmlParser	proc errorMsg(my: XmlParser): string		327
+nim	errorMsgExpected	parsexml.html#errorMsgExpected,XmlParser,string	proc errorMsgExpected(my: XmlParser; tag: string): string		333
+nim	errorMsg	parsexml.html#errorMsg,XmlParser,string	proc errorMsg(my: XmlParser; msg: string): string		339
+nim	next	parsexml.html#next,XmlParser	proc next(my: var XmlParser)		757
+idx	XML	parsexml.html#xml_1	Module parsexml		0
+idx	HTML	parsexml.html#html_1	Module parsexml		0
+heading	Example 1: Retrieve HTML title	parsexml.html#example-1colon-retrieve-html-title	 Example 1: Retrieve HTML title		0
+heading	Example 2: Retrieve all HTML links	parsexml.html#example-2colon-retrieve-all-html-links	 Example 2: Retrieve all HTML links		0
+nimgrp	errormsg	parsexml.html#errorMsg-procs-all	proc		327

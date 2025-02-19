@@ -1,0 +1,14 @@
+nimTitle	sha1	sha1.html	module src/checksums/sha1		0
+nim	Sha1Digest	sha1.html#Sha1Digest	type Sha1Digest		50
+nim	SecureHash	sha1.html#SecureHash	type SecureHash		51
+nim	Sha1State	sha1.html#Sha1State	object Sha1State		54
+nim	newSha1State	sha1.html#newSha1State	proc newSha1State(): Sha1State		62
+nim	update	sha1.html#update,Sha1State,openArray[char]	proc update(ctx: var Sha1State; data: openArray[char])		159
+nim	finalize	sha1.html#finalize,Sha1State	proc finalize(ctx: var Sha1State): Sha1Digest		194
+nim	secureHash	sha1.html#secureHash,openArray[char]	proc secureHash(str: openArray[char]): SecureHash		216
+nim	secureHashFile	sha1.html#secureHashFile,string	proc secureHashFile(filename: string): SecureHash		230
+nim	`$`	sha1.html#$,SecureHash	proc `$`(self: SecureHash): string		253
+nim	parseSecureHash	sha1.html#parseSecureHash,string	proc parseSecureHash(hash: string): SecureHash		266
+nim	`==`	sha1.html#==,SecureHash,SecureHash	proc `==`(a, b: SecureHash): bool		281
+nim	isValidSha1Hash	sha1.html#isValidSha1Hash,string	proc isValidSha1Hash(s: string): bool		294
+heading	See also	sha1.html#see-also	 See also		0

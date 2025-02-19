@@ -1,0 +1,19 @@
+nimTitle	magicsys	magicsys.html	module magicsys		0
+nim	nilOrSysInt	magicsys.html#nilOrSysInt,ModuleGraph	proc nilOrSysInt(g: ModuleGraph): PType		18
+nim	getSysSym	magicsys.html#getSysSym,ModuleGraph,TLineInfo,string	proc getSysSym(g: ModuleGraph; info: TLineInfo; name: string): PSym		25
+nim	getSysMagic	magicsys.html#getSysMagic,ModuleGraph,TLineInfo,string,TMagic	proc getSysMagic(g: ModuleGraph; info: TLineInfo; name: string; m: TMagic): PSym		32
+nim	sysTypeFromName	magicsys.html#sysTypeFromName,ModuleGraph,TLineInfo,string	proc sysTypeFromName(g: ModuleGraph; info: TLineInfo; name: string): PType		45
+nim	getSysType	magicsys.html#getSysType,ModuleGraph,TLineInfo,TTypeKind	proc getSysType(g: ModuleGraph; info: TLineInfo; kind: TTypeKind): PType		48
+nim	resetSysTypes	magicsys.html#resetSysTypes,ModuleGraph	proc resetSysTypes(g: ModuleGraph)		82
+nim	getFloatLitType	magicsys.html#getFloatLitType,ModuleGraph,PNode	proc getFloatLitType(g: ModuleGraph; literal: PNode): PType		89
+nim	skipIntLit	magicsys.html#skipIntLit,PType,IdGenerator	proc skipIntLit(t: PType; id: IdGenerator): PType		94
+nim	addSonSkipIntLit	magicsys.html#addSonSkipIntLit,PType,PType,IdGenerator	proc addSonSkipIntLit(father, son: PType; id: IdGenerator)		101
+nim	makeVarType	magicsys.html#makeVarType,PSym,PType,IdGenerator	proc makeVarType(owner: PSym; baseType: PType; idgen: IdGenerator; kind = tyVar): PType		106
+nim	getCompilerProc	magicsys.html#getCompilerProc,ModuleGraph,string	proc getCompilerProc(g: ModuleGraph; name: string): PSym		113
+nim	registerCompilerProc	magicsys.html#registerCompilerProc,ModuleGraph,PSym	proc registerCompilerProc(g: ModuleGraph; s: PSym)		119
+nim	registerNimScriptSymbol	magicsys.html#registerNimScriptSymbol,ModuleGraph,PSym	proc registerNimScriptSymbol(g: ModuleGraph; s: PSym)		122
+nim	getNimScriptSymbol	magicsys.html#getNimScriptSymbol,ModuleGraph,string	proc getNimScriptSymbol(g: ModuleGraph; name: string): PSym		131
+nim	resetNimScriptSymbols	magicsys.html#resetNimScriptSymbols,ModuleGraph	proc resetNimScriptSymbols(g: ModuleGraph)		134
+nim	getMagicEqSymForType	magicsys.html#getMagicEqSymForType,ModuleGraph,PType,TLineInfo	proc getMagicEqSymForType(g: ModuleGraph; t: PType; info: TLineInfo): PSym		136
+nim	makePtrType	magicsys.html#makePtrType,PType,IdGenerator	proc makePtrType(baseType: PType; idgen: IdGenerator): PType		160
+nim	makeAddr	magicsys.html#makeAddr,PNode,IdGenerator	proc makeAddr(n: PNode; idgen: IdGenerator): PNode		164

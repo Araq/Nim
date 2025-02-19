@@ -1,0 +1,2 @@
+nimTitle	closureiters	closureiters.html	module closureiters		0
+nim	transformClosureIterator	closureiters.html#transformClosureIterator,ModuleGraph,IdGenerator,PSym,PNode	proc transformClosureIterator(g: ModuleGraph; idgen: IdGenerator; fn: PSym; n: PNode): PNode		1488

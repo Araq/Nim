@@ -1,0 +1,30 @@
+nimTitle	paths	paths.html	module std/paths		0
+nim	Path	paths.html#Path	type Path		26
+nim	hash	paths.html#hash,Path	proc hash(x: Path): Hash		28
+nim	`$`	paths.html#$.t,Path	template `$`(x: Path): string		35
+nim	`==`	paths.html#==,Path,Path	proc `==`(x, y: Path): bool		38
+nim	add	paths.html#add,Path,Path	proc add(x: var Path; y: Path)		55
+nim	`/`	paths.html#/,Path,Path	proc `/`(head, tail: Path): Path		57
+nim	splitPath	paths.html#splitPath,Path	proc splitPath(path: Path): tuple[head, tail: Path]		70
+nim	splitFile	paths.html#splitFile,Path	proc splitFile(path: Path): tuple[dir, name: Path, ext: string]		82
+nim	isAbsolute	paths.html#isAbsolute,Path	proc isAbsolute(path: Path): bool		100
+nim	relativePath	paths.html#relativePath,Path,Path	proc relativePath(path, base: Path; sep = DirSep): Path		106
+nim	isRelativeTo	paths.html#isRelativeTo,Path,Path	proc isRelativeTo(path: Path; base: Path): bool		123
+nim	parentDir	paths.html#parentDir,Path	proc parentDir(path: Path): Path		128
+nim	tailDir	paths.html#tailDir,Path	proc tailDir(path: Path): Path		142
+nim	isRootDir	paths.html#isRootDir,Path	proc isRootDir(path: Path): bool		151
+nim	parentDirs	paths.html#parentDirs.i,Path	iterator parentDirs(path: Path; fromRoot = false; inclusive = true): Path		155
+nim	`/../`	paths.html#/../,Path,Path	proc `/../`(head, tail: Path): Path		172
+nim	extractFilename	paths.html#extractFilename,Path	proc extractFilename(path: Path): Path		181
+nim	lastPathPart	paths.html#lastPathPart,Path	proc lastPathPart(path: Path): Path		193
+nim	changeFileExt	paths.html#changeFileExt,Path,string	proc changeFileExt(filename: Path; ext: string): Path		204
+nim	addFileExt	paths.html#addFileExt,Path,string	proc addFileExt(filename: Path; ext: string): Path		221
+nim	unixToNativePath	paths.html#unixToNativePath,Path	proc unixToNativePath(path: Path; drive = Path("")): Path		236
+nim	getCurrentDir	paths.html#getCurrentDir	proc getCurrentDir(): Path		248
+nim	normalizeExe	paths.html#normalizeExe,Path	proc normalizeExe(file: var Path)		263
+nim	normalizePath	paths.html#normalizePath,Path	proc normalizePath(path: var Path)		265
+nim	normalizePathEnd	paths.html#normalizePathEnd,Path	proc normalizePathEnd(path: var Path; trailingSep = false)		267
+nim	absolutePath	paths.html#absolutePath,Path	proc absolutePath(path: Path; root = getCurrentDir()): Path		269
+nim	expandTilde	paths.html#expandTilde,Path	proc expandTilde(path: Path): Path		290
+idx	baseName	paths.html#basename_1	Module paths		0
+idx	current working directory	paths.html#current-working-directory_1	Module paths		0

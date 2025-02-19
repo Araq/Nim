@@ -1,0 +1,38 @@
+nimTitle	asyncfutures	asyncfutures.html	module std/asyncfutures		0
+nim	FutureBase	asyncfutures.html#FutureBase	type FutureBase		26
+nim	Future	asyncfutures.html#Future	type Future		37
+nim	FutureVar	asyncfutures.html#FutureVar	type FutureVar		40
+nim	FutureError	asyncfutures.html#FutureError	object FutureError		42
+nim	isFutureLoggingEnabled	asyncfutures.html#isFutureLoggingEnabled	const isFutureLoggingEnabled		48
+nim	NimAsyncContinueSuffix	asyncfutures.html#NimAsyncContinueSuffix	const NimAsyncContinueSuffix		51
+nim	getCallSoonProc	asyncfutures.html#getCallSoonProc	proc getCallSoonProc(): (proc (cbproc: proc ()) {.gcsafe.})		92
+nim	setCallSoonProc	asyncfutures.html#setCallSoonProc	proc setCallSoonProc(p: (proc (cbproc: proc ()) {.gcsafe.}))		96
+nim	callSoon	asyncfutures.html#callSoon,proc)	proc callSoon(cbproc: proc () {.gcsafe.})		100
+nim	newFuture	asyncfutures.html#newFuture,string	proc newFuture[T](fromProc: string = "unspecified"): owned(Future[T])		121
+nim	newFutureVar	asyncfutures.html#newFutureVar,string	proc newFutureVar[T](fromProc = "unspecified"): owned(FutureVar[T])		129
+nim	clean	asyncfutures.html#clean,FutureVar[T]	proc clean[T](future: FutureVar[T])		139
+nim	complete	asyncfutures.html#complete,Future[T],sinkT	proc complete[T](future: Future[T]; val: sink T)		206
+nim	complete	asyncfutures.html#complete,Future[void]	proc complete(future: Future[void]; val = Future[void].default)		210
+nim	complete	asyncfutures.html#complete,FutureVar[T]	proc complete[T](future: FutureVar[T])		213
+nim	complete	asyncfutures.html#complete,FutureVar[T],sinkT	proc complete[T](future: FutureVar[T]; val: sink T)		222
+nim	fail	asyncfutures.html#fail,Future[T],ref.Exception	proc fail[T](future: Future[T]; error: ref Exception)		234
+nim	clearCallbacks	asyncfutures.html#clearCallbacks,FutureBase	proc clearCallbacks(future: FutureBase)		245
+nim	addCallback	asyncfutures.html#addCallback,FutureBase,proc)	proc addCallback(future: FutureBase; cb: proc () {.closure, gcsafe.})		249
+nim	addCallback	asyncfutures.html#addCallback,Future[T],proc(Future[T])	proc addCallback[T](future: Future[T];\n               cb: proc (future: Future[T]) {.closure, gcsafe.})		259
+nim	callback=	asyncfutures.html#callback=,FutureBase,proc)	proc callback=(future: FutureBase; cb: proc () {.closure, gcsafe.})		269
+nim	callback=	asyncfutures.html#callback=,Future[T],proc(Future[T])	proc callback=[T](future: Future[T]; cb: proc (future: Future[T]) {.closure, gcsafe.})		278
+nim	`$`	asyncfutures.html#$,seq[StackTraceEntry]	proc `$`(stackTraceEntries: seq[StackTraceEntry]): string		314
+nim	read	asyncfutures.html#read	proc read[T](future: Future[T] | FutureVar[T]): lent T		377
+nim	read	asyncfutures.html#read_2	proc read(future: Future[void] | FutureVar[void])		384
+nim	readError	asyncfutures.html#readError,Future[T]	proc readError[T](future: Future[T]): ref Exception		387
+nim	mget	asyncfutures.html#mget,FutureVar[T]	proc mget[T](future: FutureVar[T]): var T		396
+nim	finished	asyncfutures.html#finished	proc finished(future: FutureBase | FutureVar): bool		403
+nim	failed	asyncfutures.html#failed,FutureBase	proc failed(future: FutureBase): bool		412
+nim	asyncCheck	asyncfutures.html#asyncCheck,Future[T]	proc asyncCheck[T](future: Future[T])		416
+nim	`and`	asyncfutures.html#and,Future[T],Future[Y]	proc `and`[T, Y](fut1: Future[T]; fut2: Future[Y]): Future[void]		431
+nim	`or`	asyncfutures.html#or,Future[T],Future[Y]	proc `or`[T, Y](fut1: Future[T]; fut2: Future[Y]): Future[void]		447
+nim	all	asyncfutures.html#all,varargs[Future[T]]	proc all[T](futs: varargs[Future[T]]): auto		459
+nimgrp	complete	asyncfutures.html#complete-procs-all	proc		206
+nimgrp	read	asyncfutures.html#read-procs-all	proc		377
+nimgrp	callback=	asyncfutures.html#callback=-procs-all	proc		269
+nimgrp	addcallback	asyncfutures.html#addCallback-procs-all	proc		249

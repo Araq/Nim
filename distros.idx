@@ -1,0 +1,9 @@
+nimTitle	distros	distros.html	module std/distros		0
+nim	Distribution	distros.html#Distribution	enum Distribution		36
+nim	LacksDevPackages	distros.html#LacksDevPackages	const LacksDevPackages		138
+nim	detectOs	distros.html#detectOs.t,untyped	template detectOs(d: untyped): bool		207
+nim	foreignDeps	distros.html#foreignDeps	var foreignDeps		214
+nim	foreignCmd	distros.html#foreignCmd,string	proc foreignCmd(cmd: string; requiresSudo = false)		216
+nim	foreignDepInstallCmd	distros.html#foreignDepInstallCmd,string	proc foreignDepInstallCmd(foreignPackageName: string): (string, bool)		225
+nim	foreignDep	distros.html#foreignDep,string	proc foreignDep(foreignPackageName: string)		270
+nim	echoForeignDeps	distros.html#echoForeignDeps	proc echoForeignDeps()		276

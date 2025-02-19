@@ -1,0 +1,5 @@
+nimTitle	navigator	ic/navigator.html	module ic/navigator		0
+nim	navDefinition	ic/navigator.html#navDefinition,ModuleGraph	proc navDefinition(g: ModuleGraph)		173
+nim	navUsages	ic/navigator.html#navUsages,ModuleGraph	proc navUsages(g: ModuleGraph)		174
+nim	navDefusages	ic/navigator.html#navDefusages,ModuleGraph	proc navDefusages(g: ModuleGraph)		175
+nim	writeRodFiles	ic/navigator.html#writeRodFiles,ModuleGraph	proc writeRodFiles(g: ModuleGraph)		177

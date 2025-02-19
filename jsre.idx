@@ -1,0 +1,17 @@
+nimTitle	jsre	jsre.html	module std/jsre		0
+nim	RegExp	jsre.html#RegExp	type RegExp		6
+nim	newRegExp	jsre.html#newRegExp,cstring,cstring	proc newRegExp(pattern: cstring; flags: cstring): RegExp		26
+nim	newRegExp	jsre.html#newRegExp,cstring	proc newRegExp(pattern: cstring): RegExp		29
+nim	compile	jsre.html#compile,RegExp,cstring,cstring	proc compile(self: RegExp; pattern: cstring; flags: cstring)		31
+nim	replace	jsre.html#replace,cstring,RegExp,cstring	proc replace(pattern: cstring; self: RegExp; replacement: cstring): cstring		34
+nim	replace	jsre.html#replace,cstring,RegExp,proc(varargs[cstring])	proc replace(pattern: cstring; self: RegExp;\n        cb: proc (args: varargs[cstring]): cstring): cstring		37
+nim	split	jsre.html#split,cstring,RegExp	proc split(pattern: cstring; self: RegExp): seq[cstring]		40
+nim	match	jsre.html#match,cstring,RegExp	proc match(pattern: cstring; self: RegExp): seq[cstring]		43
+nim	exec	jsre.html#exec,RegExp,cstring	proc exec(self: RegExp; pattern: cstring): seq[cstring]		46
+nim	toCstring	jsre.html#toCstring,RegExp	proc toCstring(self: RegExp): cstring		49
+nim	`$`	jsre.html#$,RegExp	proc `$`(self: RegExp): string		52
+nim	contains	jsre.html#contains,cstring,RegExp	proc contains(pattern: cstring; self: RegExp): bool		54
+nim	startsWith	jsre.html#startsWith,cstring,RegExp	proc startsWith(pattern: cstring; self: RegExp): bool		63
+nim	endsWith	jsre.html#endsWith,cstring,RegExp	proc endsWith(pattern: cstring; self: RegExp): bool		70
+nimgrp	replace	jsre.html#replace-procs-all	proc		34
+nimgrp	newregexp	jsre.html#newRegExp-procs-all	proc		26

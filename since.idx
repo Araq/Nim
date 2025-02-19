@@ -1,0 +1,4 @@
+nimTitle	since	since.html	module std/private/since		0
+nim	since	since.html#since.t,,untyped	template since(version: (int, int); body: untyped)		15
+nim	since	since.html#since.t,,untyped_2	template since(version: (int, int, int); body: untyped)		25
+nimgrp	since	since.html#since-templates-all	template		15

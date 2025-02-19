@@ -1,0 +1,265 @@
+nimTitle	vmdef	vmdef.html	module vmdef		0
+nim	TInstrType	vmdef.html#TInstrType	type TInstrType		17
+nim	byteExcess	vmdef.html#byteExcess	const byteExcess		26
+nim	regOShift	vmdef.html#regOShift	const regOShift		31
+nim	regAShift	vmdef.html#regAShift	const regAShift		32
+nim	regBShift	vmdef.html#regBShift	const regBShift		33
+nim	regCShift	vmdef.html#regCShift	const regCShift		34
+nim	regBxShift	vmdef.html#regBxShift	const regBxShift		35
+nim	regOMask	vmdef.html#regOMask	const regOMask		37
+nim	regAMask	vmdef.html#regAMask	const regAMask		38
+nim	regBMask	vmdef.html#regBMask	const regBMask		39
+nim	regCMask	vmdef.html#regCMask	const regCMask		40
+nim	regBxMask	vmdef.html#regBxMask	const regBxMask		41
+nim	wordExcess	vmdef.html#wordExcess	const wordExcess		43
+nim	regBxMin	vmdef.html#regBxMin	const regBxMin		44
+nim	regBxMax	vmdef.html#regBxMax	const regBxMax		45
+nim	TRegister	vmdef.html#TRegister	type TRegister		48
+nim	TDest	vmdef.html#TDest	type TDest		49
+nim	TInstr	vmdef.html#TInstr	type TInstr		50
+nim	opcEof	vmdef.html#opcEof	TOpcode.opcEof		52
+nim	opcRet	vmdef.html#opcRet	TOpcode.opcRet		52
+nim	opcYldYoid	vmdef.html#opcYldYoid	TOpcode.opcYldYoid		52
+nim	opcYldVal	vmdef.html#opcYldVal	TOpcode.opcYldVal		52
+nim	opcAsgnInt	vmdef.html#opcAsgnInt	TOpcode.opcAsgnInt		52
+nim	opcAsgnFloat	vmdef.html#opcAsgnFloat	TOpcode.opcAsgnFloat		52
+nim	opcAsgnRef	vmdef.html#opcAsgnRef	TOpcode.opcAsgnRef		52
+nim	opcAsgnComplex	vmdef.html#opcAsgnComplex	TOpcode.opcAsgnComplex		52
+nim	opcCastIntToFloat32	vmdef.html#opcCastIntToFloat32	TOpcode.opcCastIntToFloat32		52
+nim	opcCastIntToFloat64	vmdef.html#opcCastIntToFloat64	TOpcode.opcCastIntToFloat64		52
+nim	opcCastFloatToInt32	vmdef.html#opcCastFloatToInt32	TOpcode.opcCastFloatToInt32		52
+nim	opcCastFloatToInt64	vmdef.html#opcCastFloatToInt64	TOpcode.opcCastFloatToInt64		52
+nim	opcCastPtrToInt	vmdef.html#opcCastPtrToInt	TOpcode.opcCastPtrToInt		52
+nim	opcCastIntToPtr	vmdef.html#opcCastIntToPtr	TOpcode.opcCastIntToPtr		52
+nim	opcFastAsgnComplex	vmdef.html#opcFastAsgnComplex	TOpcode.opcFastAsgnComplex		52
+nim	opcNodeToReg	vmdef.html#opcNodeToReg	TOpcode.opcNodeToReg		52
+nim	opcLdArr	vmdef.html#opcLdArr	TOpcode.opcLdArr		52
+nim	opcLdArrAddr	vmdef.html#opcLdArrAddr	TOpcode.opcLdArrAddr		52
+nim	opcWrArr	vmdef.html#opcWrArr	TOpcode.opcWrArr		52
+nim	opcLdObj	vmdef.html#opcLdObj	TOpcode.opcLdObj		52
+nim	opcLdObjAddr	vmdef.html#opcLdObjAddr	TOpcode.opcLdObjAddr		52
+nim	opcWrObj	vmdef.html#opcWrObj	TOpcode.opcWrObj		52
+nim	opcAddrReg	vmdef.html#opcAddrReg	TOpcode.opcAddrReg		52
+nim	opcAddrNode	vmdef.html#opcAddrNode	TOpcode.opcAddrNode		52
+nim	opcLdDeref	vmdef.html#opcLdDeref	TOpcode.opcLdDeref		52
+nim	opcWrDeref	vmdef.html#opcWrDeref	TOpcode.opcWrDeref		52
+nim	opcWrStrIdx	vmdef.html#opcWrStrIdx	TOpcode.opcWrStrIdx		52
+nim	opcLdStrIdx	vmdef.html#opcLdStrIdx	TOpcode.opcLdStrIdx		52
+nim	opcLdStrIdxAddr	vmdef.html#opcLdStrIdxAddr	TOpcode.opcLdStrIdxAddr		52
+nim	opcSlice	vmdef.html#opcSlice	TOpcode.opcSlice		52
+nim	opcAddInt	vmdef.html#opcAddInt	TOpcode.opcAddInt		52
+nim	opcAddImmInt	vmdef.html#opcAddImmInt	TOpcode.opcAddImmInt		52
+nim	opcSubInt	vmdef.html#opcSubInt	TOpcode.opcSubInt		52
+nim	opcSubImmInt	vmdef.html#opcSubImmInt	TOpcode.opcSubImmInt		52
+nim	opcLenSeq	vmdef.html#opcLenSeq	TOpcode.opcLenSeq		52
+nim	opcLenStr	vmdef.html#opcLenStr	TOpcode.opcLenStr		52
+nim	opcLenCstring	vmdef.html#opcLenCstring	TOpcode.opcLenCstring		52
+nim	opcIncl	vmdef.html#opcIncl	TOpcode.opcIncl		52
+nim	opcInclRange	vmdef.html#opcInclRange	TOpcode.opcInclRange		52
+nim	opcExcl	vmdef.html#opcExcl	TOpcode.opcExcl		52
+nim	opcCard	vmdef.html#opcCard	TOpcode.opcCard		52
+nim	opcMulInt	vmdef.html#opcMulInt	TOpcode.opcMulInt		52
+nim	opcDivInt	vmdef.html#opcDivInt	TOpcode.opcDivInt		52
+nim	opcModInt	vmdef.html#opcModInt	TOpcode.opcModInt		52
+nim	opcAddFloat	vmdef.html#opcAddFloat	TOpcode.opcAddFloat		52
+nim	opcSubFloat	vmdef.html#opcSubFloat	TOpcode.opcSubFloat		52
+nim	opcMulFloat	vmdef.html#opcMulFloat	TOpcode.opcMulFloat		52
+nim	opcDivFloat	vmdef.html#opcDivFloat	TOpcode.opcDivFloat		52
+nim	opcShrInt	vmdef.html#opcShrInt	TOpcode.opcShrInt		52
+nim	opcShlInt	vmdef.html#opcShlInt	TOpcode.opcShlInt		52
+nim	opcAshrInt	vmdef.html#opcAshrInt	TOpcode.opcAshrInt		52
+nim	opcBitandInt	vmdef.html#opcBitandInt	TOpcode.opcBitandInt		52
+nim	opcBitorInt	vmdef.html#opcBitorInt	TOpcode.opcBitorInt		52
+nim	opcBitxorInt	vmdef.html#opcBitxorInt	TOpcode.opcBitxorInt		52
+nim	opcAddu	vmdef.html#opcAddu	TOpcode.opcAddu		52
+nim	opcSubu	vmdef.html#opcSubu	TOpcode.opcSubu		52
+nim	opcMulu	vmdef.html#opcMulu	TOpcode.opcMulu		52
+nim	opcDivu	vmdef.html#opcDivu	TOpcode.opcDivu		52
+nim	opcModu	vmdef.html#opcModu	TOpcode.opcModu		52
+nim	opcEqInt	vmdef.html#opcEqInt	TOpcode.opcEqInt		52
+nim	opcLeInt	vmdef.html#opcLeInt	TOpcode.opcLeInt		52
+nim	opcLtInt	vmdef.html#opcLtInt	TOpcode.opcLtInt		52
+nim	opcEqFloat	vmdef.html#opcEqFloat	TOpcode.opcEqFloat		52
+nim	opcLeFloat	vmdef.html#opcLeFloat	TOpcode.opcLeFloat		52
+nim	opcLtFloat	vmdef.html#opcLtFloat	TOpcode.opcLtFloat		52
+nim	opcLeu	vmdef.html#opcLeu	TOpcode.opcLeu		52
+nim	opcLtu	vmdef.html#opcLtu	TOpcode.opcLtu		52
+nim	opcEqRef	vmdef.html#opcEqRef	TOpcode.opcEqRef		52
+nim	opcEqNimNode	vmdef.html#opcEqNimNode	TOpcode.opcEqNimNode		52
+nim	opcSameNodeType	vmdef.html#opcSameNodeType	TOpcode.opcSameNodeType		52
+nim	opcXor	vmdef.html#opcXor	TOpcode.opcXor		52
+nim	opcNot	vmdef.html#opcNot	TOpcode.opcNot		52
+nim	opcUnaryMinusInt	vmdef.html#opcUnaryMinusInt	TOpcode.opcUnaryMinusInt		52
+nim	opcUnaryMinusFloat	vmdef.html#opcUnaryMinusFloat	TOpcode.opcUnaryMinusFloat		52
+nim	opcBitnotInt	vmdef.html#opcBitnotInt	TOpcode.opcBitnotInt		52
+nim	opcEqStr	vmdef.html#opcEqStr	TOpcode.opcEqStr		52
+nim	opcEqCString	vmdef.html#opcEqCString	TOpcode.opcEqCString		52
+nim	opcLeStr	vmdef.html#opcLeStr	TOpcode.opcLeStr		52
+nim	opcLtStr	vmdef.html#opcLtStr	TOpcode.opcLtStr		52
+nim	opcEqSet	vmdef.html#opcEqSet	TOpcode.opcEqSet		52
+nim	opcLeSet	vmdef.html#opcLeSet	TOpcode.opcLeSet		52
+nim	opcLtSet	vmdef.html#opcLtSet	TOpcode.opcLtSet		52
+nim	opcMulSet	vmdef.html#opcMulSet	TOpcode.opcMulSet		52
+nim	opcPlusSet	vmdef.html#opcPlusSet	TOpcode.opcPlusSet		52
+nim	opcMinusSet	vmdef.html#opcMinusSet	TOpcode.opcMinusSet		52
+nim	opcXorSet	vmdef.html#opcXorSet	TOpcode.opcXorSet		52
+nim	opcConcatStr	vmdef.html#opcConcatStr	TOpcode.opcConcatStr		52
+nim	opcContainsSet	vmdef.html#opcContainsSet	TOpcode.opcContainsSet		52
+nim	opcRepr	vmdef.html#opcRepr	TOpcode.opcRepr		52
+nim	opcSetLenStr	vmdef.html#opcSetLenStr	TOpcode.opcSetLenStr		52
+nim	opcSetLenSeq	vmdef.html#opcSetLenSeq	TOpcode.opcSetLenSeq		52
+nim	opcIsNil	vmdef.html#opcIsNil	TOpcode.opcIsNil		52
+nim	opcOf	vmdef.html#opcOf	TOpcode.opcOf		52
+nim	opcIs	vmdef.html#opcIs	TOpcode.opcIs		52
+nim	opcParseFloat	vmdef.html#opcParseFloat	TOpcode.opcParseFloat		52
+nim	opcConv	vmdef.html#opcConv	TOpcode.opcConv		52
+nim	opcCast	vmdef.html#opcCast	TOpcode.opcCast		52
+nim	opcQuit	vmdef.html#opcQuit	TOpcode.opcQuit		52
+nim	opcInvalidField	vmdef.html#opcInvalidField	TOpcode.opcInvalidField		52
+nim	opcNarrowS	vmdef.html#opcNarrowS	TOpcode.opcNarrowS		52
+nim	opcNarrowU	vmdef.html#opcNarrowU	TOpcode.opcNarrowU		52
+nim	opcSignExtend	vmdef.html#opcSignExtend	TOpcode.opcSignExtend		52
+nim	opcAddStrCh	vmdef.html#opcAddStrCh	TOpcode.opcAddStrCh		52
+nim	opcAddStrStr	vmdef.html#opcAddStrStr	TOpcode.opcAddStrStr		52
+nim	opcAddSeqElem	vmdef.html#opcAddSeqElem	TOpcode.opcAddSeqElem		52
+nim	opcRangeChck	vmdef.html#opcRangeChck	TOpcode.opcRangeChck		52
+nim	opcNAdd	vmdef.html#opcNAdd	TOpcode.opcNAdd		52
+nim	opcNAddMultiple	vmdef.html#opcNAddMultiple	TOpcode.opcNAddMultiple		52
+nim	opcNKind	vmdef.html#opcNKind	TOpcode.opcNKind		52
+nim	opcNSymKind	vmdef.html#opcNSymKind	TOpcode.opcNSymKind		52
+nim	opcNIntVal	vmdef.html#opcNIntVal	TOpcode.opcNIntVal		52
+nim	opcNFloatVal	vmdef.html#opcNFloatVal	TOpcode.opcNFloatVal		52
+nim	opcNSymbol	vmdef.html#opcNSymbol	TOpcode.opcNSymbol		52
+nim	opcNIdent	vmdef.html#opcNIdent	TOpcode.opcNIdent		52
+nim	opcNGetType	vmdef.html#opcNGetType	TOpcode.opcNGetType		52
+nim	opcNStrVal	vmdef.html#opcNStrVal	TOpcode.opcNStrVal		52
+nim	opcNSigHash	vmdef.html#opcNSigHash	TOpcode.opcNSigHash		52
+nim	opcNGetSize	vmdef.html#opcNGetSize	TOpcode.opcNGetSize		52
+nim	opcNSetIntVal	vmdef.html#opcNSetIntVal	TOpcode.opcNSetIntVal		52
+nim	opcNSetFloatVal	vmdef.html#opcNSetFloatVal	TOpcode.opcNSetFloatVal		52
+nim	opcNSetSymbol	vmdef.html#opcNSetSymbol	TOpcode.opcNSetSymbol		52
+nim	opcNSetIdent	vmdef.html#opcNSetIdent	TOpcode.opcNSetIdent		52
+nim	opcNSetStrVal	vmdef.html#opcNSetStrVal	TOpcode.opcNSetStrVal		52
+nim	opcNNewNimNode	vmdef.html#opcNNewNimNode	TOpcode.opcNNewNimNode		52
+nim	opcNCopyNimNode	vmdef.html#opcNCopyNimNode	TOpcode.opcNCopyNimNode		52
+nim	opcNCopyNimTree	vmdef.html#opcNCopyNimTree	TOpcode.opcNCopyNimTree		52
+nim	opcNDel	vmdef.html#opcNDel	TOpcode.opcNDel		52
+nim	opcGenSym	vmdef.html#opcGenSym	TOpcode.opcGenSym		52
+nim	opcNccValue	vmdef.html#opcNccValue	TOpcode.opcNccValue		52
+nim	opcNccInc	vmdef.html#opcNccInc	TOpcode.opcNccInc		52
+nim	opcNcsAdd	vmdef.html#opcNcsAdd	TOpcode.opcNcsAdd		52
+nim	opcNcsIncl	vmdef.html#opcNcsIncl	TOpcode.opcNcsIncl		52
+nim	opcNcsLen	vmdef.html#opcNcsLen	TOpcode.opcNcsLen		52
+nim	opcNcsAt	vmdef.html#opcNcsAt	TOpcode.opcNcsAt		52
+nim	opcNctPut	vmdef.html#opcNctPut	TOpcode.opcNctPut		52
+nim	opcNctLen	vmdef.html#opcNctLen	TOpcode.opcNctLen		52
+nim	opcNctGet	vmdef.html#opcNctGet	TOpcode.opcNctGet		52
+nim	opcNctHasNext	vmdef.html#opcNctHasNext	TOpcode.opcNctHasNext		52
+nim	opcNctNext	vmdef.html#opcNctNext	TOpcode.opcNctNext		52
+nim	opcNodeId	vmdef.html#opcNodeId	TOpcode.opcNodeId		52
+nim	opcSlurp	vmdef.html#opcSlurp	TOpcode.opcSlurp		52
+nim	opcGorge	vmdef.html#opcGorge	TOpcode.opcGorge		52
+nim	opcParseExprToAst	vmdef.html#opcParseExprToAst	TOpcode.opcParseExprToAst		52
+nim	opcParseStmtToAst	vmdef.html#opcParseStmtToAst	TOpcode.opcParseStmtToAst		52
+nim	opcQueryErrorFlag	vmdef.html#opcQueryErrorFlag	TOpcode.opcQueryErrorFlag		52
+nim	opcNError	vmdef.html#opcNError	TOpcode.opcNError		52
+nim	opcNWarning	vmdef.html#opcNWarning	TOpcode.opcNWarning		52
+nim	opcNHint	vmdef.html#opcNHint	TOpcode.opcNHint		52
+nim	opcNGetLineInfo	vmdef.html#opcNGetLineInfo	TOpcode.opcNGetLineInfo		52
+nim	opcNCopyLineInfo	vmdef.html#opcNCopyLineInfo	TOpcode.opcNCopyLineInfo		52
+nim	opcNSetLineInfoLine	vmdef.html#opcNSetLineInfoLine	TOpcode.opcNSetLineInfoLine		52
+nim	opcNSetLineInfoColumn	vmdef.html#opcNSetLineInfoColumn	TOpcode.opcNSetLineInfoColumn		52
+nim	opcNSetLineInfoFile	vmdef.html#opcNSetLineInfoFile	TOpcode.opcNSetLineInfoFile		52
+nim	opcEqIdent	vmdef.html#opcEqIdent	TOpcode.opcEqIdent		52
+nim	opcStrToIdent	vmdef.html#opcStrToIdent	TOpcode.opcStrToIdent		52
+nim	opcGetImpl	vmdef.html#opcGetImpl	TOpcode.opcGetImpl		52
+nim	opcGetImplTransf	vmdef.html#opcGetImplTransf	TOpcode.opcGetImplTransf		52
+nim	opcEcho	vmdef.html#opcEcho	TOpcode.opcEcho		52
+nim	opcIndCall	vmdef.html#opcIndCall	TOpcode.opcIndCall		52
+nim	opcIndCallAsgn	vmdef.html#opcIndCallAsgn	TOpcode.opcIndCallAsgn		52
+nim	opcRaise	vmdef.html#opcRaise	TOpcode.opcRaise		52
+nim	opcNChild	vmdef.html#opcNChild	TOpcode.opcNChild		52
+nim	opcNSetChild	vmdef.html#opcNSetChild	TOpcode.opcNSetChild		52
+nim	opcCallSite	vmdef.html#opcCallSite	TOpcode.opcCallSite		52
+nim	opcNewStr	vmdef.html#opcNewStr	TOpcode.opcNewStr		52
+nim	opcTJmp	vmdef.html#opcTJmp	TOpcode.opcTJmp		52
+nim	opcFJmp	vmdef.html#opcFJmp	TOpcode.opcFJmp		52
+nim	opcJmp	vmdef.html#opcJmp	TOpcode.opcJmp		52
+nim	opcJmpBack	vmdef.html#opcJmpBack	TOpcode.opcJmpBack		52
+nim	opcBranch	vmdef.html#opcBranch	TOpcode.opcBranch		52
+nim	opcTry	vmdef.html#opcTry	TOpcode.opcTry		52
+nim	opcExcept	vmdef.html#opcExcept	TOpcode.opcExcept		52
+nim	opcFinally	vmdef.html#opcFinally	TOpcode.opcFinally		52
+nim	opcFinallyEnd	vmdef.html#opcFinallyEnd	TOpcode.opcFinallyEnd		52
+nim	opcNew	vmdef.html#opcNew	TOpcode.opcNew		52
+nim	opcNewSeq	vmdef.html#opcNewSeq	TOpcode.opcNewSeq		52
+nim	opcLdNull	vmdef.html#opcLdNull	TOpcode.opcLdNull		52
+nim	opcLdNullReg	vmdef.html#opcLdNullReg	TOpcode.opcLdNullReg		52
+nim	opcLdConst	vmdef.html#opcLdConst	TOpcode.opcLdConst		52
+nim	opcAsgnConst	vmdef.html#opcAsgnConst	TOpcode.opcAsgnConst		52
+nim	opcLdGlobal	vmdef.html#opcLdGlobal	TOpcode.opcLdGlobal		52
+nim	opcLdGlobalAddr	vmdef.html#opcLdGlobalAddr	TOpcode.opcLdGlobalAddr		52
+nim	opcLdGlobalDerefFFI	vmdef.html#opcLdGlobalDerefFFI	TOpcode.opcLdGlobalDerefFFI		52
+nim	opcLdGlobalAddrDerefFFI	vmdef.html#opcLdGlobalAddrDerefFFI	TOpcode.opcLdGlobalAddrDerefFFI		52
+nim	opcLdImmInt	vmdef.html#opcLdImmInt	TOpcode.opcLdImmInt		52
+nim	opcNBindSym	vmdef.html#opcNBindSym	TOpcode.opcNBindSym		52
+nim	opcNDynBindSym	vmdef.html#opcNDynBindSym	TOpcode.opcNDynBindSym		52
+nim	opcSetType	vmdef.html#opcSetType	TOpcode.opcSetType		52
+nim	opcTypeTrait	vmdef.html#opcTypeTrait	TOpcode.opcTypeTrait		52
+nim	opcSymOwner	vmdef.html#opcSymOwner	TOpcode.opcSymOwner		52
+nim	opcSymIsInstantiationOf	vmdef.html#opcSymIsInstantiationOf	TOpcode.opcSymIsInstantiationOf		52
+nim	TOpcode	vmdef.html#TOpcode	enum TOpcode		52
+nim	TBlock	vmdef.html#TBlock	object TBlock		188
+nim	emRepl	vmdef.html#emRepl	TEvalMode.emRepl		192
+nim	emConst	vmdef.html#emConst	TEvalMode.emConst		192
+nim	emOptimize	vmdef.html#emOptimize	TEvalMode.emOptimize		192
+nim	emStaticExpr	vmdef.html#emStaticExpr	TEvalMode.emStaticExpr		192
+nim	emStaticStmt	vmdef.html#emStaticStmt	TEvalMode.emStaticStmt		192
+nim	TEvalMode	vmdef.html#TEvalMode	enum TEvalMode		192
+nim	allowCast	vmdef.html#allowCast	TSandboxFlag.allowCast		201
+nim	allowInfiniteLoops	vmdef.html#allowInfiniteLoops	TSandboxFlag.allowInfiniteLoops		201
+nim	allowInfiniteRecursion	vmdef.html#allowInfiniteRecursion	TSandboxFlag.allowInfiniteRecursion		201
+nim	TSandboxFlag	vmdef.html#TSandboxFlag	enum TSandboxFlag		201
+nim	TSandboxFlags	vmdef.html#TSandboxFlags	type TSandboxFlags		205
+nim	slotEmpty	vmdef.html#slotEmpty	TSlotKind.slotEmpty		207
+nim	slotFixedVar	vmdef.html#slotFixedVar	TSlotKind.slotFixedVar		207
+nim	slotFixedLet	vmdef.html#slotFixedLet	TSlotKind.slotFixedLet		207
+nim	slotTempUnknown	vmdef.html#slotTempUnknown	TSlotKind.slotTempUnknown		207
+nim	slotTempInt	vmdef.html#slotTempInt	TSlotKind.slotTempInt		207
+nim	slotTempFloat	vmdef.html#slotTempFloat	TSlotKind.slotTempFloat		207
+nim	slotTempStr	vmdef.html#slotTempStr	TSlotKind.slotTempStr		207
+nim	slotTempComplex	vmdef.html#slotTempComplex	TSlotKind.slotTempComplex		207
+nim	slotTempPerm	vmdef.html#slotTempPerm	TSlotKind.slotTempPerm		207
+nim	TSlotKind	vmdef.html#TSlotKind	enum TSlotKind		207
+nim	rkNone	vmdef.html#rkNone	TRegisterKind.rkNone		221
+nim	rkNode	vmdef.html#rkNode	TRegisterKind.rkNode		221
+nim	rkInt	vmdef.html#rkInt	TRegisterKind.rkInt		221
+nim	rkFloat	vmdef.html#rkFloat	TRegisterKind.rkFloat		221
+nim	rkRegisterAddr	vmdef.html#rkRegisterAddr	TRegisterKind.rkRegisterAddr		221
+nim	rkNodeAddr	vmdef.html#rkNodeAddr	TRegisterKind.rkNodeAddr		221
+nim	TRegisterKind	vmdef.html#TRegisterKind	enum TRegisterKind		221
+nim	TFullReg	vmdef.html#TFullReg	object TFullReg		223
+nim	PProc	vmdef.html#PProc	type PProc		233
+nim	VmArgs	vmdef.html#VmArgs	object VmArgs		238
+nim	VmCallback	vmdef.html#VmCallback	type VmCallback		243
+nim	PCtx	vmdef.html#PCtx	type PCtx		245
+nim	TCtx	vmdef.html#TCtx	object TCtx		246
+nim	PStackFrame	vmdef.html#PStackFrame	type PStackFrame		277
+nim	TStackFrame	vmdef.html#TStackFrame	object TStackFrame		278
+nim	Profiler	vmdef.html#Profiler	object Profiler		287
+nim	TPosition	vmdef.html#TPosition	type TPosition		291
+nim	PEvalContext	vmdef.html#PEvalContext	type PEvalContext		293
+nim	newCtx	vmdef.html#newCtx,PSym,IdentCache,ModuleGraph,IdGenerator	proc newCtx(module: PSym; cache: IdentCache; g: ModuleGraph; idgen: IdGenerator): PCtx		295
+nim	refresh	vmdef.html#refresh,PCtx,PSym,IdGenerator	proc refresh(c: PCtx; module: PSym; idgen: IdGenerator)		303
+nim	registerCallback	vmdef.html#registerCallback,PCtx,string,VmCallback	proc registerCallback(c: PCtx; name: string; callback: VmCallback): int		318
+nim	firstABxInstr	vmdef.html#firstABxInstr	const firstABxInstr		324
+nim	largeInstrs	vmdef.html#largeInstrs	const largeInstrs		325
+nim	slotSomeTemp	vmdef.html#slotSomeTemp	const slotSomeTemp		328
+nim	relativeJumps	vmdef.html#relativeJumps	const relativeJumps		329
+nim	nimNodeFlag	vmdef.html#nimNodeFlag	const nimNodeFlag		332
+nim	opcode	vmdef.html#opcode.t,TInstr	template opcode(x: TInstr): TOpcode		334
+nim	regA	vmdef.html#regA.t,TInstr	template regA(x: TInstr): TRegister		335
+nim	regB	vmdef.html#regB.t,TInstr	template regB(x: TInstr): TRegister		336
+nim	regC	vmdef.html#regC.t,TInstr	template regC(x: TInstr): TRegister		337
+nim	regBx	vmdef.html#regBx.t,TInstr	template regBx(x: TInstr): int		338
+nim	jmpDiff	vmdef.html#jmpDiff.t,TInstr	template jmpDiff(x: TInstr): int		340

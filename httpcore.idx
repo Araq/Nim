@@ -1,0 +1,114 @@
+nimTitle	httpcore	httpcore.html	module std/httpcore		0
+nim	HttpHeaders	httpcore.html#HttpHeaders	type HttpHeaders		18
+nim	HttpHeaderValues	httpcore.html#HttpHeaderValues	type HttpHeaderValues		22
+nim	HttpCode	httpcore.html#HttpCode	type HttpCode		26
+nim	HttpVer11	httpcore.html#HttpVer11	HttpVersion.HttpVer11		28
+nim	HttpVer10	httpcore.html#HttpVer10	HttpVersion.HttpVer10		28
+nim	HttpVersion	httpcore.html#HttpVersion	enum HttpVersion		28
+nim	HttpHead	httpcore.html#HttpHead	HttpMethod.HttpHead		32
+nim	HttpGet	httpcore.html#HttpGet	HttpMethod.HttpGet		32
+nim	HttpPost	httpcore.html#HttpPost	HttpMethod.HttpPost		32
+nim	HttpPut	httpcore.html#HttpPut	HttpMethod.HttpPut		32
+nim	HttpDelete	httpcore.html#HttpDelete	HttpMethod.HttpDelete		32
+nim	HttpTrace	httpcore.html#HttpTrace	HttpMethod.HttpTrace		32
+nim	HttpOptions	httpcore.html#HttpOptions	HttpMethod.HttpOptions		32
+nim	HttpConnect	httpcore.html#HttpConnect	HttpMethod.HttpConnect		32
+nim	HttpPatch	httpcore.html#HttpPatch	HttpMethod.HttpPatch		32
+nim	HttpMethod	httpcore.html#HttpMethod	enum HttpMethod		32
+nim	Http100	httpcore.html#Http100	const Http100		55
+nim	Http101	httpcore.html#Http101	const Http101		56
+nim	Http102	httpcore.html#Http102	const Http102		57
+nim	Http103	httpcore.html#Http103	const Http103		58
+nim	Http200	httpcore.html#Http200	const Http200		59
+nim	Http201	httpcore.html#Http201	const Http201		60
+nim	Http202	httpcore.html#Http202	const Http202		61
+nim	Http203	httpcore.html#Http203	const Http203		62
+nim	Http204	httpcore.html#Http204	const Http204		63
+nim	Http205	httpcore.html#Http205	const Http205		64
+nim	Http206	httpcore.html#Http206	const Http206		65
+nim	Http207	httpcore.html#Http207	const Http207		66
+nim	Http208	httpcore.html#Http208	const Http208		67
+nim	Http226	httpcore.html#Http226	const Http226		68
+nim	Http300	httpcore.html#Http300	const Http300		69
+nim	Http301	httpcore.html#Http301	const Http301		70
+nim	Http302	httpcore.html#Http302	const Http302		71
+nim	Http303	httpcore.html#Http303	const Http303		72
+nim	Http304	httpcore.html#Http304	const Http304		73
+nim	Http305	httpcore.html#Http305	const Http305		74
+nim	Http307	httpcore.html#Http307	const Http307		75
+nim	Http308	httpcore.html#Http308	const Http308		76
+nim	Http400	httpcore.html#Http400	const Http400		77
+nim	Http401	httpcore.html#Http401	const Http401		78
+nim	Http402	httpcore.html#Http402	const Http402		79
+nim	Http403	httpcore.html#Http403	const Http403		80
+nim	Http404	httpcore.html#Http404	const Http404		81
+nim	Http405	httpcore.html#Http405	const Http405		82
+nim	Http406	httpcore.html#Http406	const Http406		83
+nim	Http407	httpcore.html#Http407	const Http407		84
+nim	Http408	httpcore.html#Http408	const Http408		85
+nim	Http409	httpcore.html#Http409	const Http409		86
+nim	Http410	httpcore.html#Http410	const Http410		87
+nim	Http411	httpcore.html#Http411	const Http411		88
+nim	Http412	httpcore.html#Http412	const Http412		89
+nim	Http413	httpcore.html#Http413	const Http413		90
+nim	Http414	httpcore.html#Http414	const Http414		91
+nim	Http415	httpcore.html#Http415	const Http415		92
+nim	Http416	httpcore.html#Http416	const Http416		93
+nim	Http417	httpcore.html#Http417	const Http417		94
+nim	Http418	httpcore.html#Http418	const Http418		95
+nim	Http421	httpcore.html#Http421	const Http421		96
+nim	Http422	httpcore.html#Http422	const Http422		97
+nim	Http423	httpcore.html#Http423	const Http423		98
+nim	Http424	httpcore.html#Http424	const Http424		99
+nim	Http425	httpcore.html#Http425	const Http425		100
+nim	Http426	httpcore.html#Http426	const Http426		101
+nim	Http428	httpcore.html#Http428	const Http428		102
+nim	Http429	httpcore.html#Http429	const Http429		103
+nim	Http431	httpcore.html#Http431	const Http431		104
+nim	Http451	httpcore.html#Http451	const Http451		105
+nim	Http500	httpcore.html#Http500	const Http500		106
+nim	Http501	httpcore.html#Http501	const Http501		107
+nim	Http502	httpcore.html#Http502	const Http502		108
+nim	Http503	httpcore.html#Http503	const Http503		109
+nim	Http504	httpcore.html#Http504	const Http504		110
+nim	Http505	httpcore.html#Http505	const Http505		111
+nim	Http506	httpcore.html#Http506	const Http506		112
+nim	Http507	httpcore.html#Http507	const Http507		113
+nim	Http508	httpcore.html#Http508	const Http508		114
+nim	Http510	httpcore.html#Http510	const Http510		115
+nim	Http511	httpcore.html#Http511	const Http511		116
+nim	httpNewLine	httpcore.html#httpNewLine	const httpNewLine		119
+nim	headerLimit	httpcore.html#headerLimit	const headerLimit		120
+nim	toCaseInsensitive	httpcore.html#toCaseInsensitive,HttpHeaders,string	proc toCaseInsensitive(headers: HttpHeaders; s: string): string		129
+nim	newHttpHeaders	httpcore.html#newHttpHeaders	proc newHttpHeaders(titleCase = false): HttpHeaders		133
+nim	newHttpHeaders	httpcore.html#newHttpHeaders,openArray[tuple[string,string]]	proc newHttpHeaders(keyValuePairs: openArray[tuple[key: string, val: string]];\n               titleCase = false): HttpHeaders		138
+nim	`$`	httpcore.html#$,HttpHeaders	proc `$`(headers: HttpHeaders): string		152
+nim	clear	httpcore.html#clear,HttpHeaders	proc clear(headers: HttpHeaders)		155
+nim	`[]`	httpcore.html#[],HttpHeaders,string	proc `[]`(headers: HttpHeaders; key: string): HttpHeaderValues		158
+nim	toString	httpcore.html#toString.c,HttpHeaderValues	converter toString(values: HttpHeaderValues): string		170
+nim	`[]`	httpcore.html#[],HttpHeaders,string,int	proc `[]`(headers: HttpHeaders; key: string; i: int): string		173
+nim	`[]=`	httpcore.html#[]=,HttpHeaders,string,string	proc `[]=`(headers: HttpHeaders; key, value: string)		180
+nim	`[]=`	httpcore.html#[]=,HttpHeaders,string,seq[string]	proc `[]=`(headers: HttpHeaders; key: string; value: seq[string])		185
+nim	add	httpcore.html#add,HttpHeaders,string,string	proc add(headers: HttpHeaders; key, value: string)		194
+nim	del	httpcore.html#del,HttpHeaders,string	proc del(headers: HttpHeaders; key: string)		202
+nim	pairs	httpcore.html#pairs.i,HttpHeaders	iterator pairs(headers: HttpHeaders): tuple[key, value: string]		206
+nim	contains	httpcore.html#contains,HttpHeaderValues,string	proc contains(values: HttpHeaderValues; value: string): bool		212
+nim	hasKey	httpcore.html#hasKey,HttpHeaders,string	proc hasKey(headers: HttpHeaders; key: string): bool		219
+nim	getOrDefault	httpcore.html#getOrDefault,HttpHeaders,string	proc getOrDefault(headers: HttpHeaders; key: string;\n             default = @[""].HttpHeaderValues): HttpHeaderValues		222
+nim	len	httpcore.html#len,HttpHeaders	proc len(headers: HttpHeaders): int		231
+nim	parseHeader	httpcore.html#parseHeader,string	proc parseHeader(line: string): tuple[key: string, value: seq[string]]		244
+nim	`==`	httpcore.html#==,tuple[string,int,int],HttpVersion	proc `==`(protocol: tuple[orig: string, major, minor: int]; ver: HttpVersion): bool		264
+nim	contains	httpcore.html#contains,set[HttpMethod],string	proc contains(methods: set[HttpMethod]; x: string): bool		275
+nim	`$`	httpcore.html#$,HttpCode	proc `$`(code: HttpCode): string		278
+nim	`==`	httpcore.html#==,HttpCode,HttpCode	proc `==`(a, b: HttpCode): bool		347
+nim	is1xx	httpcore.html#is1xx,HttpCode	proc is1xx(code: HttpCode): bool		349
+nim	is2xx	httpcore.html#is2xx,HttpCode	proc is2xx(code: HttpCode): bool		356
+nim	is3xx	httpcore.html#is3xx,HttpCode	proc is3xx(code: HttpCode): bool		360
+nim	is4xx	httpcore.html#is4xx,HttpCode	proc is4xx(code: HttpCode): bool		364
+nim	is5xx	httpcore.html#is5xx,HttpCode	proc is5xx(code: HttpCode): bool		368
+nimgrp	==	httpcore.html#==-procs-all	proc		264
+nimgrp	$	httpcore.html#$-procs-all	proc		152
+nimgrp	[]=	httpcore.html#[]=-procs-all	proc		180
+nimgrp	contains	httpcore.html#contains-procs-all	proc		212
+nimgrp	[]	httpcore.html#[]-procs-all	proc		158
+nimgrp	newhttpheaders	httpcore.html#newHttpHeaders-procs-all	proc		133

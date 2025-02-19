@@ -1,0 +1,793 @@
+nimTitle	system	system.html	module system		0
+nim	int	system.html#int	type int		2
+nim	int8	system.html#int8	type int8		4
+nim	int16	system.html#int16	type int16		5
+nim	int32	system.html#int32	type int32		6
+nim	int64	system.html#int64	type int64		7
+nim	uint	system.html#uint	type uint		8
+nim	uint8	system.html#uint8	type uint8		9
+nim	uint16	system.html#uint16	type uint16		10
+nim	uint32	system.html#uint32	type uint32		11
+nim	uint64	system.html#uint64	type uint64		12
+nim	float	system.html#float	type float		15
+nim	float32	system.html#float32	type float32		16
+nim	float64	system.html#float64	type float64		17
+nim	char	system.html#char	type char		22
+nim	string	system.html#string	type string		23
+nim	cstring	system.html#cstring	type cstring		24
+nim	pointer	system.html#pointer	type pointer		25
+nim	typedesc	system.html#typedesc	type typedesc		28
+nim	`ptr`	system.html#ptr	type `ptr`		31
+nim	`ref`	system.html#ref	type `ref`		32
+nim	void	system.html#void	type void		36
+nim	auto	system.html#auto	type auto		37
+nim	any	system.html#any	type any		38
+nim	untyped	system.html#untyped	type untyped		39
+nim	typed	system.html#typed	type typed		41
+nim	bool	system.html#bool	enum bool		45
+nim	on	system.html#on	const on		49
+nim	off	system.html#off	const off		50
+nim	SomeSignedInt	system.html#SomeSignedInt	type SomeSignedInt		53
+nim	SomeUnsignedInt	system.html#SomeUnsignedInt	type SomeUnsignedInt		56
+nim	SomeInteger	system.html#SomeInteger	type SomeInteger		59
+nim	SomeFloat	system.html#SomeFloat	type SomeFloat		62
+nim	SomeNumber	system.html#SomeNumber	type SomeNumber		65
+nim	SomeOrdinal	system.html#SomeOrdinal	type SomeOrdinal		68
+nim	`not`	system.html#not,bool	proc `not`(x: bool): bool		76
+nim	`and`	system.html#and,bool,bool	proc `and`(x, y: bool): bool		79
+nim	`or`	system.html#or,bool,bool	proc `or`(x, y: bool): bool		84
+nim	`xor`	system.html#xor,bool,bool	proc `xor`(x, y: bool): bool		89
+nim	zeroDefault	system.html#zeroDefault,typedesc[T]	proc zeroDefault[T](_: typedesc[T]): T		27
+nim	NimMajor	system.html#NimMajor	const NimMajor		2
+nim	NimMinor	system.html#NimMinor	const NimMinor		9
+nim	NimPatch	system.html#NimPatch	const NimPatch		13
+nim	nimvm	system.html#nimvm	let nimvm		18
+nim	isMainModule	system.html#isMainModule	const isMainModule		24
+nim	CompileDate	system.html#CompileDate	const CompileDate		28
+nim	CompileTime	system.html#CompileTime	const CompileTime		32
+nim	defined	system.html#defined,untyped	proc defined(x: untyped): bool		36
+nim	declared	system.html#declared,untyped	proc declared(x: untyped): bool		54
+nim	declaredInScope	system.html#declaredInScope,untyped	proc declaredInScope(x: untyped): bool		69
+nim	compiles	system.html#compiles,untyped	proc compiles(x: untyped): bool		73
+nim	astToStr	system.html#astToStr,T	proc astToStr[T](x: T): string		83
+nim	runnableExamples	system.html#runnableExamples,string,untyped	proc runnableExamples(rdoccmd = ""; body: untyped)		87
+nim	compileOption	system.html#compileOption,string	proc compileOption(option: string): bool		116
+nim	compileOption	system.html#compileOption,string,string	proc compileOption(option, arg: string): bool		131
+nim	currentSourcePath	system.html#currentSourcePath.t	template currentSourcePath(): string		143
+nim	slurp	system.html#slurp,string	proc slurp(filename: string): string		159
+nim	staticRead	system.html#staticRead,string	proc staticRead(filename: string): string		162
+nim	gorge	system.html#gorge,string,string,string	proc gorge(command: string; input = ""; cache = ""): string		174
+nim	staticExec	system.html#staticExec,string,string,string	proc staticExec(command: string; input = ""; cache = ""): string		178
+nim	gorgeEx	system.html#gorgeEx,string,string,string	proc gorgeEx(command: string; input = ""; cache = ""): tuple[output: string,\n    exitCode: int]		205
+nim	`static`	system.html#static	type `static`		40
+nim	`type`	system.html#type	type `type`		46
+nim	typeOfProc	system.html#typeOfProc	TypeOfMode.typeOfProc		53
+nim	typeOfIter	system.html#typeOfIter	TypeOfMode.typeOfIter		53
+nim	TypeOfMode	system.html#TypeOfMode	enum TypeOfMode		53
+nim	typeof	system.html#typeof,untyped	proc typeof(x: untyped; mode = typeOfIter): typedesc		57
+nim	`or`	system.html#or,typedesc,typedesc	proc `or`(a, b: typedesc): typedesc		79
+nim	`and`	system.html#and,typedesc,typedesc	proc `and`(a, b: typedesc): typedesc		82
+nim	`not`	system.html#not,typedesc	proc `not`(a: typedesc): typedesc		85
+nim	iterable	system.html#iterable	type iterable		90
+nim	Ordinal	system.html#Ordinal	type Ordinal		93
+nim	`addr`	system.html#addr,T	proc `addr`[T](x: T): ptr T		99
+nim	unsafeAddr	system.html#unsafeAddr,T	proc unsafeAddr[T](x: T): ptr T		120
+nim	new	system.html#new,ref.T,proc(T)	proc new[T](a: var ref T; finalizer: proc (x: T) {.nimcall.})		131
+nim	new	system.html#new,ref.T,proc(ref.T)	proc new[T](a: var ref T; finalizer: proc (x: ref T) {.nimcall.})		144
+nim	`=wasMoved`	system.html#=wasMoved,T	proc `=wasMoved`[T](obj: var T)		161
+nim	wasMoved	system.html#wasMoved,T	proc wasMoved[T](obj: var T)		164
+nim	move	system.html#move,T	proc move[T](x: var T): T		171
+nim	ensureMove	system.html#ensureMove,T	proc ensureMove[T](x: T): T		177
+nim	range	system.html#range	type range		189
+nim	array	system.html#array	type array		190
+nim	openArray	system.html#openArray	type openArray		192
+nim	varargs	system.html#varargs	type varargs		196
+nim	seq	system.html#seq	type seq		197
+nim	set	system.html#set	type set		198
+nim	UncheckedArray	system.html#UncheckedArray	type UncheckedArray		201
+nim	sink	system.html#sink	type sink		204
+nim	lent	system.html#lent	type lent		205
+nim	high	system.html#high,T	proc high[T: Ordinal | enum | range](x: T): T		207
+nim	high	system.html#high,typedesc[T]	proc high[T: Ordinal | enum | range](x: typedesc[T]): T		220
+nim	high	system.html#high,openArray[T]	proc high[T](x: openArray[T]): int		231
+nim	high	system.html#high,array[I,T]	proc high[I, T](x: array[I, T]): I		243
+nim	high	system.html#high,typedesc[array[I,T]]	proc high[I, T](x: typedesc[array[I, T]]): I		257
+nim	high	system.html#high,cstring	proc high(x: cstring): int		268
+nim	high	system.html#high,string	proc high(x: string): int		275
+nim	low	system.html#low,T	proc low[T: Ordinal | enum | range](x: T): T		285
+nim	low	system.html#low,typedesc[T]	proc low[T: Ordinal | enum | range](x: typedesc[T]): T		297
+nim	low	system.html#low,openArray[T]	proc low[T](x: openArray[T]): int		308
+nim	low	system.html#low,array[I,T]	proc low[I, T](x: array[I, T]): I		320
+nim	low	system.html#low,typedesc[array[I,T]]	proc low[I, T](x: typedesc[array[I, T]]): I		334
+nim	low	system.html#low,cstring	proc low(x: cstring): int		345
+nim	low	system.html#low,string	proc low(x: string): int		351
+nim	`[]`	system.html#[],T,I	proc `[]`[I: Ordinal; T](a: T; i: I): T		373
+nim	`[]=`	system.html#[]=,T,I,sinkS	proc `[]=`[I: Ordinal; T, S](a: T; i: I; x: sink S)		375
+nim	`=`	system.html#=,T,T	proc `=`[T](dest: var T; src: T)		377
+nim	`=copy`	system.html#=copy,T,T	proc `=copy`[T](dest: var T; src: T)		378
+nim	`=destroy`	system.html#=destroy,T	proc `=destroy`[T](x: var T)		391
+nim	`=destroy`	system.html#=destroy,string	proc `=destroy`(x: string)		396
+nim	`=destroy`	system.html#=destroy,seq[T]	proc `=destroy`[T](x: seq[T])		399
+nim	`=destroy`	system.html#=destroy,ref.T	proc `=destroy`[T](x: ref T)		402
+nim	`=dup`	system.html#=dup,T	proc `=dup`[T](x: T): T		406
+nim	`=sink`	system.html#=sink,T,T	proc `=sink`[T](x: var T; y: T)		410
+nim	`=trace`	system.html#=trace,T,pointer	proc `=trace`[T](x: var T; env: pointer)		418
+nim	HSlice	system.html#HSlice	object HSlice		423
+nim	Slice	system.html#Slice	type Slice		426
+nim	`..`	system.html#..,sinkT,sinkU	proc `..`[T, U](a: sink T; b: sink U): HSlice[T, U]		428
+nim	`..`	system.html#..,sinkT	proc `..`[T](b: sink T): HSlice[int, T]		440
+nim	succ	system.html#succ,T,V	proc succ[T, V: Ordinal](x: T; y: V = 1): T		1
+nim	pred	system.html#pred,T,V	proc pred[T, V: Ordinal](x: T; y: V = 1): T		10
+nim	inc	system.html#inc,T,V	proc inc[T, V: Ordinal](x: var T; y: V = 1)		19
+nim	dec	system.html#dec,T,V	proc dec[T, V: Ordinal](x: var T; y: V = 1)		31
+nim	`+`	system.html#+,int	proc `+`(x: int): int		49
+nim	`+`	system.html#+,int8	proc `+`(x: int8): int8		51
+nim	`+`	system.html#+,int16	proc `+`(x: int16): int16		52
+nim	`+`	system.html#+,int32	proc `+`(x: int32): int32		53
+nim	`+`	system.html#+,int64	proc `+`(x: int64): int64		54
+nim	`-`	system.html#-,int	proc `-`(x: int): int		56
+nim	`-`	system.html#-,int8	proc `-`(x: int8): int8		58
+nim	`-`	system.html#-,int16	proc `-`(x: int16): int16		59
+nim	`-`	system.html#-,int32	proc `-`(x: int32): int32		60
+nim	`-`	system.html#-,int64	proc `-`(x: int64): int64		61
+nim	`not`	system.html#not,int	proc `not`(x: int): int		63
+nim	`not`	system.html#not,int8	proc `not`(x: int8): int8		70
+nim	`not`	system.html#not,int16	proc `not`(x: int16): int16		71
+nim	`not`	system.html#not,int32	proc `not`(x: int32): int32		72
+nim	`not`	system.html#not,int64	proc `not`(x: int64): int64		73
+nim	`+`	system.html#+,int,int	proc `+`(x, y: int): int		75
+nim	`+`	system.html#+,int8,int8	proc `+`(x, y: int8): int8		77
+nim	`+`	system.html#+,int16,int16	proc `+`(x, y: int16): int16		78
+nim	`+`	system.html#+,int32,int32	proc `+`(x, y: int32): int32		79
+nim	`+`	system.html#+,int64,int64	proc `+`(x, y: int64): int64		80
+nim	`-`	system.html#-,int,int	proc `-`(x, y: int): int		82
+nim	`-`	system.html#-,int8,int8	proc `-`(x, y: int8): int8		84
+nim	`-`	system.html#-,int16,int16	proc `-`(x, y: int16): int16		85
+nim	`-`	system.html#-,int32,int32	proc `-`(x, y: int32): int32		86
+nim	`-`	system.html#-,int64,int64	proc `-`(x, y: int64): int64		87
+nim	`*`	system.html#*,int,int	proc `*`(x, y: int): int		89
+nim	`*`	system.html#*,int8,int8	proc `*`(x, y: int8): int8		91
+nim	`*`	system.html#*,int16,int16	proc `*`(x, y: int16): int16		92
+nim	`*`	system.html#*,int32,int32	proc `*`(x, y: int32): int32		93
+nim	`*`	system.html#*,int64,int64	proc `*`(x, y: int64): int64		94
+nim	`div`	system.html#div,int,int	proc `div`(x, y: int): int		96
+nim	`div`	system.html#div,int8,int8	proc `div`(x, y: int8): int8		108
+nim	`div`	system.html#div,int16,int16	proc `div`(x, y: int16): int16		109
+nim	`div`	system.html#div,int32,int32	proc `div`(x, y: int32): int32		110
+nim	`div`	system.html#div,int64,int64	proc `div`(x, y: int64): int64		111
+nim	`mod`	system.html#mod,int,int	proc `mod`(x, y: int): int		113
+nim	`mod`	system.html#mod,int8,int8	proc `mod`(x, y: int8): int8		122
+nim	`mod`	system.html#mod,int16,int16	proc `mod`(x, y: int16): int16		123
+nim	`mod`	system.html#mod,int32,int32	proc `mod`(x, y: int32): int32		124
+nim	`mod`	system.html#mod,int64,int64	proc `mod`(x, y: int64): int64		125
+nim	`shr`	system.html#shr,int,SomeInteger	proc `shr`(x: int; y: SomeInteger): int		135
+nim	`shr`	system.html#shr,int8,SomeInteger	proc `shr`(x: int8; y: SomeInteger): int8		152
+nim	`shr`	system.html#shr,int16,SomeInteger	proc `shr`(x: int16; y: SomeInteger): int16		153
+nim	`shr`	system.html#shr,int32,SomeInteger	proc `shr`(x: int32; y: SomeInteger): int32		154
+nim	`shr`	system.html#shr,int64,SomeInteger	proc `shr`(x: int64; y: SomeInteger): int64		155
+nim	`shl`	system.html#shl,int,SomeInteger	proc `shl`(x: int; y: SomeInteger): int		158
+nim	`shl`	system.html#shl,int8,SomeInteger	proc `shl`(x: int8; y: SomeInteger): int8		166
+nim	`shl`	system.html#shl,int16,SomeInteger	proc `shl`(x: int16; y: SomeInteger): int16		167
+nim	`shl`	system.html#shl,int32,SomeInteger	proc `shl`(x: int32; y: SomeInteger): int32		168
+nim	`shl`	system.html#shl,int64,SomeInteger	proc `shl`(x: int64; y: SomeInteger): int64		169
+nim	ashr	system.html#ashr,int,SomeInteger	proc ashr(x: int; y: SomeInteger): int		171
+nim	ashr	system.html#ashr,int8,SomeInteger	proc ashr(x: int8; y: SomeInteger): int8		184
+nim	ashr	system.html#ashr,int16,SomeInteger	proc ashr(x: int16; y: SomeInteger): int16		185
+nim	ashr	system.html#ashr,int32,SomeInteger	proc ashr(x: int32; y: SomeInteger): int32		186
+nim	ashr	system.html#ashr,int64,SomeInteger	proc ashr(x: int64; y: SomeInteger): int64		187
+nim	`and`	system.html#and,int,int	proc `and`(x, y: int): int		189
+nim	`and`	system.html#and,int8,int8	proc `and`(x, y: int8): int8		194
+nim	`and`	system.html#and,int16,int16	proc `and`(x, y: int16): int16		195
+nim	`and`	system.html#and,int32,int32	proc `and`(x, y: int32): int32		196
+nim	`and`	system.html#and,int64,int64	proc `and`(x, y: int64): int64		197
+nim	`or`	system.html#or,int,int	proc `or`(x, y: int): int		199
+nim	`or`	system.html#or,int8,int8	proc `or`(x, y: int8): int8		204
+nim	`or`	system.html#or,int16,int16	proc `or`(x, y: int16): int16		205
+nim	`or`	system.html#or,int32,int32	proc `or`(x, y: int32): int32		206
+nim	`or`	system.html#or,int64,int64	proc `or`(x, y: int64): int64		207
+nim	`xor`	system.html#xor,int,int	proc `xor`(x, y: int): int		209
+nim	`xor`	system.html#xor,int8,int8	proc `xor`(x, y: int8): int8		214
+nim	`xor`	system.html#xor,int16,int16	proc `xor`(x, y: int16): int16		215
+nim	`xor`	system.html#xor,int32,int32	proc `xor`(x, y: int32): int32		216
+nim	`xor`	system.html#xor,int64,int64	proc `xor`(x, y: int64): int64		217
+nim	`not`	system.html#not,uint	proc `not`(x: uint): uint		220
+nim	`not`	system.html#not,uint8	proc `not`(x: uint8): uint8		222
+nim	`not`	system.html#not,uint16	proc `not`(x: uint16): uint16		223
+nim	`not`	system.html#not,uint32	proc `not`(x: uint32): uint32		224
+nim	`not`	system.html#not,uint64	proc `not`(x: uint64): uint64		225
+nim	`shr`	system.html#shr,uint,SomeInteger	proc `shr`(x: uint; y: SomeInteger): uint		227
+nim	`shr`	system.html#shr,uint8,SomeInteger	proc `shr`(x: uint8; y: SomeInteger): uint8		229
+nim	`shr`	system.html#shr,uint16,SomeInteger	proc `shr`(x: uint16; y: SomeInteger): uint16		230
+nim	`shr`	system.html#shr,uint32,SomeInteger	proc `shr`(x: uint32; y: SomeInteger): uint32		231
+nim	`shr`	system.html#shr,uint64,SomeInteger	proc `shr`(x: uint64; y: SomeInteger): uint64		232
+nim	`shl`	system.html#shl,uint,SomeInteger	proc `shl`(x: uint; y: SomeInteger): uint		234
+nim	`shl`	system.html#shl,uint8,SomeInteger	proc `shl`(x: uint8; y: SomeInteger): uint8		236
+nim	`shl`	system.html#shl,uint16,SomeInteger	proc `shl`(x: uint16; y: SomeInteger): uint16		237
+nim	`shl`	system.html#shl,uint32,SomeInteger	proc `shl`(x: uint32; y: SomeInteger): uint32		238
+nim	`shl`	system.html#shl,uint64,SomeInteger	proc `shl`(x: uint64; y: SomeInteger): uint64		239
+nim	`and`	system.html#and,uint,uint	proc `and`(x, y: uint): uint		241
+nim	`and`	system.html#and,uint8,uint8	proc `and`(x, y: uint8): uint8		243
+nim	`and`	system.html#and,uint16,uint16	proc `and`(x, y: uint16): uint16		244
+nim	`and`	system.html#and,uint32,uint32	proc `and`(x, y: uint32): uint32		245
+nim	`and`	system.html#and,uint64,uint64	proc `and`(x, y: uint64): uint64		246
+nim	`or`	system.html#or,uint,uint	proc `or`(x, y: uint): uint		248
+nim	`or`	system.html#or,uint8,uint8	proc `or`(x, y: uint8): uint8		250
+nim	`or`	system.html#or,uint16,uint16	proc `or`(x, y: uint16): uint16		251
+nim	`or`	system.html#or,uint32,uint32	proc `or`(x, y: uint32): uint32		252
+nim	`or`	system.html#or,uint64,uint64	proc `or`(x, y: uint64): uint64		253
+nim	`xor`	system.html#xor,uint,uint	proc `xor`(x, y: uint): uint		255
+nim	`xor`	system.html#xor,uint8,uint8	proc `xor`(x, y: uint8): uint8		257
+nim	`xor`	system.html#xor,uint16,uint16	proc `xor`(x, y: uint16): uint16		258
+nim	`xor`	system.html#xor,uint32,uint32	proc `xor`(x, y: uint32): uint32		259
+nim	`xor`	system.html#xor,uint64,uint64	proc `xor`(x, y: uint64): uint64		260
+nim	`+`	system.html#+,uint,uint	proc `+`(x, y: uint): uint		262
+nim	`+`	system.html#+,uint8,uint8	proc `+`(x, y: uint8): uint8		264
+nim	`+`	system.html#+,uint16,uint16	proc `+`(x, y: uint16): uint16		265
+nim	`+`	system.html#+,uint32,uint32	proc `+`(x, y: uint32): uint32		266
+nim	`+`	system.html#+,uint64,uint64	proc `+`(x, y: uint64): uint64		267
+nim	`-`	system.html#-,uint,uint	proc `-`(x, y: uint): uint		269
+nim	`-`	system.html#-,uint8,uint8	proc `-`(x, y: uint8): uint8		271
+nim	`-`	system.html#-,uint16,uint16	proc `-`(x, y: uint16): uint16		272
+nim	`-`	system.html#-,uint32,uint32	proc `-`(x, y: uint32): uint32		273
+nim	`-`	system.html#-,uint64,uint64	proc `-`(x, y: uint64): uint64		274
+nim	`*`	system.html#*,uint,uint	proc `*`(x, y: uint): uint		276
+nim	`*`	system.html#*,uint8,uint8	proc `*`(x, y: uint8): uint8		278
+nim	`*`	system.html#*,uint16,uint16	proc `*`(x, y: uint16): uint16		279
+nim	`*`	system.html#*,uint32,uint32	proc `*`(x, y: uint32): uint32		280
+nim	`*`	system.html#*,uint64,uint64	proc `*`(x, y: uint64): uint64		281
+nim	`div`	system.html#div,uint,uint	proc `div`(x, y: uint): uint		283
+nim	`div`	system.html#div,uint8,uint8	proc `div`(x, y: uint8): uint8		286
+nim	`div`	system.html#div,uint16,uint16	proc `div`(x, y: uint16): uint16		287
+nim	`div`	system.html#div,uint32,uint32	proc `div`(x, y: uint32): uint32		288
+nim	`div`	system.html#div,uint64,uint64	proc `div`(x, y: uint64): uint64		289
+nim	`mod`	system.html#mod,uint,uint	proc `mod`(x, y: uint): uint		291
+nim	`mod`	system.html#mod,uint8,uint8	proc `mod`(x, y: uint8): uint8		294
+nim	`mod`	system.html#mod,uint16,uint16	proc `mod`(x, y: uint16): uint16		295
+nim	`mod`	system.html#mod,uint32,uint32	proc `mod`(x, y: uint32): uint32		296
+nim	`mod`	system.html#mod,uint64,uint64	proc `mod`(x, y: uint64): uint64		297
+nim	`+=`	system.html#+=,T,T	proc `+=`[T: SomeInteger](x: var T; y: T)		299
+nim	`-=`	system.html#-=,T,T	proc `-=`[T: SomeInteger](x: var T; y: T)		303
+nim	`*=`	system.html#*=,T,T	proc `*=`[T: SomeInteger](x: var T; y: T)		307
+nim	`+`	system.html#+,float32	proc `+`(x: float32): float32		313
+nim	`-`	system.html#-,float32	proc `-`(x: float32): float32		314
+nim	`+`	system.html#+,float32,float32	proc `+`(x, y: float32): float32		315
+nim	`-`	system.html#-,float32,float32	proc `-`(x, y: float32): float32		316
+nim	`*`	system.html#*,float32,float32	proc `*`(x, y: float32): float32		317
+nim	`/`	system.html#/,float32,float32	proc `/`(x, y: float32): float32		318
+nim	`+`	system.html#+,float	proc `+`(x: float): float		320
+nim	`-`	system.html#-,float	proc `-`(x: float): float		321
+nim	`+`	system.html#+,float,float	proc `+`(x, y: float): float		322
+nim	`-`	system.html#-,float,float	proc `-`(x, y: float): float		323
+nim	`*`	system.html#*,float,float	proc `*`(x, y: float): float		324
+nim	`/`	system.html#/,float,float	proc `/`(x, y: float): float		325
+nim	`+=`	system.html#+=,T,T_2	proc `+=`[T: float | float32 | float64](x: var T; y: T)		327
+nim	`-=`	system.html#-=,T,T_2	proc `-=`[T: float | float32 | float64](x: var T; y: T)		332
+nim	`*=`	system.html#*=,T,T_2	proc `*=`[T: float | float32 | float64](x: var T; y: T)		337
+nim	`/=`	system.html#/=,float64,float64	proc `/=`(x: var float64; y: float64)		342
+nim	`/=`	system.html#/=,T,T	proc `/=`[T: float | float32](x: var T; y: T)		346
+nim	`+%`	system.html#+%,int,int	proc `+%`(x, y: int): int		352
+nim	`+%`	system.html#+%,int8,int8	proc `+%`(x, y: int8): int8		358
+nim	`+%`	system.html#+%,int16,int16	proc `+%`(x, y: int16): int16		359
+nim	`+%`	system.html#+%,int32,int32	proc `+%`(x, y: int32): int32		360
+nim	`+%`	system.html#+%,int64,int64	proc `+%`(x, y: int64): int64		361
+nim	`-%`	system.html#-%,int,int	proc `-%`(x, y: int): int		363
+nim	`-%`	system.html#-%,int8,int8	proc `-%`(x, y: int8): int8		369
+nim	`-%`	system.html#-%,int16,int16	proc `-%`(x, y: int16): int16		370
+nim	`-%`	system.html#-%,int32,int32	proc `-%`(x, y: int32): int32		371
+nim	`-%`	system.html#-%,int64,int64	proc `-%`(x, y: int64): int64		372
+nim	`*%`	system.html#*%,int,int	proc `*%`(x, y: int): int		374
+nim	`*%`	system.html#*%,int8,int8	proc `*%`(x, y: int8): int8		380
+nim	`*%`	system.html#*%,int16,int16	proc `*%`(x, y: int16): int16		381
+nim	`*%`	system.html#*%,int32,int32	proc `*%`(x, y: int32): int32		382
+nim	`*%`	system.html#*%,int64,int64	proc `*%`(x, y: int64): int64		383
+nim	`/%`	system.html#/%,int,int	proc `/%`(x, y: int): int		385
+nim	`/%`	system.html#/%,int8,int8	proc `/%`(x, y: int8): int8		391
+nim	`/%`	system.html#/%,int16,int16	proc `/%`(x, y: int16): int16		392
+nim	`/%`	system.html#/%,int32,int32	proc `/%`(x, y: int32): int32		393
+nim	`/%`	system.html#/%,int64,int64	proc `/%`(x, y: int64): int64		394
+nim	`%%`	system.html#%%,int,int	proc `%%`(x, y: int): int		396
+nim	`%%`	system.html#%%,int8,int8	proc `%%`(x, y: int8): int8		402
+nim	`%%`	system.html#%%,int16,int16	proc `%%`(x, y: int16): int16		403
+nim	`%%`	system.html#%%,int32,int32	proc `%%`(x, y: int32): int32		404
+nim	`%%`	system.html#%%,int64,int64	proc `%%`(x, y: int64): int64		405
+nim	`==`	system.html#==,Enum,Enum	proc `==`[Enum: enum](x, y: Enum): bool		2
+nim	`==`	system.html#==,pointer,pointer	proc `==`(x, y: pointer): bool		15
+nim	`==`	system.html#==,string,string	proc `==`(x, y: string): bool		22
+nim	`==`	system.html#==,char,char	proc `==`(x, y: char): bool		25
+nim	`==`	system.html#==,bool,bool	proc `==`(x, y: bool): bool		27
+nim	`==`	system.html#==,set[T],set[T]	proc `==`[T](x, y: set[T]): bool		29
+nim	`==`	system.html#==,ref.T,ref.T	proc `==`[T](x, y: ref T): bool		34
+nim	`==`	system.html#==,ptr.T,ptr.T	proc `==`[T](x, y: ptr T): bool		36
+nim	`==`	system.html#==,T,T	proc `==`[T: proc | iterator](x, y: T): bool		38
+nim	`<=`	system.html#<=,Enum,Enum	proc `<=`[Enum: enum](x, y: Enum): bool		41
+nim	`<=`	system.html#<=,string,string	proc `<=`(x, y: string): bool		42
+nim	`<=`	system.html#<=,char,char	proc `<=`(x, y: char): bool		54
+nim	`<=`	system.html#<=,set[T],set[T]	proc `<=`[T](x, y: set[T]): bool		66
+nim	`<=`	system.html#<=,bool,bool	proc `<=`(x, y: bool): bool		80
+nim	`<=`	system.html#<=,ref.T,ref.T	proc `<=`[T](x, y: ref T): bool		81
+nim	`<=`	system.html#<=,pointer,pointer	proc `<=`(x, y: pointer): bool		82
+nim	`<`	system.html#<,Enum,Enum	proc `<`[Enum: enum](x, y: Enum): bool		84
+nim	`<`	system.html#<,string,string	proc `<`(x, y: string): bool		85
+nim	`<`	system.html#<,char,char	proc `<`(x, y: char): bool		97
+nim	`<`	system.html#<,set[T],set[T]	proc `<`[T](x, y: set[T]): bool		109
+nim	`<`	system.html#<,bool,bool	proc `<`(x, y: bool): bool		123
+nim	`<`	system.html#<,ref.T,ref.T	proc `<`[T](x, y: ref T): bool		124
+nim	`<`	system.html#<,ptr.T,ptr.T	proc `<`[T](x, y: ptr T): bool		125
+nim	`<`	system.html#<,pointer,pointer	proc `<`(x, y: pointer): bool		126
+nim	`!=`	system.html#!=.t,untyped,untyped	template `!=`(x, y: untyped): untyped		131
+nim	`>=`	system.html#>=.t,untyped,untyped	template `>=`(x, y: untyped): untyped		135
+nim	`>`	system.html#>.t,untyped,untyped	template `>`(x, y: untyped): untyped		139
+nim	`==`	system.html#==,int,int	proc `==`(x, y: int): bool		144
+nim	`==`	system.html#==,int8,int8	proc `==`(x, y: int8): bool		146
+nim	`==`	system.html#==,int16,int16	proc `==`(x, y: int16): bool		147
+nim	`==`	system.html#==,int32,int32	proc `==`(x, y: int32): bool		148
+nim	`==`	system.html#==,int64,int64	proc `==`(x, y: int64): bool		149
+nim	`<=`	system.html#<=,int,int	proc `<=`(x, y: int): bool		151
+nim	`<=`	system.html#<=,int8,int8	proc `<=`(x, y: int8): bool		153
+nim	`<=`	system.html#<=,int16,int16	proc `<=`(x, y: int16): bool		154
+nim	`<=`	system.html#<=,int32,int32	proc `<=`(x, y: int32): bool		155
+nim	`<=`	system.html#<=,int64,int64	proc `<=`(x, y: int64): bool		156
+nim	`<`	system.html#<,int,int	proc `<`(x, y: int): bool		158
+nim	`<`	system.html#<,int8,int8	proc `<`(x, y: int8): bool		160
+nim	`<`	system.html#<,int16,int16	proc `<`(x, y: int16): bool		161
+nim	`<`	system.html#<,int32,int32	proc `<`(x, y: int32): bool		162
+nim	`<`	system.html#<,int64,int64	proc `<`(x, y: int64): bool		163
+nim	`<=`	system.html#<=,uint,uint	proc `<=`(x, y: uint): bool		165
+nim	`<=`	system.html#<=,uint8,uint8	proc `<=`(x, y: uint8): bool		167
+nim	`<=`	system.html#<=,uint16,uint16	proc `<=`(x, y: uint16): bool		168
+nim	`<=`	system.html#<=,uint32,uint32	proc `<=`(x, y: uint32): bool		169
+nim	`<=`	system.html#<=,uint64,uint64	proc `<=`(x, y: uint64): bool		170
+nim	`<`	system.html#<,uint,uint	proc `<`(x, y: uint): bool		172
+nim	`<`	system.html#<,uint8,uint8	proc `<`(x, y: uint8): bool		174
+nim	`<`	system.html#<,uint16,uint16	proc `<`(x, y: uint16): bool		175
+nim	`<`	system.html#<,uint32,uint32	proc `<`(x, y: uint32): bool		176
+nim	`<`	system.html#<,uint64,uint64	proc `<`(x, y: uint64): bool		177
+nim	`<=%`	system.html#<=%,int,int	proc `<=%`(x, y: int): bool		179
+nim	`<=%`	system.html#<=%,int8,int8	proc `<=%`(x, y: int8): bool		183
+nim	`<=%`	system.html#<=%,int16,int16	proc `<=%`(x, y: int16): bool		184
+nim	`<=%`	system.html#<=%,int32,int32	proc `<=%`(x, y: int32): bool		185
+nim	`<=%`	system.html#<=%,int64,int64	proc `<=%`(x, y: int64): bool		186
+nim	`<%`	system.html#<%,int,int	proc `<%`(x, y: int): bool		188
+nim	`<%`	system.html#<%,int8,int8	proc `<%`(x, y: int8): bool		192
+nim	`<%`	system.html#<%,int16,int16	proc `<%`(x, y: int16): bool		193
+nim	`<%`	system.html#<%,int32,int32	proc `<%`(x, y: int32): bool		194
+nim	`<%`	system.html#<%,int64,int64	proc `<%`(x, y: int64): bool		195
+nim	`>=%`	system.html#>=%.t,untyped,untyped	template `>=%`(x, y: untyped): untyped		197
+nim	`>%`	system.html#>%.t,untyped,untyped	template `>%`(x, y: untyped): untyped		201
+nim	`==`	system.html#==,uint,uint	proc `==`(x, y: uint): bool		205
+nim	`==`	system.html#==,uint8,uint8	proc `==`(x, y: uint8): bool		207
+nim	`==`	system.html#==,uint16,uint16	proc `==`(x, y: uint16): bool		208
+nim	`==`	system.html#==,uint32,uint32	proc `==`(x, y: uint32): bool		209
+nim	`==`	system.html#==,uint64,uint64	proc `==`(x, y: uint64): bool		210
+nim	`<=`	system.html#<=,float32,float32	proc `<=`(x, y: float32): bool		212
+nim	`<=`	system.html#<=,float,float	proc `<=`(x, y: float): bool		213
+nim	`<`	system.html#<,float32,float32	proc `<`(x, y: float32): bool		215
+nim	`<`	system.html#<,float,float	proc `<`(x, y: float): bool		216
+nim	`==`	system.html#==,float32,float32	proc `==`(x, y: float32): bool		218
+nim	`==`	system.html#==,float,float	proc `==`(x, y: float): bool		219
+nim	min	system.html#min,int,int	proc min(x, y: int): int		223
+nim	min	system.html#min,int8,int8	proc min(x, y: int8): int8		225
+nim	min	system.html#min,int16,int16	proc min(x, y: int16): int16		227
+nim	min	system.html#min,int32,int32	proc min(x, y: int32): int32		229
+nim	min	system.html#min,int64,int64	proc min(x, y: int64): int64		231
+nim	min	system.html#min,float32,float32	proc min(x, y: float32): float32		234
+nim	min	system.html#min,float64,float64	proc min(x, y: float64): float64		236
+nim	min	system.html#min,T,T	proc min[T: not SomeFloat](x, y: T): T		238
+nim	max	system.html#max,int,int	proc max(x, y: int): int		242
+nim	max	system.html#max,int8,int8	proc max(x, y: int8): int8		244
+nim	max	system.html#max,int16,int16	proc max(x, y: int16): int16		246
+nim	max	system.html#max,int32,int32	proc max(x, y: int32): int32		248
+nim	max	system.html#max,int64,int64	proc max(x, y: int64): int64		250
+nim	max	system.html#max,float32,float32	proc max(x, y: float32): float32		253
+nim	max	system.html#max,float64,float64	proc max(x, y: float64): float64		255
+nim	max	system.html#max,T,T	proc max[T: not SomeFloat](x, y: T): T		257
+nim	min	system.html#min,openArray[T]	proc min[T](x: openArray[T]): T		262
+nim	max	system.html#max,openArray[T]	proc max[T](x: openArray[T]): T		268
+nim	clamp	system.html#clamp,T,T,T	proc clamp[T](x, a, b: T): T		277
+nim	`==`	system.html#==,array[I,T],array[I,T]	proc `==`[I, T](x, y: array[I, T]): bool		294
+nim	`==`	system.html#==,openArray[T],openArray[T]	proc `==`[T](x, y: openArray[T]): bool		300
+nim	`==`	system.html#==,seq[T],seq[T]	proc `==`[T](x, y: seq[T]): bool		309
+nim	appType	system.html#appType	const appType		458
+nim	byte	system.html#byte	type byte		486
+nim	Natural	system.html#Natural	type Natural		489
+nim	Positive	system.html#Positive	type Positive		493
+nim	RootObj	system.html#RootObj	object RootObj		498
+nim	RootRef	system.html#RootRef	type RootRef		503
+nim	RootEffect	system.html#RootEffect	object RootEffect		508
+nim	StackTraceEntry	system.html#StackTraceEntry	object StackTraceEntry		515
+nim	Exception	system.html#Exception	object Exception		532
+nim	Defect	system.html#Defect	object Defect		550
+nim	CatchableError	system.html#CatchableError	object CatchableError		555
+nim	JsRoot	system.html#JsRoot	type JsRoot		566
+nim	unsafeNew	system.html#unsafeNew,ref.T,Natural	proc unsafeNew[T](a: var ref T; size: Natural)		569
+nim	sizeof	system.html#sizeof,T	proc sizeof[T](x: T): int		580
+nim	alignof	system.html#alignof,T	proc alignof[T](x: T): int		599
+nim	alignof	system.html#alignof,typedesc	proc alignof(x: typedesc): int		600
+nim	offsetOf	system.html#offsetOf.t,typedesc[T],untyped	template offsetOf[T](t: typedesc[T]; member: untyped): int		604
+nim	offsetOf	system.html#offsetOf.t,T,untyped	template offsetOf[T](value: T; member: untyped): int		608
+nim	sizeof	system.html#sizeof,typedesc	proc sizeof(x: typedesc): int		613
+nim	newSeq	system.html#newSeq,seq[T],Natural	proc newSeq[T](s: var seq[T]; len: Natural)		616
+nim	newSeq	system.html#newSeq	proc newSeq[T](len = 0.Natural): seq[T]		635
+nim	newSeqOfCap	system.html#newSeqOfCap,Natural	proc newSeqOfCap[T](cap: Natural): seq[T]		655
+nim	len	system.html#len,TOpenArray	proc len[TOpenArray: openArray | varargs](x: TOpenArray): int		667
+nim	len	system.html#len,string	proc len(x: string): int		674
+nim	len	system.html#len,cstring	proc len(x: cstring): int		681
+nim	len	system.html#len	proc len(x: (type array) | array): int		700
+nim	len	system.html#len,seq[T]	proc len[T](x: seq[T]): int		709
+nim	ord	system.html#ord,T	proc ord[T: Ordinal | enum](x: T): int		719
+nim	chr	system.html#chr,range[]	proc chr(u: range[0 .. 255]): char		730
+nim	incl	system.html#incl,set[T],T	proc incl[T](x: var set[T]; y: T)		1
+nim	incl	system.html#incl.t,set[T],set[T]	template incl[T](x: var set[T]; y: set[T])		15
+nim	excl	system.html#excl,set[T],T	proc excl[T](x: var set[T]; y: T)		24
+nim	excl	system.html#excl.t,set[T],set[T]	template excl[T](x: var set[T]; y: set[T])		33
+nim	card	system.html#card,set[T]	proc card[T](x: set[T]): int		42
+nim	len	system.html#len,set[T]	proc len[T](x: set[T]): int		51
+nim	`*`	system.html#*,set[T],set[T]	proc `*`[T](x, y: set[T]): set[T]		55
+nim	`+`	system.html#+,set[T],set[T]	proc `+`[T](x, y: set[T]): set[T]		60
+nim	`-`	system.html#-,set[T],set[T]	proc `-`[T](x, y: set[T]): set[T]		65
+nim	contains	system.html#contains,set[T],T	proc contains[T](x: set[T]; y: T): bool		70
+nim	contains	system.html#contains,HSlice[U,V],W	proc contains[U, V, W](s: HSlice[U, V]; value: W): bool		746
+nim	`in`	system.html#in.t,untyped,untyped	template `in`(x, y: untyped): untyped		759
+nim	`notin`	system.html#notin.t,untyped,untyped	template `notin`(x, y: untyped): untyped		765
+nim	`is`	system.html#is,T,S	proc `is`[T, S](x: T; y: S): bool		772
+nim	`isnot`	system.html#isnot.t,untyped,untyped	template `isnot`(x, y: untyped): untyped		790
+nim	owned	system.html#owned	type owned		798
+nim	unown	system.html#unown.t,typed	template unown(x: typed): untyped		825
+nim	new	system.html#new,ref.T	proc new[T](a: var ref T)		827
+nim	new	system.html#new,typedesc	proc new(t: typedesc): auto		831
+nim	disarm	system.html#disarm.t,typed	template disarm(x: typed)		845
+nim	`of`	system.html#of,T,typedesc[S]	proc `of`[T, S](x: T; y: typedesc[S]): bool		852
+nim	cmp	system.html#cmp,T,T	proc cmp[T](x, y: T): int		878
+nim	cmp	system.html#cmp,string,string	proc cmp(x, y: string): int		896
+nim	`@`	system.html#@,sinkarray[IDX,T]	proc `@`[IDX, T](a: sink array[IDX, T]): seq[T]		902
+nim	default	system.html#default,typedesc[T]	proc default[T](_: typedesc[T]): T		918
+nim	reset	system.html#reset,T	proc reset[T](obj: var T)		933
+nim	setLen	system.html#setLen,seq[T],Natural	proc setLen[T](s: var seq[T]; newlen: Natural)		945
+nim	setLen	system.html#setLen,string,Natural	proc setLen(s: var string; newlen: Natural)		960
+nim	newString	system.html#newString,Natural	proc newString(len: Natural): string		972
+nim	newStringOfCap	system.html#newStringOfCap,Natural	proc newStringOfCap(cap: Natural): string		981
+nim	`&`	system.html#&,string,char	proc `&`(x: string; y: char): string		988
+nim	`&`	system.html#&,char,char	proc `&`(x, y: char): string		994
+nim	`&`	system.html#&,string,string	proc `&`(x, y: string): string		1000
+nim	`&`	system.html#&,char,string	proc `&`(x: char; y: string): string		1006
+nim	add	system.html#add,string,char	proc add(x: var string; y: char)		1016
+nim	add	system.html#add,string,string	proc add(x: var string; y: string)		1025
+nim	littleEndian	system.html#littleEndian	Endianness.littleEndian		1036
+nim	bigEndian	system.html#bigEndian	Endianness.bigEndian		1036
+nim	Endianness	system.html#Endianness	enum Endianness		1036
+nim	cpuEndian	system.html#cpuEndian	const cpuEndian		1040
+nim	hostOS	system.html#hostOS	const hostOS		1045
+nim	hostCPU	system.html#hostCPU	const hostCPU		1052
+nim	QuitSuccess	system.html#QuitSuccess	const QuitSuccess		1105
+nim	QuitFailure	system.html#QuitFailure	const QuitFailure		1109
+nim	programResult	system.html#programResult	var programResult		1114
+nim	add	system.html#add,seq[T],openArray[T]	proc add[T](x: var seq[T]; y: openArray[T])		1185
+nim	del	system.html#del,seq[T],Natural	proc del[T](x: var seq[T]; i: Natural)		1216
+nim	insert	system.html#insert,seq[T],sinkT	proc insert[T](x: var seq[T]; item: sink T; i = 0.Natural)		1231
+nim	Inf	system.html#Inf	const Inf		1277
+nim	NegInf	system.html#NegInf	const NegInf		1279
+nim	NaN	system.html#NaN	const NaN		1281
+nim	high	system.html#high,typedesc[SomeFloat]	proc high(T: typedesc[SomeFloat]): T:type		1288
+nim	low	system.html#low,typedesc[SomeFloat]	proc low(T: typedesc[SomeFloat]): T:type		1289
+nim	toFloat	system.html#toFloat,int	proc toFloat(i: int): float		1291
+nim	toBiggestFloat	system.html#toBiggestFloat,BiggestInt	proc toBiggestFloat(i: BiggestInt): BiggestFloat		1306
+nim	toInt	system.html#toInt,float	proc toInt(f: float): int		1310
+nim	toBiggestInt	system.html#toBiggestInt,BiggestFloat	proc toBiggestInt(f: BiggestFloat): BiggestInt		1327
+nim	`/`	system.html#/,int,int	proc `/`(x, y: int): float		1331
+nim	abs	system.html#abs,T	proc abs[T: float64 | float32](x: T): T		1350
+nim	abs	system.html#abs,int	proc abs(x: int): int		1363
+nim	abs	system.html#abs,int8	proc abs(x: int8): int8		1365
+nim	abs	system.html#abs,int16	proc abs(x: int16): int16		1367
+nim	abs	system.html#abs,int32	proc abs(x: int32): int32		1369
+nim	abs	system.html#abs,int64	proc abs(x: int64): int64		1371
+nim	swap	system.html#swap,T,T	proc swap[T](a, b: var T)		1394
+nim	zeroMem	system.html#zeroMem,pointer,Natural	proc zeroMem(p: pointer; size: Natural)		2
+nim	copyMem	system.html#copyMem,pointer,pointer,Natural	proc copyMem(dest, source: pointer; size: Natural)		9
+nim	moveMem	system.html#moveMem,pointer,pointer,Natural	proc moveMem(dest, source: pointer; size: Natural)		17
+nim	equalMem	system.html#equalMem,pointer,pointer,Natural	proc equalMem(a, b: pointer; size: Natural): bool		27
+nim	cmpMem	system.html#cmpMem,pointer,pointer,Natural	proc cmpMem(a, b: pointer; size: Natural): int		36
+nim	allocImpl	system.html#allocImpl,Natural	proc allocImpl(size: Natural): pointer		51
+nim	alloc0Impl	system.html#alloc0Impl,Natural	proc alloc0Impl(size: Natural): pointer		52
+nim	deallocImpl	system.html#deallocImpl,pointer	proc deallocImpl(p: pointer)		53
+nim	reallocImpl	system.html#reallocImpl,pointer,Natural	proc reallocImpl(p: pointer; newSize: Natural): pointer		54
+nim	realloc0Impl	system.html#realloc0Impl,pointer,Natural,Natural	proc realloc0Impl(p: pointer; oldSize, newSize: Natural): pointer		55
+nim	allocSharedImpl	system.html#allocSharedImpl,Natural	proc allocSharedImpl(size: Natural): pointer		57
+nim	allocShared0Impl	system.html#allocShared0Impl,Natural	proc allocShared0Impl(size: Natural): pointer		58
+nim	deallocSharedImpl	system.html#deallocSharedImpl,pointer	proc deallocSharedImpl(p: pointer)		59
+nim	reallocSharedImpl	system.html#reallocSharedImpl,pointer,Natural	proc reallocSharedImpl(p: pointer; newSize: Natural): pointer		60
+nim	reallocShared0Impl	system.html#reallocShared0Impl,pointer,Natural,Natural	proc reallocShared0Impl(p: pointer; oldSize, newSize: Natural): pointer		61
+nim	AllocStats	system.html#AllocStats	object AllocStats		67
+nim	`-`	system.html#-,AllocStats,AllocStats	proc `-`(a, b: AllocStats): AllocStats		71
+nim	dumpAllocstats	system.html#dumpAllocstats.t,untyped	template dumpAllocstats(code: untyped)		75
+nim	getAllocStats	system.html#getAllocStats	proc getAllocStats(): AllocStats		88
+nim	alloc	system.html#alloc.t,Natural	template alloc(size: Natural): pointer		90
+nim	createU	system.html#createU,typedesc	proc createU(T: typedesc; size = 1.Positive): ptr T:type		106
+nim	alloc0	system.html#alloc0.t,Natural	template alloc0(size: Natural): pointer		121
+nim	create	system.html#create,typedesc	proc create(T: typedesc; size = 1.Positive): ptr T:type		134
+nim	realloc	system.html#realloc.t,pointer,Natural	template realloc(p: pointer; newSize: Natural): pointer		146
+nim	realloc0	system.html#realloc0.t,pointer,Natural,Natural	template realloc0(p: pointer; oldSize, newSize: Natural): pointer		160
+nim	resize	system.html#resize,ptr.T,Natural	proc resize[T](p: ptr T; newSize: Natural): ptr T		177
+nim	dealloc	system.html#dealloc,pointer	proc dealloc(p: pointer)		190
+nim	allocShared	system.html#allocShared.t,Natural	template allocShared(size: Natural): pointer		204
+nim	createSharedU	system.html#createSharedU,typedesc	proc createSharedU(T: typedesc; size = 1.Positive): ptr T:type		220
+nim	allocShared0	system.html#allocShared0.t,Natural	template allocShared0(size: Natural): pointer		236
+nim	createShared	system.html#createShared,typedesc	proc createShared(T: typedesc; size = 1.Positive): ptr T:type		250
+nim	reallocShared	system.html#reallocShared.t,pointer,Natural	template reallocShared(p: pointer; newSize: Natural): pointer		263
+nim	reallocShared0	system.html#reallocShared0.t,pointer,Natural,Natural	template reallocShared0(p: pointer; oldSize, newSize: Natural): pointer		274
+nim	resizeShared	system.html#resizeShared,ptr.T,Natural	proc resizeShared[T](p: ptr T; newSize: Natural): ptr T		288
+nim	deallocShared	system.html#deallocShared,pointer	proc deallocShared(p: pointer)		299
+nim	freeShared	system.html#freeShared,ptr.T	proc freeShared[T](p: ptr T)		310
+nim	getOccupiedMem	system.html#getOccupiedMem	proc getOccupiedMem(): int		406
+nim	getFreeMem	system.html#getFreeMem	proc getFreeMem(): int		409
+nim	getTotalMem	system.html#getTotalMem	proc getTotalMem(): int		413
+nim	getOccupiedSharedMem	system.html#getOccupiedSharedMem	proc getOccupiedSharedMem(): int		437
+nim	getFreeSharedMem	system.html#getFreeSharedMem	proc getFreeSharedMem(): int		442
+nim	getTotalSharedMem	system.html#getTotalSharedMem	proc getTotalSharedMem(): int		447
+nim	`|`	system.html#|,typedesc,typedesc	proc `|`(a, b: typedesc): typedesc		1432
+nim	countdown	system.html#countdown.i,T,T,Positive	iterator countdown[T](a, b: T; step: Positive = 1): T		6
+nim	countup	system.html#countup.i,T,T,Positive	iterator countup[T](a, b: T; step: Positive = 1): T		46
+nim	`..`	system.html#...i,T,T	iterator `..`[T](a, b: T): T		81
+nim	`..`	system.html#...i,int64,int64	iterator `..`(a, b: int64): int64		121
+nim	`..`	system.html#...i,int32,int32	iterator `..`(a, b: int32): int32		122
+nim	`..`	system.html#...i,uint64,uint64	iterator `..`(a, b: uint64): uint64		123
+nim	`..`	system.html#...i,uint32,uint32	iterator `..`(a, b: uint32): uint32		124
+nim	`..<`	system.html#..<.i,T,T	iterator `..<`[T](a, b: T): T		126
+nim	`..<`	system.html#..<.i,int64,int64	iterator `..<`(a, b: int64): int64		142
+nim	`..<`	system.html#..<.i,int32,int32	iterator `..<`(a, b: int32): int32		143
+nim	`..<`	system.html#..<.i,uint64,uint64	iterator `..<`(a, b: uint64): uint64		144
+nim	`..<`	system.html#..<.i,uint32,uint32	iterator `..<`(a, b: uint32): uint32		145
+nim	`||`	system.html#||.i,S,T,staticstring	iterator `||`[S, T](a: S; b: T; annotation: static string = "parallel for"): T		147
+nim	`||`	system.html#||.i,S,T,Positive,staticstring	iterator `||`[S, T](a: S; b: T; step: Positive;\n           annotation: static string = "parallel for"): T		164
+nim	len	system.html#len,HSlice[U: Ordinal,V: Ordinal]	proc len[U: Ordinal; V: Ordinal](x: HSlice[U, V]): int		1437
+nim	isNil	system.html#isNil,ref.T	proc isNil[T](x: ref T): bool		1445
+nim	isNil	system.html#isNil,ptr.T	proc isNil[T](x: ptr T): bool		1447
+nim	isNil	system.html#isNil,pointer	proc isNil(x: pointer): bool		1448
+nim	isNil	system.html#isNil,cstring	proc isNil(x: cstring): bool		1449
+nim	isNil	system.html#isNil,T	proc isNil[T: proc | iterator {.closure.}](x: T): bool		1450
+nim	`@`	system.html#@,openArray[T]	proc `@`[T](a: openArray[T]): seq[T]		1456
+nim	`&`	system.html#&,sinkseq[T],sinkseq[T]	proc `&`[T](x, y: sink seq[T]): seq[T]		1475
+nim	`&`	system.html#&,sinkseq[T],sinkT	proc `&`[T](x: sink seq[T]; y: sink T): seq[T]		1491
+nim	`&`	system.html#&,sinkT,sinkseq[T]	proc `&`[T](x: sink T; y: sink seq[T]): seq[T]		1506
+nim	instantiationInfo	system.html#instantiationInfo,int	proc instantiationInfo(index = -1; fullPaths = false): tuple[filename: string,\n    line: int, column: int]		1564
+nim	prepareMutation	system.html#prepareMutation,string	proc prepareMutation(s: var string)		198
+nim	capacity	system.html#capacity,string	proc capacity(self: string): int		216
+nim	NimSeqV2	system.html#NimSeqV2	object NimSeqV2		28
+nim	shrink	system.html#shrink,seq[T],Natural	proc shrink[T](x: var seq[T]; newLen: Natural)		125
+nim	grow	system.html#grow,seq[T],Natural,T	proc grow[T](x: var seq[T]; newLen: Natural; value: T)		138
+nim	add	system.html#add,seq[T],sinkT	proc add[T](x: var seq[T]; y: sink T)		153
+nim	capacity	system.html#capacity,seq[T]	proc capacity[T](self: seq[T]): int		194
+nim	setLenUninit	system.html#setLenUninit,seq[T],Natural	proc setLenUninit[T](s: var seq[T]; newlen: Natural)		205
+nim	newSeqUninitialized	system.html#newSeqUninitialized,Natural	proc newSeqUninitialized[T: SomeNumber](len: Natural): seq[T]		1649
+nim	newSeqUninit	system.html#newSeqUninit,Natural	proc newSeqUninit[T](len: Natural): seq[T]		1668
+nim	newStringUninit	system.html#newStringUninit,Natural	proc newStringUninit(len: Natural): string		1688
+nim	writeStackTrace	system.html#writeStackTrace	proc writeStackTrace()		1715
+nim	PFrame	system.html#PFrame	type PFrame		1724
+nim	TFrame	system.html#TFrame	object TFrame		1727
+nim	isUniqueRef	system.html#isUniqueRef,ref.T	proc isUniqueRef[T](x: ref T): bool		136
+nim	`=dispose`	system.html#=dispose.t	template `=dispose`[T](x: owned(ref T))		193
+nim	getThreadId	system.html#getThreadId	proc getThreadId(): int		30
+nim	GC_runOrc	system.html#GC_runOrc	proc GC_runOrc()		455
+nim	GC_enableOrc	system.html#GC_enableOrc	proc GC_enableOrc()		460
+nim	GC_disableOrc	system.html#GC_disableOrc	proc GC_disableOrc()		466
+nim	GC_prepareOrc	system.html#GC_prepareOrc	proc GC_prepareOrc(): int		472
+nim	GC_partialCollect	system.html#GC_partialCollect,int	proc GC_partialCollect(limit: int)		474
+nim	GC_fullCollect	system.html#GC_fullCollect	proc GC_fullCollect()		477
+nim	GC_enableMarkAndSweep	system.html#GC_enableMarkAndSweep	proc GC_enableMarkAndSweep()		482
+nim	GC_disableMarkAndSweep	system.html#GC_disableMarkAndSweep	proc GC_disableMarkAndSweep()		486
+nim	GC_unref	system.html#GC_unref,ref.T	proc GC_unref[T](x: ref T)		243
+nim	GC_ref	system.html#GC_ref,ref.T	proc GC_ref[T](x: ref T)		248
+nim	setupForeignThreadGc	system.html#setupForeignThreadGc.t	template setupForeignThreadGc()		257
+nim	tearDownForeignThreadGc	system.html#tearDownForeignThreadGc.t	template tearDownForeignThreadGc()		261
+nim	newException	system.html#newException.t,typedesc,string,ref.Exception	template newException(exceptn: typedesc; message: string;\n             parentException: ref Exception = nil): untyped		1743
+nim	find	system.html#find,T,S	proc find[T, S](a: T; item: S): int		1757
+nim	contains	system.html#contains,openArray[T],T	proc contains[T](a: openArray[T]; item: T): bool		1766
+nim	pop	system.html#pop,seq[T]	proc pop[T](s: var seq[T]): T		1780
+nim	`==`	system.html#==,T,T_2	proc `==`[T: tuple | object](x, y: T): bool		1799
+nim	`<=`	system.html#<=,T,T	proc `<=`[T: tuple](x, y: T): bool		1806
+nim	`<`	system.html#<,T,T	proc `<`[T: tuple](x, y: T): bool		1815
+nim	gcThroughput	system.html#gcThroughput	GC_Strategy.gcThroughput		10
+nim	gcResponsiveness	system.html#gcResponsiveness	GC_Strategy.gcResponsiveness		10
+nim	gcOptimizeTime	system.html#gcOptimizeTime	GC_Strategy.gcOptimizeTime		10
+nim	gcOptimizeSpace	system.html#gcOptimizeSpace	GC_Strategy.gcOptimizeSpace		10
+nim	GC_Strategy	system.html#GC_Strategy	enum GC_Strategy		10
+nim	globalRaiseHook	system.html#globalRaiseHook	var globalRaiseHook		1840
+nim	localRaiseHook	system.html#localRaiseHook	var localRaiseHook		1849
+nim	outOfMemHook	system.html#outOfMemHook	var outOfMemHook		1859
+nim	unhandledExceptionHook	system.html#unhandledExceptionHook	var unhandledExceptionHook		1879
+nim	add	system.html#add,string,cstring	proc add(x: var string; y: cstring)		1886
+nim	add	system.html#add,cstring,cstring	proc add(x: var cstring; y: cstring)		1901
+nim	echo	system.html#echo,varargs[typed,]	proc echo(x: varargs[typed, `$`])		1921
+nim	debugEcho	system.html#debugEcho,varargs[typed,]	proc debugEcho(x: varargs[typed, `$`])		1936
+nim	getTypeInfo	system.html#getTypeInfo,T	proc getTypeInfo[T](x: T): pointer		1948
+nim	likely	system.html#likely.t,bool	template likely(val: bool): bool		1960
+nim	unlikely	system.html#unlikely.t,bool	template unlikely(val: bool): bool		1984
+nim	delete	system.html#delete,seq[T],Natural	proc delete[T](x: var seq[T]; i: Natural)		2016
+nim	NimVersion	system.html#NimVersion	const NimVersion		2049
+nim	cstringArrayToSeq	system.html#cstringArrayToSeq,cstringArray,Natural	proc cstringArrayToSeq(a: cstringArray; len: Natural): seq[string]		2121
+nim	cstringArrayToSeq	system.html#cstringArrayToSeq,cstringArray	proc cstringArrayToSeq(a: cstringArray): seq[string]		2128
+nim	allocCStringArray	system.html#allocCStringArray,openArray[string]	proc allocCStringArray(a: openArray[string]): cstringArray		2138
+nim	deallocCStringArray	system.html#deallocCStringArray,cstringArray	proc deallocCStringArray(a: cstringArray)		2148
+nim	nimThreadDestructionHandlers	system.html#nimThreadDestructionHandlers	var nimThreadDestructionHandlers		2
+nim	onThreadDestruction	system.html#onThreadDestruction,proc)	proc onThreadDestruction(handler: proc () {.closure, gcsafe, raises: [].})		31
+nim	nimThreadProcWrapperBody	system.html#nimThreadProcWrapperBody.t,untyped	template nimThreadProcWrapperBody(closure: untyped): untyped		97
+nim	setControlCHook	system.html#setControlCHook,proc)	proc setControlCHook(hook: proc () {.noconv.})		2180
+nim	unsetControlCHook	system.html#unsetControlCHook	proc unsetControlCHook()		2195
+nim	getStackTrace	system.html#getStackTrace	proc getStackTrace(): string		2199
+nim	getStackTrace	system.html#getStackTrace,ref.Exception	proc getStackTrace(e: ref Exception): string		2202
+nim	errorMessageWriter	system.html#errorMessageWriter	var errorMessageWriter		19
+nim	getFrameState	system.html#getFrameState	proc getFrameState(): FrameState		100
+nim	setFrameState	system.html#setFrameState,FrameState	proc setFrameState(state: FrameState)		106
+nim	getFrame	system.html#getFrame	proc getFrame(): PFrame		116
+nim	setFrame	system.html#setFrame,PFrame	proc setFrame(s: PFrame)		133
+nim	stackTraceAvailable	system.html#stackTraceAvailable	proc stackTraceAvailable(): bool		329
+nim	onUnhandledException	system.html#onUnhandledException	var onUnhandledException		370
+nim	getStackTraceEntries	system.html#getStackTraceEntries,ref.Exception	proc getStackTraceEntries(e: ref Exception): lent seq[StackTraceEntry]		548
+nim	getStackTraceEntries	system.html#getStackTraceEntries	proc getStackTraceEntries(): seq[StackTraceEntry]		553
+nim	formatErrorIndexBound	system.html#formatErrorIndexBound.t,T,T,T	template formatErrorIndexBound[T](i, a, b: T): string		4
+nim	formatErrorIndexBound	system.html#formatErrorIndexBound.t,T,T	template formatErrorIndexBound[T](i, n: T): string		11
+nim	formatFieldDefect	system.html#formatFieldDefect.t,,	template formatFieldDefect(f, discVal): string		14
+nim	iterToProc	system.html#iterToProc,typed,typedesc,untyped	proc iterToProc(iter: typed; envType: typedesc; procName: untyped)		490
+nim	getMaxMem	system.html#getMaxMem	proc getMaxMem(): int		1267
+nim	ForeignCell	system.html#ForeignCell	object ForeignCell		115
+nim	protect	system.html#protect,pointer	proc protect(x: pointer): ForeignCell		118
+nim	dispose	system.html#dispose,ForeignCell	proc dispose(x: ForeignCell)		119
+nim	isNotForeign	system.html#isNotForeign,ForeignCell	proc isNotForeign(x: ForeignCell): bool		120
+nim	GC_getStatistics	system.html#GC_getStatistics	proc GC_getStatistics(): string		258
+nim	getCurrentException	system.html#getCurrentException	proc getCurrentException(): ref Exception		2295
+nim	getCurrentExceptionMsg	system.html#getCurrentExceptionMsg	proc getCurrentExceptionMsg(): string		2304
+nim	setCurrentException	system.html#setCurrentException,ref.Exception	proc setCurrentException(exc: ref Exception)		2309
+nim	rawProc	system.html#rawProc,T	proc rawProc[T: proc {.closure.} | iterator {.closure.}](x: T): pointer		2323
+nim	rawEnv	system.html#rawEnv,T	proc rawEnv[T: proc {.closure.} | iterator {.closure.}](x: T): pointer		2365
+nim	finished	system.html#finished,T	proc finished[T: iterator {.closure.}](x: T): bool		2373
+nim	quit	system.html#quit,int	proc quit(errorcode: int = QuitSuccess)		2399
+nim	quit	system.html#quit,string	proc quit(errormsg: string; errorcode = QuitFailure)		2452
+nim	BackwardsIndex	system.html#BackwardsIndex	type BackwardsIndex		5
+nim	`^`	system.html#^.t,int	template `^`(x: int): BackwardsIndex		9
+nim	`[]`	system.html#[],openArray[T],BackwardsIndex	proc `[]`[T](s: openArray[T]; i: BackwardsIndex): T		22
+nim	`[]`	system.html#[],array[Idx,T],BackwardsIndex	proc `[]`[Idx, T](a: array[Idx, T]; i: BackwardsIndex): T		25
+nim	`[]`	system.html#[],string,BackwardsIndex	proc `[]`(s: string; i: BackwardsIndex): char		27
+nim	`[]`	system.html#[],openArray[T],BackwardsIndex_2	proc `[]`[T](s: var openArray[T]; i: BackwardsIndex): var T		29
+nim	`[]`	system.html#[],array[Idx,T],BackwardsIndex_2	proc `[]`[Idx, T](a: var array[Idx, T]; i: BackwardsIndex): var T		31
+nim	`[]`	system.html#[],string,BackwardsIndex_2	proc `[]`(s: var string; i: BackwardsIndex): var char		33
+nim	`[]=`	system.html#[]=,openArray[T],BackwardsIndex,T	proc `[]=`[T](s: var openArray[T]; i: BackwardsIndex; x: T)		35
+nim	`[]=`	system.html#[]=,array[Idx,T],BackwardsIndex,T	proc `[]=`[Idx, T](a: var array[Idx, T]; i: BackwardsIndex; x: T)		37
+nim	`[]=`	system.html#[]=,string,BackwardsIndex,char	proc `[]=`(s: var string; i: BackwardsIndex; x: char)		39
+nim	`..^`	system.html#..^.t,untyped,untyped	template `..^`(a, b: untyped): untyped		42
+nim	`..<`	system.html#..<.t,untyped,untyped	template `..<`(a, b: untyped): untyped		47
+nim	`[]`	system.html#[].t,string,int	template `[]`(s: string; i: int): char		55
+nim	`[]=`	system.html#[]=.t,string,int,char	template `[]=`(s: string; i: int; val: char)		56
+nim	`[]`	system.html#[],string,HSlice[T: Ordinal,U: Ordinal]	proc `[]`[T, U: Ordinal](s: string; x: HSlice[T, U]): string		76
+nim	`[]=`	system.html#[]=,string,HSlice[T: Ordinal,U: Ordinal],string	proc `[]=`[T, U: Ordinal](s: var string; x: HSlice[T, U]; b: string)		88
+nim	`[]`	system.html#[],array[Idx,T],HSlice[U: Ordinal,V: Ordinal]	proc `[]`[Idx, T; U, V: Ordinal](a: array[Idx, T]; x: HSlice[U, V]): seq[T]		106
+nim	`[]=`	system.html#[]=,array[Idx,T],HSlice[U: Ordinal,V: Ordinal],openArray[T]	proc `[]=`[Idx, T; U, V: Ordinal](a: var array[Idx, T]; x: HSlice[U, V];\n                             b: openArray[T])		121
+nim	`[]`	system.html#[],openArray[T],HSlice[U: Ordinal,V: Ordinal]	proc `[]`[T; U, V: Ordinal](s: openArray[T]; x: HSlice[U, V]): seq[T]		135
+nim	`[]=`	system.html#[]=,seq[T],HSlice[U: Ordinal,V: Ordinal],openArray[T]	proc `[]=`[T; U, V: Ordinal](s: var seq[T]; x: HSlice[U, V]; b: openArray[T])		150
+nim	`&=`	system.html#&=,string,string	proc `&=`(x: var string; y: string)		2469
+nim	`&=`	system.html#&=.t,typed,typed	template `&=`(x, y: typed)		2476
+nim	rangeCheck	system.html#rangeCheck.t	template rangeCheck(cond)		2483
+nim	NimNode	system.html#NimNode	type NimNode		2520
+nim	ForLoopStmt	system.html#ForLoopStmt	object ForLoopStmt		2524
+nim	varargsLen	system.html#varargsLen.m,varargs[untyped]	macro varargsLen(x: varargs[untyped]): int		2528
+nim	repr	system.html#repr,HSlice[T,U]	proc repr[T, U](x: HSlice[T, U]): string		2537
+nim	insert	system.html#insert,string,string	proc insert(x: var string; item: string; i = 0.Natural)		2548
+nim	addEscapedChar	system.html#addEscapedChar,string,char	proc addEscapedChar(s: var string; c: char)		2573
+nim	addQuoted	system.html#addQuoted,string,T	proc addQuoted[T](s: var string; x: T)		2615
+nim	locals	system.html#locals	proc locals(): RootObj		2664
+nim	deepCopy	system.html#deepCopy,,T	proc deepCopy[T](x: out T; y: T)		2693
+nim	deepCopy	system.html#deepCopy,T	proc deepCopy[T](y: T): T		2703
+nim	procCall	system.html#procCall,untyped	proc procCall(x: untyped)		2709
+nim	`==`	system.html#==,cstring,cstring	proc `==`(x, y: cstring): bool		2719
+nim	closureScope	system.html#closureScope.t,untyped	template closureScope(body: untyped): untyped		2728
+nim	once	system.html#once.t,untyped	template once(body: untyped): untyped		2755
+nim	substr	system.html#substr,openArray[char]	proc substr(s: openArray[char]): string		2772
+nim	substr	system.html#substr,string,int,int	proc substr(s: string; first, last: int): string		2784
+nim	substr	system.html#substr,string,int	proc substr(s: string; first = 0): string		2805
+nim	toOpenArray	system.html#toOpenArray,ptr.UncheckedArray[T],int,int	proc toOpenArray[T](x: ptr UncheckedArray[T]; first, last: int): openArray[T]		2812
+nim	toOpenArray	system.html#toOpenArray,cstring,int,int	proc toOpenArray(x: cstring; first, last: int): openArray[char]		2814
+nim	toOpenArrayByte	system.html#toOpenArrayByte,cstring,int,int	proc toOpenArrayByte(x: cstring; first, last: int): openArray[byte]		2816
+nim	toOpenArray	system.html#toOpenArray,seq[T],int,int	proc toOpenArray[T](x: seq[T]; first, last: int): openArray[T]		2819
+nim	toOpenArray	system.html#toOpenArray,openArray[T],int,int	proc toOpenArray[T](x: openArray[T]; first, last: int): openArray[T]		2833
+nim	toOpenArray	system.html#toOpenArray,array[I,T],I,I	proc toOpenArray[I, T](x: array[I, T]; first, last: I): openArray[T]		2835
+nim	toOpenArray	system.html#toOpenArray,string,int,int	proc toOpenArray(x: string; first, last: int): openArray[char]		2837
+nim	toOpenArrayByte	system.html#toOpenArrayByte,string,int,int	proc toOpenArrayByte(x: string; first, last: int): openArray[byte]		2840
+nim	toOpenArrayByte	system.html#toOpenArrayByte,openArray[char],int,int	proc toOpenArrayByte(x: openArray[char]; first, last: int): openArray[byte]		2842
+nim	toOpenArrayByte	system.html#toOpenArrayByte,seq[char],int,int	proc toOpenArrayByte(x: seq[char]; first, last: int): openArray[byte]		2844
+nim	toOpenArrayChar	system.html#toOpenArrayChar,openArray[byte],int,int	proc toOpenArrayChar(x: openArray[byte]; first, last: int): openArray[char]		2847
+nim	arrayWith	system.html#arrayWith,T,staticint	proc arrayWith[T](y: T; size: static int): array[size, T]		2968
+nim	arrayWithDefault	system.html#arrayWithDefault,staticint	proc arrayWithDefault[T](size: static int): array[size, T]		2977
+heading	System module	system.html#system-module	 System module		0
+heading	Strings and characters	system.html#system-module-strings-and-characters	  Strings and characters		0
+heading	Seqs	system.html#system-module-seqs	  Seqs		0
+heading	Sets	system.html#system-module-sets	  Sets		0
+heading	Numbers	system.html#system-module-numbers	  Numbers		0
+heading	Ordinals	system.html#system-module-ordinals	  Ordinals		0
+heading	Misc	system.html#system-module-misc	  Misc		0
+idx	for-loop macro	system.html#forminusloop-macro_1	Misc		0
+idx	out of memory	system.html#out-of-memory_1	Misc		0
+idx	wasMoved	system.html#wasmoved_1	Misc		0
+idx	slice	system.html#slice_1	Misc		0
+idx	slice	system.html#slice_2	Misc		0
+idx	caller info	system.html#caller-info_1	Misc		0
+idx	runnable example	system.html#runnable-example_1	Misc		0
+idx	cut	system.html#cut_1	Misc		0
+idx	limit	system.html#limit_1	Misc		0
+idx	splice	system.html#splice_1	Misc		0
+idx	splice	system.html#splice_2	Misc		0
+idx	dup	system.html#dup_1	Misc		0
+idx	trace	system.html#trace_1	Misc		0
+idx	resource	system.html#resource_1	Misc		0
+idx	destructor	system.html#destructor_1	Misc		0
+idx	sink	system.html#sink_1	Misc		0
+idx	INT_MAX	system.html#int-max_1	Misc		0
+idx	MAX_INT	system.html#max-int_1	Misc		0
+idx	INT_MIN	system.html#int-min_1	Misc		0
+idx	MIN_INT	system.html#min-int_1	Misc		0
+idx	method	system.html#method_1	Misc		0
+idx	super	system.html#super_1	Misc		0
+idx	OpenMP	system.html#openmp_1	Misc		0
+idx	OpenMP	system.html#openmp_2	Misc		0
+idx	roof	system.html#roof_1	Misc		0
+nimgrp	..	system.html#..-procs-all	proc		428
+nimgrp	ashr	system.html#ashr-procs-all	proc		171
+nimgrp	setlen	system.html#setLen-procs-all	proc		945
+nimgrp	/	system.html#/-procs-all	proc		318
+nimgrp	len	system.html#len-procs-all	proc		667
+nimgrp	+=	system.html#+=-procs-all	proc		299
+nimgrp	substr	system.html#substr-procs-all	proc		2772
+nimgrp	+%	system.html#+%-procs-all	proc		352
+nimgrp	and	system.html#and-procs-all	proc		79
+nimgrp	*%	system.html#*%-procs-all	proc		374
+nimgrp	[]=	system.html#[]=-procs-all	proc		375
+nimgrp	shr	system.html#shr-procs-all	proc		135
+nimgrp	capacity	system.html#capacity-procs-all	proc		216
+nimgrp	<%	system.html#<%-procs-all	proc		188
+nimgrp	<=	system.html#<=-procs-all	proc		41
+nimgrp	add	system.html#add-procs-all	proc		1016
+nimgrp	<=%	system.html#<=%-procs-all	proc		179
+nimgrp	quit	system.html#quit-procs-all	proc		2399
+nimgrp	div	system.html#div-procs-all	proc		96
+nimgrp	cstringarraytoseq	system.html#cstringArrayToSeq-procs-all	proc		2121
+nimgrp	toopenarray	system.html#toOpenArray-procs-all	proc		2812
+nimgrp	insert	system.html#insert-procs-all	proc		1231
+nimgrp	-	system.html#--procs-all	proc		56
+nimgrp	newseq	system.html#newSeq-procs-all	proc		616
+nimgrp	[]	system.html#[]-procs-all	proc		373
+nimgrp	&	system.html#&-procs-all	proc		988
+nimgrp	<	system.html#<-procs-all	proc		84
+nimgrp	mod	system.html#mod-procs-all	proc		113
+nimgrp	getstacktraceentries	system.html#getStackTraceEntries-procs-all	proc		548
+nimgrp	min	system.html#min-procs-all	proc		223
+nimgrp	==	system.html#==-procs-all	proc		2
+nimgrp	alignof	system.html#alignof-procs-all	proc		599
+nimgrp	=destroy	system.html#=destroy-procs-all	proc		391
+nimgrp	*	system.html#*-procs-all	proc		89
+nimgrp	*=	system.html#*=-procs-all	proc		307
+nimgrp	contains	system.html#contains-procs-all	proc		70
+nimgrp	new	system.html#new-procs-all	proc		131
+nimgrp	max	system.html#max-procs-all	proc		242
+nimgrp	xor	system.html#xor-procs-all	proc		89
+nimgrp	abs	system.html#abs-procs-all	proc		1350
+nimgrp	-=	system.html#-=-procs-all	proc		303
+nimgrp	sizeof	system.html#sizeof-procs-all	proc		580
+nimgrp	high	system.html#high-procs-all	proc		207
+nimgrp	not	system.html#not-procs-all	proc		76
+nimgrp	or	system.html#or-procs-all	proc		84
+nimgrp	isnil	system.html#isNil-procs-all	proc		1445
+nimgrp	low	system.html#low-procs-all	proc		285
+nimgrp	+	system.html#+-procs-all	proc		49
+nimgrp	/%	system.html#/%-procs-all	proc		385
+nimgrp	compileoption	system.html#compileOption-procs-all	proc		116
+nimgrp	toopenarraybyte	system.html#toOpenArrayByte-procs-all	proc		2816
+nimgrp	deepcopy	system.html#deepCopy-procs-all	proc		2693
+nimgrp	shl	system.html#shl-procs-all	proc		158
+nimgrp	-%	system.html#-%-procs-all	proc		363
+nimgrp	cmp	system.html#cmp-procs-all	proc		878
+nimgrp	@	system.html#@-procs-all	proc		902
+nimgrp	/=	system.html#/=-procs-all	proc		342
+nimgrp	getstacktrace	system.html#getStackTrace-procs-all	proc		2199
+nimgrp	%%	system.html#%%-procs-all	proc		396
+nimgrp	..	system.html#..-iterators-all	iterator		81
+nimgrp	||	system.html#||-iterators-all	iterator		147
+nimgrp	..<	system.html#..<-iterators-all	iterator		126
+nimgrp	formaterrorindexbound	system.html#formatErrorIndexBound-templates-all	template		4
+nimgrp	offsetof	system.html#offsetOf-templates-all	template		604

@@ -1,0 +1,43 @@
+nimTitle	sha3	sha3.html	module src/checksums/sha3		0
+nim	Sha3_224	sha3.html#Sha3_224	Sha3Instance.Sha3_224		291
+nim	Sha3_256	sha3.html#Sha3_256	Sha3Instance.Sha3_256		291
+nim	Sha3_384	sha3.html#Sha3_384	Sha3Instance.Sha3_384		291
+nim	Sha3_512	sha3.html#Sha3_512	Sha3Instance.Sha3_512		291
+nim	Sha3Instance	sha3.html#Sha3Instance	enum Sha3Instance		291
+nim	Sha3Digest_224	sha3.html#Sha3Digest_224	type Sha3Digest_224		299
+nim	Sha3Digest_256	sha3.html#Sha3Digest_256	type Sha3Digest_256		300
+nim	Sha3Digest_384	sha3.html#Sha3Digest_384	type Sha3Digest_384		301
+nim	Sha3Digest_512	sha3.html#Sha3Digest_512	type Sha3Digest_512		302
+nim	Sha3State	sha3.html#Sha3State	type Sha3State		304
+nim	Sha3StateStatic	sha3.html#Sha3StateStatic	type Sha3StateStatic		310
+nim	digestLength	sha3.html#digestLength,Sha3Instance	proc digestLength(instance: Sha3Instance): int		313
+nim	initSha3	sha3.html#initSha3,Sha3Instance	proc initSha3(instance: Sha3Instance): Sha3State		321
+nim	initSha3StateStatic	sha3.html#initSha3StateStatic,staticSha3Instance	proc initSha3StateStatic(instance: static Sha3Instance): Sha3StateStatic[instance]		325
+nim	initSha3_224	sha3.html#initSha3_224	proc initSha3_224(): Sha3StateStatic[Sha3_224]		329
+nim	initSha3_256	sha3.html#initSha3_256	proc initSha3_256(): Sha3StateStatic[Sha3_256]		332
+nim	initSha3_384	sha3.html#initSha3_384	proc initSha3_384(): Sha3StateStatic[Sha3_384]		335
+nim	initSha3_512	sha3.html#initSha3_512	proc initSha3_512(): Sha3StateStatic[Sha3_512]		338
+nim	update	sha3.html#update,Sha3StateStatic[instance],openArray[char]	proc update[instance: static Sha3Instance](state: var Sha3StateStatic[instance];\n                                      data: openArray[char])		342
+nim	update	sha3.html#update,Sha3State,openArray[char]	proc update(state: var Sha3State; data: openArray[char])		348
+nim	digest	sha3.html#digest,Sha3StateStatic[Sha3Instance]	proc digest(state: var Sha3StateStatic[Sha3_224]): Sha3Digest_224		355
+nim	digest	sha3.html#digest,Sha3StateStatic[Sha3Instance]_2	proc digest(state: var Sha3StateStatic[Sha3_256]): Sha3Digest_256		360
+nim	digest	sha3.html#digest,Sha3StateStatic[Sha3Instance]_3	proc digest(state: var Sha3StateStatic[Sha3_384]): Sha3Digest_384		365
+nim	digest	sha3.html#digest,Sha3StateStatic[Sha3Instance]_4	proc digest(state: var Sha3StateStatic[Sha3_512]): Sha3Digest_512		370
+nim	digest	sha3.html#digest,Sha3State,openArray[char]	proc digest(state: var Sha3State; dest: var openArray[char]): int		375
+nim	Shake128	sha3.html#Shake128	ShakeInstance.Shake128		392
+nim	Shake256	sha3.html#Shake256	ShakeInstance.Shake256		392
+nim	Shake512	sha3.html#Shake512	ShakeInstance.Shake512		392
+nim	ShakeInstance	sha3.html#ShakeInstance	enum ShakeInstance		392
+nim	ShakeState	sha3.html#ShakeState	type ShakeState		399
+nim	digestLength	sha3.html#digestLength,ShakeInstance	proc digestLength(instance: ShakeInstance): int		402
+nim	initShake	sha3.html#initShake,ShakeInstance	proc initShake(instance: ShakeInstance): ShakeState		409
+nim	update	sha3.html#update,ShakeState,openArray[char]	proc update(state: var ShakeState; data: openArray[char])		413
+nim	finalize	sha3.html#finalize,ShakeState	proc finalize(state: var ShakeState)		416
+nim	shakeOut	sha3.html#shakeOut,ShakeState,openArray[char]	proc shakeOut(state: var ShakeState; dest: var openArray[char])		421
+nim	secureHash	sha3.html#secureHash,staticSha3Instance,openArray[char]	proc secureHash(instance: static Sha3Instance; data: openArray[char]): auto		445
+nim	secureHash	sha3.html#secureHash,Sha3Instance,openArray[char]	proc secureHash(instance: Sha3Instance; data: openArray[char]): seq[char]		453
+nimgrp	digestlength	sha3.html#digestLength-procs-all	proc		313
+nimgrp	securehash	sha3.html#secureHash-procs-all	proc		445
+nimgrp	update	sha3.html#update-procs-all	proc		342
+nimgrp	digest	sha3.html#digest-procs-all	proc		355
+heading	Implemented Algorithms	sha3.html#implemented-algorithms	 Implemented Algorithms		0

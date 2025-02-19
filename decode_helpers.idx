@@ -1,0 +1,5 @@
+nimTitle	decode_helpers	decode_helpers.html	module std/private/decode_helpers		0
+nim	handleHexChar	decode_helpers.html#handleHexChar,char,int	proc handleHexChar(c: char; x: var int): bool		1
+nim	handleHexChar	decode_helpers.html#handleHexChar,char	proc handleHexChar(c: char): int		24
+nim	decodePercent	decode_helpers.html#decodePercent,openArray[char],int	proc decodePercent(s: openArray[char]; i: var int): char		31
+nimgrp	handlehexchar	decode_helpers.html#handleHexChar-procs-all	proc		1

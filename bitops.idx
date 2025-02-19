@@ -1,0 +1,51 @@
+nimTitle	bitops	bitops.html	module std/bitops		0
+nim	bitnot	bitops.html#bitnot,T	proc bitnot[T: SomeInteger](x: T): T		32
+nim	bitand	bitops.html#bitand.m,T,T,varargs[T]	macro bitand[T: SomeInteger](x, y: T; z: varargs[T]): T		41
+nim	bitor	bitops.html#bitor.m,T,T,varargs[T]	macro bitor[T: SomeInteger](x, y: T; z: varargs[T]): T		48
+nim	bitxor	bitops.html#bitxor.m,T,T,varargs[T]	macro bitxor[T: SomeInteger](x, y: T; z: varargs[T]): T		55
+nim	BitsRange	bitops.html#BitsRange	type BitsRange		63
+nim	bitsliced	bitops.html#bitsliced,T,Slice[int]	proc bitsliced[T: SomeInteger](v: T; slice: Slice[int]): T		72
+nim	bitslice	bitops.html#bitslice,T,Slice[int]	proc bitslice[T: SomeInteger](v: var T; slice: Slice[int])		84
+nim	toMask	bitops.html#toMask,Slice[int]	proc toMask[T: SomeInteger](slice: Slice[int]): T		96
+nim	masked	bitops.html#masked,T,T	proc masked[T: SomeInteger](v, mask: T): T		107
+nim	masked	bitops.html#masked,T,Slice[int]	proc masked[T: SomeInteger](v: T; slice: Slice[int]): T		118
+nim	mask	bitops.html#mask,T,T	proc mask[T: SomeInteger](v: var T; mask: T)		129
+nim	mask	bitops.html#mask,T,Slice[int]	proc mask[T: SomeInteger](v: var T; slice: Slice[int])		141
+nim	setMasked	bitops.html#setMasked,T,T	proc setMasked[T: SomeInteger](v, mask: T): T		153
+nim	setMasked	bitops.html#setMasked,T,Slice[int]	proc setMasked[T: SomeInteger](v: T; slice: Slice[int]): T		163
+nim	setMask	bitops.html#setMask,T,T	proc setMask[T: SomeInteger](v: var T; mask: T)		173
+nim	setMask	bitops.html#setMask,T,Slice[int]	proc setMask[T: SomeInteger](v: var T; slice: Slice[int])		184
+nim	clearMasked	bitops.html#clearMasked,T,T	proc clearMasked[T: SomeInteger](v, mask: T): T		195
+nim	clearMasked	bitops.html#clearMasked,T,Slice[int]	proc clearMasked[T: SomeInteger](v: T; slice: Slice[int]): T		206
+nim	clearMask	bitops.html#clearMask,T,T	proc clearMask[T: SomeInteger](v: var T; mask: T)		217
+nim	clearMask	bitops.html#clearMask,T,Slice[int]	proc clearMask[T: SomeInteger](v: var T; slice: Slice[int])		229
+nim	flipMasked	bitops.html#flipMasked,T,T	proc flipMasked[T: SomeInteger](v, mask: T): T		241
+nim	flipMasked	bitops.html#flipMasked,T,Slice[int]	proc flipMasked[T: SomeInteger](v: T; slice: Slice[int]): T		251
+nim	flipMask	bitops.html#flipMask,T,T	proc flipMask[T: SomeInteger](v: var T; mask: T)		261
+nim	flipMask	bitops.html#flipMask,T,Slice[int]	proc flipMask[T: SomeInteger](v: var T; slice: Slice[int])		272
+nim	setBit	bitops.html#setBit,T,BitsRange[T: SomeInteger]	proc setBit[T: SomeInteger](v: var T; bit: BitsRange[T])		283
+nim	clearBit	bitops.html#clearBit,T,BitsRange[T: SomeInteger]	proc clearBit[T: SomeInteger](v: var T; bit: BitsRange[T])		292
+nim	flipBit	bitops.html#flipBit,T,BitsRange[T: SomeInteger]	proc flipBit[T: SomeInteger](v: var T; bit: BitsRange[T])		301
+nim	setBits	bitops.html#setBits.m,typed,varargs[typed]	macro setBits(v: typed; bits: varargs[typed]): untyped		314
+nim	clearBits	bitops.html#clearBits.m,typed,varargs[typed]	macro clearBits(v: typed; bits: varargs[typed]): untyped		326
+nim	flipBits	bitops.html#flipBits.m,typed,varargs[typed]	macro flipBits(v: typed; bits: varargs[typed]): untyped		338
+nim	testBit	bitops.html#testBit,T,BitsRange[T: SomeInteger]	proc testBit[T: SomeInteger](v: T; bit: BitsRange[T]): bool		351
+nim	countSetBits	bitops.html#countSetBits,SomeInteger	proc countSetBits(x: SomeInteger): int		488
+nim	popcount	bitops.html#popcount,SomeInteger	proc popcount(x: SomeInteger): int		496
+nim	parityBits	bitops.html#parityBits,SomeInteger	proc parityBits(x: SomeInteger): int		500
+nim	firstSetBit	bitops.html#firstSetBit,SomeInteger	proc firstSetBit(x: SomeInteger): int		522
+nim	fastLog2	bitops.html#fastLog2,SomeInteger	proc fastLog2(x: SomeInteger): int		565
+nim	countLeadingZeroBits	bitops.html#countLeadingZeroBits,SomeInteger	proc countLeadingZeroBits(x: SomeInteger): int		604
+nim	countTrailingZeroBits	bitops.html#countTrailingZeroBits,SomeInteger	proc countTrailingZeroBits(x: SomeInteger): int		632
+nim	rotateLeftBits	bitops.html#rotateLeftBits,T,range[]	proc rotateLeftBits[T: SomeUnsignedInt](value: T; shift: range[0 .. (sizeof(T) * 8)]): T		785
+nim	rotateRightBits	bitops.html#rotateRightBits,T,range[]	proc rotateRightBits[T: SomeUnsignedInt](value: T; shift: range[0 .. (sizeof(T) * 8)]): T		813
+nim	reverseBits	bitops.html#reverseBits,T	proc reverseBits[T: SomeUnsignedInt](x: T): T		848
+idx	Hamming weight	bitops.html#hamming-weight_1	Module bitops		0
+nimgrp	flipmask	bitops.html#flipMask-procs-all	proc		261
+nimgrp	flipmasked	bitops.html#flipMasked-procs-all	proc		241
+nimgrp	masked	bitops.html#masked-procs-all	proc		107
+nimgrp	mask	bitops.html#mask-procs-all	proc		129
+nimgrp	clearmask	bitops.html#clearMask-procs-all	proc		217
+nimgrp	setmasked	bitops.html#setMasked-procs-all	proc		153
+nimgrp	clearmasked	bitops.html#clearMasked-procs-all	proc		195
+nimgrp	setmask	bitops.html#setMask-procs-all	proc		173

@@ -1,0 +1,4 @@
+nimTitle	vmprofiler	vmprofiler.html	module vmprofiler		0
+nim	enter	vmprofiler.html#enter,Profiler,PCtx,PStackFrame	proc enter(prof: var Profiler; c: PCtx; tos: PStackFrame)		6
+nim	leave	vmprofiler.html#leave,Profiler,PCtx	proc leave(prof: var Profiler; c: PCtx)		25
+nim	dump	vmprofiler.html#dump,ConfigRef,ProfileData	proc dump(conf: ConfigRef; pd: ProfileData): string		29

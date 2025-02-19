@@ -1,0 +1,11 @@
+nimTitle	asyncstreams	asyncstreams.html	module std/asyncstreams		0
+nim	FutureStream	asyncstreams.html#FutureStream	type FutureStream		20
+nim	newFutureStream	asyncstreams.html#newFutureStream,string	proc newFutureStream[T](fromProc = "unspecified"): FutureStream[T]		29
+nim	complete	asyncstreams.html#complete,FutureStream[T]	proc complete[T](future: FutureStream[T])		45
+nim	fail	asyncstreams.html#fail,FutureStream[T],ref.Exception	proc fail[T](future: FutureStream[T]; error: ref Exception)		52
+nim	callback=	asyncstreams.html#callback=,FutureStream[T],proc(FutureStream[T])	proc callback=[T](future: FutureStream[T];\n             cb: proc (future: FutureStream[T]) {.closure, gcsafe.})		60
+nim	finished	asyncstreams.html#finished,FutureStream[T]	proc finished[T](future: FutureStream[T]): bool		75
+nim	failed	asyncstreams.html#failed,FutureStream[T]	proc failed[T](future: FutureStream[T]): bool		81
+nim	write	asyncstreams.html#write,FutureStream[T],T	proc write[T](future: FutureStream[T]; value: T): Future[void]		85
+nim	read	asyncstreams.html#read,FutureStream[T]	proc read[T](future: FutureStream[T]): owned(Future[(bool, T)])		100
+nim	len	asyncstreams.html#len,FutureStream[T]	proc len[T](future: FutureStream[T]): int		145

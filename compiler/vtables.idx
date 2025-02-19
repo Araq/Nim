@@ -1,0 +1,3 @@
+nimTitle	vtables	vtables.html	module vtables		0
+nim	collectVTableDispatchers	vtables.html#collectVTableDispatchers,ModuleGraph	proc collectVTableDispatchers(g: ModuleGraph)		84
+nim	sortVTableDispatchers	vtables.html#sortVTableDispatchers,ModuleGraph	proc sortVTableDispatchers(g: ModuleGraph)		122

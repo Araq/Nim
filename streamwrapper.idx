@@ -1,0 +1,3 @@
+nimTitle	streamwrapper	streamwrapper.html	module std/streamwrapper		0
+nim	PipeOutStream	streamwrapper.html#PipeOutStream	type PipeOutStream		21
+nim	newPipeOutStream	streamwrapper.html#newPipeOutStream,sink	proc newPipeOutStream[T](s: sink (ref T)): owned PipeOutStream[T]		89

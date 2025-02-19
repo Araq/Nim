@@ -1,0 +1,9 @@
+nimTitle	xmlparser	xmlparser.html	module std/xmlparser		0
+nim	XmlError	xmlparser.html#XmlError	object XmlError		18
+nim	parseXml	xmlparser.html#parseXml,Stream,string,seq[string],set[XmlParseOption]	proc parseXml(s: Stream; filename: string; errors: var seq[string];\n         options: set[XmlParseOption] = {reportComments}): XmlNode		105
+nim	parseXml	xmlparser.html#parseXml,Stream,set[XmlParseOption]	proc parseXml(s: Stream; options: set[XmlParseOption] = {reportComments}): XmlNode		126
+nim	parseXml	xmlparser.html#parseXml,string,set[XmlParseOption]	proc parseXml(str: string; options: set[XmlParseOption] = {reportComments}): XmlNode		133
+nim	loadXml	xmlparser.html#loadXml,string,seq[string],set[XmlParseOption]	proc loadXml(path: string; errors: var seq[string];\n        options: set[XmlParseOption] = {reportComments}): XmlNode		138
+nim	loadXml	xmlparser.html#loadXml,string,set[XmlParseOption]	proc loadXml(path: string; options: set[XmlParseOption] = {reportComments}): XmlNode		146
+nimgrp	loadxml	xmlparser.html#loadXml-procs-all	proc		138
+nimgrp	parsexml	xmlparser.html#parseXml-procs-all	proc		105

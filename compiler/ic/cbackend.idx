@@ -1,0 +1,2 @@
+nimTitle	cbackend	ic/cbackend.html	module ic/cbackend		0
+nim	generateCode	ic/cbackend.html#generateCode,ModuleGraph	proc generateCode(g: ModuleGraph)		142

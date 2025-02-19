@@ -1,0 +1,34 @@
+nimTitle	db_mysql	db_mysql.html	module src/db_connector/db_mysql		0
+nim	DbConn	db_mysql.html#DbConn	type DbConn		100
+nim	Row	db_mysql.html#Row	type Row		101
+nim	InstantRow	db_mysql.html#InstantRow	object InstantRow		103
+nim	dbError	db_mysql.html#dbError,DbConn	proc dbError(db: DbConn)		108
+nim	dbQuote	db_mysql.html#dbQuote,string	proc dbQuote(s: string): string		125
+nim	tryExec	db_mysql.html#tryExec,DbConn,SqlQuery,varargs[string,]	proc tryExec(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): bool		147
+nim	exec	db_mysql.html#exec,DbConn,SqlQuery,varargs[string,]	proc exec(db: DbConn; query: SqlQuery; args: varargs[string, `$`])		157
+nim	fastRows	db_mysql.html#fastRows.i,DbConn,SqlQuery,varargs[string,]	iterator fastRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		172
+nim	instantRows	db_mysql.html#instantRows.i,DbConn,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): InstantRow		199
+nim	instantRows	db_mysql.html#instantRows.i,DbConn,DbColumns,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; columns: var DbColumns; query: SqlQuery;\n            args: varargs[string, `$`]): InstantRow		280
+nim	`[]`	db_mysql.html#[],InstantRow,int	proc `[]`(row: InstantRow; col: int): string		297
+nim	unsafeColumnAt	db_mysql.html#unsafeColumnAt,InstantRow,int	proc unsafeColumnAt(row: InstantRow; index: int): cstring		301
+nim	len	db_mysql.html#len,InstantRow	proc len(row: InstantRow): int		305
+nim	getRow	db_mysql.html#getRow,DbConn,SqlQuery,varargs[string,]	proc getRow(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		309
+nim	getAllRows	db_mysql.html#getAllRows,DbConn,SqlQuery,varargs[string,]	proc getAllRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): seq[Row]		325
+nim	rows	db_mysql.html#rows.i,DbConn,SqlQuery,varargs[string,]	iterator rows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		345
+nim	getValue	db_mysql.html#getValue,DbConn,SqlQuery,varargs[string,]	proc getValue(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): string		350
+nim	tryInsertId	db_mysql.html#tryInsertId,DbConn,SqlQuery,varargs[string,]	proc tryInsertId(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		357
+nim	insertId	db_mysql.html#insertId,DbConn,SqlQuery,varargs[string,]	proc insertId(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		367
+nim	tryInsert	db_mysql.html#tryInsert,DbConn,SqlQuery,string,varargs[string,]	proc tryInsert(db: DbConn; query: SqlQuery; pkName: string;\n          args: varargs[string, `$`]): int64		374
+nim	insert	db_mysql.html#insert,DbConn,SqlQuery,string,varargs[string,]	proc insert(db: DbConn; query: SqlQuery; pkName: string; args: varargs[string, `$`]): int64		380
+nim	execAffectedRows	db_mysql.html#execAffectedRows,DbConn,SqlQuery,varargs[string,]	proc execAffectedRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		387
+nim	close	db_mysql.html#close,DbConn	proc close(db: DbConn)		395
+nim	open	db_mysql.html#open,string,string,string,string	proc open(connection, user, password, database: string): DbConn		399
+nim	setEncoding	db_mysql.html#setEncoding,DbConn,string	proc setEncoding(connection: DbConn; encoding: string): bool		418
+nimgrp	instantrows	db_mysql.html#instantRows-iterators-all	iterator		199
+idx	mySQL	db_mysql.html#mysql_1	Module db_mysql		0
+heading	Parameter substitution	db_mysql.html#parameter-substitution	 Parameter substitution		0
+heading	Examples	db_mysql.html#examples	 Examples		0
+heading	Opening a connection to a database	db_mysql.html#examples-opening-a-connection-to-a-database	  Opening a connection to a database		0
+heading	Creating a table	db_mysql.html#examples-creating-a-table	  Creating a table		0
+heading	Inserting data	db_mysql.html#examples-inserting-data	  Inserting data		0
+heading	Larger example	db_mysql.html#examples-larger-example	  Larger example		0

@@ -1,0 +1,26 @@
+markupTitle	atlas.md	atlas.html	atlas.md		0
+heading	Atlas Package Cloner	atlas.html#atlas-package-cloner	 Atlas Package Cloner		0
+heading	Concepts	atlas.html#concepts	  Concepts		0
+heading	Workspaces	atlas.html#workspaces	   Workspaces		0
+heading	Projects	atlas.html#projects	   Projects		0
+heading	Dependencies	atlas.html#dependencies	   Dependencies		0
+heading	No magic	atlas.html#no-magic	  No magic		0
+heading	How it works	atlas.html#how-it-works	  How it works		0
+heading	Commands	atlas.html#commands	  Commands		0
+heading	Use <url> / <package name>	atlas.html#use-lturlgt-slash-ltpackage-namegt	   Use &lt;url&gt; / &lt;package name&gt;		0
+heading	Clone/Update <url>/<package name>	atlas.html#cloneslashupdate-lturlgtslashltpackage-namegt	   Clone/Update &lt;url&gt;/&lt;package name&gt;		0
+heading	Search <term term2 term3 ...>	atlas.html#search-ltterm-term2-term3-dotdotdotgt	   Search &lt;term term2 term3 ...&gt;		0
+heading	Install <proj.nimble>	atlas.html#install-ltprojdotnimblegt	   Install &lt;proj.nimble&gt;		0
+heading	UpdateProjects / updateDeps filterfilter	atlas.html#updateprojects-slash-updatedeps-filterfilter	   UpdateProjects / updateDeps <a class="reference internal" href="#filter">filter</a>		0
+heading	Others	atlas.html#others	   Others		0
+heading	Overrides	atlas.html#overrides	  Overrides		0
+heading	Virtual Nim environments	atlas.html#virtual-nim-environments	  Virtual Nim environments		0
+heading	Dependency resolution	atlas.html#dependency-resolution	  Dependency resolution		0
+heading	MaxVer	atlas.html#maxver	   MaxVer		0
+heading	SemVer	atlas.html#semver	   SemVer		0
+heading	MinVer	atlas.html#minver	   MinVer		0
+heading	Reproducible builds / lockfiles	atlas.html#reproducible-builds-slash-lockfiles	  Reproducible builds / lockfiles		0
+heading	pin atlas.lockatlas.lock	atlas.html#pin-atlasdotlockatlasdotlock	   pin <a class="reference internal" href="#atlas.lock">atlas.lock</a>		0
+heading	rep atlas.lockatlas.lock	atlas.html#rep-atlasdotlockatlasdotlock	   rep <a class="reference internal" href="#atlas.lock">atlas.lock</a>		0
+heading	Plugins	atlas.html#plugins	  Plugins		0
+heading	Builders	atlas.html#builders	   Builders		0

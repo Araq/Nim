@@ -1,0 +1,6 @@
+nimTitle	filters	filters.html	module filters		0
+nim	charArg	filters.html#charArg,ConfigRef,PNode,string,int,char	proc charArg(conf: ConfigRef; n: PNode; name: string; pos: int; default: char): char		33
+nim	strArg	filters.html#strArg,ConfigRef,PNode,string,int,string	proc strArg(conf: ConfigRef; n: PNode; name: string; pos: int; default: string): string		42
+nim	boolArg	filters.html#boolArg,ConfigRef,PNode,string,int,bool	proc boolArg(conf: ConfigRef; n: PNode; name: string; pos: int; default: bool): bool		50
+nim	filterStrip	filters.html#filterStrip,ConfigRef,PLLStream,AbsoluteFile,PNode	proc filterStrip(conf: ConfigRef; stdin: PLLStream; filename: AbsoluteFile;\n            call: PNode): PLLStream		59
+nim	filterReplace	filters.html#filterReplace,ConfigRef,PLLStream,AbsoluteFile,PNode	proc filterReplace(conf: ConfigRef; stdin: PLLStream; filename: AbsoluteFile;\n              call: PNode): PLLStream		73

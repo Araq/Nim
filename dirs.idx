@@ -1,0 +1,12 @@
+nimTitle	dirs	dirs.html	module std/dirs		0
+nim	dirExists	dirs.html#dirExists,Path	proc dirExists(dir: Path): bool		11
+nim	createDir	dirs.html#createDir,Path	proc createDir(dir: Path)		16
+nim	existsOrCreateDir	dirs.html#existsOrCreateDir,Path	proc existsOrCreateDir(dir: Path): bool		31
+nim	removeDir	dirs.html#removeDir,Path	proc removeDir(dir: Path; checkDir = false)		43
+nim	moveDir	dirs.html#moveDir,Path,Path	proc moveDir(source, dest: Path)		58
+nim	walkDir	dirs.html#walkDir.i,Path	iterator walkDir(dir: Path; relative = false; checkDir = false; skipSpecial = false): tuple[\n    kind: PathComponent, path: Path]		73
+nim	walkDirRec	dirs.html#walkDirRec.i,Path	iterator walkDirRec(dir: Path; yieldFilter = {pcFile}; followFilter = {pcDir};\n           relative = false; checkDir = false; skipSpecial = false): Path		91
+nim	setCurrentDir	dirs.html#setCurrentDir,Path	proc setCurrentDir(newDir: Path)		129
+idx	current working directory	dirs.html#current-working-directory_1	Module dirs		0
+idx	directory	dirs.html#directory_1	Module dirs		0
+idx	directory	dirs.html#directory_2	Module dirs		0

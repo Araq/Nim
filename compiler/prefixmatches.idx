@@ -1,0 +1,3 @@
+nimTitle	prefixmatches	prefixmatches.html	module prefixmatches		0
+nim	PrefixMatch	prefixmatches.html#PrefixMatch	enum PrefixMatch		13
+nim	prefixMatch	prefixmatches.html#prefixMatch,string,string	proc prefixMatch(p, s: string): PrefixMatch		19

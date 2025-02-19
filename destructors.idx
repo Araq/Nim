@@ -1,0 +1,27 @@
+markupTitle	Nim Destructors and Move Semantics	destructors.html	Nim Destructors and Move Semantics		0
+heading	About this document	destructors.html#about-this-document	 About this document		0
+heading	Motivating example	destructors.html#motivating-example	 Motivating example		0
+heading	Lifetime-tracking hooks	destructors.html#lifetimeminustracking-hooks	 Lifetime-tracking hooks		0
+heading	nim=destroy hook	destructors.html#lifetimeminustracking-hooks-nimeqdestroy-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">destroy</span></span></tt> hook		0
+heading	nim=wasMoved hook	destructors.html#lifetimeminustracking-hooks-nimeqwasmoved-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">wasMoved</span></span></tt> hook		0
+heading	nim=sink hook	destructors.html#lifetimeminustracking-hooks-nimeqsink-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">sink</span></span></tt> hook		0
+heading	nim=copy hook	destructors.html#lifetimeminustracking-hooks-nimeqcopy-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">copy</span></span></tt> hook		0
+heading	nim=trace hook	destructors.html#lifetimeminustracking-hooks-nimeqtrace-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">trace</span></span></tt> hook		0
+heading	nim=dup hook	destructors.html#lifetimeminustracking-hooks-nimeqdup-hook	  <tt class="docutils literal"><span class="pre"><span class="Operator">=</span><span class="Identifier">dup</span></span></tt> hook		0
+heading	Move semantics	destructors.html#move-semantics	 Move semantics		0
+heading	Swap	destructors.html#swap	 Swap		0
+heading	Sink parameters	destructors.html#sink-parameters	 Sink parameters		0
+heading	Sink parameter inference	destructors.html#sink-parameter-inference	 Sink parameter inference		0
+idx	.nosinks	destructors.html#dotnosinks_1	Sink parameter inference		0
+heading	Rewrite rules	destructors.html#rewrite-rules	 Rewrite rules		0
+heading	Object and array construction	destructors.html#object-and-array-construction	 Object and array construction		0
+heading	Destructor removal	destructors.html#destructor-removal	 Destructor removal		0
+heading	Self assignments	destructors.html#self-assignments	 Self assignments		0
+heading	Lent type	destructors.html#lent-type	 Lent type		0
+heading	The cursor pragma	destructors.html#the-cursor-pragma	 The cursor pragma		0
+heading	Cursor inference / copy elision	destructors.html#cursor-inference-slash-copy-elision	 Cursor inference / copy elision		0
+heading	Hook lifting	destructors.html#hook-lifting	 Hook lifting		0
+heading	Hook generation	destructors.html#hook-generation	 Hook generation		0
+heading	nodestroy pragma	destructors.html#nodestroy-pragma	 nodestroy pragma		0
+idx	nodestroy	destructors.html#nodestroy_1	nodestroy pragma		0
+heading	Copy on write	destructors.html#copy-on-write	 Copy on write		0

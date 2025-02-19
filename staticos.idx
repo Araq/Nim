@@ -1,0 +1,9 @@
+nimTitle	staticos	staticos.html	module std/staticos		0
+nim	staticFileExists	staticos.html#staticFileExists,string	proc staticFileExists(filename: string): bool		7
+nim	staticDirExists	staticos.html#staticDirExists,string	proc staticDirExists(dir: string): bool		13
+nim	pcFile	staticos.html#pcFile	PathComponent.pcFile		19
+nim	pcLinkToFile	staticos.html#pcLinkToFile	PathComponent.pcLinkToFile		19
+nim	pcDir	staticos.html#pcDir	PathComponent.pcDir		19
+nim	pcLinkToDir	staticos.html#pcLinkToDir	PathComponent.pcLinkToDir		19
+nim	PathComponent	staticos.html#PathComponent	enum PathComponent		19
+nim	staticWalkDir	staticos.html#staticWalkDir,string	proc staticWalkDir(dir: string; relative = false): seq[\n    tuple[kind: PathComponent, path: string]]		29

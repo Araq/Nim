@@ -1,0 +1,25 @@
+nimTitle	epoll	epoll.html	module std/epoll		0
+nim	EPOLLIN	epoll.html#EPOLLIN	const EPOLLIN		13
+nim	EPOLLPRI	epoll.html#EPOLLPRI	const EPOLLPRI		14
+nim	EPOLLOUT	epoll.html#EPOLLOUT	const EPOLLOUT		15
+nim	EPOLLERR	epoll.html#EPOLLERR	const EPOLLERR		16
+nim	EPOLLHUP	epoll.html#EPOLLHUP	const EPOLLHUP		17
+nim	EPOLLRDNORM	epoll.html#EPOLLRDNORM	const EPOLLRDNORM		18
+nim	EPOLLRDBAND	epoll.html#EPOLLRDBAND	const EPOLLRDBAND		19
+nim	EPOLLWRNORM	epoll.html#EPOLLWRNORM	const EPOLLWRNORM		20
+nim	EPOLLWRBAND	epoll.html#EPOLLWRBAND	const EPOLLWRBAND		21
+nim	EPOLLMSG	epoll.html#EPOLLMSG	const EPOLLMSG		22
+nim	EPOLLRDHUP	epoll.html#EPOLLRDHUP	const EPOLLRDHUP		23
+nim	EPOLLEXCLUSIVE	epoll.html#EPOLLEXCLUSIVE	const EPOLLEXCLUSIVE		24
+nim	EPOLLWAKEUP	epoll.html#EPOLLWAKEUP	const EPOLLWAKEUP		25
+nim	EPOLLONESHOT	epoll.html#EPOLLONESHOT	const EPOLLONESHOT		26
+nim	EPOLLET	epoll.html#EPOLLET	const EPOLLET		27
+nim	EPOLL_CTL_ADD	epoll.html#EPOLL_CTL_ADD	const EPOLL_CTL_ADD		32
+nim	EPOLL_CTL_DEL	epoll.html#EPOLL_CTL_DEL	const EPOLL_CTL_DEL		33
+nim	EPOLL_CTL_MOD	epoll.html#EPOLL_CTL_MOD	const EPOLL_CTL_MOD		34
+nim	EpollData	epoll.html#EpollData	object EpollData		44
+nim	EpollEvent	epoll.html#EpollEvent	object EpollEvent		50
+nim	epoll_create	epoll.html#epoll_create,cint	proc epoll_create(size: cint): cint		54
+nim	epoll_create1	epoll.html#epoll_create1,cint	proc epoll_create1(flags: cint): cint		62
+nim	epoll_ctl	epoll.html#epoll_ctl,cint,cint,,ptr.EpollEvent	proc epoll_ctl(epfd: cint; op: cint; fd: cint | SocketHandle; event: ptr EpollEvent): cint		67
+nim	epoll_wait	epoll.html#epoll_wait,cint,ptr.EpollEvent,cint,cint	proc epoll_wait(epfd: cint; events: ptr EpollEvent; maxevents: cint; timeout: cint): cint		77

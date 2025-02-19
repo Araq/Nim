@@ -1,0 +1,463 @@
+markupTitle	Nim Manual	manual.html	Nim Manual		0
+heading	About this document	manual.html#about-this-document	 About this document		0
+heading	Definitions	manual.html#definitions	 Definitions		0
+idx	locations	manual.html#locations_1	Definitions		0
+idx	type	manual.html#type_1	Definitions		0
+idx	static type	manual.html#static-type_1	Definitions		0
+idx	dynamic type	manual.html#dynamic-type_1	Definitions		0
+idx	identifier	manual.html#identifier_1	Definitions		0
+idx	scope	manual.html#scope_1	Definitions		0
+idx	l-values	manual.html#lminusvalues_1	Definitions		0
+idx	program	manual.html#program_1	Definitions		0
+idx	source files	manual.html#source-files_1	Definitions		0
+idx	compiler	manual.html#compiler_1	Definitions		0
+idx	executable	manual.html#executable_1	Definitions		0
+idx	compile-time	manual.html#compileminustime_1	Definitions		0
+idx	runtime	manual.html#runtime_1	Definitions		0
+idx	abstract syntax tree	manual.html#abstract-syntax-tree_1	Definitions		0
+idx	AST	manual.html#ast_1	Definitions		0
+idx	semantic analysis	manual.html#semantic-analysis_1	Definitions		0
+idx	static error	manual.html#static-error_1	Definitions		0
+idx	panic	manual.html#panic_1	Definitions		0
+idx	runtime checks	manual.html#runtime-checks_1	Definitions		0
+idx	unchecked runtime error	manual.html#unchecked-runtime-error_1	Definitions		0
+idx	safe	manual.html#safe_1	Definitions		0
+idx	constant expression	manual.html#constant-expression_1	Definitions		0
+heading	Lexical Analysis	manual.html#lexical-analysis	 Lexical Analysis		0
+heading	Encoding	manual.html#lexical-analysis-encoding	  Encoding		0
+heading	Indentation	manual.html#lexical-analysis-indentation	  Indentation		0
+idx	indentation sensitive	manual.html#indentation-sensitive_1	Indentation		0
+heading	Comments	manual.html#lexical-analysis-comments	  Comments		0
+idx	comment pieces	manual.html#comment-pieces_1	Comments		0
+idx	Documentation comments	manual.html#documentation-comments_1	Comments		0
+heading	Multiline comments	manual.html#lexical-analysis-multiline-comments	  Multiline comments		0
+heading	Identifiers & Keywords	manual.html#lexical-analysis-identifiers-amp-keywords	  Identifiers &amp; Keywords		0
+heading	Identifier equality	manual.html#lexical-analysis-identifier-equality	  Identifier equality		0
+idx	partial case-insensitivity	manual.html#partial-caseminusinsensitivity_1	Identifier equality		0
+idx	style-insensitive	manual.html#styleminusinsensitive_1	Identifier equality		0
+heading	Keywords as identifiers	manual.html#lexical-analysis-keywords-as-identifiers	  Keywords as identifiers		0
+heading	String literals	manual.html#lexical-analysis-string-literals	  String literals		0
+idx	escape sequences	manual.html#escape-sequences_1	String literals		0
+idx	carriage return	manual.html#carriage-return_1	String literals		0
+idx	line feed	manual.html#line-feed_1	String literals		0
+idx	newline	manual.html#newline_1	String literals		0
+idx	form feed	manual.html#form-feed_1	String literals		0
+idx	tabulator	manual.html#tabulator_1	String literals		0
+idx	vertical tabulator	manual.html#vertical-tabulator_1	String literals		0
+idx	backslash	manual.html#backslash_1	String literals		0
+idx	quotation mark	manual.html#quotation-mark_1	String literals		0
+idx	apostrophe	manual.html#apostrophe_1	String literals		0
+idx	character with decimal value d	manual.html#character-with-decimal-value-d_1	String literals		0
+idx	alert	manual.html#alert_1	String literals		0
+idx	backspace	manual.html#backspace_1	String literals		0
+idx	escape	manual.html#escape_1	String literals		0
+idx	[ESC]	manual.html#esc_1	String literals		0
+idx	character with hex value HH	manual.html#character-with-hex-value-hh_1	String literals		0
+idx	unicode codepoint with hex value HHHH	manual.html#unicode-codepoint-with-hex-value-hhhh_1	String literals		0
+idx	unicode codepoint	manual.html#unicode-codepoint_1	String literals		0
+heading	Triple quoted string literals	manual.html#lexical-analysis-triple-quoted-string-literals	  Triple quoted string literals		0
+heading	Raw string literals	manual.html#lexical-analysis-raw-string-literals	  Raw string literals		0
+heading	Generalized raw string literals	manual.html#lexical-analysis-generalized-raw-string-literals	  Generalized raw string literals		0
+heading	Character literals	manual.html#lexical-analysis-character-literals	  Character literals		0
+idx	newline	manual.html#newline_2	Character literals		0
+idx	escape sequences	manual.html#escape-sequences_2	Character literals		0
+idx	carriage return	manual.html#carriage-return_2	Character literals		0
+idx	line feed	manual.html#line-feed_2	Character literals		0
+idx	form feed	manual.html#form-feed_2	Character literals		0
+idx	tabulator	manual.html#tabulator_2	Character literals		0
+idx	vertical tabulator	manual.html#vertical-tabulator_2	Character literals		0
+idx	backslash	manual.html#backslash_2	Character literals		0
+idx	quotation mark	manual.html#quotation-mark_2	Character literals		0
+idx	apostrophe	manual.html#apostrophe_2	Character literals		0
+idx	character with decimal value d	manual.html#character-with-decimal-value-d_2	Character literals		0
+idx	alert	manual.html#alert_2	Character literals		0
+idx	backspace	manual.html#backspace_2	Character literals		0
+idx	escape	manual.html#escape_2	Character literals		0
+idx	[ESC]	manual.html#esc_2	Character literals		0
+idx	character with hex value HH	manual.html#character-with-hex-value-hh_2	Character literals		0
+heading	Numeric literals	manual.html#lexical-analysis-numeric-literals	  Numeric literals		0
+idx	type suffix	manual.html#type-suffix_1	Numeric literals		0
+heading	Custom numeric literals	manual.html#numeric-literals-custom-numeric-literals	   Custom numeric literals		0
+heading	Operators	manual.html#lexical-analysis-operators	  Operators		0
+heading	Unicode Operators	manual.html#lexical-analysis-unicode-operators	  Unicode Operators		0
+heading	Other tokens	manual.html#lexical-analysis-other-tokens	  Other tokens		0
+idx	slice	manual.html#slice_1	Other tokens		0
+heading	Syntax	manual.html#syntax	 Syntax		0
+heading	Associativity	manual.html#syntax-associativity	  Associativity		0
+heading	Precedence	manual.html#syntax-precedence	  Precedence		0
+idx	sigil-like	manual.html#sigilminuslike_1	Precedence		0
+idx	arrow like	manual.html#arrow-like_1	Precedence		0
+heading	Dot-like operators	manual.html#syntax-dotminuslike-operators	  Dot-like operators		0
+heading	Grammar	manual.html#syntax-grammar	  Grammar		0
+heading	Order of evaluation	manual.html#order-of-evaluation	 Order of evaluation		0
+heading	Constants and Constant Expressions	manual.html#constants-and-constant-expressions	 Constants and Constant Expressions		0
+idx	constant	manual.html#constant_1	Constants and Constant Expressions		0
+heading	Restrictions on Compile-Time Execution	manual.html#restrictions-on-compileminustime-execution	 Restrictions on Compile-Time Execution		0
+heading	Types	manual.html#types	 Types		0
+heading	Ordinal types	manual.html#types-ordinal-types	  Ordinal types		0
+heading	Pre-defined integer types	manual.html#types-preminusdefined-integer-types	  Pre-defined integer types		0
+idx	unsigned integer	manual.html#unsigned-integer_1	Pre-defined integer types		0
+idx	Automatic type conversion	manual.html#automatic-type-conversion_1	Pre-defined integer types		0
+idx	narrowing type conversion	manual.html#narrowing-type-conversion_1	Pre-defined integer types		0
+idx	widening type conversion	manual.html#widening-type-conversion_1	Pre-defined integer types		0
+heading	Subrange types	manual.html#types-subrange-types	  Subrange types		0
+heading	Pre-defined floating-point types	manual.html#types-preminusdefined-floatingminuspoint-types	  Pre-defined floating-point types		0
+idx	FloatInvalidOpDefect	manual.html#floatinvalidopdefect_1	Pre-defined floating-point types		0
+idx	FloatDivByZeroDefect	manual.html#floatdivbyzerodefect_1	Pre-defined floating-point types		0
+idx	FloatOverflowDefect	manual.html#floatoverflowdefect_1	Pre-defined floating-point types		0
+idx	FloatUnderflowDefect	manual.html#floatunderflowdefect_1	Pre-defined floating-point types		0
+idx	FloatInexactDefect	manual.html#floatinexactdefect_1	Pre-defined floating-point types		0
+idx	FloatingPointDefect	manual.html#floatingpointdefect_1	Pre-defined floating-point types		0
+idx	nanChecks	manual.html#nanchecks_1	Pre-defined floating-point types		0
+idx	infChecks	manual.html#infchecks_1	Pre-defined floating-point types		0
+idx	floatChecks	manual.html#floatchecks_1	Pre-defined floating-point types		0
+heading	Boolean type	manual.html#types-boolean-type	  Boolean type		0
+idx	bool	manual.html#bool_1	Boolean type		0
+heading	Character type	manual.html#types-character-type	  Character type		0
+heading	Enumeration types	manual.html#types-enumeration-types	  Enumeration types		0
+heading	String type	manual.html#types-string-type	  String type		0
+heading	cstring type	manual.html#types-cstring-type	  cstring type		0
+heading	Structured types	manual.html#types-structured-types	  Structured types		0
+heading	Array and sequence types	manual.html#types-array-and-sequence-types	  Array and sequence types		0
+heading	Open arrays	manual.html#types-open-arrays	  Open arrays		0
+idx	openarray	manual.html#openarray_1	Open arrays		0
+heading	Varargs	manual.html#types-varargs	  Varargs		0
+heading	Unchecked arrays	manual.html#types-unchecked-arrays	  Unchecked arrays		0
+heading	Tuples and object types	manual.html#types-tuples-and-object-types	  Tuples and object types		0
+heading	Object construction	manual.html#types-object-construction	  Object construction		0
+idx	object construction expression	manual.html#object-construction-expression_1	Object construction		0
+heading	Object variants	manual.html#types-object-variants	  Object variants		0
+idx	discriminator	manual.html#discriminator_1	Object variants		0
+heading	cast uncheckedAssign	manual.html#types-cast-uncheckedassign	  cast uncheckedAssign		0
+heading	Default values for object fields	manual.html#types-default-values-for-object-fields	  Default values for object fields		0
+heading	Set type	manual.html#types-set-type	  Set type		0
+heading	Bit fields	manual.html#set-type-bit-fields	   Bit fields		0
+heading	Reference and pointer types	manual.html#types-reference-and-pointer-types	  Reference and pointer types		0
+idx	aliasing	manual.html#aliasing_1	Reference and pointer types		0
+idx	traced	manual.html#traced_1	Reference and pointer types		0
+idx	untraced	manual.html#untraced_1	Reference and pointer types		0
+heading	Nil	manual.html#types-nil	  Nil		0
+heading	Mixing GC'ed memory with nimptr	manual.html#types-mixing-gc-ed-memory-with-nimptr	  Mixing GC'ed memory with <tt class="docutils literal"><span class="pre"><span class="Keyword">ptr</span></span></tt>		0
+heading	Procedural type	manual.html#types-procedural-type	  Procedural type		0
+idx	calling conventions	manual.html#calling-conventions_1	Procedural type		0
+idx	nimcall	manual.html#nimcall_1	Procedural type		0
+idx	closure	manual.html#closure_1	Procedural type		0
+idx	stdcall	manual.html#stdcall_1	Procedural type		0
+idx	cdecl	manual.html#cdecl_1	Procedural type		0
+idx	safecall	manual.html#safecall_1	Procedural type		0
+idx	inline	manual.html#inline_1	Procedural type		0
+idx	noinline	manual.html#noinline_1	Procedural type		0
+idx	fastcall	manual.html#fastcall_1	Procedural type		0
+idx	thiscall	manual.html#thiscall_1	Procedural type		0
+idx	syscall	manual.html#syscall_1	Procedural type		0
+idx	noconv	manual.html#noconv_1	Procedural type		0
+heading	Distinct type	manual.html#types-distinct-type	  Distinct type		0
+idx	base type	manual.html#base-type_1	Distinct type		0
+heading	Modeling currencies	manual.html#distinct-type-modeling-currencies	   Modeling currencies		0
+idx	units	manual.html#units_1	Modeling currencies		0
+idx	borrow	manual.html#borrow_1	Modeling currencies		0
+heading	Avoiding SQL injection attacks	manual.html#distinct-type-avoiding-sql-injection-attacks	   Avoiding SQL injection attacks		0
+idx	SQL injection attack	manual.html#sql-injection-attack_1	Avoiding SQL injection attacks		0
+heading	Auto type	manual.html#types-auto-type	  Auto type		0
+heading	Type relations	manual.html#type-relations	 Type relations		0
+heading	Type equality	manual.html#type-relations-type-equality	  Type equality		0
+heading	Subtype relation	manual.html#type-relations-subtype-relation	  Subtype relation		0
+heading	Convertible relation	manual.html#type-relations-convertible-relation	  Convertible relation		0
+idx	converter	manual.html#converter_1	Convertible relation		0
+heading	Assignment compatibility	manual.html#type-relations-assignment-compatibility	  Assignment compatibility		0
+heading	Overload resolution	manual.html#overload-resolution	 Overload resolution		0
+heading	First Trial: Category matching	manual.html#overload-resolution-first-trialcolon-category-matching	  First Trial: Category matching		0
+heading	Second Trial: Hierarchical Order Comparison	manual.html#overload-resolution-second-trialcolon-hierarchical-order-comparison	  Second Trial: Hierarchical Order Comparison		0
+heading	Third Trial: Complexity Analysis	manual.html#overload-resolution-third-trialcolon-complexity-analysis	  Third Trial: Complexity Analysis		0
+heading	Some Examples	manual.html#overload-resolution-some-examples	  Some Examples		0
+heading	Type variables match	manual.html#overload-resolution-type-variables-match	  Type variables match		0
+heading	Overloading based on 'var T'	manual.html#overload-resolution-overloading-based-on-var-t	  Overloading based on 'var T'		0
+idx	l-value	manual.html#lminusvalue_1	Overloading based on 'var T'		0
+heading	Lazy type resolution for untyped	manual.html#overload-resolution-lazy-type-resolution-for-untyped	  Lazy type resolution for untyped		0
+idx	unresolved	manual.html#unresolved_1	Lazy type resolution for untyped		0
+heading	Varargs matching	manual.html#overload-resolution-varargs-matching	  Varargs matching		0
+heading	iterable	manual.html#overload-resolution-iterable	  iterable		0
+heading	Overload disambiguation	manual.html#overload-disambiguation	 Overload disambiguation		0
+heading	Named argument overloading	manual.html#overload-disambiguation-named-argument-overloading	  Named argument overloading		0
+heading	Statements and expressions	manual.html#statements-and-expressions	 Statements and expressions		0
+idx	simple statements	manual.html#simple-statements_1	Statements and expressions		0
+idx	complex statements	manual.html#complex-statements_1	Statements and expressions		0
+idx	dangling else problem	manual.html#dangling-else-problem_1	Statements and expressions		0
+heading	Statement list expression	manual.html#statements-and-expressions-statement-list-expression	  Statement list expression		0
+heading	Discard statement	manual.html#statements-and-expressions-discard-statement	  Discard statement		0
+idx	discardable	manual.html#discardable_1	Discard statement		0
+heading	Void context	manual.html#statements-and-expressions-void-context	  Void context		0
+heading	Var statement	manual.html#statements-and-expressions-var-statement	  Var statement		0
+idx	noinit	manual.html#noinit_1	Var statement		0
+idx	requiresInit	manual.html#requiresinit_1	Var statement		0
+idx	control flow analysis	manual.html#control-flow-analysis_1	Var statement		0
+heading	Let statement	manual.html#statements-and-expressions-let-statement	  Let statement		0
+idx	single assignment	manual.html#single-assignment_1	Let statement		0
+heading	Special identifier nim_ (underscore)	manual.html#statements-and-expressions-special-identifier-nim-underscore	  Special identifier <tt class="docutils literal"><span class="pre"><span class="Identifier">_</span></span></tt> (underscore)		0
+heading	Tuple unpacking	manual.html#statements-and-expressions-tuple-unpacking	  Tuple unpacking		0
+heading	Const section	manual.html#statements-and-expressions-const-section	  Const section		0
+heading	Static statement/expression	manual.html#statements-and-expressions-static-statementslashexpression	  Static statement/expression		0
+heading	If statement	manual.html#statements-and-expressions-if-statement	  If statement		0
+heading	Case statement	manual.html#statements-and-expressions-case-statement	  Case statement		0
+heading	When statement	manual.html#statements-and-expressions-when-statement	  When statement		0
+heading	When nimvm statement	manual.html#statements-and-expressions-when-nimvm-statement	  When nimvm statement		0
+heading	Return statement	manual.html#statements-and-expressions-return-statement	  Return statement		0
+idx	result	manual.html#result_1	Return statement		0
+heading	Yield statement	manual.html#statements-and-expressions-yield-statement	  Yield statement		0
+heading	Block statement	manual.html#statements-and-expressions-block-statement	  Block statement		0
+heading	Break statement	manual.html#statements-and-expressions-break-statement	  Break statement		0
+heading	While statement	manual.html#statements-and-expressions-while-statement	  While statement		0
+heading	Continue statement	manual.html#statements-and-expressions-continue-statement	  Continue statement		0
+heading	Assembler statement	manual.html#statements-and-expressions-assembler-statement	  Assembler statement		0
+heading	Using statement	manual.html#statements-and-expressions-using-statement	  Using statement		0
+heading	If expression	manual.html#statements-and-expressions-if-expression	  If expression		0
+heading	When expression	manual.html#statements-and-expressions-when-expression	  When expression		0
+heading	Case expression	manual.html#statements-and-expressions-case-expression	  Case expression		0
+heading	Block expression	manual.html#statements-and-expressions-block-expression	  Block expression		0
+heading	Table constructor	manual.html#statements-and-expressions-table-constructor	  Table constructor		0
+heading	Type conversions	manual.html#statements-and-expressions-type-conversions	  Type conversions		0
+heading	Type casts	manual.html#statements-and-expressions-type-casts	  Type casts		0
+heading	The addr operator	manual.html#statements-and-expressions-the-addr-operator	  The addr operator		0
+heading	The unsafeAddr operator	manual.html#statements-and-expressions-the-unsafeaddr-operator	  The unsafeAddr operator		0
+heading	Procedures	manual.html#procedures	 Procedures		0
+idx	methods	manual.html#methods_1	Procedures		0
+idx	functions	manual.html#functions_1	Procedures		0
+idx	procedures	manual.html#procedures_1	Procedures		0
+idx	forward	manual.html#forward_1	Procedures		0
+idx	result	manual.html#result_2	Procedures		0
+idx	Operators	manual.html#operators_1	Procedures		0
+heading	Export marker	manual.html#procedures-export-marker	  Export marker		0
+idx	asterisk	manual.html#asterisk_1	Export marker		0
+heading	Method call syntax	manual.html#procedures-method-call-syntax	  Method call syntax		0
+heading	Properties	manual.html#procedures-properties	  Properties		0
+idx	setter	manual.html#setter_1	Properties		0
+heading	Command invocation syntax	manual.html#procedures-command-invocation-syntax	  Command invocation syntax		0
+heading	Closures	manual.html#procedures-closures	  Closures		0
+heading	Creating closures in loops	manual.html#closures-creating-closures-in-loops	   Creating closures in loops		0
+heading	Anonymous procedures	manual.html#procedures-anonymous-procedures	  Anonymous procedures		0
+heading	Do notation	manual.html#procedures-do-notation	  Do notation		0
+heading	Func	manual.html#procedures-func	  Func		0
+idx	noSideEffect	manual.html#nosideeffect_1	Func		0
+heading	Routines	manual.html#procedures-routines	  Routines		0
+heading	Type bound operators	manual.html#procedures-type-bound-operators	  Type bound operators		0
+heading	Nonoverloadable builtins	manual.html#procedures-nonoverloadable-builtins	  Nonoverloadable builtins		0
+idx	shadow	manual.html#shadow_1	Nonoverloadable builtins		0
+heading	Var parameters	manual.html#procedures-var-parameters	  Var parameters		0
+idx	tuple unpacking	manual.html#tuple-unpacking_1	Var parameters		0
+heading	Var return type	manual.html#procedures-var-return-type	  Var return type		0
+heading	Future directions	manual.html#var-return-type-future-directions	   Future directions		0
+heading	NRVO	manual.html#procedures-nrvo	  NRVO		0
+idx	result	manual.html#result_3	NRVO		0
+idx	NRVO	manual.html#nrvo_1	NRVO		0
+heading	Overloading of the subscript operator	manual.html#procedures-overloading-of-the-subscript-operator	  Overloading of the subscript operator		0
+heading	Methods	manual.html#methods	 Methods		0
+idx	base	manual.html#base_1	Methods		0
+heading	Multi-methods	manual.html#methods-multiminusmethods	  Multi-methods		0
+heading	Inhibit dynamic method resolution via procCall	manual.html#methods-inhibit-dynamic-method-resolution-via-proccall	  Inhibit dynamic method resolution via procCall		0
+idx	system.procCall	manual.html#systemdotproccall_1	Inhibit dynamic method resolution via procCall		0
+idx	super	manual.html#super_1	Inhibit dynamic method resolution via procCall		0
+heading	Iterators and the for statement	manual.html#iterators-and-the-for-statement	 Iterators and the for statement		0
+idx	for	manual.html#for_1	Iterators and the for statement		0
+idx	iterator	manual.html#iterator_1	Iterators and the for statement		0
+idx	implicit block	manual.html#implicit-block_1	Iterators and the for statement		0
+heading	Implicit items/pairs invocations	manual.html#iterators-and-the-for-statement-implicit-itemsslashpairs-invocations	  Implicit items/pairs invocations		0
+heading	First-class iterators	manual.html#iterators-and-the-for-statement-firstminusclass-iterators	  First-class iterators		0
+idx	inline iterator	manual.html#inline-iterator_1	First-class iterators		0
+idx	closure iterator	manual.html#closure-iterator_1	First-class iterators		0
+idx	collaborative tasking	manual.html#collaborative-tasking_1	First-class iterators		0
+heading	Converters	manual.html#converters	 Converters		0
+heading	Type sections	manual.html#type-sections	 Type sections		0
+heading	Exception handling	manual.html#exception-handling	 Exception handling		0
+heading	Try statement	manual.html#exception-handling-try-statement	  Try statement		0
+idx	exception handlers	manual.html#exception-handlers_1	Try statement		0
+idx	finally	manual.html#finally_1	Try statement		0
+heading	Try expression	manual.html#exception-handling-try-expression	  Try expression		0
+heading	Except clauses	manual.html#exception-handling-except-clauses	  Except clauses		0
+heading	Custom exceptions	manual.html#exception-handling-custom-exceptions	  Custom exceptions		0
+heading	Defer statement	manual.html#exception-handling-defer-statement	  Defer statement		0
+heading	Raise statement	manual.html#exception-handling-raise-statement	  Raise statement		0
+idx	re-raised	manual.html#reminusraised_1	Raise statement		0
+idx	ReraiseDefect	manual.html#reraisedefect_1	Raise statement		0
+heading	Exception hierarchy	manual.html#exception-handling-exception-hierarchy	  Exception hierarchy		0
+heading	Imported exceptions	manual.html#exception-handling-imported-exceptions	  Imported exceptions		0
+heading	Effect system	manual.html#effect-system	 Effect system		0
+heading	Exception tracking	manual.html#effect-system-exception-tracking	  Exception tracking		0
+idx	raises	manual.html#raises_1	Exception tracking		0
+heading	EffectsOf annotation	manual.html#effect-system-effectsof-annotation	  EffectsOf annotation		0
+heading	Tag tracking	manual.html#effect-system-tag-tracking	  Tag tracking		0
+idx	effect system	manual.html#effect-system_1	Tag tracking		0
+heading	Side effects	manual.html#effect-system-side-effects	  Side effects		0
+heading	GC safety effect	manual.html#effect-system-gc-safety-effect	  GC safety effect		0
+idx	GC safe	manual.html#gc-safe_1	GC safety effect		0
+idx	gcsafe	manual.html#gcsafe_1	GC safety effect		0
+heading	Effects pragma	manual.html#effect-system-effects-pragma	  Effects pragma		0
+heading	Generics	manual.html#generics	 Generics		0
+idx	type parameters	manual.html#type-parameters_1	Generics		0
+idx	generic type parameter	manual.html#generic-type-parameter_1	Generics		0
+idx	type variable	manual.html#type-variable_1	Generics		0
+heading	Generic Procs	manual.html#generics-generic-procs	  Generic Procs		0
+heading	Is operator	manual.html#generics-is-operator	  Is operator		0
+heading	Type classes	manual.html#generics-type-classes	  Type classes		0
+idx	type constraints	manual.html#type-constraints_1	Type classes		0
+heading	Implicit generics	manual.html#generics-implicit-generics	  Implicit generics		0
+idx	implicitly generic	manual.html#implicitly-generic_1	Implicit generics		0
+idx	bind once	manual.html#bind-once_1	Implicit generics		0
+idx	bind many	manual.html#bind-many_1	Implicit generics		0
+heading	Generic inference restrictions	manual.html#generics-generic-inference-restrictions	  Generic inference restrictions		0
+heading	Symbol lookup in generics	manual.html#generics-symbol-lookup-in-generics	  Symbol lookup in generics		0
+heading	Open and Closed symbols	manual.html#symbol-lookup-in-generics-open-and-closed-symbols	   Open and Closed symbols		0
+heading	Mixin statement	manual.html#generics-mixin-statement	  Mixin statement		0
+idx	mixin	manual.html#mixin_1	Mixin statement		0
+heading	Bind statement	manual.html#generics-bind-statement	  Bind statement		0
+heading	Delegating bind statements	manual.html#generics-delegating-bind-statements	  Delegating bind statements		0
+idx	forward	manual.html#forward_2	Delegating bind statements		0
+heading	Templates	manual.html#templates	 Templates		0
+heading	Typed vs untyped parameters	manual.html#templates-typed-vs-untyped-parameters	  Typed vs untyped parameters		0
+idx	immediate	manual.html#immediate_1	Typed vs untyped parameters		0
+heading	Passing a code block to a template	manual.html#templates-passing-a-code-block-to-a-template	  Passing a code block to a template		0
+heading	Varargs of untyped	manual.html#templates-varargs-of-untyped	  Varargs of untyped		0
+heading	Symbol binding in templates	manual.html#templates-symbol-binding-in-templates	  Symbol binding in templates		0
+idx	hygienic	manual.html#hygienic_1	Symbol binding in templates		0
+heading	Identifier construction	manual.html#templates-identifier-construction	  Identifier construction		0
+heading	Lookup rules for template parameters	manual.html#templates-lookup-rules-for-template-parameters	  Lookup rules for template parameters		0
+heading	Hygiene in templates	manual.html#templates-hygiene-in-templates	  Hygiene in templates		0
+idx	hygienic	manual.html#hygienic_2	Hygiene in templates		0
+idx	inject	manual.html#inject_1	Hygiene in templates		0
+idx	gensym	manual.html#gensym_1	Hygiene in templates		0
+idx	dirty	manual.html#dirty_1	Hygiene in templates		0
+heading	Limitations of the method call syntax	manual.html#templates-limitations-of-the-method-call-syntax	  Limitations of the method call syntax		0
+heading	Macros	manual.html#macros	 Macros		0
+idx	domain-specific languages	manual.html#domainminusspecific-languages_1	Macros		0
+heading	Debug example	manual.html#macros-debug-example	  Debug example		0
+heading	bindSym	manual.html#macros-bindsym	  bindSym		0
+idx	symbols	manual.html#symbols_1	bindSym		0
+heading	Post-statement blocks	manual.html#macros-postminusstatement-blocks	  Post-statement blocks		0
+heading	For loop macro	manual.html#macros-for-loop-macro	  For loop macro		0
+heading	Case statement macros	manual.html#macros-case-statement-macros	  Case statement macros		0
+heading	Special Types	manual.html#special-types	 Special Types		0
+heading	static[T]	manual.html#special-types-static-t	  static[T]		0
+heading	typedesc[T]	manual.html#special-types-typedesc-t	  typedesc[T]		0
+heading	typeof operator	manual.html#special-types-typeof-operator	  typeof operator		0
+idx	typeof	manual.html#typeof_1	typeof operator		0
+heading	Modules	manual.html#modules	 Modules		0
+idx	namespace	manual.html#namespace_1	Modules		0
+idx	information hiding	manual.html#information-hiding_1	Modules		0
+idx	separate compilation	manual.html#separate-compilation_1	Modules		0
+idx	import	manual.html#import_1	Modules		0
+idx	Recursive module dependencies	manual.html#recursive-module-dependencies_1	Modules		0
+heading	Import statement	manual.html#modules-import-statement	  Import statement		0
+heading	Include statement	manual.html#modules-include-statement	  Include statement		0
+heading	Module names in imports	manual.html#modules-module-names-in-imports	  Module names in imports		0
+heading	Collective imports from a directory	manual.html#modules-collective-imports-from-a-directory	  Collective imports from a directory		0
+heading	Pseudo import/include paths	manual.html#modules-pseudo-importslashinclude-paths	  Pseudo import/include paths		0
+heading	From import statement	manual.html#modules-from-import-statement	  From import statement		0
+heading	Export statement	manual.html#modules-export-statement	  Export statement		0
+heading	Scope rules	manual.html#modules-scope-rules	  Scope rules		0
+heading	Block scope	manual.html#scope-rules-block-scope	   Block scope		0
+heading	Tuple or object scope	manual.html#scope-rules-tuple-or-object-scope	   Tuple or object scope		0
+heading	Module scope	manual.html#scope-rules-module-scope	   Module scope		0
+idx	system	manual.html#system_1	Module scope		0
+heading	Packages	manual.html#modules-packages	  Packages		0
+heading	Compiler Messages	manual.html#compiler-messages	 Compiler Messages		0
+idx	hint	manual.html#hint_1	Compiler Messages		0
+idx	warning	manual.html#warning_1	Compiler Messages		0
+idx	error	manual.html#error_1	Compiler Messages		0
+heading	Pragmas	manual.html#pragmas	 Pragmas		0
+heading	deprecated pragma	manual.html#pragmas-deprecated-pragma	  deprecated pragma		0
+heading	compileTime pragma	manual.html#pragmas-compiletime-pragma	  compileTime pragma		0
+heading	noreturn pragma	manual.html#pragmas-noreturn-pragma	  noreturn pragma		0
+heading	acyclic pragma	manual.html#pragmas-acyclic-pragma	  acyclic pragma		0
+heading	final pragma	manual.html#pragmas-final-pragma	  final pragma		0
+heading	shallow pragma	manual.html#pragmas-shallow-pragma	  shallow pragma		0
+heading	pure pragma	manual.html#pragmas-pure-pragma	  pure pragma		0
+heading	asmNoStackFrame pragma	manual.html#pragmas-asmnostackframe-pragma	  asmNoStackFrame pragma		0
+heading	error pragma	manual.html#pragmas-error-pragma	  error pragma		0
+heading	fatal pragma	manual.html#pragmas-fatal-pragma	  fatal pragma		0
+heading	warning pragma	manual.html#pragmas-warning-pragma	  warning pragma		0
+heading	hint pragma	manual.html#pragmas-hint-pragma	  hint pragma		0
+heading	line pragma	manual.html#pragmas-line-pragma	  line pragma		0
+heading	linearScanEnd pragma	manual.html#pragmas-linearscanend-pragma	  linearScanEnd pragma		0
+idx	case	manual.html#case_1	linearScanEnd pragma		0
+heading	computedGoto pragma	manual.html#pragmas-computedgoto-pragma	  computedGoto pragma		0
+idx	case	manual.html#case_2	computedGoto pragma		0
+heading	immediate pragma	manual.html#pragmas-immediate-pragma	  immediate pragma		0
+heading	redefine pragma	manual.html#pragmas-redefine-pragma	  redefine pragma		0
+heading	compilation option pragmas	manual.html#pragmas-compilation-option-pragmas	  compilation option pragmas		0
+heading	push and pop pragmas	manual.html#pragmas-push-and-pop-pragmas	  push and pop pragmas		0
+idx	push/pop	manual.html#pushslashpop_1	push and pop pragmas		0
+idx	push/pop	manual.html#pushslashpop_2	push and pop pragmas		0
+heading	register pragma	manual.html#pragmas-register-pragma	  register pragma		0
+heading	global pragma	manual.html#pragmas-global-pragma	  global pragma		0
+heading	Disabling certain messages	manual.html#pragmas-disabling-certain-messages	  Disabling certain messages		0
+heading	used pragma	manual.html#pragmas-used-pragma	  used pragma		0
+heading	experimental pragma	manual.html#pragmas-experimental-pragma	  experimental pragma		0
+heading	Implementation Specific Pragmas	manual.html#implementation-specific-pragmas	 Implementation Specific Pragmas		0
+heading	Bitsize pragma	manual.html#implementation-specific-pragmas-bitsize-pragma	  Bitsize pragma		0
+heading	size pragma	manual.html#implementation-specific-pragmas-size-pragma	  size pragma		0
+heading	Align pragma	manual.html#implementation-specific-pragmas-align-pragma	  Align pragma		0
+idx	align	manual.html#align_1	Align pragma		0
+heading	Noalias pragma	manual.html#implementation-specific-pragmas-noalias-pragma	  Noalias pragma		0
+heading	Volatile pragma	manual.html#implementation-specific-pragmas-volatile-pragma	  Volatile pragma		0
+heading	nodecl pragma	manual.html#implementation-specific-pragmas-nodecl-pragma	  nodecl pragma		0
+heading	Header pragma	manual.html#implementation-specific-pragmas-header-pragma	  Header pragma		0
+heading	IncompleteStruct pragma	manual.html#implementation-specific-pragmas-incompletestruct-pragma	  IncompleteStruct pragma		0
+heading	Compile pragma	manual.html#implementation-specific-pragmas-compile-pragma	  Compile pragma		0
+heading	Link pragma	manual.html#implementation-specific-pragmas-link-pragma	  Link pragma		0
+heading	passc pragma	manual.html#implementation-specific-pragmas-passc-pragma	  passc pragma		0
+heading	localPassC pragma	manual.html#implementation-specific-pragmas-localpassc-pragma	  localPassC pragma		0
+heading	passl pragma	manual.html#implementation-specific-pragmas-passl-pragma	  passl pragma		0
+heading	Emit pragma	manual.html#implementation-specific-pragmas-emit-pragma	  Emit pragma		0
+idx	C++	manual.html#cplusplus_1	Emit pragma		0
+idx	Objective C	manual.html#objective-c_1	Emit pragma		0
+heading	ImportCpp pragma	manual.html#implementation-specific-pragmas-importcpp-pragma	  ImportCpp pragma		0
+idx	C++	manual.html#cplusplus_2	ImportCpp pragma		0
+heading	Namespaces	manual.html#importcpp-pragma-namespaces	   Namespaces		0
+heading	Importcpp for enums	manual.html#importcpp-pragma-importcpp-for-enums	   Importcpp for enums		0
+heading	Importcpp for procs	manual.html#importcpp-pragma-importcpp-for-procs	   Importcpp for procs		0
+heading	Wrapping constructors	manual.html#importcpp-pragma-wrapping-constructors	   Wrapping constructors		0
+idx	constructor	manual.html#constructor_1	Wrapping constructors		0
+heading	Wrapping destructors	manual.html#importcpp-pragma-wrapping-destructors	   Wrapping destructors		0
+heading	Importcpp for objects	manual.html#importcpp-pragma-importcpp-for-objects	   Importcpp for objects		0
+heading	ImportJs pragma	manual.html#implementation-specific-pragmas-importjs-pragma	  ImportJs pragma		0
+heading	ImportObjC pragma	manual.html#implementation-specific-pragmas-importobjc-pragma	  ImportObjC pragma		0
+idx	Objective C	manual.html#objective-c_2	ImportObjC pragma		0
+heading	CodegenDecl pragma	manual.html#implementation-specific-pragmas-codegendecl-pragma	  CodegenDecl pragma		0
+heading	nimcppNonPod pragma	manual.html#implementation-specific-pragmas-nimcppnonpod-pragma	  <tt class="docutils literal"><span class="pre"><span class="Identifier">cppNonPod</span></span></tt> pragma		0
+heading	compile-time define pragmas	manual.html#implementation-specific-pragmas-compileminustime-define-pragmas	  compile-time define pragmas		0
+idx	intdefine	manual.html#intdefine_1	compile-time define pragmas		0
+idx	strdefine	manual.html#strdefine_1	compile-time define pragmas		0
+idx	booldefine	manual.html#booldefine_1	compile-time define pragmas		0
+heading	User-defined pragmas	manual.html#userminusdefined-pragmas	 User-defined pragmas		0
+heading	pragma pragma	manual.html#userminusdefined-pragmas-pragma-pragma	  pragma pragma		0
+heading	Custom annotations	manual.html#userminusdefined-pragmas-custom-annotations	  Custom annotations		0
+heading	Macro pragmas	manual.html#userminusdefined-pragmas-macro-pragmas	  Macro pragmas		0
+heading	Foreign function interface	manual.html#foreign-function-interface	 Foreign function interface		0
+idx	FFI	manual.html#ffi_1	Foreign function interface		0
+heading	Importc pragma	manual.html#foreign-function-interface-importc-pragma	  Importc pragma		0
+heading	Exportc pragma	manual.html#foreign-function-interface-exportc-pragma	  Exportc pragma		0
+heading	Exportcpp pragma	manual.html#foreign-function-interface-exportcpp-pragma	  Exportcpp pragma		0
+heading	Extern pragma	manual.html#foreign-function-interface-extern-pragma	  Extern pragma		0
+heading	Bycopy pragma	manual.html#foreign-function-interface-bycopy-pragma	  Bycopy pragma		0
+heading	Byref pragma	manual.html#foreign-function-interface-byref-pragma	  Byref pragma		0
+heading	Varargs pragma	manual.html#foreign-function-interface-varargs-pragma	  Varargs pragma		0
+heading	Union pragma	manual.html#foreign-function-interface-union-pragma	  Union pragma		0
+heading	Packed pragma	manual.html#foreign-function-interface-packed-pragma	  Packed pragma		0
+heading	Dynlib pragma for import	manual.html#foreign-function-interface-dynlib-pragma-for-import	  Dynlib pragma for import		0
+heading	Dynlib pragma for export	manual.html#foreign-function-interface-dynlib-pragma-for-export	  Dynlib pragma for export		0
+heading	Threads	manual.html#threads	 Threads		0
+heading	Thread pragma	manual.html#threads-thread-pragma	  Thread pragma		0
+idx	no heap sharing restriction	manual.html#no-heap-sharing-restriction_1	Thread pragma		0
+heading	Threadvar pragma	manual.html#threads-threadvar-pragma	  Threadvar pragma		0
+idx	thread-local	manual.html#threadminuslocal_1	Threadvar pragma		0
+heading	Threads and exceptions	manual.html#threads-threads-and-exceptions	  Threads and exceptions		0
+heading	Guards and locks	manual.html#guards-and-locks	 Guards and locks		0
+idx	guard	manual.html#guard_1	Guards and locks		0
+idx	locks	manual.html#locks_1	Guards and locks		0
+heading	Guards and locks sections	manual.html#guards-and-locks-guards-and-locks-sections	  Guards and locks sections		0
+heading	Protecting global variables	manual.html#guards-and-locks-sections-protecting-global-variables	   Protecting global variables		0
+heading	Protecting general locations	manual.html#guards-and-locks-sections-protecting-general-locations	   Protecting general locations		0
+idx	path analysis	manual.html#path-analysis_1	Protecting general locations		0
+heading	Strict definitions and nimout parameters	manual.html#strict-definitions-and-nimout-parameters	 Strict definitions and <tt class="docutils literal"><span class="pre"><span class="Keyword">out</span></span></tt> parameters		0
+heading	nimout parameters	manual.html#strict-definitions-and-nimout-parameters-nimout-parameters	  <tt class="docutils literal"><span class="pre"><span class="Keyword">out</span></span></tt> parameters		0
+heading	Out parameters and exception handling	manual.html#strict-definitions-and-nimout-parameters-out-parameters-and-exception-handling	  Out parameters and exception handling		0
+heading	Out parameters and inheritance	manual.html#strict-definitions-and-nimout-parameters-out-parameters-and-inheritance	  Out parameters and inheritance		0

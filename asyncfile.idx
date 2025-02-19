@@ -1,0 +1,17 @@
+nimTitle	asyncfile	asyncfile.html	module std/asyncfile		0
+nim	AsyncFile	asyncfile.html#AsyncFile	type AsyncFile		41
+nim	getFileSize	asyncfile.html#getFileSize,AsyncFile	proc getFileSize(f: AsyncFile): int64		78
+nim	newAsyncFile	asyncfile.html#newAsyncFile,AsyncFD	proc newAsyncFile(fd: AsyncFD): AsyncFile		92
+nim	openAsync	asyncfile.html#openAsync,string	proc openAsync(filename: string; mode = fmRead): AsyncFile		98
+nim	readBuffer	asyncfile.html#readBuffer,AsyncFile,pointer,int	proc readBuffer(f: AsyncFile; buf: pointer; size: int): Future[int]		127
+nim	read	asyncfile.html#read,AsyncFile,int	proc read(f: AsyncFile; size: int): Future[string]		204
+nim	readLine	asyncfile.html#readLine,AsyncFile	proc readLine(f: AsyncFile): Future[string]		299
+nim	getFilePos	asyncfile.html#getFilePos,AsyncFile	proc getFilePos(f: AsyncFile): int64		314
+nim	setFilePos	asyncfile.html#setFilePos,AsyncFile,int64	proc setFilePos(f: AsyncFile; pos: int64)		320
+nim	readAll	asyncfile.html#readAll,AsyncFile	proc readAll(f: AsyncFile): Future[string]		329
+nim	writeBuffer	asyncfile.html#writeBuffer,AsyncFile,pointer,int	proc writeBuffer(f: AsyncFile; buf: pointer; size: int): Future[void]		338
+nim	write	asyncfile.html#write,AsyncFile,string	proc write(f: AsyncFile; data: string): Future[void]		407
+nim	setFileSize	asyncfile.html#setFileSize,AsyncFile,int64	proc setFileSize(f: AsyncFile; length: int64)		488
+nim	close	asyncfile.html#close,AsyncFile	proc close(f: AsyncFile)		505
+nim	writeFromStream	asyncfile.html#writeFromStream,AsyncFile,FutureStream[string]	proc writeFromStream(f: AsyncFile; fs: FutureStream[string]): owned(Future[void])		515
+nim	readToStream	asyncfile.html#readToStream,AsyncFile,FutureStream[string]	proc readToStream(f: AsyncFile; fs: FutureStream[string]): owned(Future[void])		529
