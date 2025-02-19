@@ -1,0 +1,339 @@
+# bash completion for nimgrep                          -*- shell-script -*-
+
+__is_short_or_long()
+{
+    local actual short long
+    actual="$1"
+    short="$2"
+    long="$3"
+    [[ ! -z $short && $actual == $short ]] && return 0
+    [[ ! -z $long && $actual == $long ]] && return 0
+    return 1
+}
+
+__ask_for_subcmd_or_subopts()
+{
+    local args cmd subcmd words sub_words word_first word_last word_lastlast
+    local len ilast ilastlast i ele sub_len n_nopts
+    
+    args=("$@")
+    ask_for_what="${args[0]}"
+    cmd="${args[1]}"
+    subcmd="${args[2]}"
+    ilast="${args[3]}"
+    words=("${args[@]:4}")
+    len=${#words[@]}
+    ilastlast=$((ilast - 1))
+    sub_words=("${words[@]:0:ilast}")
+    sub_len=${#sub_words[@]}
+    word_first=${words[0]}
+    word_last=${words[ilast]}
+    word_lastlast=${words[ilastlast]}
+    n_nopts=0
+
+    # printf "\n[DBUG] word_first:${word_first}|ilast:${ilast}|words(${len}):${words[*]}|sub_words(${sub_len}):${sub_words[*]}\n"
+    
+    if [[ $word_first != $cmd ]]
+    then
+	return 1
+    fi
+
+    i=0
+    while [[ $i -lt $len ]]
+    do
+	ele=${words[i]}
+	if [[ ! $ele =~ ^- ]]
+	then
+	    if [[ $ele == $cmd || $ele == $subcmd ]]
+	    then
+		((n_nopts+=1))
+	    elif [[ $i -eq $ilast && $ele =~ ^[a-zA-Z] ]]
+	    then
+	        ((i=i))
+	    elif [[ -z $ele ]]
+	    then
+	        ((i=i))
+	    elif [[ $ele =~ ^: ]]
+	    then
+		((i+=1))
+	    else
+		return 1
+	    fi
+	fi
+	((i+=1))
+    done
+
+    case $ask_for_what in
+	1)
+	    if [[ n_nopts -eq 1 ]]
+	    then
+		if [[ -z $word_last || $word_last =~ ^[a-zA-Z] ]] && [[ $word_lastlast != : ]]
+		then
+		    return 0
+		fi
+	    fi	    
+	    ;;
+	2) 
+	    if [[ n_nopts -eq 2 ]]
+	    then
+		if [[ -z $word_last ]] || [[ $word_last =~ ^[-:] ]]
+		then
+		    return 0
+		fi
+	    fi  
+    esac
+    
+    return 1
+}
+
+__ask_for_subcmd()
+{
+    __ask_for_subcmd_or_subopts 1 "$@"
+}
+
+__ask_for_subcmd_opts()
+{
+    __ask_for_subcmd_or_subopts 2 "$@"
+}
+
+_nimgrep()
+{
+    local curr prev prevprev words
+    local i_curr n_words i_prev i_prevprev
+    
+    COMPREPLY=()
+    i_curr=$COMP_CWORD
+    n_words=$((i_curr+1))
+    i_prev=$((i_curr-1))
+    i_prevprev=$((i_curr-2))
+    curr="${COMP_WORDS[i_curr]}"
+    prev="${COMP_WORDS[i_prev]}"
+    prevprev="${COMP_WORDS[i_prevprev]}"
+    words=("${COMP_WORDS[@]:0:n_words}")
+
+    local subcmds opts candids
+
+    # printf "\n[DBUG] curr:$curr|prev:$prev|words(${#words[*]}):${words[*]}\n"
+
+    # Asking for a subcommand
+    if false && __ask_for_subcmd nimgrep nimgrep $i_curr "${words[@]}"
+    then
+        subcmds=""
+	return 0
+    fi
+
+    # Prioritize subcmd over opt
+    if false
+    then
+	return 124
+    elif false && __ask_for_subcmd_opts nimgrep compileToC $i_curr "${words[@]}"
+    then
+	opts=() \
+	    && candids=()	
+    else
+	opts=() \
+	    && candids=()
+	opts+=("-f" "--find" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--replace" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--confirm" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--filenames" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--peg" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--re" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-x" "--rex" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-w" "--word" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-i" "--ignoreCase" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-y" "--ignoreStyle" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-r" "--recursive" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--follow" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-s" "--sortTime" "asc desc") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--extensions" "EX") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notextensions" "EX") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--filename" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notfilename" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--dirname" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notdirname" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--dirpath" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notdirpath" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--inFile" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notinFile" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--bin" "on off only") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-t" "--text" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--inContext" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--notinContext" "PAT") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--nocolor" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--colorTheme" "THEME") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--color" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--count" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-c" "--context" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-a" "--afterContext" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-b" "--beforeContext" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-g" "--group" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-l" "--newLine" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--cols" "N auto") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--onlyAscii" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-j" "--threads" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--stdin" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--verbose" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-h" "--help" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-v" "--version" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+    fi
+    
+    local c_short c_long c_accvals
+    local len i idx0 idx1 idx2
+    
+    case $curr in
+	# Asking for accepted optvalues, e.g., `out:`
+	:)
+	    len=${#opts[@]}
+	    i=0
+	    
+	    while [[ $i -lt $len ]]
+	    do
+		idx0=$((i / 3 * 3))
+	        idx1=$((idx0 + 1))
+		idx2=$((idx1 + 1))
+		c_short=${opts[idx0]}
+		c_long=${opts[idx1]}
+		c_accvals=${opts[idx2]}
+		(false \
+		     || __is_short_or_long $prev ${c_short} ${c_long} \
+		     || false) \
+		    && COMPREPLY=( $(compgen -W "${c_accvals}" --) ) \
+		    && return 0
+		((i+=3))
+	    done
+
+	    return 124
+	    ;;
+	
+	*)
+	    # When in a incomplete opt value, e.g., `--check:of`
+	    if [[ $prev == : ]]
+	    then
+		len=${#opts[@]}
+		i=0
+		while [[ $i -lt $len ]]
+		do
+		    idx0=$((i / 3 * 3))
+		    idx1=$((idx0 + 1))
+		    idx2=$((idx1 + 1))
+		    c_short=${opts[idx0]}
+		    c_long=${opts[idx1]}
+		    c_accvals=${opts[idx2]}
+		    (false \
+			 || __is_short_or_long $prevprev ${c_short} ${c_long} \
+			 || false) \
+			&& COMPREPLY=( $(compgen -W "${c_accvals}" -- ${curr}) ) \
+			&& return 0
+		    ((i+=3))
+		done
+		return 124
+	    fi
+
+	    # When in a complete optname, might need optvalue, e.g., `--check`
+	    if [[ $curr =~ ^--?[:()a-zA-Z]+$ ]]
+	    then
+	        len=${#opts[@]}
+		i=0
+		while [[ $i -lt $len ]]
+		do
+		    idx0=$(((i / 3 * 3)))
+		    idx1=$((idx0 + 1))
+		    idx2=$((idx1 + 1))
+		    c_short=${opts[idx0]}
+		    c_long=${opts[idx1]}
+		    c_accvals=${opts[idx2]}
+		    
+		    if __is_short_or_long $curr ${c_short} ${c_long}
+		    then
+			if [[ ! -z $c_accvals ]]
+			then
+			    COMPREPLY=( $(compgen -W "${curr}:" -- ${curr}) ) \
+				&& compopt -o nospace \
+				&& return 0
+			else
+			    COMPREPLY=( $(compgen -W "${curr}" -- ${curr}) ) \
+				&& return 0		    
+			fi
+		    fi
+		    
+		    ((i+=3))
+		done # while
+		
+		if true
+		then		
+		    COMPREPLY=( $(compgen -W "${candids[*]}" -- "$curr") )
+		    compopt -o nospace
+		    return 0
+		fi
+		
+	    # When in an incomplete optname, e.g., `--chec`
+	    elif [[ $curr =~ ^--?[^:]* ]]
+	    then
+		if true
+		then		
+		    COMPREPLY=( $(compgen -W "${candids[*]}" -- "$curr") )
+		    compopt -o nospace
+		    return 0
+		fi		
+	    fi
+
+	    if true
+	    then
+		compopt -o filenames
+		COMPREPLY=( $(compgen -f -- "$curr") )
+		compopt -o nospace
+		return 0
+	    fi
+	    
+	    ;;
+    esac
+    return 0
+
+} &&
+    complete -F _nimgrep nimgrep
+
+# ex: filetype=sh
