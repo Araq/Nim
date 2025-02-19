@@ -741,7 +741,8 @@ block t1684:
 block t5632:
   type Option[T] = object
 
-  proc point[A](v: A, t: typedesc[Option[A]]): Option[A] =
+  # original issue test uses Option[A] instead
+  proc point[A](v: A, t: typedesc[Option]): Option[A] =
     discard
 
   discard point(1, Option)
