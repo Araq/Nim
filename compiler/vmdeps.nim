@@ -135,8 +135,6 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
     if inst:
       if allowRecursion:
         result = mapTypeToAstR(t.skipModifier, info)
-        # keep original type info for getType calls on the output node:
-        result.typ() = t
       else:
         result = newNodeX(nkBracketExpr)
         #result.add mapTypeToAst(t.last, info)
@@ -145,8 +143,6 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
           result.add mapTypeToAst(a, info)
     else:
       result = mapTypeToAstX(cache, t.skipModifier, info, idgen, inst, allowRecursion)
-      # keep original type info for getType calls on the output node:
-      result.typ() = t
   of tyGenericBody:
     if inst:
       result = mapTypeToAstR(t.typeBodyImpl, info)
@@ -161,7 +157,8 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       result = newNodeX(nkDistinctTy)
       result.add mapTypeToAst(t.skipModifier, info)
     else:
-      if allowRecursion or t.sym == nil:
+      if allowRecursion or t.sym == nil or
+          (tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody):
         result = mapTypeToBracket("distinct", mDistinct, t, info)
       else:
         result = atomicType(t.sym)
@@ -185,7 +182,8 @@ proc mapTypeToAstX(cache: IdentCache; t: PType; info: TLineInfo;
       else:
         result.add newNodeI(nkEmpty, info)
     else:
-      if allowRecursion or t.sym == nil:
+      if allowRecursion or t.sym == nil or
+          (tfFromGeneric in t.flags and t.sym.typ.kind == tyGenericBody):
         result = newNodeIT(nkObjectTy, if t.n.isNil: info else: t.n.info, t)
         result.add newNodeI(nkEmpty, info)
         if t.baseClass == nil:
