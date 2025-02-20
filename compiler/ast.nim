@@ -1904,7 +1904,7 @@ proc skipGenericOwner*(s: PSym): PSym =
 
 proc originatingModule*(s: PSym): PSym =
   result = s
-  while result.kind != skModule: result = result.owner
+  while result != nil and result.kind != skModule: result = result.owner
 
 proc isRoutine*(s: PSym): bool {.inline.} =
   result = s.kind in skProcKinds
