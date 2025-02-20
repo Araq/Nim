@@ -251,6 +251,18 @@ sub/mmain.idx""", context
     doAssert doSomething["col"].getInt == 0
     doAssert doSomething["code"].getStr == "proc doSomething(x, y: int): int {.raises: [], tags: [], forbids: [].}"
 
+  block: # nim jsondoc --raw switch
+    let file = testsDir / "misc/mrawjson.nim"
+    let output = "nimcache_tjsondoc.json"
+    defer: removeFile(output)
+    let (msg, exitCode) = execCmdEx(fmt"{nim} jsondoc --raw  -o:{output} {file}")
+    doAssert exitCode == 0, msg
+
+    let data = parseFile(output)
+    doAssert data["moduleDescription"].getStr == "Module description. See [someProc]\nanother line"
+    let someProc = data["entries"][0]
+    doAssert someProc["description"].getStr == "Code should be used like `someProc(1, 2)`"
+
   block: # further issues with `--backend`
     let file = testsDir / "misc/mbackend.nim"
     var cmd = fmt"{nim} doc -b:cpp --hints:off --nimcache:{nimcache} {file}"
