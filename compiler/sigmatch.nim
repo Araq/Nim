@@ -97,7 +97,6 @@ type
 
   TTypeRelFlags* = set[TTypeRelFlag]
 
-
 const
   isNilConversion = isConvertible # maybe 'isIntConv' fits better?
   maxInheritancePenalty = high(int) div 2
@@ -1385,12 +1384,16 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       result = typeRel(c, f.base, aOrig.base, flags)
     else:
       result = typeRel(c, f.base, aOrig, flags + {trNoCovariance})
+      if result > isVarConvertible:
+        result = isVarConvertible
     subtypeCheck()
   of tyLent:
     if aOrig.kind == f.kind:
       result = typeRel(c, f.base, aOrig.base, flags)
     else:
       result = typeRel(c, f.base, aOrig, flags + {trNoCovariance})
+      if result > isVarConvertible:
+        result = isVarConvertible
     subtypeCheck()
   of tyArray:
     a = reduceToBase(a)
@@ -2353,7 +2356,7 @@ proc incMatches(m: var TCandidate; r: TTypeRelation; convMatch = 1) =
   of isFromIntLit: inc(m.intConvMatches, 256)
   of isInferredConvertible:
     inc(m.convMatches)
-  of isEqual: inc(m.exactMatches)
+  of isEqual, isVarConvertible: inc(m.exactMatches)
   of isNone: discard
 
 template matchesVoidProc(t: PType): bool =
@@ -2530,7 +2533,7 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
     # ``isIntConv`` and ``isIntLit`` here:
     inc(m.intConvMatches, 256)
     result = implicitConv(nkHiddenStdConv, f, arg, m, c)
-  of isEqual:
+  of isEqual, isVarConvertible:
     inc(m.exactMatches)
     result = arg
     let ff = skipTypes(f, abstractVar-{tyTypeDesc})

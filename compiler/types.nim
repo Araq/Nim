@@ -39,6 +39,7 @@ type
     isSubtype,
     isSubrange,              # subrange of the wanted type; no type conversion
                              # but apart from that counts as ``isSubtype``
+    isVarConvertible,
     isBothMetaConvertible    # generic proc parameter was matched against
                              # generic type, e.g., map(mySeq, x=>x+1),
                              # maybe recoverable by rerun if the parameter is
