@@ -1,5 +1,5 @@
 discard """
-  matrix: "-u:nimPreviewNonVarDestructor;"
+  matrix: "-d:nimLegacyVarDestructor;"
 """
 type DistinctSeq* = distinct seq[int]
 

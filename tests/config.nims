@@ -40,6 +40,7 @@ switch("define", "nimPreviewNonVarDestructor")
 switch("define", "nimPreviewCheckedClose")
 switch("define", "nimPreviewAsmSemSymbol")
 
+
 switch("warningAserror", "UnnamedBreak")
 when not defined(testsConciseTypeMismatch):
   switch("legacy", "verboseTypeMismatch")
