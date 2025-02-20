@@ -471,19 +471,20 @@ proc foldArrayAccess(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNo
       if result.kind == nkExprColonExpr: result = result[1]
     else:
       result = nil
-      localError(g.config, n.info, formatErrorIndexBound(idx, x.len-1) & $n)
+      #localError(g.config, n.info, formatErrorIndexBound(idx, x.len-1) & $n)
   of nkBracket:
     idx -= toInt64(firstOrd(g.config, x.typ))
     if idx >= 0 and idx < x.len: result = x[int(idx)]
     else:
       result = nil
-      localError(g.config, n.info, formatErrorIndexBound(idx, x.len-1) & $n)
+      #localError(g.config, n.info, formatErrorIndexBound(idx, x.len-1) & $n)
   of nkStrLit..nkTripleStrLit:
     result = newNodeIT(nkCharLit, x.info, n.typ)
     if idx >= 0 and idx < x.strVal.len:
       result.intVal = ord(x.strVal[int(idx)])
     else:
-      localError(g.config, n.info, formatErrorIndexBound(idx, x.strVal.len-1) & $n)
+      result = nil
+      #localError(g.config, n.info, formatErrorIndexBound(idx, x.strVal.len-1) & $n)
   else: result = nil
 
 proc foldFieldAccess(m: PSym, n: PNode; idgen: IdGenerator; g: ModuleGraph): PNode =

@@ -114,3 +114,10 @@ block named: # works
   if true:
     break named
   doAssert false, "not reached"
+
+block:
+  iterator p(a: openArray[char]): int =
+    if a.len != 0:
+      if a[0] != '/':
+        discard
+  for t in p(""): discard
