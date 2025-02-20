@@ -332,7 +332,7 @@ block:
   macro main =
     let x = 12
     result = quote do:
-      `hello`(12, type(x))
+      `hello`(12, type(`x`))
 
   main()
 
