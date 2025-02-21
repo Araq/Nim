@@ -1501,7 +1501,10 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
       addParamOrResult(c, arg, kind)
       styleCheckDef(c, a[j].info, arg)
       onDef(a[j].info, arg)
-      a[j] = newSymNode(arg)
+      if a[j].kind == nkPragmaExpr:
+        a[j][0] = newSymNode(arg)
+      else:
+        a[j] = newSymNode(arg)
 
   var r: PType = nil
   if n[0].kind != nkEmpty:
