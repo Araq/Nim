@@ -18,4 +18,4 @@ func square[n: static int](A: Matrix[n, n]): Matrix[n, n] =
   A * A
 
 let A: Matrix[2, 2] = [-1, 1, 0, -1]
-echo(square(A))
+doAssert square(A) == [1.0, -2.0, 0.0, 1.0]
