@@ -2946,7 +2946,7 @@ proc semTupleFieldsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType
     result.add n[i]
   let oldType = n.typ
   result.typ() = typ
-  if oldType != nil:
+  if oldType != nil and not hasEmpty(oldType): # see hasEmpty comment above
     # convert back to old type
     let conversion = indexTypesMatch(c, oldType, typ, result)
     # ignore matching error, the goal is just to keep the original type info
@@ -2977,7 +2977,7 @@ proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedT
     addSonSkipIntLit(typ, n[i].typ.skipTypes({tySink}), c.idgen)
   let oldType = n.typ
   result.typ() = typ
-  if oldType != nil:
+  if oldType != nil and not hasEmpty(oldType): # see hasEmpty comment above
     # convert back to old type
     let conversion = indexTypesMatch(c, oldType, typ, result)
     # ignore matching error, the goal is just to keep the original type info
