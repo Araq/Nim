@@ -2944,7 +2944,11 @@ proc semTupleFieldsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType
     typ.n.add newSymNode(f)
     n[i][0] = newSymNode(f)
     result.add n[i]
-  result.typ() = typ
+  if n.typ == nil:
+    # don't override old type in case info was erased in the VM
+    result.typ() = typ
+  else:
+    result.typ() = n.typ
 
 proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
   result = n                  # we don't modify n, but compute the type:
@@ -2965,7 +2969,9 @@ proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedT
       # `const foo = if true: (0, nil) else: (1, new(int))`
       n[i] = fitNode(c, expectedElemType, n[i], n[i].info)
     addSonSkipIntLit(typ, n[i].typ.skipTypes({tySink}), c.idgen)
-  result.typ() = typ
+  if n.typ == nil:
+    # don't override old type in case info was erased in the VM
+    result.typ() = typ
 
 include semobjconstr
 
