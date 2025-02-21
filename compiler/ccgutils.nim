@@ -11,7 +11,7 @@
 
 import
   ast, types, msgs, wordrecg,
-  platform, trees, options, cgendata, mangleutils
+  platform, trees, options, cgendata, mangleutils, renderer
 
 import std/[hashes, strutils, formatfloat]
 
@@ -120,14 +120,14 @@ proc makeUnique(m: BModule; s: PSym, name: string = ""): string =
   result.add "_u"
   result.add $s.itemId.item
 
-proc encodeSym*(m: BModule; s: PSym; makeUnique: bool = false): string =
+proc encodeSym*(m: BModule; s: PSym; makeUnique: bool = false; extra: string = ""): string =
   #Module::Type
-  var name = s.name.s
+  var name = s.name.s & extra
   if makeUnique:
     name = makeUnique(m, s, name)
   "N" & encodeName(s.skipGenericOwner.name.s) & encodeName(name) & "E"
 
-proc encodeType*(m: BModule; t: PType): string =
+proc encodeType*(m: BModule; t: PType; staticLists: var string): string =
   result = ""
   var kindName = ($t.kind)[2..^1]
   kindName[0] = toLower($kindName[0])[0]
@@ -138,10 +138,10 @@ proc encodeType*(m: BModule; t: PType): string =
     result = encodeName(t[0].sym.name.s)
     result.add "I"
     for i in 1..<t.len - 1:
-      result.add encodeType(m, t[i])
+      result.add encodeType(m, t[i], staticLists)
     result.add "E"
   of tySequence, tyOpenArray, tyArray, tyVarargs, tyTuple, tyProc, tySet, tyTypeDesc,
-    tyPtr, tyRef, tyVar, tyLent, tySink, tyStatic, tyUncheckedArray, tyOr, tyAnd, tyBuiltInTypeClass:
+    tyPtr, tyRef, tyVar, tyLent, tySink, tyUncheckedArray, tyOr, tyAnd, tyBuiltInTypeClass:
     result =
       case t.kind:
       of tySequence: encodeName("seq")
@@ -150,8 +150,13 @@ proc encodeType*(m: BModule; t: PType): string =
     for i in 0..<t.len:
       let s = t[i]
       if s.isNil: continue
-      result.add encodeType(m, s)
+      result.add encodeType(m, s, staticLists)
     result.add "E"
+  of tyStatic:
+    if t.n != nil:
+      staticLists.add "_s" & renderTree(t.n)
+    else:
+      raiseAssert "unreachable"
   of tyRange:
     var val = "range_"
     if t.n[0].typ.kind in {tyFloat..tyFloat128}:
@@ -164,7 +169,7 @@ proc encodeType*(m: BModule; t: PType): string =
   of tyString..tyUInt64, tyPointer, tyBool, tyChar, tyVoid, tyAnything, tyNil, tyEmpty:
     result = encodeName(kindName)
   of tyAlias, tyInferred, tyOwned:
-    result = encodeType(m, t.elementType)
+    result = encodeType(m, t.elementType, staticLists)
   else:
     assert false, "encodeType " & $t.kind
 

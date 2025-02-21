@@ -57,11 +57,15 @@ proc mangleField(m: BModule; name: PIdent): string =
 
 proc mangleProc(m: BModule; s: PSym; makeUnique: bool): string =
   result = "_Z"  # Common prefix in Itanium ABI
-  result.add encodeSym(m, s, makeUnique)
+  var params = ""
+  var staticLists = ""
   if s.typ.len > 1: #we dont care about the return param
     for i in 1..<s.typ.len:
       if s.typ[i].isNil: continue
-      result.add encodeType(m, s.typ[i])
+      params.add encodeType(m, s.typ[i], staticLists)
+
+  result.add encodeSym(m, s, makeUnique, staticLists)
+  result.add params
 
   if result in m.g.mangledPrcs:
     result = mangleProc(m, s, true)
