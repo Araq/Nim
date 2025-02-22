@@ -1,4 +1,4 @@
-import std/[tables, assertions]
+import std/[tables]
 import ast
 
 type
