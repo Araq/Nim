@@ -158,7 +158,7 @@ proc bundleC2nim(args: string) =
 proc bundleNimbleExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: NimbleStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/nimble.git",
-                commit = commit, allowBundled = true)
+                  commit = commit, allowBundled = true)
   updateSubmodules(distDir / "nimble", allowBundled = true)
   nimCompile("dist/nimble/src/nimble.nim",
              options = "-d:release --noNimblePath " & args)
@@ -169,9 +169,9 @@ proc bundleNimbleExe(latest: bool, args: string) =
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/atlas.git",
-                commit = commit, allowBundled = true)
+                  commit = commit, allowBundled = true)
   cloneDependency(distDir / "atlas" / distDir, "https://github.com/nim-lang/sat.git",
-              commit = SatStableCommit, allowBundled = true)
+                  commit = SatStableCommit, allowBundled = true)
   # installer.ini expects it under $nim/bin
   nimCompile("dist/atlas/src/atlas.nim",
              options = "-d:release --noNimblePath -d:nimAtlasBootstrap " & args)
