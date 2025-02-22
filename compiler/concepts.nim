@@ -86,7 +86,7 @@ type
     flags: set[MatchFlags]
     
   MatchKind = enum
-    mkIndeterminate, mkNoMatch, mkSubset, mkSame
+    mkNoMatch, mkSubset, mkSame
 
 const
   asymmetricConceptParamMods = {tyVar, tySink, tyLent, tyOwned, tyAlias, tyInferred} # param modifiers that to not have to match implementation -> concept
@@ -497,31 +497,33 @@ proc matchSyms(c: PContext, n: PNode; kinds: set[TSymKind]; m: var MatchCon): bo
 proc conceptMatchNode(c: PContext; n: PNode; m: var MatchCon): bool =
   ## Traverse the concept's AST ('n') and see if every declaration inside 'n'
   ## can be matched with the current scope.
-  result = false
-  for sn in travStmts(n):
-    result = case sn.kind
-      of nkProcDef, nkFuncDef:
-        # procs match any of: proc, template, macro, func, method, converter.
-        # The others are more specific.
-        # XXX: Enforce .noSideEffect for 'nkFuncDef'? But then what are the use cases...
-        const filter = {skProc, skTemplate, skMacro, skFunc, skMethod, skConverter}
-        matchSyms(c, sn, filter, m)
-      of nkTemplateDef:
-        matchSyms(c, sn, {skTemplate}, m)
-      of nkMacroDef:
-        matchSyms(c, sn, {skMacro}, m)
-      of nkConverterDef:
-        matchSyms(c, sn, {skConverter}, m)
-      of nkMethodDef:
-        matchSyms(c, sn, {skMethod}, m)
-      of nkIteratorDef:
-        matchSyms(c, sn, {skIterator}, m)
-      of nkCommentStmt:
-        true
-      else:
-        false # error was reported earlier.
-    if not result:
-      break
+  case n.kind
+  of nkStmtList, nkStmtListExpr:
+    for i in 0..<n.len:
+      if not conceptMatchNode(c, n[i], m):
+        return false
+    return true
+  of nkProcDef, nkFuncDef:
+    # procs match any of: proc, template, macro, func, method, converter.
+    # The others are more specific.
+    # XXX: Enforce .noSideEffect for 'nkFuncDef'? But then what are the use cases...
+    const filter = {skProc, skTemplate, skMacro, skFunc, skMethod, skConverter}
+    result = matchSyms(c, n, filter, m)
+  of nkTemplateDef:
+    result = matchSyms(c, n, {skTemplate}, m)
+  of nkMacroDef:
+    result = matchSyms(c, n, {skMacro}, m)
+  of nkConverterDef:
+    result = matchSyms(c, n, {skConverter}, m)
+  of nkMethodDef:
+    result = matchSyms(c, n, {skMethod}, m)
+  of nkIteratorDef:
+    result = matchSyms(c, n, {skIterator}, m)
+  of nkCommentStmt:
+    result = true
+  else:
+    # error was reported earlier.
+    result = false
 
 proc fixBindings(bindings: var LayeredIdTable; concpt: PType; invocation: PType; m: var MatchCon) =
   # invocation != nil means we have a non-atomic concept:

@@ -1139,6 +1139,24 @@ proc isCovariantPtr(c: var TCandidate, f, a: PType): bool =
   else:
     return false
 
+proc enterConceptMatch(c: var TCandidate; f,a: PType, flags: TTypeRelFlags): TTypeRelation =
+  var
+    conceptFlags: set[MatchFlags] = {}
+    container: PType = nil
+    concpt = f
+  if concpt.kind != tyConcept:
+    container = concpt
+    concpt = container.reduceToBase
+  if trDontBind in flags:
+    conceptFlags.incl mfDontBind
+  if trCheckGeneric in flags:
+    conceptFlags.incl mfCheckGeneric
+  let mres = concepts.conceptMatch(c.c, concpt, a, c.bindings, container, flags = conceptFlags)
+  if mres:
+    isGeneric
+  else:
+    isNone
+
 when false:
   proc maxNumericType(prev, candidate: PType): PType =
     let c = candidate.skipTypes({tyRange})
@@ -1645,13 +1663,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     let rootf = if skipBoth or depthf > deptha: f.skipGenericAlias else: f
     
     if f.isConcept:
-      var conceptFlags: set[MatchFlags] = {}
-      if trDontBind in flags:
-        conceptFlags.incl mfDontBind
-      if trCheckGeneric in flags:
-        conceptFlags.incl mfCheckGeneric
-      result = if concepts.conceptMatch(c.c, rootf.reduceToBase, roota, c.bindings, rootf, flags = conceptFlags): isGeneric
-               else: isNone
+      result = enterConceptMatch(c, rootf, roota, flags)
     elif a.kind == tyGenericInst:
       if roota.base == rootf.base:
         let nextFlags = flags + {trNoCovariance}
@@ -1752,13 +1764,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           if f[i].kind != tyTypeDesc: return
       result = isGeneric
     elif concpt.kind == tyConcept:
-      var conceptFlags: set[MatchFlags] = {}
-      if trDontBind in flags:
-        conceptFlags.incl mfDontBind
-      if trCheckGeneric in flags:
-        conceptFlags.incl mfCheckGeneric
-      result = if concepts.conceptMatch(c.c, concpt, x, c.bindings, f, flags = conceptFlags): isGeneric
-               else: isNone
+      result = enterConceptMatch(c, f, x, flags)
     else:
       let genericBody = f[0]
       var askip = skippedNone
@@ -1893,13 +1899,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         else:
           result = isNone
   of tyConcept:
-    var conceptFlags: set[MatchFlags] = {}
-    if trDontBind in flags:
-      conceptFlags.incl mfDontBind
-    if trCheckGeneric in flags:
-      conceptFlags.incl mfCheckGeneric
-    result = if concepts.conceptMatch(c.c, f, a, c.bindings, nil, flags = conceptFlags): isGeneric
-               else: isNone
+    result = enterConceptMatch(c, f, a, flags)
   of tyCompositeTypeClass:
     considerPreviousT:
       let roota = a.skipGenericAlias
