@@ -19,7 +19,7 @@ proc execRetry(cmd: string) =
   doAssert ok, cmd
 
 proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
-                      appendRepoName = true, allowBundled = false) =
+                      appendRepoName = true, allowBundled = false, offline = false) =
   let destDirBase = destDirBase.absolutePath
   let p = url.parseUri.path
   let name = p.splitFile.name
@@ -29,12 +29,16 @@ proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
   if not dirExists(destDir):
     # note: old code used `destDir / .git` but that wouldn't prevent git clone
     # from failing
-    execRetry fmt"git clone -q {url} {quotedDestDir}"
+    if offline:
+      quit "FAILURE: " & destdir & " does not exist"
+    else:
+      execRetry fmt"git clone -q {url} {quotedDestDir}"
   if isGitRepo(destDir):
     let oldDir = getCurrentDir()
     setCurrentDir(destDir)
     try:
-      execRetry "git fetch -q"
+      if not offline:
+        execRetry "git fetch -q"
       exec fmt"git checkout -q {commit}"
     finally:
       setCurrentDir(oldDir)
