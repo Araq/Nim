@@ -343,12 +343,6 @@ block: # unconstrained param sanity check
   spring(C1Impl())
 
 block: # exact nested concept binding
-  #[
-    prove ArrayImpl is serializable (spring)
-      prove Buffer is Buffer (w)
-      prove ArrayImpl is ArrayLike (w)
-        prove ArrayImpl is ArrayImpl (len)
-  ]#
   type
     Sizeable = concept
       proc size(s: Self): int

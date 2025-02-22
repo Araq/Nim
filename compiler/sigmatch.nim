@@ -311,6 +311,9 @@ proc checkGeneric(a, b: TCandidate): int =
   result = winner
 
 proc sumGeneric(t: PType): int =
+  # count the "genericness" so that Foo[Foo[T]] has the value 3
+  # and Foo[T] has the value 2 so that we know Foo[Foo[T]] is more
+  # specific than Foo[T].
   result = 0
   var t = t
   while true:

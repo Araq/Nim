@@ -2195,8 +2195,7 @@ proc semTypeNode(c: PContext, n: PNode, prev: PType): PType =
       of "sink": result = semAnyRef(c, n, tySink, prev)
       of "owned": result = semAnyRef(c, n, tyOwned, prev)
       else: result = semGeneric(c, n, s, prev)
-    else:
-      result = semGeneric(c, n, s, prev)
+    else: result = semGeneric(c, n, s, prev)
   of nkDotExpr:
     let typeExpr = semExpr(c, n)
     if typeExpr.typ.isNil:
