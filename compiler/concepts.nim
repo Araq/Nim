@@ -162,14 +162,6 @@ proc acceptsAllTypes(t: PType): bool=
     if not(t.hasElementType) or t.elementType.kind == tyNone:
       result = true
 
-iterator travStmts(n: PNode): PNode {. closure .} =
-  if n.kind in {nkStmtList, nkStmtListExpr}:
-    for i in 0..<n.len:
-      for sn in travStmts(n[i]):
-        yield sn
-  else:
-    yield n
-
 proc procDefSignature(s: PSym): PNode {. deprecated .} = 
   var nc = s.ast.copyNode()
   for i in 0 .. 5:
