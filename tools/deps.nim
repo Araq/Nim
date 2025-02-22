@@ -4,10 +4,12 @@ import std/private/gitutils
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
-proc exec(cmd: string) =
+proc tryexec(cmd: string): int =
   echo "deps.cmd: " & cmd
-  let status = execShellCmd(cmd)
-  doAssert status == 0, cmd
+  execShellCmd(cmd)
+
+proc exec(cmd: string) =
+  doAssert tryexec(cmd) == 0, cmd
 
 proc execRetry(cmd: string) =
   let ok = retryCall(call = block:
@@ -19,7 +21,7 @@ proc execRetry(cmd: string) =
   doAssert ok, cmd
 
 proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
-                      appendRepoName = true, allowBundled = false, offline = false) =
+                      appendRepoName = true, allowBundled = false) =
   let destDirBase = destDirBase.absolutePath
   let p = url.parseUri.path
   let name = p.splitFile.name
@@ -29,17 +31,16 @@ proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
   if not dirExists(destDir):
     # note: old code used `destDir / .git` but that wouldn't prevent git clone
     # from failing
-    if offline:
-      quit "FAILURE: " & destdir & " does not exist"
-    else:
-      execRetry fmt"git clone -q {url} {quotedDestDir}"
+    execRetry fmt"git clone -q {url} {quotedDestDir}"
+  
   if isGitRepo(destDir):
     let oldDir = getCurrentDir()
     setCurrentDir(destDir)
     try:
-      if not offline:
+      let checkoutCmd = fmt"git checkout -q {commit}"
+      if tryexec(checkoutCmd) != 0:
         execRetry "git fetch -q"
-      exec fmt"git checkout -q {commit}"
+        exec checkoutCmd
     finally:
       setCurrentDir(oldDir)
   elif allowBundled:

@@ -68,7 +68,6 @@ Options:
   --localdocs[:path]       only build local documentations. If a path is not
                            specified (or empty), the default is used.
   --skipIntegrityCheck     skips integrity check when booting the compiler
-  --offline                skip everything requiring an internet connection
 Possible Commands:
   boot [options]           bootstraps with given command line options
   distrohelper [bindir]    helper for distro packagers
@@ -105,7 +104,7 @@ Commands for core developers:
                            specifying a category, e.g. `tests cat async`)
   temp options             creates a temporary compiler for testing
 """
-var offline = false
+
 let kochExe* = when isMainModule: os.getAppFilename() # always correct when koch is main program, even if `koch` exe renamed e.g.: `nim c -o:koch_debug koch.nim`
                else: getAppDir() / "koch".exe # works for winrelease
 
@@ -152,14 +151,14 @@ proc csource(args: string) =
        [args, VersionAsString, compileNimInst])
 
 proc bundleC2nim(args: string) =
-  cloneDependency(distDir, "https://github.com/nim-lang/c2nim.git", offline=offline)
+  cloneDependency(distDir, "https://github.com/nim-lang/c2nim.git")
   nimCompile("dist/c2nim/c2nim",
              options = "--noNimblePath --path:. " & args)
 
 proc bundleNimbleExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: NimbleStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/nimble.git",
-                commit = commit, allowBundled = true, offline=offline)
+                commit = commit, allowBundled = true)
   updateSubmodules(distDir / "nimble", allowBundled = true)
   nimCompile("dist/nimble/src/nimble.nim",
              options = "-d:release --noNimblePath " & args)
@@ -170,9 +169,9 @@ proc bundleNimbleExe(latest: bool, args: string) =
 proc bundleAtlasExe(latest: bool, args: string) =
   let commit = if latest: "HEAD" else: AtlasStableCommit
   cloneDependency(distDir, "https://github.com/nim-lang/atlas.git",
-                commit = commit, allowBundled = true, offline=offline)
+                commit = commit, allowBundled = true)
   cloneDependency(distDir / "atlas" / distDir, "https://github.com/nim-lang/sat.git",
-              commit = SatStableCommit, allowBundled = true, offline=offline)
+              commit = SatStableCommit, allowBundled = true)
   # installer.ini expects it under $nim/bin
   nimCompile("dist/atlas/src/atlas.nim",
              options = "-d:release --noNimblePath -d:nimAtlasBootstrap " & args)
@@ -208,7 +207,7 @@ proc bundleWinTools(args: string) =
 
 proc bundleChecksums(latest: bool) =
   let commit = if latest: "HEAD" else: ChecksumsStableCommit
-  cloneDependency(distDir, "https://github.com/nim-lang/checksums.git", commit, allowBundled = true, offline=offline)
+  cloneDependency(distDir, "https://github.com/nim-lang/checksums.git", commit, allowBundled = true)
 
 proc zip(latest: bool; args: string) =
   bundleChecksums(latest)
@@ -294,12 +293,12 @@ proc installDeps(dep: string, commit = "") =
   case dep
   of "tinyc":
     if commit.len == 0: commit = "916cc2f94818a8a382dd8d4b8420978816c1dfb3"
-    cloneDependency(distDir, "https://github.com/timotheecour/nim-tinyc-archive", commit, offline=offline)
+    cloneDependency(distDir, "https://github.com/timotheecour/nim-tinyc-archive", commit)
   of "libffi":
     # technically a nimble package, however to play nicely with --noNimblePath,
     # let's just clone it wholesale:
     if commit.len == 0: commit = "bb2bdaf1a29a4bff6fbd8ae4695877cbb3ec783e"
-    cloneDependency(distDir, "https://github.com/Araq/libffi", commit, offline=offline)
+    cloneDependency(distDir, "https://github.com/Araq/libffi", commit)
   else: doAssert false, "unsupported: " & dep
   # xxx: also add linenoise, niminst etc, refs https://github.com/nim-lang/RFCs/issues/206
 
@@ -728,8 +727,6 @@ when isMainModule:
           localDocsOut = op.val.absolutePath
       of "skipintegritycheck":
         skipIntegrityCheck = true
-      of "offline":
-        offline = true
       else: showHelp(success = false)
     of cmdArgument:
       case normalize(op.key)
