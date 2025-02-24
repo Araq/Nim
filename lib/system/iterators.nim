@@ -37,7 +37,7 @@ iterator mitems*[T](a: var openArray[T]): var T {.inline.} =
     yield a[i]
     unCheckedInc(i)
 
-iterator items*[IX, T](a: array[IX, T]): T {.inline.} =
+iterator items*[IX, T](a: array[IX, T]): lent2 T {.inline.} =
   ## Iterates over each item of `a`.
   when a.len > 0:
     var i = low(IX)
