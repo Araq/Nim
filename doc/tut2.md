@@ -327,10 +327,12 @@ As the example demonstrates, invocation of a multi-method cannot be ambiguous:
 Collide 2 is preferred over collide 1 because the resolution works from left to
 right. Thus `Unit, Thing` is preferred over `Thing, Unit`.
 
-**Performance note**: Nim does not produce a virtual method table, but
-generates dispatch trees. This avoids the expensive indirect branch for method
-calls and enables inlining. However, other optimizations like compile time
-evaluation or dead code elimination do not work with methods.
+**Performance note**: Nim generates dispatch trees for methods by default.
+With `--experimental:vtables`, it also provides an option to generate
+a virtual method table for methods,
+which tends to produce better performance in general, 
+especially for deep object hierarchies.
+However, other optimizations like compile time evaluation or dead code elimination do not work with methods.
 
 
 Exceptions
