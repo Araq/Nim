@@ -163,9 +163,9 @@ template main =
     doAssert fn3() == "[[-12]]"
 
     block: # bug 9 from https://github.com/nim-lang/Nim/pull/17020#issuecomment-803193947
+      func wrap1(a: string): string = "{" & a & "}"
+      func `'wrap3`(a: string): string = "{" & a & "}"
       macro metawrap(): untyped =
-        func wrap1(a: string): string = "{" & a & "}"
-        func `'wrap3`(a: string): string = "{" & a & "}"
         result = quote do:
           let a1 {.inject.} = wrap1"-128"
           let a2 {.inject.} = -128'wrap3
