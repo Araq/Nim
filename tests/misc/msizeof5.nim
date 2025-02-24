@@ -26,7 +26,7 @@ template ensureCgen(T: typedesc) =
   var a {.volatile.}: T
 
 block:
-  type Foo1Alias{.importc: "struct Foo1", size: sizeof(cint).} = object
+  type Foo1Alias{.importc: "struct Foo1", nodecl, size: sizeof(cint).} = object
     a: cint
   ensureCgen Foo1Alias
 

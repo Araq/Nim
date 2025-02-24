@@ -238,7 +238,7 @@ elif defined(ios) or defined(macosx):
   const errSecSuccess = 0 ## No error.
 
   type
-    SecRandom {.importc: "struct __SecRandom".} = object
+    SecRandom {.importc: "struct __SecRandom", header: "<Security/SecRandom.h>".} = object
 
     SecRandomRef = ptr SecRandom
       ## An abstract Core Foundation-type object containing information about a random number generator.

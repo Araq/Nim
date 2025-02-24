@@ -19,6 +19,8 @@ errors.
 
 - With `-d:nimPreviewAsmSemSymbol`, backticked symbols are type checked in the `asm/emit` statements.
 
+- `importc` no longer implies `nodecl` for imported types. Use `header` or `nodecl` pragmas so that it doesn't generate a declaration for the type symbol.
+
 ## Standard library additions and changes
 
 [//]: # "Additions:"
