@@ -1328,8 +1328,6 @@ proc genMagic(c: PCtx; n: PNode; dest: var TDest; flags: TGenFlags = {}, m: TMag
 
   of mNIntVal: genUnaryABC(c, n, dest, opcNIntVal)
   of mNFloatVal: genUnaryABC(c, n, dest, opcNFloatVal)
-  of mNSymbol: genUnaryABC(c, n, dest, opcNSymbol)
-  of mNIdent: genUnaryABC(c, n, dest, opcNIdent)
   of mNGetType:
     let tmp = c.genx(n[1])
     if dest < 0: dest = c.getTemp(n.typ)
@@ -1355,12 +1353,6 @@ proc genMagic(c: PCtx; n: PNode; dest: var TDest; flags: TGenFlags = {}, m: TMag
   of mNSetFloatVal:
     unused(c, n, dest)
     genBinaryStmt(c, n, opcNSetFloatVal)
-  of mNSetSymbol:
-    unused(c, n, dest)
-    genBinaryStmt(c, n, opcNSetSymbol)
-  of mNSetIdent:
-    unused(c, n, dest)
-    genBinaryStmt(c, n, opcNSetIdent)
   of mNSetStrVal:
     unused(c, n, dest)
     genBinaryStmt(c, n, opcNSetStrVal)

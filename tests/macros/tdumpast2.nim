@@ -11,8 +11,7 @@ proc dumpit(n: NimNode): string {.compileTime.} =
   of nnkNilLit:                  add(result, "nil")
   of nnkCharLit..nnkInt64Lit:    add(result, $n.intVal)
   of nnkFloatLit..nnkFloat64Lit: add(result, $n.floatVal)
-  of nnkStrLit..nnkTripleStrLit: add(result, $n.strVal)
-  of nnkIdent:                   add(result, $n.ident)
+  of nnkStrLit..nnkTripleStrLit, nnkIdent: add(result, $n.strVal)
   of nnkSym, nnkNone:            assert false
   else:
     add(result, dumpit(n[0]))

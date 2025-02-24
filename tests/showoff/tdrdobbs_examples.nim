@@ -109,7 +109,7 @@ proc matchAgainst(n, pattern: NimNode): NimNode {.compileTime.} =
     newDotExpr(current, newIdentNode(astToStr(field)))
 
   template `==@`(n, pattern: untyped): untyped =
-    newCall("==", n@kind, newIdentNode($pat2kind($pattern.ident)))
+    newCall("==", n@kind, newIdentNode($pat2kind(pattern.strVal)))
 
   case pattern.kind
   of CallNodes:

@@ -119,15 +119,13 @@ type
     opcNSymKind,
     opcNIntVal,
     opcNFloatVal,
-    opcNSymbol,
-    opcNIdent,
     opcNGetType,
     opcNStrVal,
     opcNSigHash,
     opcNGetSize,
 
     opcNSetIntVal,
-    opcNSetFloatVal, opcNSetSymbol, opcNSetIdent, opcNSetStrVal,
+    opcNSetFloatVal, opcNSetStrVal,
     opcNNewNimNode, opcNCopyNimNode, opcNCopyNimTree, opcNDel, opcGenSym,
 
     opcNccValue, opcNccInc, opcNcsAdd, opcNcsIncl, opcNcsLen, opcNcsAt,

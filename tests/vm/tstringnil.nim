@@ -15,7 +15,7 @@ proc buildSuiteContents(suiteName, suiteDesc, suiteBloc: NimNode): tuple[tests: 
     tests:seq[SuiteTest] = @[]
 
   for child in suiteBloc.children():
-    case $child[0].ident:
+    case $child[0].strVal:
     of "test":
 
       var testObj = SuiteTest()
