@@ -33,8 +33,7 @@ nimIsCiSkip(){
 
 nimInternalInstallDepsWindows(){
   echo_run mkdir dist
-  echo_run curl -L https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev1/x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1.7z
- -o dist/mingw64.7z
+  echo_run curl -L https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev1/x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1.7z -o dist/mingw64.7z
   echo_run curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
   echo_run 7z x dist/mingw64.7z -odist
   echo_run 7z x dist/dlls.zip -obin
