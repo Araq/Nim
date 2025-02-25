@@ -459,7 +459,7 @@ template handleStdinOrCmdInput =
     conf.outDir = getNimcacheDir(conf)
 
 proc handleStdinInput*(conf: ConfigRef) =
-  conf.projectName = "stdinfile"
+  conf.projectName = conf.stdinFile.string
   conf.projectIsStdin = true
   handleStdinOrCmdInput()
 
@@ -935,6 +935,10 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
     var value: int = 0
     discard parseSaturatedNatural(arg, value)
     conf.errorMax = if value == 0: high(int) else: value
+  of "stdinfile":
+    expectArg(conf, switch, arg, pass, info)
+    conf.stdinFile = if os.isAbsolute(arg): AbsoluteFile(arg)
+                     else: AbsoluteFile(getCurrentDir() / arg)
   of "verbosity":
     expectArg(conf, switch, arg, pass, info)
     let verbosity = parseInt(arg)
