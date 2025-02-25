@@ -5186,22 +5186,22 @@ caught by reference. Example:
   proc fn() =
     let a = initRuntimeError("foo")
     doAssert $a.what == "foo"
-    var b: cstring
+    var b = ""
     try: raise initRuntimeError("foo2")
     except CStdException as e:
       doAssert e is CStdException
-      b = e.what()
-    doAssert $b == "foo2"
+      b = $e.what()
+    doAssert b == "foo2"
 
     try: raise initStdException()
     except CStdException: discard
 
     try: raise initRuntimeError("foo3")
     except CRuntimeError as e:
-      b = e.what()
+      b = $e.what()
     except CStdException:
       doAssert false
-    doAssert $b == "foo3"
+    doAssert b == "foo3"
 
   fn()
   ```
@@ -6264,7 +6264,7 @@ The default for symbols of entity `type`, `var`, `let` and `const`
 is `gensym`. For `proc`, `iterator`, `converter`, `template`,
 `macro`, the default is `inject`, but if a `gensym` symbol with the same name
 is defined in the same syntax-level scope, it will be `gensym` by default.
-This can be overriden by marking the routine as `inject`. 
+This can be overridden by marking the routine as `inject`. 
 
 If the name of the entity is passed as a template parameter, it is an `inject`'ed symbol:
 

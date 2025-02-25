@@ -25,7 +25,7 @@ const
   useEffectSystem* = true
   useWriteTracking* = false
   hasFFI* = defined(nimHasLibFFI)
-  copyrightYear* = "2024"
+  copyrightYear* = "2025"
 
   nimEnableCovariance* = defined(nimEnableCovariance)
 
@@ -249,8 +249,6 @@ type
       ## Useful for libraries that rely on local passC
     jsNoLambdaLifting
       ## Old transformation for closures in JS backend
-    noStrictDefs
-      ## disable "strictdefs"
 
   SymbolFilesOption* = enum
     disabledSf, writeOnlySf, readOnlySf, v2Sf, stressTest

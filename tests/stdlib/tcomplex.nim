@@ -2,7 +2,7 @@ discard """
   matrix: "--mm:refc; --mm:orc"
 """
 
-import std/[complex, math]
+import std/[complex, math, strformat, formatfloat]
 import std/assertions
 
 proc `=~`[T](x, y: Complex[T]): bool =
@@ -113,3 +113,7 @@ doAssert 123.0.im + 456.0 == complex64(456, 123)
 
 let localA = complex(0.1'f32)
 doAssert localA.im is float32
+
+block: # bug #24666
+  let z = complex64(1, 2)
+  doAssert fmt"{z}" == "(1.0, 2.0)"

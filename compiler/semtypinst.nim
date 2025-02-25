@@ -344,7 +344,7 @@ proc replaceTypeVarsS(cl: var TReplTypeVars, s: PSym, t: PType): PSym =
   #[
 
   We cannot naively check for symbol recursions, because otherwise
-  object types A, B whould share their fields!
+  object types A, B would share their fields!
 
       import tables
 

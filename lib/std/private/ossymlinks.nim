@@ -2,7 +2,8 @@ include system/inclrtl
 import std/oserrors
 
 import oscommon
-export symlinkExists
+when supportedSystem:
+  export symlinkExists
 
 when defined(nimPreviewSlimSystem):
   import std/[syncio, assertions, widestrs]
@@ -13,8 +14,6 @@ elif defined(windows):
   import std/[winlean, times]
 elif defined(posix):
   import std/posix
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 
 when weirdTarget:

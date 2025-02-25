@@ -590,7 +590,7 @@ proc processCompile(c: PContext, n: PNode) =
     var customArgs = ""
     if n.kind in nkCallKinds:
       s = getStrLit(c, n, 1)
-      if n.len <= 3:
+      if n.len == 3:
         customArgs = getStrLit(c, n, 2)
       else:
         localError(c.config, n.info, "'.compile' pragma takes up 2 arguments")
@@ -637,7 +637,10 @@ proc semAsmOrEmit*(con: PContext, n: PNode, marker: char): PNode =
         # XXX what to do here if 'amb' is true?
         if e != nil:
           incl(e.flags, sfUsed)
-          result.add newSymNode(e)
+          if isDefined(con.config, "nimPreviewAsmSemSymbol"):
+            result.add con.semExprWithType(con, newSymNode(e), {efTypeAllowed})
+          else:
+            result.add newSymNode(e)
         else:
           result.add newStrNode(nkStrLit, sub)
       else:
@@ -1315,8 +1318,12 @@ proc singlePragma(c: PContext, sym: PSym, n: PNode, i: var int,
         pragmaProposition(c, it)
       of wEnsures:
         pragmaEnsures(c, it)
-      of wEnforceNoRaises, wQuirky:
+      of wEnforceNoRaises:
         sym.flags.incl sfNeverRaises
+      of wQuirky:
+        sym.flags.incl sfNeverRaises
+        if sym.kind in {skProc, skMethod, skConverter, skFunc, skIterator}:
+          sym.options.incl optQuirky
       of wSystemRaisesDefect:
         sym.flags.incl sfSystemRaisesDefect
       of wVirtual:

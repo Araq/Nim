@@ -1692,7 +1692,8 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         if aAsObject.kind == tyObject and trIsOutParam notin flags:
           let baseType = aAsObject.base
           if baseType != nil:
-            inc c.inheritancePenalty, 1 + int(c.inheritancePenalty < 0)
+            if tfFinal notin aAsObject.flags:
+              inc c.inheritancePenalty, 1 + int(c.inheritancePenalty < 0)
             let ret = typeRel(c, f, baseType, flags)
             return if ret in {isEqual,isGeneric}: isSubtype else: ret
 
@@ -1733,6 +1734,10 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           let tr = typeRel(c, f[i], x[i], flags)
           if tr <= isSubtype: return
         result = isGeneric
+        let impl = last(f[0])
+        if impl.kind == tyObject and tfFinal notin impl.flags:
+          # match non-invocation case
+          inc c.inheritancePenalty, 0 + int(c.inheritancePenalty < 0)
     elif x.kind == tyGenericInst and f[0] == x[0] and
           x.len - 1 == f.len:
       for i in 1..<f.len:
@@ -1789,7 +1794,8 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           depth = -1
 
       if depth >= 0:
-        inc c.inheritancePenalty, depth + int(c.inheritancePenalty < 0)
+        if aobj.kind == tyObject and tfFinal notin aobj.flags:
+          inc c.inheritancePenalty, depth + int(c.inheritancePenalty < 0)
         # bug #4863: We still need to bind generic alias crap, so
         # we cannot return immediately:
         result = if depth == 0: isGeneric else: isSubtype
@@ -2251,7 +2257,7 @@ proc isLValue(c: PContext; n: PNode, isOutParam = false): bool {.inline.} =
     result = c.inUncheckedAssignSection > 0
   of arAddressableConst:
     let sym = getRoot(n)
-    result = noStrictDefs notin c.config.legacyFeatures and sym != nil and sym.kind == skLet and isOutParam
+    result = strictDefs in c.features and sym != nil and sym.kind == skLet and isOutParam
   else:
     result = false
 

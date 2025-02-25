@@ -129,7 +129,8 @@ other associated resources. Variables are destroyed via this hook when
 they go out of scope or when the routine they were declared in is about
 to return.
 
-A `=destroy` hook is allowed to have a parameter of a `var T` or `T` type. Taking a `var T` type is deprecated. The prototype of this hook for a type `T` needs to be:
+A `=destroy` hook is allowed to have a parameter of a `var T` or `T` type.
+The prototype of this hook for a type `T` needs to be:
 
   ```nim
   proc `=destroy`(x: T)

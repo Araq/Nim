@@ -4,10 +4,12 @@ import std/private/gitutils
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
-proc exec(cmd: string) =
+proc tryexec(cmd: string): int =
   echo "deps.cmd: " & cmd
-  let status = execShellCmd(cmd)
-  doAssert status == 0, cmd
+  execShellCmd(cmd)
+
+proc exec(cmd: string) =
+  doAssert tryexec(cmd) == 0, cmd
 
 proc execRetry(cmd: string) =
   let ok = retryCall(call = block:
@@ -34,8 +36,10 @@ proc cloneDependency*(destDirBase: string, url: string, commit = commitHead,
     let oldDir = getCurrentDir()
     setCurrentDir(destDir)
     try:
-      execRetry "git fetch -q"
-      exec fmt"git checkout -q {commit}"
+      let checkoutCmd = fmt"git checkout -q {commit}"
+      if tryexec(checkoutCmd) != 0:
+        execRetry "git fetch -q"
+        exec checkoutCmd
     finally:
       setCurrentDir(oldDir)
   elif allowBundled:

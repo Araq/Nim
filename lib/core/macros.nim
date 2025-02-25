@@ -1327,7 +1327,7 @@ proc `name=`*(someProc: NimNode; val: NimNode) =
   else: someProc[0] = val
 
 proc params*(someProc: NimNode): NimNode =
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[0]
   else:
     someProc.expectRoutine
@@ -1335,7 +1335,7 @@ proc params*(someProc: NimNode): NimNode =
 
 proc `params=`* (someProc: NimNode; params: NimNode) =
   expectKind(params, nnkFormalParams)
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[0] = params
   else:
     someProc.expectRoutine
@@ -1344,7 +1344,7 @@ proc `params=`* (someProc: NimNode; params: NimNode) =
 proc pragma*(someProc: NimNode): NimNode =
   ## Get the pragma of a proc type.
   ## These will be expanded.
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     result = someProc[1]
   else:
     someProc.expectRoutine
@@ -1352,7 +1352,7 @@ proc pragma*(someProc: NimNode): NimNode =
 proc `pragma=`*(someProc: NimNode; val: NimNode) =
   ## Set the pragma of a proc type.
   expectKind(val, {nnkEmpty, nnkPragma})
-  if someProc.kind == nnkProcTy:
+  if someProc.kind in {nnkProcTy, nnkIteratorTy}:
     someProc[1] = val
   else:
     someProc.expectRoutine

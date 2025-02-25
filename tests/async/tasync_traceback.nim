@@ -76,12 +76,7 @@ Exception message: b failure
 bar failure
 Async traceback:
   tasync_traceback\.nim\(\d+?\) tasync_traceback
-  asyncdispatch\.nim\(\d+?\) waitFor
-  asyncdispatch\.nim\(\d+?\) poll
-    ## Processes asynchronous completion events
-  asyncdispatch\.nim\(\d+?\) runOnce
-  asyncdispatch\.nim\(\d+?\) processPendingCallbacks
-    ## Executes pending callbacks
+  tasync_traceback\.nim\(\d+?\) foo \(Async\)
   tasync_traceback\.nim\(\d+?\) bar \(Async\)
 Exception message: bar failure
 

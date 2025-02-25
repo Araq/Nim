@@ -45,3 +45,14 @@ block: # bug #22354
 
 
   main()
+
+proc main = # bug #24677
+  let NULL = 1
+  doAssert NULL == 1
+
+  var COMMA = 1
+  doAssert COMMA == 1
+
+  for NDEBUG in 0..2:
+    doAssert NDEBUG == NDEBUG
+main()

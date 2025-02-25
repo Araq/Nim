@@ -263,7 +263,7 @@ proc registerAdditionalOps*(c: PCtx) =
     wrap2si(readLines, ioop)
     systemop getCurrentExceptionMsg
     systemop getCurrentException
-    registerCallback c, "stdlib.osdirs.staticWalkDir", proc (a: VmArgs) {.nimcall.} =
+    registerCallback c, "stdlib.staticos.staticWalkDir", proc (a: VmArgs) {.nimcall.} =
       setResult(a, staticWalkDirImpl(getString(a, 0), getBool(a, 1)))
     registerCallback c, "stdlib.staticos.staticDirExists", proc (a: VmArgs) {.nimcall.} =
       setResult(a, dirExists(getString(a, 0)))

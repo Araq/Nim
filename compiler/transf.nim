@@ -106,6 +106,13 @@ proc transformSons(c: PTransf, n: PNode, noConstFold = false): PNode =
   for i in 0..<n.len:
     result[i] = transform(c, n[i], noConstFold)
 
+proc transformSonsAfterType(c: PTransf, n: PNode, noConstFold = false): PNode =
+  result = newTransNode(n)
+  assert n.len != 0
+  result[0] = copyTree(n[0])
+  for i in 1..<n.len:
+    result[i] = transform(c, n[i], noConstFold)
+
 proc newAsgnStmt(c: PTransf, kind: TNodeKind, le: PNode, ri: PNode; isFirstWrite: bool): PNode =
   result = newTransNode(kind, ri.info, 2)
   result[0] = le
@@ -1102,6 +1109,9 @@ proc transform(c: PTransf, n: PNode, noConstFold = false): PNode =
       result = transformAddrDeref(c, n, {nkAddr, nkHiddenAddr})
   of nkHiddenStdConv, nkHiddenSubConv, nkConv:
     result = transformConv(c, n)
+  of nkObjConstr, nkCast:
+    # don't try to transform type node
+    result = transformSonsAfterType(c, n)
   of nkDiscardStmt:
     result = n
     if n[0].kind != nkEmpty:
