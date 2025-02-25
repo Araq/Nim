@@ -240,3 +240,11 @@ block: # bug #17197
     result = true
 
   doAssert needlemanWunsch("ABC", "DEFG", 1, 2, 3)
+
+block: # bug #12340
+  func consume(x: sink seq[int]) =
+    x[0] += 5
+
+  let x = @[1, 2, 3, 4]
+  consume x
+  doAssert x == @[1, 2, 3, 4]
