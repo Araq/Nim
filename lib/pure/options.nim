@@ -215,6 +215,34 @@ proc get*[T](self: Option[T], otherwise: T): T {.inline.} =
   else:
     otherwise
 
+proc unpack*[T](self: Option[T], val: out T): bool {.inline.} =
+  ## Unpacks the contents of the `Option` if there are any, and returns true.
+  ## Otherwise, it simply returns false and sets the value to its default one.
+  runnableExamples:
+    var storage: int
+
+    if some(1337).unpack(storage):
+      assert storage == 1337
+
+  if not self.isSome:
+    val = default(T)
+    false
+  else:
+    val = self.get()
+    true
+
+template `?=`*[T](x: untyped{ident}, self: Option[T]): bool =
+  ## Unpacks the contents of the `Option` into a value name provided if there are any, and returns true.
+  ## Otherwise, returns false and no value is created.
+  runnableExamples:
+    let container = some(1337)
+
+    if store ?= container:
+      assert store == 1337
+  
+  var x: T
+  unpack(self, x)
+
 proc get*[T](self: var Option[T]): var T {.inline.} =
   ## Returns the content of the `var Option` mutably. If it has no value,
   ## an `UnpackDefect` exception is raised.
