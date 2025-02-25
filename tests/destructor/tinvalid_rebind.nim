@@ -1,7 +1,7 @@
 discard """
 joinable: false
 cmd: "nim check $file"
-errormsg: "cannot bind another '=destroy' to: Foo; previous declaration was constructed here implicitly: tinvalid_rebind.nim(12, 7)"
+errormsg: "cannot bind another '=destroy' to: Foo; previous declaration was constructed implicitly"
 line: 14
 """
 

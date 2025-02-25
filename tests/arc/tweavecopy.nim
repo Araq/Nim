@@ -115,7 +115,7 @@ when isMainModule:
     # chan <- 53
     # chan <- 64
     Worker(Receiver):
-      var val: int
+      var val: int = 0
       for j in 0 ..< 10:
         args.chan[].recvLoop(val):
           # Busy loop, in prod we might want to yield the core/thread timeslice
@@ -135,7 +135,7 @@ when isMainModule:
   proc main() =
     echo "Testing if 2 threads can send data"
     echo "-----------------------------------"
-    var threads: array[2, Thread[ThreadArgs]]
+    var threads: array[2, Thread[ThreadArgs]] = default(array[2, Thread[ThreadArgs]])
 
     var chan = cast[ptr ChannelSPSCSingle](allocShared(MemBlockSize))
     chan[].initialize(itemSize = sizeof(int))

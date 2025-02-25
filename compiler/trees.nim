@@ -147,6 +147,13 @@ proc whichPragma*(n: PNode): TSpecialWord =
   of nkCast: return wCast
   of nkClosedSymChoice, nkOpenSymChoice:
     return whichPragma(key[0])
+  of nkBracketExpr:
+    if n.kind notin nkPragmaCallKinds: return wInvalid
+    result = whichPragma(key[0])
+    if result notin {wHint, wHintAsError, wWarning, wWarningAsError}:
+      # note bracket pragmas, see processNote
+      result = wInvalid
+    return
   else: return wInvalid
   if result in nonPragmaWordsLow..nonPragmaWordsHigh:
     result = wInvalid

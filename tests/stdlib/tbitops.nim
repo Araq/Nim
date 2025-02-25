@@ -173,7 +173,7 @@ proc main() =
 
   block:
     # basic mask operations (mutating)
-    var v: uint8
+    var v: uint8 = 0'u8
     v.setMask(0b1100_0000)
     v.setMask(0b0000_1100)
     doAssert v == 0b1100_1100
@@ -254,7 +254,7 @@ proc main() =
     doAssert a.clearMasked(3 .. 6) == 0b1000_0100
   block:
     # single bit operations
-    var v: uint8
+    var v: uint8 = 0'u8
     v.setBit(0)
     doAssert v == 0x0000_0001
     v.setBit(1)
@@ -269,7 +269,7 @@ proc main() =
     doAssert not v.testBit(6)
   block:
     # multi bit operations
-    var v: uint8
+    var v: uint8 = 0'u8
     v.setBits(0, 1, 7)
     doAssert v == 0b1000_0011
     v.flipBits(2, 3)
@@ -278,11 +278,11 @@ proc main() =
     doAssert v == 0b0000_1100
   block:
     # signed
-    var v: int8
+    var v: int8 = 0'i8
     v.setBit(7)
     doAssert v == -128
   block:
-    var v: uint64
+    var v: uint64 = 0'u64
     v.setBit(63)
     doAssert v == 0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000'u64
 
@@ -335,7 +335,7 @@ proc main() =
 
 block: # not ready for vm because exception is compile error
   try:
-    var v: uint32
+    var v: uint32 = 0'u32
     var i = 32
     v.setBit(i)
     doAssert false

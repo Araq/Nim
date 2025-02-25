@@ -243,7 +243,7 @@ since (1, 5, 1):
     else:
       type A = impl(onSuccess(default(T)))
     var ret: A
-    {.emit: "`ret` = `future`.then(`onSuccess`, `onReject`)".}
+    {.emit: "`ret` = `future`.then(`onSuccess`, `onReject`);".}
     return ret
 
   proc catch*[T](future: Future[T], onReject: OnReject): Future[void] =
@@ -266,4 +266,4 @@ since (1, 5, 1):
 
       discard main()
 
-    {.emit: "`result` = `future`.catch(`onReject`)".}
+    {.emit: "`result` = `future`.catch(`onReject`);".}

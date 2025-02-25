@@ -629,7 +629,7 @@ proc warningDeprecated*(conf: ConfigRef, info: TLineInfo = gCmdLineInfo, msg = "
   message(conf, info, warnDeprecated, msg)
 
 proc internalErrorImpl(conf: ConfigRef; info: TLineInfo, errMsg: string, info2: InstantiationInfo) =
-  if conf.cmd == cmdIdeTools and conf.structuredErrorHook.isNil: return
+  if conf.cmd in {cmdIdeTools, cmdCheck} and conf.structuredErrorHook.isNil: return
   writeContext(conf, info)
   liMessage(conf, info, errInternal, errMsg, doAbort, info2)
 
@@ -668,31 +668,6 @@ template listMsg(title, r) =
 
 proc listWarnings*(conf: ConfigRef) = listMsg("Warnings:", warnMin..warnMax)
 proc listHints*(conf: ConfigRef) = listMsg("Hints:", hintMin..hintMax)
-
-proc uniqueModuleName*(conf: ConfigRef; fid: FileIndex): string =
-  ## The unique module name is guaranteed to only contain {'A'..'Z', 'a'..'z', '0'..'9', '_'}
-  ## so that it is useful as a C identifier snippet.
-  let path = AbsoluteFile toFullPath(conf, fid)
-  let rel =
-    if path.string.startsWith(conf.libpath.string):
-      relativeTo(path, conf.libpath).string
-    else:
-      relativeTo(path, conf.projectPath).string
-  let trunc = if rel.endsWith(".nim"): rel.len - len(".nim") else: rel.len
-  result = newStringOfCap(trunc)
-  for i in 0..<trunc:
-    let c = rel[i]
-    case c
-    of 'a'..'z':
-      result.add c
-    of {os.DirSep, os.AltSep}:
-      result.add 'Z' # because it looks a bit like '/'
-    of '.':
-      result.add 'O' # a circle
-    else:
-      # We mangle upper letters and digits too so that there cannot
-      # be clashes with our special meanings of 'Z' and 'O'
-      result.addInt ord(c)
 
 proc genSuccessX*(conf: ConfigRef) =
   let mem =

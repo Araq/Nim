@@ -31,10 +31,11 @@ type
     se: seq[TA]
 
 proc p(param1, param2: TC, param3: var TC): TC =
+  result = TC()
   var
-    local: TC
-    plocal: ptr TC
-    plocal2: ptr TA
+    local: TC = default(TC)
+    plocal: ptr TC = nil
+    plocal2: ptr TA = nil
 
   local.arr <| local
   local.arr[0] <| local

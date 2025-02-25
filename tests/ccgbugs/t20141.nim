@@ -16,7 +16,7 @@ template n[T, U](x: U): T =
 
 proc k() =
   var res: A
-  m(n[B](res))
+  m(n[B, A](res))
 
 proc w(mounter: U) = discard
 

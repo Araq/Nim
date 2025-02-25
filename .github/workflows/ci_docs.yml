@@ -41,11 +41,11 @@ jobs:
         target: [linux, windows, osx]
         include:
           - target: linux
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - target: windows
             os: windows-2019
           - target: osx
-            os: macos-12
+            os: macos-13
 
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}

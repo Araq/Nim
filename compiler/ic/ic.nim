@@ -837,8 +837,8 @@ proc loadNodes*(c: var PackedDecoder; g: var PackedModuleGraph; thisModule: int;
     result.ident = getIdent(c.cache, g[thisModule].fromDisk.strings[n.litId])
   of nkSym:
     result.sym = loadSym(c, g, thisModule, PackedItemId(module: LitId(0), item: tree[n].soperand))
-    if result.typ == nil and nfOpenSym notin result.flags:
-      result.typ = result.sym.typ
+    if result.typ == nil:
+      result.typ() = result.sym.typ
   of externIntLit:
     result.intVal = g[thisModule].fromDisk.numbers[n.litId]
   of nkStrLit..nkTripleStrLit:
@@ -851,8 +851,8 @@ proc loadNodes*(c: var PackedDecoder; g: var PackedModuleGraph; thisModule: int;
     assert n2.kind == nkNone
     transitionNoneToSym(result)
     result.sym = loadSym(c, g, thisModule, PackedItemId(module: n1.litId, item: tree[n2].soperand))
-    if result.typ == nil and nfOpenSym notin result.flags:
-      result.typ = result.sym.typ
+    if result.typ == nil:
+      result.typ() = result.sym.typ
   else:
     for n0 in sonsReadonly(tree, n):
       result.addAllowNil loadNodes(c, g, thisModule, tree, n0)
@@ -942,7 +942,7 @@ proc symBodyFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
     result.guard = loadSym(c, g, si, s.guard)
     result.bitsize = s.bitsize
     result.alignment = s.alignment
-  result.owner = loadSym(c, g, si, s.owner)
+  setOwner(result, loadSym(c, g, si, s.owner))
   let externalName = g[si].fromDisk.strings[s.externalName]
   if externalName != "":
     result.loc.snippet = externalName
@@ -998,7 +998,7 @@ proc typeHeaderFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
 proc typeBodyFromPacked(c: var PackedDecoder; g: var PackedModuleGraph;
                         t: PackedType; si, item: int32; result: PType) =
   result.sym = loadSym(c, g, si, t.sym)
-  result.owner = loadSym(c, g, si, t.owner)
+  setOwner(result, loadSym(c, g, si, t.owner))
   when false:
     for op, item in pairs t.attachedOps:
       result.attachedOps[op] = loadSym(c, g, si, item)
@@ -1062,7 +1062,7 @@ proc setupLookupTables(g: var PackedModuleGraph; conf: ConfigRef; cache: IdentCa
                   name: getIdent(cache, splitFile(filename).name),
                   info: newLineInfo(fileIdx, 1, 1),
                   position: int(fileIdx))
-  m.module.owner = getPackage(conf, cache, fileIdx)
+  setOwner(m.module, getPackage(conf, cache, fileIdx))
   m.module.flags = m.fromDisk.moduleFlags
 
 proc loadToReplayNodes(g: var PackedModuleGraph; conf: ConfigRef; cache: IdentCache;

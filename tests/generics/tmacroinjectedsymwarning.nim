@@ -1,3 +1,7 @@
+discard """
+  matrix: "--skipParentCfg --filenames:legacyRelProj"
+"""
+
 type Xxx = enum
   error
   value
@@ -42,8 +46,13 @@ proc f(): Result[int, cstring] =
 
 proc g(T: type): string =
   let x = f().valueOr:
+    {.push warningAsError[IgnoredSymbolInjection]: on.}
+    # test spurious error
+    discard true
+    let _ = f
+    {.pop.}
     return $error #[tt.Warning
-            ^ a new symbol 'error' has been injected during instantiation of g, however 'error' [enumField declared in tmacroinjectedsymwarning.nim(2, 3)] captured at the proc declaration will be used instead; either enable --experimental:genericsOpenSym to use the injected symbol or `bind` this captured symbol explicitly [GenericsIgnoredInjection]]#
+            ^ a new symbol 'error' has been injected during template or generic instantiation, however 'error' [enumField declared in tmacroinjectedsymwarning.nim(6, 3)] captured at the proc declaration will be used instead; either enable --experimental:openSym to use the injected symbol, or `bind` this captured symbol explicitly [IgnoredSymbolInjection]]#
 
   "ok"
 

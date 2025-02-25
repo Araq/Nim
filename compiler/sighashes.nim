@@ -55,6 +55,8 @@ proc hashSym(c: var MD5Context, s: PSym) =
       c &= it.name.s
       c &= "."
       it = it.owner
+    c &= "#"
+    c &= s.disamb
 
 proc hashTypeSym(c: var MD5Context, s: PSym; conf: ConfigRef) =
   if sfAnon in s.flags or s.kind == skGenericParam:
@@ -69,6 +71,8 @@ proc hashTypeSym(c: var MD5Context, s: PSym; conf: ConfigRef) =
       c &= it.name.s
       c &= "."
       it = it.owner
+    c &= "#"
+    c &= s.disamb
 
 proc hashTree(c: var MD5Context, n: PNode; flags: set[ConsiderFlag]; conf: ConfigRef) =
   if n == nil:

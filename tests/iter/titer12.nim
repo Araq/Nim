@@ -1,4 +1,5 @@
 discard """
+targets: "c js"
 output: '''
 Selecting 2
 1.0

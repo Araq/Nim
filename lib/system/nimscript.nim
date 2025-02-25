@@ -256,9 +256,9 @@ proc exec*(command: string) {.
   ## a non-zero exit code, an OSError exception is raised. The command is
   ## executed relative to the current source path.
   ##
-  ## **Note:** If you need a version of `exec` that returns the exit code
-  ## and text output of the command, you can use `system.gorgeEx
-  ## <system.html#gorgeEx,string,string,string>`_.
+  ## .. note:: If you need a version of `exec` that returns the exit code
+  ##   and text output of the command, you can use `system.gorgeEx
+  ##   <system.html#gorgeEx,string,string,string>`_.
   log "exec: " & command:
     if rawExec(command) != 0:
       raise newException(OSError, "FAILED: " & command)
@@ -270,10 +270,10 @@ proc exec*(command: string, input: string, cache = "") {.
   ## a non-zero exit code, an OSError exception is raised.
   ##
   ## .. warning:: This version of `exec` is executed relative to the nimscript
-  ## module path, which affects how the command resolves relative paths. Thus
-  ## it is generally better to use `gorgeEx` directly when you need more
-  ## control over the execution environment or when working with commands
-  ## that deal with relative paths.
+  ##   module path, which affects how the command resolves relative paths. Thus
+  ##   it is generally better to use `gorgeEx` directly when you need more
+  ##   control over the execution environment or when working with commands
+  ##   that deal with relative paths.
   log "exec: " & command:
     let (output, exitCode) = gorgeEx(command, input, cache)
     echo output

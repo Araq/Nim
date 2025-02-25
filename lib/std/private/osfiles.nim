@@ -21,8 +21,6 @@ elif defined(posix):
 
   proc toTime(ts: Timespec): times.Time {.inline.} =
     result = initTime(ts.tv_sec.int64, ts.tv_nsec.int)
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 
 when weirdTarget:
@@ -240,7 +238,7 @@ proc copyFile*(source, dest: string, options = {cfSymlinkFollow}; bufferSize = 1
       else:
         # generic version of copyFile which works for any platform:
         var d, s: File
-        if not open(s, source):raiseOSError(osLastError(), source)
+        if not open(s, source): raiseOSError(osLastError(), source)
         if not open(d, dest, fmWrite):
           close(s)
           raiseOSError(osLastError(), dest)

@@ -503,7 +503,7 @@ proc pthread_spin_unlock*(a1: ptr Pthread_spinlock): cint {.
 proc pthread_testcancel*() {.importc, header: "<pthread.h>".}
 
 
-proc exitnow*(code: int) {.importc: "_exit", header: "<unistd.h>".}
+proc exitnow*(code: cint) {.importc: "_exit", header: "<unistd.h>", noreturn.}
 proc access*(a1: cstring, a2: cint): cint {.importc, header: "<unistd.h>".}
 proc alarm*(a1: cint): cint {.importc, header: "<unistd.h>".}
 proc chdir*(a1: cstring): cint {.importc, header: "<unistd.h>".}
@@ -1095,7 +1095,21 @@ proc setprotoent*(a1: cint) {.importc, header: "<netdb.h>".}
 proc setservent*(a1: cint) {.importc, header: "<netdb.h>".}
 
 when not defined(lwip):
-  proc poll*(a1: ptr TPollfd, a2: Tnfds, a3: int): cint {.
+  # Linux and Haiku emulate SVR4, which used unsigned long.
+  # Meanwhile, BSD derivatives had used unsigned int; we will use this
+  # for the else case, because it is more widely cloned than SVR4's
+  # behavior.
+  when defined(linux) or defined(haiku):
+    type
+      Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = culong
+  elif defined(zephyr):
+    type
+      Tnfds* = distinct cint
+  else:
+    type
+      Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = cuint
+
+  proc poll*(a1: ptr TPollfd, a2: Tnfds, a3: cint): cint {.
     importc, header: "<poll.h>", sideEffect.}
 
 proc realpath*(name, resolved: cstring): cstring {.
@@ -1133,7 +1147,7 @@ proc utimes*(path: cstring, times: ptr array[2, Timeval]): int {.
   ##
   ## Returns zero on success.
   ##
-  ## For more information read http://www.unix.com/man-page/posix/3/utimes/.
+  ## For more information read https://www.unix.com/man-page/posix/3/utimes/.
 
 proc handle_signal(sig: cint, handler: proc (a: cint) {.noconv.}) {.importc: "signal", header: "<signal.h>".}
 

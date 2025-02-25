@@ -4,11 +4,11 @@ discard """
   nimout:'''
 tinheritgenericparameter.nim(36, 15) Error: Cannot inherit from: 'MyObject'
 tinheritgenericparameter.nim(36, 15) Error: Cannot inherit from: 'MyObject'
-tinheritgenericparameter.nim(36, 23) Error: object constructor needs an object type [proxy]
+tinheritgenericparameter.nim(36, 23) Error: object constructor needs an object type [error]
 tinheritgenericparameter.nim(36, 23) Error: expression '' has no type (or is ambiguous)
 tinheritgenericparameter.nim(37, 15) Error: Cannot inherit from: 'int'
 tinheritgenericparameter.nim(37, 15) Error: Cannot inherit from: 'int'
-tinheritgenericparameter.nim(37, 23) Error: object constructor needs an object type [proxy]
+tinheritgenericparameter.nim(37, 23) Error: object constructor needs an object type [error]
 tinheritgenericparameter.nim(37, 23) Error: expression '' has no type (or is ambiguous)
 '''
 """

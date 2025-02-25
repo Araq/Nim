@@ -31,7 +31,7 @@ Objective-C targets and the JavaScript target. [The C like targets](
 into a library or a final executable. [The JavaScript target](
 #backends-the-javascript-target) can generate a ``.js`` file which you
 reference from an HTML file or create a [standalone Node.js program](
-http://nodejs.org).
+https://nodejs.org).
 
 On top of generating libraries or standalone applications, Nim offers
 bidirectional interfacing with the backend targets through generic and
@@ -87,20 +87,19 @@ available. This includes:
 * OS-specific operations
 * threading, coroutines
 * some modules of the standard library
-* proper 64-bit integer arithmetic
 
 To compensate, the standard library has modules [catered to the JS backend](
-lib.html#pure-libraries-modules-for-js-backend)
+lib.html#pure-libraries-modules-for-the-javascript-backend)
 and more support will come in the future (for instance, Node.js bindings
 to get OS info).
 
 To compile a Nim module into a ``.js`` file use the `js`:option: command; the
 default is a ``.js`` file that is supposed to be referenced in an ``.html``
 file. However, you can also run the code with `nodejs`:idx:
-(http://nodejs.org):
+(https://nodejs.org):
 
   ```cmd
-  nim js -d:nodejs -r examples/hallo.nim
+  nim js -r examples/hallo.nim
   ```
 
 If you experience errors saying that `globalThis` is not defined, be
@@ -250,7 +249,7 @@ which will likely make your program crash at runtime.
 The name `NimMain` can be influenced via the `--nimMainPrefix:prefix` switch.
 Use `--nimMainPrefix:MyLib` and the function to call is named `MyLibNimMain`.
 
-When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors.
+When compiling to static or dynamic libraries, they don't call destructors of global variables as normal Nim programs would do. A C API `NimDestroyGlobals` is provided to call these global destructors. It is influenced by the `--nimMainPrefix:prefix` switch, too.
 
 
 ### Nim invocation example from C
@@ -359,7 +358,7 @@ Memory management
 
 In the previous sections, the `NimMain()` function reared its head. Since
 JavaScript already provides automatic memory management, you can freely pass
-objects between the two languages without problems. In C and derivate languages
+objects between the two languages without problems. In C and derivative languages
 you need to be careful about what you do and how you share memory. The
 previous examples only dealt with simple scalar values, but passing a Nim
 string to C, or reading back a C string in Nim already requires you to be

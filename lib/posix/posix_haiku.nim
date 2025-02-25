@@ -372,7 +372,7 @@ elif defined(haiku):
   # from sys/un.h
   const Sockaddr_un_path_length* = 126
 else:
-  # according to http://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
+  # according to https://pubs.opengroup.org/onlinepubs/009604499/basedefs/sys/un.h.html
   # this is >=92
   const Sockaddr_un_path_length* = 92
 
@@ -518,8 +518,6 @@ type
     fd*: cint        ## The following descriptor being polled.
     events*: cshort  ## The input event flags (see below).
     revents*: cshort ## The output event flags (see below).
-
-  Tnfds* {.importc: "nfds_t", header: "<poll.h>".} = culong
 
 var
   errno* {.importc, header: "<errno.h>".}: cint ## error variable

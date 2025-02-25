@@ -19,7 +19,7 @@ include system/inclrtl
 
 when defined(nimPreviewSlimSystem):
   import std/widestrs
-  
+
 when defined(nodejs):
   from std/private/oscommon import ReadDirEffect
 
@@ -33,8 +33,6 @@ elif defined(windows):
   import std/winlean
 elif defined(posix):
   import std/posix
-else:
-  {.error: "The cmdline module has not been implemented for the target platform.".}
 
 
 # Needed by windows in order to obtain the command line for targets
@@ -51,7 +49,7 @@ proc parseCmdLine*(c: string): seq[string] {.
   ## `parseopt module <parseopt.html>`_.
   ##
   ## On Windows, it uses the `following parsing rules
-  ## <http://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_:
+  ## <https://msdn.microsoft.com/en-us/library/17w5ykft.aspx>`_:
   ##
   ## * Arguments are delimited by white space, which is either a space or a tab.
   ## * The caret character (^) is not recognized as an escape character or

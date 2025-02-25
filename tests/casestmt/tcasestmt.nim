@@ -41,6 +41,11 @@ block t8333:
   case 0
   of 'a': echo 0
   else: echo 1
+block: # issue #11422
+  var c: int = 5
+  case c
+  of 'a' .. 'c': discard
+  else: discard
 
 
 block emptyset_when:

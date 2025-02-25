@@ -1,5 +1,5 @@
 discard """
-  errormsg: "for a 'var' type a variable needs to be passed; but 'uint16(x)' is immutable"
+  errormsg: "type mismatch: got <uint8>"
 """
 
 proc toUInt16(x: var uint16) =

@@ -33,6 +33,19 @@ proc evalTemplateAux(templ, actual: PNode, c: var TemplCtx, result: PNode) =
     let x = param
     if x.kind == nkArgList:
       for y in items(x): result.add(y)
+    elif nfDefaultRefsParam in x.flags:
+      # value of default param needs to be evaluated like template body
+      # if it contains other template params
+      var res: PNode
+      if isAtom(x):
+        res = newNodeI(nkPar, x.info)
+        evalTemplateAux(x, actual, c, res)
+        if res.len == 1: res = res[0]
+      else:
+        res = copyNode(x)
+        for i in 0..<x.safeLen:
+          evalTemplateAux(x[i], actual, c, res)
+      result.add res
     else:
       result.add copyTree(x)
 
@@ -51,7 +64,7 @@ proc evalTemplateAux(templ, actual: PNode, c: var TemplCtx, result: PNode) =
         if x == nil:
           x = copySym(s, c.idgen)
           # sem'check needs to set the owner properly later, see bug #9476
-          x.owner = nil # c.genSymOwner
+          setOwner(x, nil) # c.genSymOwner
           #if x.kind == skParam and x.owner.kind == skModule:
           #  internalAssert c.config, false
           idTablePut(c.mapping, s, x)
@@ -169,7 +182,7 @@ proc wrapInComesFrom*(info: TLineInfo; sym: PSym; res: PNode): PNode =
     d.add newSymNode(sym, info)
     result.add d
     result.add res
-    result.typ = res.typ
+    result.typ() = res.typ
 
 proc evalTemplate*(n: PNode, tmpl, genSymOwner: PSym;
                    conf: ConfigRef;

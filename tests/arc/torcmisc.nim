@@ -56,6 +56,7 @@ type
     peers*: Table[PeerID, PubSubPeer]
 
 proc getOrCreatePeer*(myParam: PubSub, peerId: PeerID, protos: seq[string]): PubSubPeer =
+  result = nil
   myParam.peers.withValue(peerId, peer):
     return peer[]
 

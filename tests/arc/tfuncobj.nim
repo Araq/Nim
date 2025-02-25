@@ -19,7 +19,7 @@ proc `=copy`(x: var FuncObj, y: FuncObj) {.error.}
 # bug #18433
 
 proc main =
-  var fs: seq[FuncObj]
+  var fs: seq[FuncObj] = @[]
 
   proc wrap(p: proc()) =
     proc closeOver() = p()

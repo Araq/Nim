@@ -1,8 +1,9 @@
 discard """
   action: reject
-  errormsg: "type mismatch: got <float64> but expected 'typeof(U(0.000001))'"
-  line: 8
-  column: 22
+nimout: '''
+t20883.nim(13, 4) template/generic instantiation of `foo` from here
+t20883.nim(9, 11) Error: cannot instantiate: 'U'
+'''
 """
 
 proc foo*[U](x: U = U(1e-6)) =

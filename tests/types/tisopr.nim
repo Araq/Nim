@@ -165,3 +165,7 @@ block: # previously tisop.nim
       doAssert f.y.typeof is float
       doAssert f.z.typeof is float
   p(A, f)
+
+block: # issue #22850
+  doAssert not (type is int)
+  doAssert not (typedesc is int)

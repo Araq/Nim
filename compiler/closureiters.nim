@@ -311,12 +311,12 @@ proc newNullifyCurExc(ctx: var Ctx, info: TLineInfo): PNode =
   let curExc = ctx.newCurExcAccess()
   curExc.info = info
   let nilnode = newNode(nkNilLit)
-  nilnode.typ = curExc.typ
+  nilnode.typ() = curExc.typ
   result = newTree(nkAsgn, curExc, nilnode)
 
 proc newOr(g: ModuleGraph, a, b: PNode): PNode {.inline.} =
   result = newTree(nkCall, newSymNode(g.getSysMagic(a.info, "or", mOr)), a, b)
-  result.typ = g.getSysType(a.info, tyBool)
+  result.typ() = g.getSysType(a.info, tyBool)
   result.info = a.info
 
 proc collectExceptState(ctx: var Ctx, n: PNode): PNode {.inline.} =
@@ -334,7 +334,7 @@ proc collectExceptState(ctx: var Ctx, n: PNode): PNode {.inline.} =
             newSymNode(g.getSysMagic(c.info, "of", mOf)),
             g.callCodegenProc("getCurrentException"),
             c[i])
-          nextCond.typ = ctx.g.getSysType(c.info, tyBool)
+          nextCond.typ() = ctx.g.getSysType(c.info, tyBool)
           nextCond.info = c.info
 
           if cond.isNil:
@@ -444,11 +444,11 @@ proc convertExprBodyToAsgn(ctx: Ctx, exprBody: PNode, res: PSym): PNode =
 
 proc newNotCall(g: ModuleGraph; e: PNode): PNode =
   result = newTree(nkCall, newSymNode(g.getSysMagic(e.info, "not", mNot), e.info), e)
-  result.typ = g.getSysType(e.info, tyBool)
+  result.typ() = g.getSysType(e.info, tyBool)
 
 proc boolLit(g: ModuleGraph; info: TLineInfo; value: bool): PNode =
   result = newIntLit(g, info, ord value)
-  result.typ = getSysType(g, info, tyBool)
+  result.typ() = getSysType(g, info, tyBool)
 
 proc captureVar(c: var Ctx, s: PSym) =
   if c.varStates.getOrDefault(s.itemId) != localRequiresLifting:
@@ -486,7 +486,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
 
       result = newNodeI(nkStmtListExpr, n.info)
       if n.typ.isNil: internalError(ctx.g.config, "lowerStmtListExprs: constr typ.isNil")
-      result.typ = n.typ
+      result.typ() = n.typ
 
       for i in 0..<n.len:
         case n[i].kind
@@ -513,7 +513,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
       let isExpr = not isEmptyType(n.typ)
       if isExpr:
         result = newNodeI(nkStmtListExpr, n.info)
-        result.typ = n.typ
+        result.typ() = n.typ
         tmp = ctx.newTempVar(n.typ, result)
       else:
         result = newNodeI(nkStmtList, n.info)
@@ -578,7 +578,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
 
       if isExpr:
         result = newNodeI(nkStmtListExpr, n.info)
-        result.typ = n.typ
+        result.typ() = n.typ
         let tmp = ctx.newTempVar(n.typ, result)
 
         n[0] = ctx.convertExprBodyToAsgn(n[0], tmp)
@@ -609,7 +609,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
 
       if isExpr:
         result = newNodeI(nkStmtListExpr, n.info)
-        result.typ = n.typ
+        result.typ() = n.typ
         let tmp = ctx.newTempVar(n.typ, result)
 
         if n[0].kind == nkStmtListExpr:
@@ -646,7 +646,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
 
       if isExpr:
         result = newNodeI(nkStmtListExpr, n.info)
-        result.typ = n.typ
+        result.typ() = n.typ
       else:
         result = newNodeI(nkStmtList, n.info)
 
@@ -732,7 +732,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
     if ns:
       needsSplit = true
       result = newNodeI(nkStmtListExpr, n.info)
-      result.typ = n.typ
+      result.typ() = n.typ
       let (st, ex) = exprToStmtList(n[^1])
       result.add(st)
       n[^1] = ex
@@ -802,7 +802,7 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
     if ns:
       needsSplit = true
       result = newNodeI(nkStmtListExpr, n.info)
-      result.typ = n.typ
+      result.typ() = n.typ
       let (st, ex) = exprToStmtList(n[0])
       result.add(st)
       n[0] = ex
@@ -814,10 +814,10 @@ proc lowerStmtListExprs(ctx: var Ctx, n: PNode, needsSplit: var bool): PNode =
     if ns:
       needsSplit = true
       result = newNodeI(nkStmtListExpr, n.info)
-      result.typ = n.typ
+      result.typ() = n.typ
       let (st, ex) = exprToStmtList(n[1])
       n.transitionSonsKind(nkBlockStmt)
-      n.typ = nil
+      n.typ() = nil
       n[1] = st
       result.add(n)
       result.add(ex)
@@ -838,9 +838,9 @@ proc newEndFinallyNode(ctx: var Ctx, info: TLineInfo): PNode =
   #         raise
   let curExc = ctx.newCurExcAccess()
   let nilnode = newNode(nkNilLit)
-  nilnode.typ = curExc.typ
+  nilnode.typ() = curExc.typ
   let cmp = newTree(nkCall, newSymNode(ctx.g.getSysMagic(info, "==", mEqRef), info), curExc, nilnode)
-  cmp.typ = ctx.g.getSysType(info, tyBool)
+  cmp.typ() = ctx.g.getSysType(info, tyBool)
 
   let retStmt =
     if ctx.nearestFinally == 0:
@@ -1185,11 +1185,11 @@ proc newArrayType(g: ModuleGraph; n: int, t: PType; idgen: IdGenerator; owner: P
 
 proc createExceptionTable(ctx: var Ctx): PNode {.inline.} =
   result = newNodeI(nkBracket, ctx.fn.info)
-  result.typ = ctx.g.newArrayType(ctx.exceptionTable.len, ctx.g.getSysType(ctx.fn.info, tyInt16), ctx.idgen, ctx.fn)
+  result.typ() = ctx.g.newArrayType(ctx.exceptionTable.len, ctx.g.getSysType(ctx.fn.info, tyInt16), ctx.idgen, ctx.fn)
 
   for i in ctx.exceptionTable:
     let elem = newIntNode(nkIntLit, i)
-    elem.typ = ctx.g.getSysType(ctx.fn.info, tyInt16)
+    elem.typ() = ctx.g.getSysType(ctx.fn.info, tyInt16)
     result.add(elem)
 
 proc newCatchBody(ctx: var Ctx, info: TLineInfo): PNode {.inline.} =
@@ -1212,7 +1212,7 @@ proc newCatchBody(ctx: var Ctx, info: TLineInfo): PNode {.inline.} =
     let getNextState = newTree(nkBracketExpr,
       ctx.createExceptionTable(),
       ctx.newStateAccess())
-    getNextState.typ = intTyp
+    getNextState.typ() = intTyp
 
     # :state = exceptionTable[:state]
     result.add(ctx.newStateAssgn(getNextState))
@@ -1223,7 +1223,7 @@ proc newCatchBody(ctx: var Ctx, info: TLineInfo): PNode {.inline.} =
       ctx.g.getSysMagic(info, "==", mEqI).newSymNode(),
       ctx.newStateAccess(),
       newIntTypeNode(0, intTyp))
-    cond.typ = boolTyp
+    cond.typ() = boolTyp
 
     let raiseStmt = newTree(nkRaiseStmt, ctx.g.emptyNode)
     let ifBranch = newTree(nkElifBranch, cond, raiseStmt)
@@ -1236,7 +1236,7 @@ proc newCatchBody(ctx: var Ctx, info: TLineInfo): PNode {.inline.} =
       ctx.g.getSysMagic(info, "<", mLtI).newSymNode,
       newIntTypeNode(0, intTyp),
       ctx.newStateAccess())
-    cond.typ = boolTyp
+    cond.typ() = boolTyp
 
     let asgn = newTree(nkAsgn, ctx.newUnrollFinallyAccess(info), cond)
     result.add(asgn)
@@ -1247,12 +1247,12 @@ proc newCatchBody(ctx: var Ctx, info: TLineInfo): PNode {.inline.} =
       ctx.g.getSysMagic(info, "<", mLtI).newSymNode,
       ctx.newStateAccess(),
       newIntTypeNode(0, intTyp))
-    cond.typ = boolTyp
+    cond.typ() = boolTyp
 
     let negateState = newTree(nkCall,
       ctx.g.getSysMagic(info, "-", mUnaryMinusI).newSymNode,
       ctx.newStateAccess())
-    negateState.typ = intTyp
+    negateState.typ() = intTyp
 
     let ifBranch = newTree(nkElifBranch, cond, ctx.newStateAssgn(negateState))
     let ifStmt = newTree(nkIfStmt, ifBranch)

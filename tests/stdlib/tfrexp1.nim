@@ -12,12 +12,12 @@ when manualTest:
   import strformat
 
 proc frexp_test(lo, hi, step: float64) =
-  var exp: int
+  var exp: int = 0
   var frac: float64
 
   var eps = 1e-15.float64
 
-  var x:float64 = lo
+  var x: float64 = lo
   while x <= hi:
     frac = frexp(x.float, exp)
     let rslt = pow(2.0, float(exp)) * frac

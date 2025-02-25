@@ -219,3 +219,9 @@ proc bug23223 = # bug #23223
   doAssert stuff == "hello"
 
 bug23223()
+
+block: # bug #23894
+  let v = high(uint) div 2
+  let s = v + 1 # 9223372036854775808
+  let m = succ v
+  doAssert s == m

@@ -1,7 +1,5 @@
 discard """
-  disabled: true # pure enums behave like overloaded enums on ambiguity now which gives a different error message
-  errormsg: "ambiguous identifier: 'amb'"
-  line: 19
+  matrix: "-d:testsConciseTypeMismatch"
 """
 
 # bug #8066
@@ -17,4 +15,13 @@ when true:
 
   echo valueA # MyEnum.valueA
   echo MyEnum.amb # OK.
-  echo amb    # Error: Unclear whether it's MyEnum.amb or OtherEnum.amb
+  echo amb #[tt.Error
+  ^ type mismatch
+Expression: echo amb
+  [1] amb: MyEnum | OtherEnum
+
+Expected one of (first mismatch at [position]):
+[1] proc echo(x: varargs[typed, `$$`])
+  ambiguous identifier: 'amb' -- use one of the following:
+    MyEnum.amb: MyEnum
+    OtherEnum.amb: OtherEnum]#

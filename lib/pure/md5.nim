@@ -100,32 +100,19 @@ proc decode(dest: var openArray[uint8], src: openArray[uint32]) =
     dest[i+3] = uint8(src[j] shr 24 and 0xff'u32)
     inc(i, 4)
 
-template slice(s: string, a, b): openArray[uint8] =
-  when nimvm:
-    # toOpenArray is not implemented in VM
-    var s2 = newSeq[uint8](s.len)
-    for i in 0 ..< s2.len:
-      s2[i] = uint8(s[i])
-    s2
-  else:
-    s.toOpenArrayByte(a, b)
-
 template slice(s: cstring, a, b): openArray[uint8] =
   when nimvm:
     # toOpenArray is not implemented in VM
-    slice($s, a, b)
+    toOpenArrayByte($s, a, b)
   else:
     when defined(js):
       # toOpenArrayByte for cstring is not implemented in JS
-      slice($s, a, b)
+      toOpenArrayByte($s, a, b)
     else:
       s.toOpenArrayByte(a, b)
 
 template slice(s: openArray[uint8], a, b): openArray[uint8] =
-  when nimvm:
-    s[a .. b]
-  else:
-    s.toOpenArray(a, b)
+  s.toOpenArray(a, b)
 
 const useMem = declared(copyMem)
 
@@ -140,7 +127,7 @@ template memOrNot(withMem, withoutMem): untyped =
 
 proc transform(buffer: openArray[uint8], state: var MD5State) =
   var
-    myBlock: MD5Block
+    myBlock: MD5Block = default(MD5Block)
   encode(myBlock, buffer)
   var a = state[0]
   var b = state[1]
@@ -238,8 +225,8 @@ proc toMD5*(s: string): MD5Digest =
   ## * `$ proc <#$,MD5Digest>`_ for converting MD5Digest to string
   runnableExamples:
     assert $toMD5("abc") == "900150983cd24fb0d6963f7d28e17f72"
-
-  var c: MD5Context
+  result = default(MD5Digest)
+  var c: MD5Context = default(MD5Context)
   md5Init(c)
   md5Update(c, s.slice(0, s.len - 1))
   md5Final(c, result)
@@ -261,8 +248,8 @@ proc getMD5*(s: string): string =
     assert getMD5("abc") == "900150983cd24fb0d6963f7d28e17f72"
 
   var
-    c: MD5Context
-    d: MD5Digest
+    c: MD5Context = default(MD5Context)
+    d: MD5Digest = default(MD5Digest)
   md5Init(c)
   md5Update(c, s.slice(0, s.len - 1))
   md5Final(c, d)
@@ -332,7 +319,7 @@ proc md5Final*(c: var MD5Context, digest: var MD5Digest) =
   ## If you use the `toMD5 proc <#toMD5,string>`_, there's no need to call this
   ## function explicitly.
   var
-    Bits: MD5CBits
+    Bits: MD5CBits = default(MD5CBits)
     PadLen: int
   decode(Bits, c.count)
   var Index = int((c.count[0] shr 3) and 0x3F)

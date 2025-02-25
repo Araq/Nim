@@ -47,9 +47,8 @@ proc processPipeline(graph: ModuleGraph; semNode: PNode; bModule: PPassContext):
   of NonePass:
     raiseAssert "use setPipeLinePass to set a proper PipelinePass"
 
-proc processImplicitImports(graph: ModuleGraph; implicits: seq[string], nodeKind: TNodeKind,
-                      m: PSym, ctx: PContext, bModule: PPassContext, idgen: IdGenerator,
-                      ) =
+proc processImplicitImports*(graph: ModuleGraph; implicits: seq[string], nodeKind: TNodeKind,
+                             m: PSym, ctx: PContext, bModule: PPassContext, idgen: IdGenerator) =
   # XXX fixme this should actually be relative to the config file!
   let relativeTo = toFullPath(graph.config, m.info)
   for module in items(implicits):
@@ -64,7 +63,7 @@ proc processImplicitImports(graph: ModuleGraph; implicits: seq[string], nodeKind
       if semNode == nil or processPipeline(graph, semNode, bModule) == nil:
         break
 
-proc prePass(c: PContext; n: PNode) =
+proc prePass*(c: PContext; n: PNode) =
   for son in n:
     if son.kind == nkPragma:
       for s in son:

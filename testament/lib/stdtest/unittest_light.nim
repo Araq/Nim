@@ -6,13 +6,18 @@ proc mismatch*[T](lhs: T, rhs: T): string =
   ## while avoiding pulling too many dependencies. On failure, diagnostic
   ## information is provided that in particular makes it easy to spot
   ## whitespace mismatches and where the mismatch is.
+  result = ""
+
   proc replaceInvisible(s: string): string =
+    result = ""
     for a in s:
       case a
       of '\n': result.add "\\n\n"
       else: result.add a
 
-  proc quoted(s: string): string = result.addQuoted s
+  proc quoted(s: string): string =
+    result = ""
+    result.addQuoted s
 
   result.add '\n'
   result.add "lhs:{" & replaceInvisible(

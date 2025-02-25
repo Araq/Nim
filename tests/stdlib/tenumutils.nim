@@ -35,5 +35,15 @@ template main =
     doAssert $b == "kb0"
     static: doAssert B.high.symbolName == "b2"
 
+  block:
+    type
+      Color = enum
+        Red = "red", Yellow = "yellow", Blue = "blue"
+
+    var s = Red
+    doAssert symbolName(s) == "Red"
+    var x: range[Red..Blue] = Yellow
+    doAssert symbolName(x) == "Yellow"
+
 static: main()
 main()

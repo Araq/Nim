@@ -61,7 +61,7 @@ template reallocPayload0(p: pointer; oldLen, newLen: int): ptr NimStrPayload =
 proc resize(old: int): int {.inline.} =
   if old <= 0: result = 4
   elif old <= high(int16): result = old * 2
-  else: result = old * 3 div 2 # for large arrays * 3/2 is better
+  else: result = old div 2 + old # for large arrays * 3/2 is better
 
 proc prepareAdd(s: var NimStringV2; addLen: int) {.compilerRtl.} =
   let newLen = s.len + addLen
@@ -112,9 +112,10 @@ proc nimToCStringConv(s: NimStringV2): cstring {.compilerproc, nonReloadable, in
 
 proc appendString(dest: var NimStringV2; src: NimStringV2) {.compilerproc, inline.} =
   if src.len > 0:
-    # also copy the \0 terminator:
-    copyMem(unsafeAddr dest.p.data[dest.len], unsafeAddr src.p.data[0], src.len+1)
+    # don't copy the \0 terminator:
+    copyMem(unsafeAddr dest.p.data[dest.len], unsafeAddr src.p.data[0], src.len)
     inc dest.len, src.len
+    dest.p.data[dest.len] = '\0'
 
 proc appendChar(dest: var NimStringV2; c: char) {.compilerproc, inline.} =
   dest.p.data[dest.len] = c
@@ -166,7 +167,7 @@ proc setLengthStrV2(s: var NimStringV2, newLen: int) {.compilerRtl.} =
   s.len = newLen
 
 proc nimAsgnStrV2(a: var NimStringV2, b: NimStringV2) {.compilerRtl.} =
-  if a.p == b.p: return
+  if a.p == b.p and a.len == b.len: return
   if isLiteral(b):
     # we can shallow copy literals:
     frees(a)

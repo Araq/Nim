@@ -84,7 +84,7 @@ proc toTreeSet*(conf: ConfigRef; s: TBitSet, settype: PType, info: TLineInfo): P
   elemType = settype[0]
   first = firstOrd(conf, elemType).toInt64
   result = newNodeI(nkCurly, info)
-  result.typ = settype
+  result.typ() = settype
   result.info = info
   e = 0
   while e < s.len * ElemSize:
@@ -101,7 +101,7 @@ proc toTreeSet*(conf: ConfigRef; s: TBitSet, settype: PType, info: TLineInfo): P
         result.add aa
       else:
         n = newNodeI(nkRange, info)
-        n.typ = elemType
+        n.typ() = elemType
         n.add aa
         let bb = newIntTypeNode(b + first, elemType)
         bb.info = info

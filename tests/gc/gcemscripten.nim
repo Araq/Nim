@@ -1,5 +1,6 @@
 discard """
   outputsub: "77\n77"
+  retries: 2
 """
 
 ## Check how GC/Alloc works in Emscripten

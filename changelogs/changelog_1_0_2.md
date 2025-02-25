@@ -11,7 +11,7 @@
 * Fixed "Assertion error when running `nim check` on compiler/nim.nim" [#12281](https://github.com/nim-lang/Nim/issues/12281)
 * Fixed "Compiler crash with empty array and generic instantiation with int as parameter" [#12264](https://github.com/nim-lang/Nim/issues/12264)
 * Fixed "Regression in JS backend codegen "Error: request to generate code for .compileTime proc"" [#12240](https://github.com/nim-lang/Nim/issues/12240)
-* Fix how `relativePath` handle case sensitiviy
+* Fix how `relativePath` handles case sensitivity
 * Fixed "SIGSEGV in compiler when using generic types and seqs" [#12336](https://github.com/nim-lang/Nim/issues/12336)
 * Fixed "[1.0.0] weird interaction between `import os` and casting integer to char on macosx trigger bad codegen" [#12291](https://github.com/nim-lang/Nim/issues/12291)
 * VM: no special casing for big endian machines
@@ -43,7 +43,7 @@
 * threadpool: fix link in docs (#12258)
 * Fix spellings (#12277)
 * fix #12278, don't expose internal PCRE documentation
-* Fixed "Documentation of quitprocs is wrong" [#12279(https://github.com/nim-lang/Nim/issues/12279)
+* Fixed "Documentation of quitprocs is wrong" [#12279](https://github.com/nim-lang/Nim/issues/12279)
 * Fix typo in docs
 * Fix reference to parseSpec proc in readme
 * [doc/tut1] removed discard discussion in comments

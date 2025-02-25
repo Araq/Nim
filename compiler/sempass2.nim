@@ -11,7 +11,7 @@ import
   ast, astalgo, msgs, renderer, magicsys, types, idents, trees,
   wordrecg, options, guards, lineinfos, semfold, semdata,
   modulegraphs, varpartitions, typeallowed, nilcheck, errorhandling,
-  semstrictfuncs, suggestsymdb
+  semstrictfuncs, suggestsymdb, pushpoppragmas
 
 import std/[tables, intsets, strutils, sequtils]
 
@@ -85,6 +85,7 @@ type
     isInnerProc: bool
     inEnforcedNoSideEffects: bool
     currOptions: TOptions
+    optionsStack: seq[(TOptions, TNoteKinds)]
     config: ConfigRef
     graph: ModuleGraph
     c: PContext
@@ -123,10 +124,11 @@ proc collectObjectTree(graph: ModuleGraph, n: PNode) =
             else:
               graph.objectTree[root].add (depthLevel, typ)
 
-proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
-  if typ == nil or sfGeneratedOp in tracked.owner.flags:
+proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo; explicit = false) =
+  if typ == nil or (sfGeneratedOp in tracked.owner.flags and not explicit):
     # don't create type bound ops for anything in a function with a `nodestroy` pragma
     # bug #21987
+    # unless this is an explicit call, bug #24626
     return
   when false:
     let realType = typ.skipTypes(abstractInst)
@@ -193,7 +195,7 @@ proc guardDotAccess(a: PEffects; n: PNode) =
     let dot = newNodeI(nkDotExpr, n.info, 2)
     dot[0] = n[0]
     dot[1] = newSymNode(g)
-    dot.typ = g.typ
+    dot.typ() = g.typ
     for L in a.locked:
       #if a.guards.sameSubexprs(dot, L): return
       if guards.sameTree(dot, L): return
@@ -211,6 +213,7 @@ proc varDecl(a: PEffects; n: PNode) {.inline.} =
 
 proc skipHiddenDeref(n: PNode): PNode {.inline.} =
   result = if n.kind == nkHiddenDeref: n[0] else: n
+
 
 proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
   let n = skipHiddenDeref(n)
@@ -411,7 +414,7 @@ proc throws(tracked, n, orig: PNode) =
   if n.typ == nil or n.typ.kind != tyError:
     if orig != nil:
       let x = copyTree(orig)
-      x.typ = n.typ
+      x.typ() = n.typ
       tracked.add x
     else:
       tracked.add n
@@ -426,12 +429,12 @@ proc excType(g: ModuleGraph; n: PNode): PType =
 
 proc createRaise(g: ModuleGraph; n: PNode): PNode =
   result = newNode(nkType)
-  result.typ = getEbase(g, n.info)
+  result.typ() = getEbase(g, n.info)
   if not n.isNil: result.info = n.info
 
 proc createTag(g: ModuleGraph; n: PNode): PNode =
   result = newNode(nkType)
-  result.typ = g.sysTypeFromName(n.info, "RootEffect")
+  result.typ() = g.sysTypeFromName(n.info, "RootEffect")
   if not n.isNil: result.info = n.info
 
 proc addRaiseEffect(a: PEffects, e, comesFrom: PNode) =
@@ -616,9 +619,16 @@ proc trackPragmaStmt(tracked: PEffects, n: PNode) =
   for i in 0..<n.len:
     var it = n[i]
     let pragma = whichPragma(it)
-    if pragma == wEffects:
+    case pragma
+    of wEffects:
       # list the computed effects up to here:
       listEffects(tracked)
+    of wPush:
+      processPushBackendOption(tracked.c.config, tracked.optionsStack, tracked.currOptions, n, i+1)
+    of wPop:
+      processPopBackendOption(tracked.c.config, tracked.optionsStack, tracked.currOptions)
+    else:
+      discard
 
 template notGcSafe(t): untyped = {tfGcSafe, tfNoSideEffect} * t.flags == {}
 
@@ -1064,7 +1074,7 @@ proc trackCall(tracked: PEffects; n: PNode) =
       # rebind type bounds operations after createTypeBoundOps call
       let t = n[1].typ.skipTypes({tyAlias, tyVar})
       if a.sym != getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind)):
-        createTypeBoundOps(tracked, t, n.info)
+        createTypeBoundOps(tracked, t, n.info, explicit = true)
         let op = getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind))
         if op != nil:
           n[0].sym = op
@@ -1203,7 +1213,7 @@ proc track(tracked: PEffects, n: PNode) =
     if n.sym.typ != nil and tfHasAsgn in n.sym.typ.flags:
       tracked.owner.flags.incl sfInjectDestructors
       # bug #15038: ensure consistency
-      if not hasDestructor(n.typ) and sameType(n.typ, n.sym.typ): n.typ = n.sym.typ
+      if n.typ == nil or (not hasDestructor(n.typ) and sameType(n.typ, n.sym.typ)): n.typ() = n.sym.typ
   of nkHiddenAddr, nkAddr:
     if n[0].kind == nkSym and isLocalSym(tracked, n[0].sym) and
           n.typ.kind notin {tyVar, tyLent}:
@@ -1294,7 +1304,12 @@ proc track(tracked: PEffects, n: PNode) =
       let last = lastSon(child)
       track(tracked, last)
   of nkCaseStmt: trackCase(tracked, n)
-  of nkWhen, nkIfStmt, nkIfExpr: trackIf(tracked, n)
+  of nkWhen: # This should be a "when nimvm" node.
+    let oldState = tracked.init.len
+    track(tracked, n[0][1])
+    tracked.init.setLen(oldState)
+    track(tracked, n[1][0])
+  of nkIfStmt, nkIfExpr: trackIf(tracked, n)
   of nkBlockStmt, nkBlockExpr: trackBlock(tracked, n[1])
   of nkWhileStmt:
     # 'while true' loop?
@@ -1595,7 +1610,7 @@ proc initEffects(g: ModuleGraph; effects: PNode; s: PSym; c: PContext): TEffects
   result = TEffects(exc: effects[exceptionEffects], tags: effects[tagEffects],
             forbids: effects[forbiddenEffects], owner: s, ownerModule: s.getModule,
             init: @[], locked: @[], graph: g, config: g.config, c: c,
-            currentBlock: 1
+            currentBlock: 1, optionsStack: @[(g.config.options, g.config.notes)]
   )
   result.guards.s = @[]
   result.guards.g = g
@@ -1631,6 +1646,9 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
      s.kind in {skProc, skFunc, skConverter, skMethod}:
     var res = s.ast[resultPos].sym # get result symbol
     t.scopes[res.id] = t.currentBlock
+    if sfNoInit in s.flags:
+      # marks result "noinit"
+      incl res.flags, sfNoInit
 
   track(t, body)
 
@@ -1643,13 +1661,14 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
           (t.config.selectedGC in {gcArc, gcOrc, gcAtomicArc} and
             (isClosure(typ.skipTypes(abstractInst)) or param.id in t.escapingParams)):
         createTypeBoundOps(t, typ, param.info)
-      if isOutParam(typ) and param.id notin t.init:
+      if isOutParam(typ) and param.id notin t.init and s.magic == mNone:
         message(g.config, param.info, warnProveInit, param.name.s)
 
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
        strictDefs in c.features) and
-     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone:
+     s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone and
+     sfNoInit notin s.flags:
     var res = s.ast[resultPos].sym # get result symbol
     if res.id notin t.init and breaksBlock(body) != bsNoReturn:
       if tfRequiresInit in s.typ.returnType.flags:

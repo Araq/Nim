@@ -143,6 +143,7 @@ proc reversed*[T](a: openArray[T]): seq[T] {.inline.} =
   runnableExamples:
     assert [10, 11, 12].reversed == @[12, 11, 10]
     assert seq[string].default.reversed == @[]
+  result = @[]
   let n = a.len
   result.setLen(n)
   for i in 0..<n: result[i] = a[n - (i + 1)]
@@ -757,7 +758,7 @@ proc prevPermutation*[T](x: var openArray[T]): bool {.discardable.} =
 
 proc rotateInternal[T](arg: var openArray[T]; first, middle, last: int): int =
   ## A port of std::rotate from C++.
-  ## Ported from [this reference](http://www.cplusplus.com/reference/algorithm/rotate/).
+  ## Ported from [this reference](https://www.cplusplus.com/reference/algorithm/rotate/).
   result = first + last - middle
 
   if first == middle or middle == last:

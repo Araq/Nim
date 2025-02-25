@@ -88,6 +88,7 @@ proc rsGetPosition(s: Stream): int =
   return s.pos
 
 proc rsPeekData(s: Stream, buffer: pointer, bufLen: int): int =
+  result = 0
   let s = ReadSocketStream(s)
   if bufLen > 0:
     let oldLen = s.buf.len

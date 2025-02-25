@@ -79,7 +79,7 @@ proc semConstrField(c: PContext, flags: TExprFlags,
     if nfSkipFieldChecking in assignment[1].flags:
       discard
     elif not fieldVisible(c, field):
-      localError(c.config, initExpr.info,
+      localError(c.config, assignment[0].info,
         "the field '$1' is not accessible." % [field.name.s])
       return
 
@@ -188,7 +188,7 @@ proc collectOrAddMissingCaseFields(c: PContext, branchNode: PNode,
           newNodeIT(nkType, constrCtx.initExpr.info, asgnType)
         )
     asgnExpr.flags.incl nfSkipFieldChecking
-    asgnExpr.typ = recTyp
+    asgnExpr.typ() = recTyp
     defaults.add newTree(nkExprColonExpr, newSymNode(sym), asgnExpr)
 
 proc collectBranchFields(c: PContext, n: PNode, discriminatorVal: PNode,
@@ -387,10 +387,13 @@ proc semConstructFields(c: PContext, n: PNode, constrCtx: var ObjConstrContext,
     if e != nil:
       result.status = initFull
     elif field.ast != nil:
-      result.status = initUnknown
-      result.defaults.add newTree(nkExprColonExpr, n, field.ast)
+      if efIgnoreDefaults notin flags:
+        result.status = initUnknown
+        result.defaults.add newTree(nkExprColonExpr, n, field.ast)
+      else:
+        result.status = initNone
     else:
-      if efWantNoDefaults notin flags: # cannot compute defaults at the typeRightPass
+      if {efWantNoDefaults, efIgnoreDefaults} * flags == {}: # cannot compute defaults at the typeRightPass
         let defaultExpr = defaultNodeField(c, n, constrCtx.checkDefault)
         if defaultExpr != nil:
           result.status = initUnknown
@@ -443,7 +446,7 @@ proc defaultConstructionError(c: PContext, t: PType, info: TLineInfo) =
     assert objType != nil
   if objType.kind == tyObject:
     var constrCtx = initConstrContext(objType, newNodeI(nkObjConstr, info))
-    let initResult = semConstructTypeAux(c, constrCtx, {efWantNoDefaults})
+    let initResult = semConstructTypeAux(c, constrCtx, {efIgnoreDefaults})
     if constrCtx.missingFields.len > 0:
       localError(c.config, info,
         "The $1 type doesn't have a default value. The following fields must be initialized: $2." % [typeToString(t), listSymbolNames(constrCtx.missingFields)])
@@ -462,17 +465,20 @@ proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType 
   if t == nil:
     return localErrorNode(c, result, "object constructor needs an object type")
 
-  if t.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
-      expectedType != nil and expectedType.skipTypes({tyGenericInst,
-      tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
-    t = expectedType
+  when false:
+    # attempted type inference for generic object types,
+    # doesn't work since n[0] isn't set and seems underspecified
+    if t.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind != tyObject and
+        expectedType != nil and expectedType.skipTypes({tyGenericInst,
+        tyAlias, tySink, tyOwned, tyRef}).kind == tyObject:
+      t = expectedType
 
   t = skipTypes(t, {tyGenericInst, tyAlias, tySink, tyOwned})
   if t.kind == tyRef:
     t = skipTypes(t.elementType, {tyGenericInst, tyAlias, tySink, tyOwned})
     if optOwnedRefs in c.config.globalOptions:
-      result.typ = makeVarType(c, result.typ, tyOwned)
+      result.typ() = makeVarType(c, result.typ, tyOwned)
       # we have to watch out, there are also 'owned proc' types that can be used
       # multiple times as long as they don't have closures.
       result.typ.flags.incl tfHasOwned
@@ -515,7 +521,7 @@ proc semObjConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType 
       for j in 1..<i:
         let prevId = considerQuotedIdent(c, result[j][0])
         if prevId.id == id.id:
-          localError(c.config, field.info, errFieldInitTwice % id.s)
+          localError(c.config, field[0].info, errFieldInitTwice % id.s)
           hasError = true
           break
       # 2) No such field exists in the constructed type

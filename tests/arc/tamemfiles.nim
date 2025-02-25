@@ -31,6 +31,7 @@ proc `+!`*(p: pointer, i: uint64): pointer {.inline.} =
 proc charEq(x, c: char): bool {.inline.} = x == c
 
 proc initSplitr*(delim: string): Splitr =
+  result = default(Splitr)
   if delim == "white":          #User can use any other permutation if needed
     result.repeat = true
     result.chrDlm = ' '
@@ -81,6 +82,7 @@ template defSplit[T](slc: T, fs: var seq[MemSlice], n: int, repeat: bool,
 
 proc msplit*(s: MemSlice, fs: var seq[MemSlice], sep=' ', n=0,
              repeat=false): int =
+  result = 0
   defSplit(s, fs, n, repeat, sep, cmemchr, charEq)
 
 proc split*(s: Splitr, line: MemSlice, cols: var seq[MemSlice],
@@ -92,6 +94,7 @@ proc split*(s: Splitr, line: MemSlice, cols: var seq[MemSlice],
 # to mask the arc problem, as does simplifying `Table` to `seq[char]`.
 
 proc load(path: string, delim=" "): Table[MemSlice, seq[char]] =
+  result = default(Table[MemSlice, seq[char]])
   let f = memfiles.open(path)
   let splitr = initSplitr(delim)
   var cols: seq[MemSlice] = @[ ]    # re-used seq buffer

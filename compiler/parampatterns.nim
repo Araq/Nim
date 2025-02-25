@@ -266,7 +266,7 @@ proc isAssignable*(owner: PSym, n: PNode): TAssignableResult =
     if skipTypes(n.typ, abstractPtrs-{tyTypeDesc}).kind in
         {tyOpenArray, tyTuple, tyObject}:
       result = isAssignable(owner, n[1])
-    elif compareTypes(n.typ, n[1].typ, dcEqIgnoreDistinct):
+    elif compareTypes(n.typ, n[1].typ, dcEqIgnoreDistinct, {IgnoreRangeShallow}):
       # types that are equal modulo distinction preserve l-value:
       result = isAssignable(owner, n[1])
   of nkHiddenDeref:
@@ -283,8 +283,15 @@ proc isAssignable*(owner: PSym, n: PNode): TAssignableResult =
   of nkObjUpConv, nkObjDownConv, nkCheckedFieldExpr:
     result = isAssignable(owner, n[0])
   of nkCallKinds:
-    # builtin slice keeps lvalue-ness:
-    if getMagic(n) in {mArrGet, mSlice}:
+    let m = getMagic(n)
+    if m == mSlice:
+      # builtin slice keeps l-value-ness
+      # except for pointers because slice dereferences
+      if n[1].typ.kind == tyPtr:
+        result = arLValue
+      else:
+        result = isAssignable(owner, n[1])
+    elif m == mArrGet:
       result = isAssignable(owner, n[1])
     elif n.typ != nil:
       case n.typ.kind

@@ -9,3 +9,6 @@ const
 type
   MyEnum* = enum
     foo, bar
+
+proc foo2*[T: int, M: string, U](x: T, y: U, z: M) =
+  echo 1

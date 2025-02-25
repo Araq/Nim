@@ -109,7 +109,7 @@ import std/private/since
 import std/exitprocs
 
 when defined(nimPreviewSlimSystem):
-  import std/assertions
+  import std/[assertions, syncio]
 
 import std/[macros, strutils, streams, times, sets, sequtils]
 
@@ -665,9 +665,7 @@ macro check*(conditions: untyped): untyped =
       checkpoint(name & " was " & $value)
 
   proc inspectArgs(exp: NimNode): tuple[assigns, check, printOuts: NimNode] =
-    result.check = copyNimTree(exp)
-    result.assigns = newNimNode(nnkStmtList)
-    result.printOuts = newNimNode(nnkStmtList)
+    result = (newNimNode(nnkStmtList), copyNimTree(exp), newNimNode(nnkStmtList))
 
     var counter = 0
 

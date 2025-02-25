@@ -1,5 +1,6 @@
 discard """
   outputsub: "Success!"
+  retries: 2
 """
 
 # This is adapted from a benchmark written by John Ellis and Pete Kovac

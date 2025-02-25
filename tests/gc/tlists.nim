@@ -1,5 +1,6 @@
 discard """
     output: '''Success'''
+    retries: 2
 """
 
 # bug #3793

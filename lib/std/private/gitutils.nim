@@ -41,6 +41,7 @@ proc diffFiles*(path1, path2: string): tuple[output: string, same: bool] =
   # This could be customized, e.g. non-git diff with `diff -uNdr`, or with
   # git diff options (e.g. --color-moved, --word-diff).
   # in general, `git diff` has more options than `diff`.
+  result = default(tuple[output: string, same: bool])
   var status = 0
   (result.output, status) = execCmdEx("git diff --no-index $1 $2" % [path1.quoteShell, path2.quoteShell])
   doAssert (status == 0) or (status == 1)

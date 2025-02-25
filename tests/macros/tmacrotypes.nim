@@ -1,9 +1,9 @@
 discard """
-  nimout: '''intProc; ntyProc; proc[int, int, float]; proc (a: int; b: float): int
+  nimout: '''intProc; ntyProc; proc[int, int, float]; proc (a: int; b: float): int {.nimcall.}
 void; ntyVoid; void; void
 int; ntyInt; int; int
-proc (); ntyProc; proc[void]; proc ()
-voidProc; ntyProc; proc[void]; proc ()
+proc () {.nimcall.}; ntyProc; proc[void]; proc () {.nimcall.}
+voidProc; ntyProc; proc[void]; proc () {.nimcall.}
 listing fields for ObjType
 a: string
 b: int

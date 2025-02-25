@@ -114,7 +114,7 @@ proc editDistance*(a, b: string): int {.noSideEffect.} =
   iCurrentA = iStart
   var
     char2pI = -1
-    char2pPrev: int
+    char2pPrev: int = 0
   for i in 1 .. (len1 - 1):
     iNextA = iCurrentA
     a.fastRuneAt(iNextA, runeA)

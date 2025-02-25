@@ -88,6 +88,13 @@ block: # https://github.com/nim-lang/RFCs/issues/294
   reject: Goo(k2)
   reject: k2.Goo
 
+  type KooRange = range[k2..k2]
+  accept: KooRange(k2)
+  accept: k2.KooRange
+  let k2ranged: KooRange = k2
+  accept: Koo(k2ranged)
+  accept: k2ranged.Koo
+
 reject:
   # bug #18550
   proc f(c: char): cstring =

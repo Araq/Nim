@@ -1490,7 +1490,9 @@ proc clearInterval*(i: Interval) {.importc, nodecl.}
 proc addEventListener*(et: EventTarget, ev: cstring, cb: proc(ev: Event), useCapture: bool = false)
 proc addEventListener*(et: EventTarget, ev: cstring, cb: proc(ev: Event), options: AddEventListenerOptions)
 proc dispatchEvent*(et: EventTarget, ev: Event)
-proc removeEventListener*(et: EventTarget; ev: cstring; cb: proc(ev: Event))
+proc removeEventListener*(et: EventTarget, ev: cstring, cb: proc(ev: Event), useCapture: bool = false)
+proc removeEventListener*(et: EventTarget, ev: cstring, cb: proc(ev: Event), options: AddEventListenerOptions)
+
 
 # Window "methods"
 proc alert*(w: Window, msg: cstring)

@@ -441,11 +441,15 @@ proc destMightOwn(c: var Partitions; dest: var VarIndex; n: PNode) =
 
   of nkIfStmt, nkIfExpr:
     for i in 0..<n.len:
+      inc c.inConditional
       destMightOwn(c, dest, n[i].lastSon)
+      dec c.inConditional
 
   of nkCaseStmt:
     for i in 1..<n.len:
+      inc c.inConditional
       destMightOwn(c, dest, n[i].lastSon)
+      dec c.inConditional
 
   of nkStmtList, nkStmtListExpr:
     if n.len > 0:
@@ -498,8 +502,17 @@ proc destMightOwn(c: var Partitions; dest: var VarIndex; n: PNode) =
         # we know the result is derived from the first argument:
         var roots: seq[(PSym, int)] = @[]
         allRoots(n[1], roots, RootEscapes)
-        for r in roots:
-          connect(c, dest.sym, r[0], n[1].info)
+        if roots.len == 0 and c.inConditional > 0:
+          # when in a conditional expression,
+          # to ensure that the first argument isn't outlived
+          # by the lvalue, we need find the root, otherwise
+          # it is probably a local temporary
+          # (e.g. a return value from a call),
+          # we should prevent cursorfication
+          dest.flags.incl preventCursor
+        else:
+          for r in roots:
+            connect(c, dest.sym, r[0], n[1].info)
 
       else:
         let magic = if n[0].kind == nkSym: n[0].sym.magic else: mNone

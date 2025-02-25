@@ -424,7 +424,8 @@ proc collectCycles() =
         rootsThreshold = 0
       #cfprintf(cstderr, "[collectCycles] freed %ld, touched %ld new threshold %ld\n", j.freed, j.touched, rootsThreshold)
     elif rootsThreshold < high(int) div 4:
-      rootsThreshold = (if rootsThreshold <= 0: defaultThreshold else: rootsThreshold) * 3 div 2
+      rootsThreshold = (if rootsThreshold <= 0: defaultThreshold else: rootsThreshold)
+      rootsThreshold = rootsThreshold div 2 + rootsThreshold
   when logOrc:
     cfprintf(cstderr, "[collectCycles] end; freed %ld new threshold %ld touched: %ld mem: %ld rcSum: %ld edges: %ld\n", j.freed, rootsThreshold, j.touched,
       getOccupiedMem(), j.rcSum, j.edges)
@@ -508,6 +509,7 @@ proc rememberCycle(isDestroyAction: bool; s: Cell; desc: PNimTypeV2) {.noinline.
       registerCycle(s, desc)
 
 proc nimDecRefIsLastCyclicDyn(p: pointer): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:
@@ -519,6 +521,7 @@ proc nimDecRefIsLastCyclicDyn(p: pointer): bool {.compilerRtl, inl.} =
     rememberCycle(result, cell, cast[ptr PNimTypeV2](p)[])
 
 proc nimDecRefIsLastDyn(p: pointer): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:
@@ -532,6 +535,7 @@ proc nimDecRefIsLastDyn(p: pointer): bool {.compilerRtl, inl.} =
         unregisterCycle(cell)
 
 proc nimDecRefIsLastCyclicStatic(p: pointer; desc: PNimTypeV2): bool {.compilerRtl, inl.} =
+  result = false
   if p != nil:
     var cell = head(p)
     if (cell.rc and not rcMask) == 0:

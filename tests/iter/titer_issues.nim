@@ -1,4 +1,5 @@
 discard """
+  target: "c js"
   output: '''
 0
 1
@@ -392,3 +393,19 @@ iterator tryFinally() {.closure.} =
 
 var x = tryFinally
 x()
+
+block: # bug #24033
+  type Query = ref object
+
+  iterator pairs(query: Query): (int, (string, float32)) =
+    var output: (int, (string, float32)) = (0, ("foo", 3.14))
+    for id in @[0, 1, 2]:
+      output[0] = id
+      yield output
+
+  var collections: seq[(int, string, string)]
+
+  for id, (str, num) in Query():
+    collections.add (id, str, $num)
+
+  doAssert collections[1] == (1, "foo", "3.14")

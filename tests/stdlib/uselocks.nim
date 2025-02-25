@@ -5,6 +5,7 @@ type MyType* [T] = object
   lock: Lock
 
 proc createMyType*[T]: MyType[T] =
+  result = default(MyType[T])
   initLock(result.lock)
 
 proc use* (m: var MyType): int =

@@ -33,7 +33,7 @@ import
   nversion, msgs, idents, types,
   ropes, wordrecg, renderer,
   cgmeth, lowerings, sighashes, modulegraphs, lineinfos,
-  transf, injectdestructors, sourcemap, astmsgs, backendpragmas,
+  transf, injectdestructors, sourcemap, astmsgs, pushpoppragmas,
   mangleutils
 
 import pipelineutils
@@ -103,7 +103,7 @@ type
     prc: PSym
     globals, locals, body: Rope
     options: TOptions
-    optionsStack: seq[TOptions]
+    optionsStack: seq[(TOptions, TNoteKinds)]
     module: BModule
     g: PGlobals
     beforeRetNeeded: bool
@@ -195,7 +195,7 @@ proc mapType(typ: PType): TJSTypeKind =
   of tyPointer:
     # treat a tyPointer like a typed pointer to an array of bytes
     result = etyBaseIndex
-  of tyRange, tyDistinct, tyOrdinal, tyProxy, tyLent:
+  of tyRange, tyDistinct, tyOrdinal, tyError, tyLent:
     # tyLent is no-op as JS has pass-by-reference semantics
     result = mapType(skipModifier t)
   of tyInt..tyInt64, tyUInt..tyUInt64, tyEnum, tyChar: result = etyInt
@@ -609,6 +609,17 @@ template unaryExpr(p: PProc, n: PNode, r: var TCompRes, magic, frmt: string) =
   var a, tmp = r.rdLoc
   if "$2" in frmt: (a, tmp) = maybeMakeTemp(p, n[1], r)
   r.res = frmt % [a, tmp]
+  r.kind = resExpr
+
+proc genBreakState(p: PProc, n: PNode, r: var TCompRes) =
+  var a: TCompRes = default(TCompRes)
+  # mangle `:state` properly somehow
+  if n.kind == nkClosure:
+    gen(p, n[1], a)
+    r.res = "(($1).HEX3Astate < 0)" % [rdLoc(a)]
+  else:
+    gen(p, n, a)
+    r.res = "((($1.ClE_0).HEX3Astate) < 0)" % [rdLoc(a)]
   r.kind = resExpr
 
 proc arithAux(p: PProc, n: PNode, r: var TCompRes, op: TMagic) =
@@ -1098,14 +1109,19 @@ proc genCaseJS(p: PProc, n: PNode, r: var TCompRes) =
           lineF(p, "break;$n", [])
     of nkElse:
       if transferRange:
-         lineF(p, "else{$n", [])
+        if n.len == 2: # a dangling else for a case statement
+          transferRange = false
+          lineF(p, "switch ($1) {$n", [cond.rdLoc])
+          lineF(p, "default: $n", [])
+        else:
+          lineF(p, "else{$n", [])
       else:
         lineF(p, "default: $n", [])
       p.nested:
         gen(p, it[0], stmt)
         moveInto(p, stmt, r)
         if transferRange:
-           lineF(p, "}$n", [])
+          lineF(p, "}$n", [])
         else:
           lineF(p, "break;$n", [])
     else: internalError(p.config, it.info, "jsgen.genCaseStmt")
@@ -1569,15 +1585,8 @@ proc genAddr(p: PProc, n: PNode, r: var TCompRes) =
         else: internalError(p.config, n[0].info, "expr(nkBracketExpr, " & $kindOfIndexedExpr & ')')
     of nkObjDownConv:
       gen(p, n[0], r)
-    of nkHiddenDeref:
+    of nkHiddenDeref, nkDerefExpr:
       gen(p, n[0], r)
-    of nkDerefExpr:
-      var x = n[0]
-      if n.kind == nkHiddenAddr:
-        x = n[0][0]
-        if n.typ.skipTypes(abstractVar).kind != tyOpenArray:
-          x.typ = n.typ
-      gen(p, x, r)
     of nkHiddenAddr:
       gen(p, n[0], r)
     of nkConv:
@@ -2442,6 +2451,7 @@ proc genMagic(p: PProc, n: PNode, r: var TCompRes) =
   of mMulSet: binaryExpr(p, n, r, "SetMul", "SetMul($1, $2)")
   of mPlusSet: binaryExpr(p, n, r, "SetPlus", "SetPlus($1, $2)")
   of mMinusSet: binaryExpr(p, n, r, "SetMinus", "SetMinus($1, $2)")
+  of mXorSet: binaryExpr(p, n, r, "SetXor", "SetXor($1, $2)")
   of mIncl: binaryExpr(p, n, r, "", "$1[$2] = true")
   of mExcl: binaryExpr(p, n, r, "", "delete $1[$2]")
   of mInSet:
@@ -2632,7 +2642,13 @@ proc genRangeChck(p: PProc, n: PNode, r: var TCompRes, magic: string) =
   let src = skipTypes(n[0].typ, abstractVarRange)
   let dest = skipTypes(n.typ, abstractVarRange)
   if optRangeCheck notin p.options:
-    return
+    if optJsBigInt64 in p.config.globalOptions and
+          dest.kind in {tyUInt..tyUInt32, tyInt..tyInt32} and
+          src.kind in {tyInt64, tyUInt64}:
+      # conversions to Number are kept
+      r.res = "Number($1)" % [r.res]
+    else:
+      discard
   elif dest.kind in {tyUInt..tyUInt64} and checkUnsignedConversions notin p.config.legacyFeatures:
     if src.kind in {tyInt64, tyUInt64} and optJsBigInt64 in p.config.globalOptions:
       r.res = "BigInt.asUintN($1, $2)" % [$(dest.size * 8), r.res]
@@ -2813,9 +2829,9 @@ proc genPragma(p: PProc, n: PNode) =
     case whichPragma(it)
     of wEmit: genAsmOrEmitStmt(p, it[1])
     of wPush:
-      processPushBackendOption(p.optionsStack, p.options, n, i+1)
+      processPushBackendOption(p.config, p.optionsStack, p.options, n, i+1)
     of wPop:
-      processPopBackendOption(p.optionsStack, p.options)
+      processPopBackendOption(p.config, p.optionsStack, p.options)
     else: discard
 
 proc genCast(p: PProc, n: PNode, r: var TCompRes) =
@@ -3043,16 +3059,7 @@ proc gen(p: PProc, n: PNode, r: var TCompRes) =
   of nkGotoState, nkState:
     globalError(p.config, n.info, "not implemented")
   of nkBreakState:
-    var a: TCompRes = default(TCompRes)
-    if n[0].kind == nkClosure:
-      gen(p, n[0][1], a)
-      let sym = n[0][1].typ[0].n[0].sym
-      r.res = "(($1).$2 < 0)" % [rdLoc(a), mangleName(p.module, sym)]
-    else:
-      gen(p, n[0], a)
-      let sym = n[0].typ[0].n[0].sym
-      r.res = "((($1.ClE_0).$2) < 0)" % [rdLoc(a), mangleName(p.module, sym)]
-    r.kind = resExpr
+    genBreakState(p, n[0], r)
   of nkPragmaBlock: gen(p, n.lastSon, r)
   of nkComesFrom:
     discard "XXX to implement for better stack traces"
