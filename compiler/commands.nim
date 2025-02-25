@@ -1076,6 +1076,9 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
   of "shownonexports":
     expectNoArg(conf, switch, arg, pass, info)
     showNonExportedFields(conf)
+  of "raw":
+    expectNoArg(conf, switch, arg, pass, info)
+    docRawOutput(conf)
   of "exceptions":
     case arg.normalize
     of "cpp": conf.exc = excCpp
