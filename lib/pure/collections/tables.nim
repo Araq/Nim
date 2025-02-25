@@ -281,7 +281,7 @@ proc initTable*[A, B](initialSize = defaultInitialSize): Table[A, B] =
   result = default(Table[A, B])
   initImpl(result, initialSize)
 
-proc `[]=`*[A, B](t: var Table[A, B], key: A, val: sink B) =
+proc `[]=`*[A, B](t: var Table[A, B], key: sink A, val: sink B) =
   ## Inserts a `(key, value)` pair into `t`.
   ##
   ## See also:
@@ -313,7 +313,7 @@ proc toTable*[A, B](pairs: openArray[(A, B)]): Table[A, B] =
   result = initTable[A, B](pairs.len)
   for key, val in items(pairs): result[key] = val
 
-proc `[]`*[A, B](t: Table[A, B], key: A): lent B =
+proc `[]`*[A, B](t: Table[A, B], key: sink A): lent B =
   ## Retrieves the value at `t[key]`.
   ##
   ## If `key` is not in `t`, the `KeyError` exception is raised.
@@ -336,7 +336,7 @@ proc `[]`*[A, B](t: Table[A, B], key: A): lent B =
       echo a['z']
   get(t, key)
 
-proc `[]`*[A, B](t: var Table[A, B], key: A): var B =
+proc `[]`*[A, B](t: var Table[A, B], key: sink A): var B =
   ## Retrieves the value at `t[key]`. The value can be modified.
   ##
   ## If `key` is not in `t`, the `KeyError` exception is raised.
@@ -494,7 +494,7 @@ proc len*[A, B](t: Table[A, B]): int =
 
   result = t.counter
 
-proc add*[A, B](t: var Table[A, B], key: A, val: sink B) {.deprecated:
+proc add*[A, B](t: var Table[A, B], key: sink A, val: sink B) {.deprecated:
     "Deprecated since v1.4; it was more confusing than useful, use `[]=`".} =
   ## Puts a new `(key, value)` pair into `t` even if `t[key]` already exists.
   ##
@@ -864,7 +864,7 @@ proc newTableFrom*[A, B, C](collection: A, index: proc(x: B): C): TableRef[C, B]
     for item in collection:
       result[index(item)] = item
 
-proc `[]`*[A, B](t: TableRef[A, B], key: A): var B =
+proc `[]`*[A, B](t: TableRef[A, B], key: sink A): var B =
   ## Retrieves the value at `t[key]`.
   ##
   ## If `key` is not in `t`, the  `KeyError` exception is raised.
@@ -888,7 +888,7 @@ proc `[]`*[A, B](t: TableRef[A, B], key: A): var B =
 
   result = t[][key]
 
-proc `[]=`*[A, B](t: TableRef[A, B], key: A, val: sink B) =
+proc `[]=`*[A, B](t: TableRef[A, B], key: sink A, val: sink B) =
   ## Inserts a `(key, value)` pair into `t`.
   ##
   ## See also:
@@ -1045,7 +1045,7 @@ proc len*[A, B](t: TableRef[A, B]): int =
 
   result = t.counter
 
-proc add*[A, B](t: TableRef[A, B], key: A, val: sink B) {.deprecated:
+proc add*[A, B](t: TableRef[A, B], key: sink A, val: sink B) {.deprecated:
     "Deprecated since v1.4; it was more confusing than useful, use `[]=`".} =
   ## Puts a new `(key, value)` pair into `t` even if `t[key]` already exists.
   ##
@@ -1297,7 +1297,7 @@ proc rawGet[A, B](t: OrderedTable[A, B], key: A, hc: var Hash): int =
 
 proc rawInsert[A, B](t: var OrderedTable[A, B],
                      data: var OrderedKeyValuePairSeq[A, B],
-                     key: A, val: sink B, hc: Hash, h: Hash) =
+                     key: sink A, val: sink B, hc: Hash, h: Hash) =
   rawInsertImpl()
   data[h].next = -1
   if t.first < 0: t.first = h
@@ -1349,7 +1349,7 @@ proc initOrderedTable*[A, B](initialSize = defaultInitialSize): OrderedTable[A, 
   result = default(OrderedTable[A, B])
   initImpl(result, initialSize)
 
-proc `[]=`*[A, B](t: var OrderedTable[A, B], key: A, val: sink B) =
+proc `[]=`*[A, B](t: var OrderedTable[A, B], key: sink A, val: sink B) =
   ## Inserts a `(key, value)` pair into `t`.
   ##
   ## See also:
@@ -1382,7 +1382,7 @@ proc toOrderedTable*[A, B](pairs: openArray[(A, B)]): OrderedTable[A, B] =
   result = initOrderedTable[A, B](pairs.len)
   for key, val in items(pairs): result[key] = val
 
-proc `[]`*[A, B](t: OrderedTable[A, B], key: A): lent B =
+proc `[]`*[A, B](t: OrderedTable[A, B], key: sink A): lent B =
   ## Retrieves the value at `t[key]`.
   ##
   ## If `key` is not in `t`, the  `KeyError` exception is raised.
@@ -1406,7 +1406,7 @@ proc `[]`*[A, B](t: OrderedTable[A, B], key: A): lent B =
 
   get(t, key)
 
-proc `[]`*[A, B](t: var OrderedTable[A, B], key: A): var B =
+proc `[]`*[A, B](t: var OrderedTable[A, B], key: sink A): var B =
   ## Retrieves the value at `t[key]`. The value can be modified.
   ##
   ## If `key` is not in `t`, the `KeyError` exception is raised.
@@ -1547,7 +1547,7 @@ proc len*[A, B](t: OrderedTable[A, B]): int {.inline.} =
 
   result = t.counter
 
-proc add*[A, B](t: var OrderedTable[A, B], key: A, val: sink B) {.deprecated:
+proc add*[A, B](t: var OrderedTable[A, B], key: sink A, val: sink B) {.deprecated:
     "Deprecated since v1.4; it was more confusing than useful, use `[]=`".} =
   ## Puts a new `(key, value)` pair into `t` even if `t[key]` already exists.
   ##
@@ -1884,7 +1884,7 @@ proc newOrderedTable*[A, B](pairs: openArray[(A, B)]): OrderedTableRef[A, B] =
     for key, val in items(pairs): result[key] = val
 
 
-proc `[]`*[A, B](t: OrderedTableRef[A, B], key: A): var B =
+proc `[]`*[A, B](t: OrderedTableRef[A, B], key: sink A): var B =
   ## Retrieves the value at `t[key]`.
   ##
   ## If `key` is not in `t`, the  `KeyError` exception is raised.
@@ -1907,7 +1907,7 @@ proc `[]`*[A, B](t: OrderedTableRef[A, B], key: A): var B =
       echo a['z']
   result = t[][key]
 
-proc `[]=`*[A, B](t: OrderedTableRef[A, B], key: A, val: sink B) =
+proc `[]=`*[A, B](t: OrderedTableRef[A, B], key: sink A, val: sink B) =
   ## Inserts a `(key, value)` pair into `t`.
   ##
   ## See also:
@@ -2048,7 +2048,7 @@ proc len*[A, B](t: OrderedTableRef[A, B]): int {.inline.} =
 
   result = t.counter
 
-proc add*[A, B](t: OrderedTableRef[A, B], key: A, val: sink B) {.deprecated:
+proc add*[A, B](t: OrderedTableRef[A, B], key: sink A, val: sink B) {.deprecated:
     "Deprecated since v1.4; it was more confusing than useful, use `[]=`".} =
   ## Puts a new `(key, value)` pair into `t` even if `t[key]` already exists.
   ##
@@ -2345,7 +2345,7 @@ proc toCountTable*[A](keys: openArray[A]): CountTable[A] =
   result = initCountTable[A](keys.len)
   for key in items(keys): result.inc(key)
 
-proc `[]`*[A](t: CountTable[A], key: A): int =
+proc `[]`*[A](t: CountTable[A], key: sink A): int =
   ## Retrieves the value at `t[key]` if `key` is in `t`.
   ## Otherwise `0` is returned.
   ##
@@ -2703,7 +2703,7 @@ proc newCountTable*[A](keys: openArray[A]): CountTableRef[A] =
   {.noSideEffect.}:
     for key in items(keys): result.inc(key)
 
-proc `[]`*[A](t: CountTableRef[A], key: A): int =
+proc `[]`*[A](t: CountTableRef[A], key: sink A): int =
   ## Retrieves the value at `t[key]` if `key` is in `t`.
   ## Otherwise `0` is returned.
   ##
