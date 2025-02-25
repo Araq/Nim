@@ -409,8 +409,12 @@ proc semArrayIndex(c: PContext, n: PNode): PType =
       result = makeRangeWithStaticExpr(c, e.typ.n)
     elif e.kind in {nkIntLit..nkUInt64Lit}:
       if e.intVal < 0:
-        localError(c.config, n.info,
-          "Array length can't be negative, but was " & $e.intVal)
+        if e.kind in {nkIntLit..nkInt64Lit}:
+          localError(c.config, n.info,
+            "Array length can't be negative, but was " & $e.intVal)
+        else:
+          localError(c.config, n.info,
+            "Array length can't exceed its maximum value (9223372036854775807), but was " & $cast[BiggestUInt](e.intVal))
       result = makeRangeType(c, 0, e.intVal-1, n.info, e.typ)
     elif e.kind == nkSym and (e.typ.kind == tyStatic or e.typ.kind == tyTypeDesc):
       if e.typ.kind == tyStatic:
@@ -1497,7 +1501,10 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
       addParamOrResult(c, arg, kind)
       styleCheckDef(c, a[j].info, arg)
       onDef(a[j].info, arg)
-      a[j] = newSymNode(arg)
+      if a[j].kind == nkPragmaExpr:
+        a[j][0] = newSymNode(arg)
+      else:
+        a[j] = newSymNode(arg)
 
   var r: PType = nil
   if n[0].kind != nkEmpty:
@@ -1667,6 +1674,11 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       var err = "cannot instantiate "
       err.addTypeHeader(c.config, t)
       err.add "\ngot: <$1>\nbut expected: <$2>" % [describeArgs(c, n), describeArgs(c, t.n, 0)]
+      if m.firstMismatch.kind == kTypeMismatch and m.firstMismatch.arg < n.len:
+        let nArg = n[m.firstMismatch.arg]
+        if nArg.kind in nkSymChoices:
+          err.add "\n"
+          err.add ambiguousIdentifierMsg(nArg)
       localError(c.config, n.info, errGenerated, err)
       return newOrPrevType(tyError, prev, c)
 
@@ -1724,10 +1736,10 @@ proc maybeAliasType(c: PContext; typeExpr, prev: PType): PType =
   else:
     result = nil
 
-proc fixupTypeOf(c: PContext, prev: PType, typExpr: PNode) =
+proc fixupTypeOf(c: PContext, prev: PType, typ: PType) =
   if prev != nil:
     let result = newTypeS(tyAlias, c)
-    result.rawAddSon typExpr.typ
+    result.rawAddSon typ
     result.sym = prev.sym
     if prev.kind != tyGenericBody:
       assignType(prev, result)
@@ -1919,10 +1931,11 @@ proc semTypeOf(c: PContext; n: PNode; prev: PType): PType =
   openScope(c)
   inc c.inTypeofContext
   defer: dec c.inTypeofContext # compiles can raise an exception
-  let t = semExprWithType(c, n, {efInTypeof})
+  let ex = semExprWithType(c, n, {efInTypeof})
   closeScope(c)
+  let t = ex.typ.skipTypes({tyStatic})
   fixupTypeOf(c, prev, t)
-  result = t.typ
+  result = t
   if result.kind == tyFromExpr:
     result.flags.incl tfNonConstExpr
 
@@ -1937,10 +1950,11 @@ proc semTypeOf2(c: PContext; n: PNode; prev: PType): PType =
       m = mode.intVal
   inc c.inTypeofContext
   defer: dec c.inTypeofContext # compiles can raise an exception
-  let t = semExprWithType(c, n[1], if m == 1: {efInTypeof} else: {})
+  let ex = semExprWithType(c, n[1], if m == 1: {efInTypeof} else: {})
   closeScope(c)
+  let t = ex.typ.skipTypes({tyStatic})
   fixupTypeOf(c, prev, t)
-  result = t.typ
+  result = t
   if result.kind == tyFromExpr:
     result.flags.incl tfNonConstExpr
 

@@ -87,6 +87,9 @@ else:
   template count(x: Cell): untyped =
     x.rc shr rcShift
 
+when not defined(nimHasQuirky):
+  {.pragma: quirky.}
+
 proc nimNewObj(size, alignment: int): pointer {.compilerRtl.} =
   let hdrSize = align(sizeof(RefHeader), alignment)
   let s = size + hdrSize
@@ -190,7 +193,7 @@ proc nimRawDispose(p: pointer, alignment: int) {.compilerRtl.} =
 template `=dispose`*[T](x: owned(ref T)) = nimRawDispose(cast[pointer](x), T.alignOf)
 #proc dispose*(x: pointer) = nimRawDispose(x)
 
-proc nimDestroyAndDispose(p: pointer) {.compilerRtl, raises: [].} =
+proc nimDestroyAndDispose(p: pointer) {.compilerRtl, quirky, raises: [].} =
   let rti = cast[ptr PNimTypeV2](p)
   if rti.destructor != nil:
     cast[DestructorProc](rti.destructor)(p)

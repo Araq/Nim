@@ -105,7 +105,7 @@ when not defined(js) and not defined(nimscript): # C
       when compileOption("overflowChecks"):
         if y == 0:
           raise new(DivByZeroDefect)
-        elif (x == T.low and y == -1.T):
+        elif (x == T.low and int64(y) == -1):
           raise new(OverflowDefect)
       let res = divmod_c(x, y)
       result[0] = res.quot
@@ -1145,6 +1145,37 @@ func prod*[T](x: openArray[T]): T =
   result = T(1)
   for i in items(x): result = result * i
 
+func cumprod*[T](x: var openArray[T]) =
+  ## Transforms ``x`` in-place (must be declared as `var`) into its
+  ## product.
+  ##
+  ## See also:
+  ## * `prod proc <#sum,openArray[T]>`_
+  ## * `cumproded proc <#cumproded,openArray[T]>`_ for a version which
+  ##   returns cumproded sequence
+  runnableExamples:
+    var a = [1, 2, 3, 4]
+    cumprod(a)
+    doAssert a == @[1, 2, 6, 24]
+  for i in 1 ..< x.len: x[i] = x[i-1] * x[i]
+
+func cumproded*[T](x: openArray[T]): seq[T] =
+  ## Return cumulative (aka prefix) product of ``x``.
+  ##
+  ## See also:
+  ## * `prod proc <#prod,openArray[T]>`_
+  ## * `cumprod proc <#cumprod,openArray[T]>`_ for the in-place version
+  runnableExamples:
+    let a = [1, 2, 3, 4]
+    doAssert cumproded(a) == @[1, 2, 6, 24]
+  result = @[]
+  let xLen = x.len
+  if xLen == 0:
+    return @[]
+  result.setLen(xLen)
+  result[0] = x[0]
+  for i in 1 ..< xLen: result[i] = result[i-1] * x[i]
+
 func cumsummed*[T](x: openArray[T]): seq[T] =
   ## Returns the cumulative (aka prefix) summation of `x`.
   ##
@@ -1353,3 +1384,4 @@ func lcm*[T](x: openArray[T]): T {.since: (1, 1).} =
   result = x[0]
   for i in 1 ..< x.len:
     result = lcm(result, x[i])
+

@@ -21,4 +21,3 @@ when defined(nimStrictMode):
     # future work: XDeclaredButNotUsed
 
 switch("define", "nimVersion:" & NimVersion) # deadcode
-switch("experimental", "strictDefs")

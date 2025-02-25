@@ -358,7 +358,7 @@ Memory management
 
 In the previous sections, the `NimMain()` function reared its head. Since
 JavaScript already provides automatic memory management, you can freely pass
-objects between the two languages without problems. In C and derivate languages
+objects between the two languages without problems. In C and derivative languages
 you need to be careful about what you do and how you share memory. The
 previous examples only dealt with simple scalar values, but passing a Nim
 string to C, or reading back a C string in Nim already requires you to be

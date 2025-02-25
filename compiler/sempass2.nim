@@ -124,10 +124,11 @@ proc collectObjectTree(graph: ModuleGraph, n: PNode) =
             else:
               graph.objectTree[root].add (depthLevel, typ)
 
-proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
-  if typ == nil or sfGeneratedOp in tracked.owner.flags:
+proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo; explicit = false) =
+  if typ == nil or (sfGeneratedOp in tracked.owner.flags and not explicit):
     # don't create type bound ops for anything in a function with a `nodestroy` pragma
     # bug #21987
+    # unless this is an explicit call, bug #24626
     return
   when false:
     let realType = typ.skipTypes(abstractInst)
@@ -136,8 +137,9 @@ proc createTypeBoundOps(tracked: PEffects, typ: PType; info: TLineInfo) =
       createTypeBoundOps(tracked.graph, tracked.c, realType.lastSon, info)
 
   createTypeBoundOps(tracked.graph, tracked.c, typ, info, tracked.c.idgen)
-  if (tfHasAsgn in typ.flags) or
-      optSeqDestructors in tracked.config.globalOptions:
+  if tracked.config.selectedGC == gcRefc or
+      optSeqDestructors in tracked.config.globalOptions or
+      tfHasAsgn in typ.flags:
     tracked.owner.flags.incl sfInjectDestructors
 
 proc isLocalSym(a: PEffects, s: PSym): bool =
@@ -221,7 +223,7 @@ proc initVar(a: PEffects, n: PNode; volatileCheck: bool) =
     if volatileCheck: makeVolatile(a, s)
     for x in a.init:
       if x == s.id:
-        if noStrictDefs notin a.c.config.legacyFeatures and s.kind == skLet:
+        if strictDefs in a.c.features and s.kind == skLet:
           localError(a.config, n.info, errXCannotBeAssignedTo %
                     renderTree(n, {renderNoComments}
                 ))
@@ -379,7 +381,7 @@ proc useVar(a: PEffects, n: PNode) =
       if s.typ.requiresInit:
         message(a.config, n.info, warnProveInit, s.name.s)
       elif a.leftPartOfAsgn <= 0:
-        if noStrictDefs notin a.c.config.legacyFeatures:
+        if strictDefs in a.c.features:
           if s.kind == skLet:
             localError(a.config, n.info, errLetNeedsInit)
           else:
@@ -1072,7 +1074,7 @@ proc trackCall(tracked: PEffects; n: PNode) =
       # rebind type bounds operations after createTypeBoundOps call
       let t = n[1].typ.skipTypes({tyAlias, tyVar})
       if a.sym != getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind)):
-        createTypeBoundOps(tracked, t, n.info)
+        createTypeBoundOps(tracked, t, n.info, explicit = true)
         let op = getAttachedOp(tracked.graph, t, TTypeAttachedOp(opKind))
         if op != nil:
           n[0].sym = op
@@ -1664,7 +1666,7 @@ proc trackProc*(c: PContext; s: PSym, body: PNode) =
 
   if not isEmptyType(s.typ.returnType) and
      (s.typ.returnType.requiresInit or s.typ.returnType.skipTypes(abstractInst).kind == tyVar or
-       noStrictDefs notin c.config.legacyFeatures) and
+       strictDefs in c.features) and
      s.kind in {skProc, skFunc, skConverter, skMethod} and s.magic == mNone and
      sfNoInit notin s.flags:
     var res = s.ast[resultPos].sym # get result symbol

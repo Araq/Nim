@@ -492,19 +492,8 @@ proc semIdentDef(c: PContext, n: PNode, kind: TSymKind, reportToNimsuggest = tru
       incl(result.flags, sfGlobal)
   result.options = c.config.options
 
-  proc getLineInfo(n: PNode): TLineInfo =
-    case n.kind
-    of nkPostfix:
-      if len(n) > 1:
-        return getLineInfo(n[1])
-    of nkAccQuoted, nkPragmaExpr:
-      if len(n) > 0:
-        return getLineInfo(n[0])
-    else:
-      discard
-    result = n.info
-  let info = getLineInfo(n)
   if reportToNimsuggest:
+    let info = getLineInfo(n)
     suggestSym(c.graph, info, result, c.graph.usageSym)
 
 proc checkNilable(c: PContext; v: PSym) =
@@ -975,7 +964,7 @@ proc semVarOrLet(c: PContext, n: PNode, symkind: TSymKind): PNode =
           else:
             checkNilable(c, v)
           # allow let to not be initialised if imported from C:
-          if v.kind == skLet and sfImportc notin v.flags and (noStrictDefs in c.config.legacyFeatures or not isLocalSym(v)):
+          if v.kind == skLet and sfImportc notin v.flags and (strictDefs notin c.features or not isLocalSym(v)):
             localError(c.config, a.info, errLetNeedsInit)
         if sfCompileTime in v.flags:
           var x = newNodeI(result.kind, v.info)
@@ -1787,6 +1776,17 @@ proc typeSectionFinalPass(c: PContext, n: PNode) =
     # check the style here after the pragmas have been processed:
     styleCheckDef(c, s)
     # compute the type's size and check for illegal recursions:
+    if a[0].kind == nkPragmaExpr:
+      let pragmas = a[0][1]
+      for i in 0 ..< pragmas.len:
+        if pragmas[i].kind == nkExprColonExpr and
+            pragmas[i][0].kind == nkIdent and
+            whichKeyword(pragmas[i][0].ident) == wSize:
+          if s.typ.kind != tyEnum and sfImportc notin s.flags:
+            # EventType* {.size: sizeof(uint32).} = enum
+            # AtomicFlag* {.importc: "atomic_flag", header: "<stdatomic.h>", size: 1.} = object
+            localError(c.config, pragmas[i].info, "size pragma only allowed for enum types and imported types")
+
     if a[1].kind == nkEmpty:
       var x = a[2]
       if x.kind in nkCallKinds and nfSem in x.flags:
@@ -2158,9 +2158,6 @@ proc bindTypeHook(c: PContext; s: PSym; n: PNode; op: TTypeAttachedOp) =
       elif obj.kind == tyGenericInvocation: obj = obj.genericHead
       else: break
     if obj.kind in {tyObject, tyDistinct, tySequence, tyString}:
-      if op == attachedDestructor and t.firstParamType.kind == tyVar and
-          c.config.selectedGC in {gcArc, gcAtomicArc, gcOrc}:
-        message(c.config, n.info, warnDeprecated, "A custom '=destroy' hook which takes a 'var T' parameter is deprecated; it should take a 'T' parameter")
       obj = canonType(c, obj)
       let ao = getAttachedOp(c.graph, obj, op)
       if ao == s:
@@ -2351,7 +2348,7 @@ proc semCppMember(c: PContext; s: PSym; n: PNode) =
           isInitializer = false
           break
         var j = 0
-        while p[j].sym.kind == skParam:
+        while p[j].kind == nkSym and p[j].sym.kind == skParam:
           initializerCall.add val
           inc j
       if isInitializer:

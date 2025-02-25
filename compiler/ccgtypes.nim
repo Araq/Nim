@@ -115,7 +115,7 @@ proc fillLocalName(p: BProc; s: PSym) =
     if s.kind == skTemp:
       # speed up conflict search for temps (these are quite common):
       if counter != 0: result.add "_" & rope(counter+1)
-    elif counter != 0 or isKeyword(s.name) or p.module.g.config.cppDefines.contains(key):
+    elif s.kind != skResult:
       result.add "_" & rope(counter+1)
     p.sigConflicts.inc(key)
     s.loc.snippet = result
@@ -246,10 +246,6 @@ proc hasNoInit(t: PType): bool =
   result = t.sym != nil and sfNoInit in t.sym.flags
 
 proc getTypeDescAux(m: BModule; origTyp: PType, check: var IntSet; kind: TypeDescKind): Rope
-
-proc isObjLackingTypeField(typ: PType): bool {.inline.} =
-  result = (typ.kind == tyObject) and ((tfFinal in typ.flags) and
-      (typ.baseClass == nil) or isPureObject(typ))
 
 proc isInvalidReturnType(conf: ConfigRef; typ: PType, isProc = true): bool =
   # Arrays and sets cannot be returned by a C procedure, because C is

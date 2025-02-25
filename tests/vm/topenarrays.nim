@@ -87,3 +87,12 @@ block: # bug #22095
     z = fn()
 
   doAssert z.limbs[0] == 10
+
+block: # bug #24630
+  func f(a: static openArray[int]): int =
+    12
+
+  func g(a: static openArray[int]) =
+    const b = f(a)
+
+  g(@[1,2,3])
