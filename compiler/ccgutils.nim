@@ -101,7 +101,11 @@ proc ccgIntroducedPtr*(conf: ConfigRef; s: PSym, retType: PType): bool =
       result = true           # ordinary objects are always passed by reference,
                               # otherwise casting doesn't work
   of tyTuple:
-    result = (getSize(conf, pt) > conf.target.floatSize*3) or (optByRef in s.options)
+    if s.typ.kind == tySink:
+      # it's a sink, so we pass it by value
+      result = false
+    else:
+      result = (getSize(conf, pt) > conf.target.floatSize*3) or (optByRef in s.options)
   else:
     result = false
   # first parameter and return type is 'lent T'? --> use pass by pointer
