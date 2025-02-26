@@ -1197,7 +1197,7 @@ proc produceSym(g: ModuleGraph; c: PContext; typ: PType; kind: TTypeAttachedOp;
       fillStrOp(a, typ, result.ast[bodyPos], d, src)
     else:
       fillBody(a, typ, result.ast[bodyPos], d, src)
-      if tk == tyObject and a.kind in {attachedAsgn, attachedSink, attachedDeepCopy, attachedDup} and not lacksMTypeField(typ):
+      if tk == tyObject and a.kind in {attachedAsgn, attachedSink, attachedDeepCopy, attachedDup} and not isObjLackingTypeField(typ):
         # bug #19205: Do not forget to also copy the hidden type field:
         genTypeFieldCopy(a, typ, result.ast[bodyPos], d, src)
 

@@ -171,7 +171,7 @@ proc bundleAtlasExe(latest: bool, args: string) =
   cloneDependency(distDir, "https://github.com/nim-lang/atlas.git",
                   commit = commit, allowBundled = true)
   cloneDependency(distDir / "atlas" / distDir, "https://github.com/nim-lang/sat.git",
-                commit = SatStableCommit, allowBundled = true)
+                  commit = SatStableCommit, allowBundled = true)
   # installer.ini expects it under $nim/bin
   nimCompile("dist/atlas/src/atlas.nim",
              options = "-d:release --noNimblePath -d:nimAtlasBootstrap " & args)

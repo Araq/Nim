@@ -1736,10 +1736,10 @@ proc maybeAliasType(c: PContext; typeExpr, prev: PType): PType =
   else:
     result = nil
 
-proc fixupTypeOf(c: PContext, prev: PType, typExpr: PNode) =
+proc fixupTypeOf(c: PContext, prev: PType, typ: PType) =
   if prev != nil:
     let result = newTypeS(tyAlias, c)
-    result.rawAddSon typExpr.typ
+    result.rawAddSon typ
     result.sym = prev.sym
     if prev.kind != tyGenericBody:
       assignType(prev, result)
@@ -1931,10 +1931,11 @@ proc semTypeOf(c: PContext; n: PNode; prev: PType): PType =
   openScope(c)
   inc c.inTypeofContext
   defer: dec c.inTypeofContext # compiles can raise an exception
-  let t = semExprWithType(c, n, {efInTypeof})
+  let ex = semExprWithType(c, n, {efInTypeof})
   closeScope(c)
+  let t = ex.typ.skipTypes({tyStatic})
   fixupTypeOf(c, prev, t)
-  result = t.typ
+  result = t
   if result.kind == tyFromExpr:
     result.flags.incl tfNonConstExpr
 
@@ -1949,10 +1950,11 @@ proc semTypeOf2(c: PContext; n: PNode; prev: PType): PType =
       m = mode.intVal
   inc c.inTypeofContext
   defer: dec c.inTypeofContext # compiles can raise an exception
-  let t = semExprWithType(c, n[1], if m == 1: {efInTypeof} else: {})
+  let ex = semExprWithType(c, n[1], if m == 1: {efInTypeof} else: {})
   closeScope(c)
+  let t = ex.typ.skipTypes({tyStatic})
   fixupTypeOf(c, prev, t)
-  result = t.typ
+  result = t
   if result.kind == tyFromExpr:
     result.flags.incl tfNonConstExpr
 
