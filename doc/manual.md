@@ -2927,6 +2927,94 @@ a parameter has different names between them.
 Not supplying the parameter name in such cases results in an
 ambiguity error.
 
+Concepts
+=========
+
+Concepts are a mechanism for users to define custom type classes that match other
+types based on a given set of bindings.
+
+```nim
+type
+  Comparable = concept # Atomic concept
+    proc cmp(a, b: Self): int
+  Indexable[I, T] = concept # Container concept
+    proc `[]`(x: Self; at: I): T
+    proc `[]=`(x: var Self; at: I; newVal: T)
+    proc len(x: Self): I
+proc sort*[I: Index; T: Comparable](x: var Indexable[I, T])
+```
+
+In the above example, `Comparable` and `Indexable` are types that will match any type that
+can can bind each definition declared in the concept body. The special `Self` type defined
+in the concept body refers to the type being matched, also called the "implementation" of 
+the concept. Implementations that match the concept are generic matches, and the concept 
+typeclasses themselves work in a similar way to generic type variables in that they are never
+concrete types themselves (even if they have concrete type parameters such as `Indexable[int, int]`)
+and expressions like `typeof(x)` in the body of `proc sort` from the above example will return the 
+type of the implementation, not the concept typeclass. Concepts are useful for providing information
+to the compiler in generic contexts, most notably for generic type checking, and as a tool for 
+[Overload resolution]. Generic type checking is forthcoming, so this will only explain overload
+resolution for now.
+
+In the example above, "atomic" and "container" concepts are mentioned. These kinds of concept
+are determined by the generic type variables of the concept. Atomic concepts` definitions contain
+only concrete types, and the `Self` type is inferred to be concrete. Container types are the same,
+under the condition that their generic variables are bound to concrete types and substituted appropriately.
+The programmer is free to define a concept that breaks these concreteness rules, thus making a "gray" concept:
+
+```nim
+type
+  Processor = concept
+    proc process[T](s: Self; data: T)
+```
+
+The above concept does not have generic variables, and its definition contains `T` which is not concrete.
+This kind of concept may disrupt the compiler's ability to type check generic contexts, but it is useful for
+overload resolution. The difference between `Indexable[I, T]` and `Processor` is that a given implementation
+is effectively described as an instantiation of `Indexable` (as in `Indexable[int, int]`) whereas a `Processor`
+concept describes an implementation designed to handle multiple different types of data `T`.
+
+Concept overload resolution
+-----------------------------
+
+When an operand's type is being matched to a concept, the operand's type  is set as the "potential
+implementation". For each definition in the concept body, overload resolution is performed by substituting `Self`
+for the potential implementation to try and find a match for each definition. If this succeeds, the concept 
+matches. Implementations do not need to exactly match the definitions in the concept. For example:
+
+```nim
+type
+  C1 = concept
+    proc p(s: Self; x: int)
+  Implementation = object
+
+proc p(x: Implementation; y: SomeInteger)
+proc spring(x: C1)
+spring(Implementation())
+```
+This will bind because `p(Implementation(), 0)` will bind. Conversely, container types will bind to
+less specific definitions if the generic constraints and bindings allow it, as per usual generic matching.
+
+Things start to get more complicated when overload resolution starts "Hierarchical Order Comparison"
+I.E. specificity comparison as per [Overload resolution]. In this state the compiler may be comparing
+all kinds of types and typeclasses with concepts as defined in the `proc` definitions of each overload.
+This leads to confusing and impractical behavior in most situations, so the rules are simplified. They are:
+
+1. if a concept is being compared with `T` or any type that accepts all other types (`auto`) the concept
+is more specific
+2. if the concept is being compared with another concept the result is deferred to [Concept subset matching]
+3. in any other case the concept is less specific then it's competitor 
+
+
+Concept subset matching
+-------------------------
+
+This type of matching is simple. When comparing concepts `C1` and `C2`, if all valid implementations of `C1`
+are also valid implementations of `C2` but not vice versa then `C1` is a subset of `C2`. This means that
+`C1` will match to `C2` and therefore the disambiguation process will prefer `C2` as it is more specific.
+If neither of them are subsets of one another, then the disambiguation proceeds to complexity analysis
+and the concept with the most definitions wins, if any. No definite winner is an ambiguity error at
+compile time.
 
 Statements and expressions
 ==========================
