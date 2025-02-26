@@ -135,7 +135,7 @@ proc bindParam(c: PContext, m: var MatchCon; key, v: PType): bool {. discardable
   let old = existingBinding(m, key)
   if old != key:
     # check previously bound value
-    if matchType(c, old, value, m) == false:
+    if not matchType(c, old, value, m):
       return false
   elif key.hasElementType and key.elementType.kind != tyNone:
     # check constaint
@@ -159,7 +159,7 @@ proc acceptsAllTypes(t: PType): bool=
   elif t.kind == tyGenericParam:
     if tfImplicitTypeParam in t.flags:
       result = true
-    if not(t.hasElementType) or t.elementType.kind == tyNone:
+    if not t.hasElementType or t.elementType.kind == tyNone:
       result = true
 
 proc procDefSignature(s: PSym): PNode {. deprecated .} = 

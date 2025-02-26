@@ -1512,7 +1512,7 @@ proc isConcept*(t: PType): bool=
   of tyCompositeTypeClass:
     t.hasElementType and isConcept(t.elementType)
   of tyGenericBody:
-    return t.typeBodyImpl.kind == tyConcept
+    t.typeBodyImpl.kind == tyConcept
   of tyGenericInvocation, tyGenericInst:
     if t.baseClass.kind == tyGenericBody:
       t.baseClass.typeBodyImpl.kind == tyConcept
