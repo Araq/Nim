@@ -1750,6 +1750,9 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     elif x.kind == tyGenericInst and concpt.kind == tyConcept:
       result = if concepts.conceptMatch(c.c, concpt, x, c.bindings, f): isGeneric
                else: isNone
+    elif x.kind == tyGenericBody and f[0] == x:
+      # not specific enough
+      result = isNone
     else:
       let genericBody = f[0]
       var askip = skippedNone
