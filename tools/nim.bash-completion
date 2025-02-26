@@ -1,47 +1,501 @@
 # bash completion for nim                             -*- shell-script -*-
 
+__is_short_or_long()
+{
+    local actual short long
+    actual="$1"
+    short="$2"
+    long="$3"
+    [[ ! -z $short && $actual == $short ]] && return 0
+    [[ ! -z $long && $actual == $long ]] && return 0
+    return 1
+}
+
+__ask_for_subcmd_or_subopts()
+{
+    local args cmd subcmd words sub_words word_first word_last word_lastlast
+    local len ilast ilastlast i ele sub_len n_nopts
+    
+    args=("$@")
+    ask_for_what="${args[0]}"
+    cmd="${args[1]}"
+    subcmd="${args[2]}"
+    ilast="${args[3]}"
+    words=("${args[@]:4}")
+    len=${#words[@]}
+    ilastlast=$((ilast - 1))
+    sub_words=("${words[@]:0:ilast}")
+    sub_len=${#sub_words[@]}
+    word_first=${words[0]}
+    word_last=${words[ilast]}
+    word_lastlast=${words[ilastlast]}
+    n_nopts=0
+
+    # printf "\n[DBUG] word_first:${word_first}|ilast:${ilast}|words(${len}):${words[*]}|sub_words(${sub_len}):${sub_words[*]}\n"
+    
+    if [[ $word_first != $cmd ]]
+    then
+	return 1
+    fi
+
+    i=0
+    while [[ $i -lt $len ]]
+    do
+	ele=${words[i]}
+	if [[ ! $ele =~ ^- ]]
+	then
+	    if [[ $ele == $cmd || $ele == $subcmd ]]
+	    then
+		((n_nopts+=1))
+	    elif [[ $i -eq $ilast && $ele =~ ^[a-zA-Z] ]]
+	    then
+	        ((i=i))
+	    elif [[ -z $ele ]]
+	    then
+	        ((i=i))
+	    elif [[ $ele =~ ^: ]]
+	    then
+		((i+=1))
+	    else
+		return 1
+	    fi
+	fi
+	((i+=1))
+    done
+
+    case $ask_for_what in
+	1)
+	    if [[ n_nopts -eq 1 ]]
+	    then
+		if [[ -z $word_last || $word_last =~ ^[a-zA-Z] ]] && [[ $word_lastlast != : ]]
+		then
+		    return 0
+		fi
+	    fi	    
+	    ;;
+	2) 
+	    if [[ n_nopts -eq 2 ]]
+	    then
+		if [[ -z $word_last ]] || [[ $word_last =~ ^[-:] ]]
+		then
+		    return 0
+		fi
+	    fi  
+    esac
+    
+    return 1
+}
+
+__ask_for_subcmd()
+{
+    __ask_for_subcmd_or_subopts 1 "$@"
+}
+
+__ask_for_subcmd_opts()
+{
+    __ask_for_subcmd_or_subopts 2 "$@"
+}
+
+
 _nim()
 {
- local cur prev words cword split
- _init_completion -s || return
+    local curr prev prevprev words
+    local i_curr n_words i_prev i_prevprev
+    
+    COMPREPLY=()
+    i_curr=$COMP_CWORD
+    n_words=$((i_curr+1))
+    i_prev=$((i_curr-1))
+    i_prevprev=$((i_curr-2))
+    curr="${COMP_WORDS[i_curr]}"
+    prev="${COMP_WORDS[i_prev]}"
+    prevprev="${COMP_WORDS[i_prevprev]}"
+    words=("${COMP_WORDS[@]:0:n_words}")
 
- COMPREPLY=()
- cur=${COMP_WORDS[COMP_CWORD]}
+    local subcmds opts candids
 
- if [ $COMP_CWORD -eq 1 ] ; then
-   # first item - suggest commands
-   kw="compile c doc compileToC cc compileToCpp cpp compileToOC objc js e rst2html rst2tex jsondoc buildIndex genDepend dump check"
-   COMPREPLY=( $( compgen -W "${kw}" -- $cur ) )
-   return 0
- fi
-  case $prev in
-    --stackTrace|--lineTrace|--threads|-x|--checks|--objChecks|--fieldChecks|--rangeChecks|--boundChecks|--overflowChecks|-a|--assertions|--floatChecks|--nanChecks|--infChecks)
-      # Options that require on/off
-      [[ "$cur" == "=" ]] && cur=""
-      COMPREPLY=( $(compgen -W 'on off' -- "$cur") )
-      return 0
-    ;;
-    --opt)
-      [[ "$cur" == "=" ]] && cur=""
-      COMPREPLY=( $(compgen -W 'none speed size' -- "$cur") )
-      return 0
-    ;;
-    --app)
-      [[ "$cur" == "=" ]] && cur=""
-      COMPREPLY=( $(compgen -W 'console gui lib staticlib' -- "$cur") )
-      return 0
-    ;;
-    *)
-      kw="-r -p= --path= -d= --define= -u= --undef= -f --forceBuild --opt= --app= --stackTrace= --lineTrace= --threads= -x= --checks= --objChecks= --fieldChecks= --rangeChecks= --boundChecks= --overflowChecks= -a= --assertions= --floatChecks= --nanChecks= --infChecks="
-      COMPREPLY=( $( compgen -W "${kw}" -- $cur ) )
-      _filedir '@(nim)'
-      #$split
-      return 0
-    ;;
-  esac
-  return 0
+    # printf "\n[DBUG] curr:$curr|prev:$prev|words(${#words[*]}):${words[*]}\n"
+
+    # Asking for a subcommand
+    if __ask_for_subcmd nim nim $i_curr "${words[@]}"
+    then
+        subcmds=""
+	# basic
+	subcmds="${subcmds} compile c"
+	subcmds="${subcmds} r"
+	subcmds="${subcmds} doc"
+	# advanced	
+	subcmds="${subcmds} compileToC cc"
+	subcmds="${subcmds} compileToCpp cpp"
+	subcmds="${subcmds} compileToOC objc"
+	subcmds="${subcmds} js"
+	subcmds="${subcmds} e"
+	subcmds="${subcmds} md2html"
+	subcmds="${subcmds} rst2html"
+	subcmds="${subcmds} md2tex"
+	subcmds="${subcmds} rst2tex"
+	subcmds="${subcmds} doc2tex"
+	subcmds="${subcmds} jsondoc"
+	subcmds="${subcmds} ctags"
+	subcmds="${subcmds} buildIndex"
+	subcmds="${subcmds} genDepend"
+	subcmds="${subcmds} dump"
+	subcmds="${subcmds} check"
+	COMPREPLY=( $( compgen -W "${subcmds}" -- ${curr}) )
+	return 0
+    fi
+
+    # Prioritize subcmd over opt
+    if false
+    then
+	return 124
+	
+    elif false && __ask_for_subcmd_opts nim compileToC $i_curr "${words[@]}"
+    then # for future use
+	opts=() \
+	    && candids=()
+	opts+=("-u" "--undef" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	
+    else
+	opts=() \
+	    && candids=()
+	opts+=("-p" "--path" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-d" "--define" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	# note, any preceeding left parenthesis will vanish the context
+	opts+=("-u" "--undef" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-f" "--forceBuild" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--stackTrace" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--lineTrace" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--threads" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--checks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--assertions" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--opt" "none speed size") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--debugger" "native") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--app" "console gui lib staticlib") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-r" "--run" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--eval" "CMD") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--fullhelp" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-h" "--help" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-v" "--version" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--objChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--fieldChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--rangeChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--boundChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--overflowChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--floatChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--nanChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--infChecks" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--defusages" "FILE,LINE,COL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-o" "--output" "FILE") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--outdir" "DIR") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--usenimcache" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--stdout" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--colors" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--filenames" "abs canonical legacyRelProj") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--processing" "dots filenames off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--unitsep" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--declaredLocs" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--spellSuggest" "NUM") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--hints" "on off list") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--hint" "HINT:on") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--hintAsError" "HINT:on") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("-w" "--warnings" "on off list") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--warning" "WARNING:on") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--warningAsError" "X:on X:off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--styleCheck" "off hint error") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--showAllMismatches" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--lib" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--import" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--include" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--nimcache" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--compileOnly" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--noLinking" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--noMain" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--genScript" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--os" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--cpu" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--debuginfo" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--passC" "OPTION") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--passL" "OPTION") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--cc" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--cincludes" "DIR") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--clibdir" "DIR") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--clib" "LIBNAME") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--project" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--docRoot" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--backend" "c cpp js objc") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--docCmd" "CMD") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--docSeeSrcUrl" "URL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--docInternal" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--lineDir" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--embedsrc" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--tlsEmulation" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--implicitStatic" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--trmacros" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--multimethods" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--hotCodeReloading" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--excessiveStackTrace" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--stackTraceMsgs" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--skipCfg" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--skipUserCfg" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--skipParentCfg" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--skipProjCfg" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--mm" "orc arc refc markAndSweep boehm go none regions") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--exceptions" "setjmp cpp goto quirky") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--index" "on off only") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--noImportdoc" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--putenv" "KEY=VALUE") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--NimblePath" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--noNimblePath" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--clearNimblePath" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--cppCompileToNamespace" "NAMESPACE") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--nimMainPrefix" "PREFIX") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--expandMacro" "MACRO") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--expandArc" "PROCNAME") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--excludePath" "PATH") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--dynlibOverride" "SYMBOL") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--dynlibOverrideAll" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--listCmd" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--asm" "") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--parallelBuild" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--incremental" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--verbosity" "0 1 2 3") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--errorMax" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--maxLoopIterationsVM" "N") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--experimental" "dotOperators callOperator parallel destructor notnil dynamicBindSym forLoopMacros caseStmtMacros codeReordering compiletimeFFI vmopsDanger strictFuncs views strictNotNil overloadableEnums strictEffects unicodeOperators flexibleOptionalParams strictDefs strictCaseObjects inferGenericTypes openSym genericsOpenSym vtables") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--legacy" "allowSemcheckedAstModification checkUnsignedConversions laxEffects verboseTypeMismatch emitGenerics jsNoLambdaLifting") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--benchmarkVM" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--profileVM" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--panics" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--deepcopy" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--jsbigint64" "on off") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+	opts+=("" "--nimBasePattern" "nimbase.h") \
+	    && candids+=(${opts[$((${#opts[@]}-3))]} ${opts[$((${#opts[@]}-2))]})
+    fi
+    
+    local c_short c_long c_accvals
+    local len i idx0 idx1 idx2
+    
+    case $curr in
+	# Asking for accepted optvalues, e.g., `out:`
+	:)
+	    len=${#opts[@]}
+	    i=0
+	    
+	    while [[ $i -lt $len ]]
+	    do
+		idx0=$((i / 3 * 3))
+	        idx1=$((idx0 + 1))
+		idx2=$((idx1 + 1))
+		c_short=${opts[idx0]}
+		c_long=${opts[idx1]}
+		c_accvals=${opts[idx2]}
+		(false \
+		     || __is_short_or_long $prev ${c_short} ${c_long} \
+		     || false) \
+		    && COMPREPLY=( $(compgen -W "${c_accvals}" --) ) \
+		    && return 0
+		((i+=3))
+	    done
+
+	    return 124
+	    ;;
+	
+	*)
+	    # When in a incomplete opt value, e.g., `--check:of`
+	    if [[ $prev == : ]]
+	    then
+		len=${#opts[@]}
+		i=0
+		while [[ $i -lt $len ]]
+		do
+		    idx0=$((i / 3 * 3))
+		    idx1=$((idx0 + 1))
+		    idx2=$((idx1 + 1))
+		    c_short=${opts[idx0]}
+		    c_long=${opts[idx1]}
+		    c_accvals=${opts[idx2]}
+		    (false \
+			 || __is_short_or_long $prevprev ${c_short} ${c_long} \
+			 || false) \
+			&& COMPREPLY=( $(compgen -W "${c_accvals}" -- ${curr}) ) \
+			&& return 0
+		    ((i+=3))
+		done
+		return 124
+	    fi
+
+	    # When in a complete optname, might need optvalue, e.g., `--check`
+	    if [[ $curr =~ ^--?[:()a-zA-Z]+$ ]]
+	    then
+	        len=${#opts[@]}
+		i=0
+		while [[ $i -lt $len ]]
+		do
+		    idx0=$(((i / 3 * 3)))
+		    idx1=$((idx0 + 1))
+		    idx2=$((idx1 + 1))
+		    c_short=${opts[idx0]}
+		    c_long=${opts[idx1]}
+		    c_accvals=${opts[idx2]}
+		    
+		    if __is_short_or_long $curr ${c_short} ${c_long}
+		    then
+			if [[ ! -z $c_accvals ]]
+			then
+			    COMPREPLY=( $(compgen -W "${curr}:" -- ${curr}) ) \
+				&& compopt -o nospace \
+				&& return 0
+			else
+			    COMPREPLY=( $(compgen -W "${curr}" -- ${curr}) ) \
+				&& return 0		    
+			fi
+		    fi
+		    
+		    ((i+=3))
+		done # while
+		
+		if true
+		then		
+		    COMPREPLY=( $(compgen -W "${candids[*]}" -- "$curr") )
+		    compopt -o nospace
+		    return 0
+		fi
+		
+	    # When in an incomplete optname, e.g., `--chec`
+	    elif [[ $curr =~ ^--?[^:]* ]]
+	    then
+		if true
+		then		
+		    COMPREPLY=( $(compgen -W "${candids[*]}" -- "$curr") )
+		    compopt -o nospace
+		    return 0
+		fi		
+	    fi
+
+	    if true
+	    then
+		compopt -o filenames
+		COMPREPLY=( $(compgen -f -- "$curr") )
+		compopt -o nospace
+		return 0
+	    fi
+	    
+	    ;;
+    esac
+    return 0
 
 } &&
-complete -onospace -F _nim nim
+    complete -F _nim nim
 
-# ex: ts=2 sw=2 et filetypesh
+# ex: filetype=sh
