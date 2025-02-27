@@ -29,6 +29,8 @@ discard """
   ccodecheck: "'_ZN14titaniummangle8testFuncE9ContainerI3intE'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE10Container2I5int325int32E'"
   ccodecheck: "'_ZN14titaniummangle8testFuncE9ContainerI10Container2I5int325int32EE'"
+  ccodecheck: "'_ZN14titaniummangle7xxx_s10E'"
+  ccodecheck: "'_ZN14titaniummangle7xxx_s20E'"
 """
 
 #When debugging this notice that if one check fails, it can be due to any of the above.
@@ -151,6 +153,9 @@ proc testFunc(a: int, xs: varargs[string]) =
   for x in xs:
     echo x
 
+proc xxx(v: static int) =
+  echo v
+
 proc testFunc() = 
   var a = 2
   var aPtr = a.addr
@@ -188,6 +193,8 @@ proc testFunc() =
   let c2 = Container2[int32, int32](data: 10, data2: 20)
   testFunc(c2)
   testFunc(Container[Container2[int32, int32]](data: c2))
-  
+  xxx(10)
+  xxx(20)
+
 
 testFunc()
