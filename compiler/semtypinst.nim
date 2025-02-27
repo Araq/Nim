@@ -608,10 +608,13 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType, isInstValue = false): 
   result = t
   if t == nil: return
 
+  var et = t
+  if t.isConcept:
+    et = t.reduceToBase
   const lookupMetas = {tyStatic, tyGenericParam, tyConcept} + tyTypeClasses - {tyAnything}
-  if t.kind in lookupMetas or
-      (t.kind == tyAnything and tfRetType notin t.flags):
-    let lookup = cl.typeMap.lookup(t)
+  if et.kind in lookupMetas or
+      (et.kind == tyAnything and tfRetType notin et.flags):
+    let lookup = cl.typeMap.lookup(et)
     if lookup != nil: return lookup
 
   case t.kind

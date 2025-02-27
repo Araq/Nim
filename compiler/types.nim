@@ -1515,6 +1515,20 @@ proc getSize*(conf: ConfigRef; typ: PType): BiggestInt =
   computeSizeAlign(conf, typ)
   result = typ.size
 
+proc isConcept*(t: PType): bool=
+  case t.kind
+  of tyConcept: true
+  of tyCompositeTypeClass:
+    t.hasElementType and isConcept(t.elementType)
+  of tyGenericBody:
+    t.typeBodyImpl.kind == tyConcept
+  of tyGenericInvocation, tyGenericInst:
+    if t.baseClass.kind == tyGenericBody:
+      t.baseClass.typeBodyImpl.kind == tyConcept
+    else:
+      t.baseClass.kind == tyConcept
+  else: false
+
 proc containsGenericTypeIter(t: PType, closure: RootRef): bool =
   case t.kind
   of tyStatic:
@@ -1525,6 +1539,8 @@ proc containsGenericTypeIter(t: PType, closure: RootRef): bool =
     return false
   of GenericTypes + tyTypeClasses + {tyFromExpr}:
     return true
+  of tyGenericInst:
+    return t.isConcept
   else:
     return false
 
@@ -2053,6 +2069,7 @@ proc genericRoot*(t: PType): PType =
 
 proc reduceToBase*(f: PType): PType =
   #[
+    Not recursion safe
     Returns the lowest order (most general) type that that is compatible with the input.
     E.g.
     A[T] = ptr object ... A -> ptr object
@@ -2077,7 +2094,7 @@ proc reduceToBase*(f: PType): PType =
     result = reduceToBase(f.typeBodyImpl)
   of tyUserTypeClass:
     if f.isResolvedUserTypeClass:
-      result = f.base  # ?? idk if this is right
+      result = f.base
     else:
       result = f.skipModifier
   of tyStatic, tyOwned, tyVar, tyLent, tySink:

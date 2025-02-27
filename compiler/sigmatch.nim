@@ -20,6 +20,7 @@ import std/[intsets, strutils, tables]
 when defined(nimPreviewSlimSystem):
   import std/assertions
 
+
 type
   MismatchKind* = enum
     kUnknown, kAlreadyGiven, kUnknownNamedParam, kTypeMismatch, kVarNeeded,
@@ -94,6 +95,7 @@ type
     trNoCovariance
     trBindGenericParam  # bind tyGenericParam even with trDontBind
     trIsOutParam
+    trCheckGeneric
 
   TTypeRelFlags* = set[TTypeRelFlag]
 
@@ -297,9 +299,9 @@ proc checkGeneric(a, b: TCandidate): int =
   var winner = 0
   for aai, bbi in underspecifiedPairs(aa, bb, 1):
     var ma = newCandidate(c, bbi)
-    let tra = typeRel(ma, bbi, aai, {trDontBind})
+    let tra = typeRel(ma, bbi, aai, {trDontBind, trCheckGeneric})
     var mb = newCandidate(c, aai)
-    let trb = typeRel(mb, aai, bbi, {trDontBind})
+    let trb = typeRel(mb, aai, bbi, {trDontBind, trCheckGeneric})
     if tra == isGeneric and trb in {isNone, isInferred, isInferredConvertible}:
       if winner == -1: return 0
       winner = 1
@@ -363,6 +365,8 @@ proc sumGeneric(t: PType): int =
         result += sumGeneric(a)
       break
     else:
+      if t.isConcept:
+        result += t.reduceToBase.conceptBody.len
       break
 
 proc complexDisambiguation(a, b: PType): int =
@@ -1138,6 +1142,24 @@ proc isCovariantPtr(c: var TCandidate, f, a: PType): bool =
   else:
     return false
 
+proc enterConceptMatch(c: var TCandidate; f,a: PType, flags: TTypeRelFlags): TTypeRelation =
+  var
+    conceptFlags: set[MatchFlags] = {}
+    container: PType = nil
+    concpt = f
+  if concpt.kind != tyConcept:
+    container = concpt
+    concpt = container.reduceToBase
+  if trDontBind in flags:
+    conceptFlags.incl mfDontBind
+  if trCheckGeneric in flags:
+    conceptFlags.incl mfCheckGeneric
+  let mres = concepts.conceptMatch(c.c, concpt, a, c.bindings, container, flags = conceptFlags)
+  if mres:
+    isGeneric
+  else:
+    isNone
+
 when false:
   proc maxNumericType(prev, candidate: PType): PType =
     let c = candidate.skipTypes({tyRange})
@@ -1643,8 +1665,10 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
 
     let roota = if skipBoth or deptha > depthf: a.skipGenericAlias else: a
     let rootf = if skipBoth or depthf > deptha: f.skipGenericAlias else: f
-
-    if a.kind == tyGenericInst:
+    
+    if f.isConcept:
+      result = enterConceptMatch(c, rootf, roota, flags)
+    elif a.kind == tyGenericInst:
       if roota.base == rootf.base:
         let nextFlags = flags + {trNoCovariance}
         var hasCovariance = false
@@ -1715,7 +1739,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
     var x = a.skipGenericAlias
     if x.kind == tyGenericParam and x.len > 0:
       x = x.last
-    let concpt = f[0].skipTypes({tyGenericBody})
+    let concpt = f.reduceToBase
     var preventHack = concpt.kind == tyConcept
     if x.kind == tyOwned and f[0].kind != tyOwned:
       preventHack = true
@@ -1748,9 +1772,8 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           # Workaround for regression #4589
           if f[i].kind != tyTypeDesc: return
       result = isGeneric
-    elif x.kind == tyGenericInst and concpt.kind == tyConcept:
-      result = if concepts.conceptMatch(c.c, concpt, x, c.bindings, f): isGeneric
-               else: isNone
+    elif concpt.kind == tyConcept:
+      result = enterConceptMatch(c, f, x, flags)
     else:
       let genericBody = f[0]
       var askip = skippedNone
@@ -1758,7 +1781,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       let aobj = x.skipToObject(askip)
       let fobj = genericBody.last.skipToObject(fskip)
       result = typeRel(c, genericBody, x, flags)
-      if result != isNone:
+      if result != isNone and concpt.kind != tyConcept:
         # see tests/generics/tgeneric3.nim for an example that triggers this
         # piece of code:
         #
@@ -1886,11 +1909,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         else:
           result = isNone
   of tyConcept:
-    if a.kind == tyConcept and sameType(f, a):
-      result = isGeneric
-    else:
-      result = if concepts.conceptMatch(c.c, f, a, c.bindings, nil): isGeneric
-               else: isNone
+    result = enterConceptMatch(c, f, a, flags)
   of tyCompositeTypeClass:
     considerPreviousT:
       let roota = a.skipGenericAlias
@@ -2411,7 +2430,6 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
 
   let oldInheritancePenalty = m.inheritancePenalty
   var r = typeRel(m, f, a)
-
   # This special typing rule for macros and templates is not documented
   # anywhere and breaks symmetry. It's hard to get rid of though, my
   # custom seqs example fails to compile without this:
