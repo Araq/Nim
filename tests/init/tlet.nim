@@ -63,7 +63,7 @@ proc foo2 =
     discard
   else:
     let x = 1
-  doAssert x == 1
+  doAssert not declared(x)
 
   when false:
     discard
