@@ -308,7 +308,7 @@ proc checkGeneric(a, b: TCandidate): int =
       winner = -1
   result = winner
 
-proc sumGeneric(t: PType): int =
+proc sumGeneric(t: PType, ignoreModifiers = false): int =
   # count the "genericness" so that Foo[Foo[T]] has the value 3
   # and Foo[T] has the value 2 so that we know Foo[Foo[T]] is more
   # specific than Foo[T].
@@ -319,9 +319,13 @@ proc sumGeneric(t: PType): int =
     of tyAlias, tySink, tyNot: t = t.skipModifier
     of tyArray, tyRef, tyPtr, tyDistinct, tyUncheckedArray,
         tyOpenArray, tyVarargs, tySet, tyRange, tySequence,
-        tyLent, tyOwned, tyVar:
+        tyLent, tyOwned:
       t = t.elementType
       inc result
+    of tyVar:
+      t = t.elementType
+      if not ignoreModifiers:
+        inc result
     of tyBool, tyChar, tyEnum, tyObject, tyPointer, tyVoid,
         tyString, tyCstring, tyInt..tyInt64, tyFloat..tyFloat128,
         tyUInt..tyUInt64, tyCompositeTypeClass, tyBuiltInTypeClass:
@@ -329,7 +333,11 @@ proc sumGeneric(t: PType): int =
       break
     of tyGenericBody:
       t = t.typeBodyImpl
-    of tyGenericInst, tyStatic:
+    of tyGenericInst:
+      t = t.skipModifier
+      if not ignoreModifiers:
+        inc result
+    of tyStatic:
       t = t.skipModifier
       inc result
     of tyOr:
@@ -365,12 +373,12 @@ proc sumGeneric(t: PType): int =
     else:
       break
 
-proc complexDisambiguation(a, b: PType): int =
+proc complexDisambiguation(a, b: PType, ignoreModifiers = false): int =
   # 'a' matches better if *every* argument matches better or equal than 'b'.
   var winner = 0
   for ai, bi in underspecifiedPairs(a, b, 1):
-    let x = ai.sumGeneric
-    let y = bi.sumGeneric
+    let x = ai.sumGeneric(ignoreModifiers)
+    let y = bi.sumGeneric(ignoreModifiers)
     if x != y:
       if winner == 0:
         if x > y: winner = 1
@@ -424,6 +432,9 @@ proc cmpCandidates*(a, b: TCandidate, isFormal=true): int =
     if false:
       # check for generic subclass relation
       result = checkGeneric(a, b)
+      if result != 0: return
+    else:
+      result = complexDisambiguation(a.callee, b.callee, ignoreModifiers = true)
       if result != 0: return
     # prefer more specialized generic over more general generic:
     result = complexDisambiguation(a.callee, b.callee)
