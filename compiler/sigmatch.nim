@@ -335,11 +335,11 @@ proc sumGeneric(t: PType, ignoreModifiers = false): int =
       t = t.typeBodyImpl
     of tyGenericInst:
       t = t.skipModifier
-      if not ignoreModifiers:
-        inc result
+      inc result
     of tyStatic:
       t = t.skipModifier
-      inc result
+      if not ignoreModifiers:
+        inc result
     of tyOr:
       var maxBranch = 0
       for branch in t.kids:
