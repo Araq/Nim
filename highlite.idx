@@ -1,0 +1,61 @@
+nimTitle	highlite	highlite.html	module packages/docutils/highlite		0
+nim	langNone	highlite.html#langNone	SourceLanguage.langNone		68
+nim	langNim	highlite.html#langNim	SourceLanguage.langNim		68
+nim	langCpp	highlite.html#langCpp	SourceLanguage.langCpp		68
+nim	langCsharp	highlite.html#langCsharp	SourceLanguage.langCsharp		68
+nim	langC	highlite.html#langC	SourceLanguage.langC		68
+nim	langJava	highlite.html#langJava	SourceLanguage.langJava		68
+nim	langYaml	highlite.html#langYaml	SourceLanguage.langYaml		68
+nim	langPython	highlite.html#langPython	SourceLanguage.langPython		68
+nim	langCmd	highlite.html#langCmd	SourceLanguage.langCmd		68
+nim	langConsole	highlite.html#langConsole	SourceLanguage.langConsole		68
+nim	SourceLanguage	highlite.html#SourceLanguage	enum SourceLanguage		68
+nim	gtEof	highlite.html#gtEof	TokenClass.gtEof		71
+nim	gtNone	highlite.html#gtNone	TokenClass.gtNone		71
+nim	gtWhitespace	highlite.html#gtWhitespace	TokenClass.gtWhitespace		71
+nim	gtDecNumber	highlite.html#gtDecNumber	TokenClass.gtDecNumber		71
+nim	gtBinNumber	highlite.html#gtBinNumber	TokenClass.gtBinNumber		71
+nim	gtHexNumber	highlite.html#gtHexNumber	TokenClass.gtHexNumber		71
+nim	gtOctNumber	highlite.html#gtOctNumber	TokenClass.gtOctNumber		71
+nim	gtFloatNumber	highlite.html#gtFloatNumber	TokenClass.gtFloatNumber		71
+nim	gtIdentifier	highlite.html#gtIdentifier	TokenClass.gtIdentifier		71
+nim	gtKeyword	highlite.html#gtKeyword	TokenClass.gtKeyword		71
+nim	gtStringLit	highlite.html#gtStringLit	TokenClass.gtStringLit		71
+nim	gtLongStringLit	highlite.html#gtLongStringLit	TokenClass.gtLongStringLit		71
+nim	gtCharLit	highlite.html#gtCharLit	TokenClass.gtCharLit		71
+nim	gtEscapeSequence	highlite.html#gtEscapeSequence	TokenClass.gtEscapeSequence		71
+nim	gtOperator	highlite.html#gtOperator	TokenClass.gtOperator		71
+nim	gtPunctuation	highlite.html#gtPunctuation	TokenClass.gtPunctuation		71
+nim	gtComment	highlite.html#gtComment	TokenClass.gtComment		71
+nim	gtLongComment	highlite.html#gtLongComment	TokenClass.gtLongComment		71
+nim	gtRegularExpression	highlite.html#gtRegularExpression	TokenClass.gtRegularExpression		71
+nim	gtTagStart	highlite.html#gtTagStart	TokenClass.gtTagStart		71
+nim	gtTagEnd	highlite.html#gtTagEnd	TokenClass.gtTagEnd		71
+nim	gtKey	highlite.html#gtKey	TokenClass.gtKey		71
+nim	gtValue	highlite.html#gtValue	TokenClass.gtValue		71
+nim	gtRawData	highlite.html#gtRawData	TokenClass.gtRawData		71
+nim	gtAssembler	highlite.html#gtAssembler	TokenClass.gtAssembler		71
+nim	gtPreprocessor	highlite.html#gtPreprocessor	TokenClass.gtPreprocessor		71
+nim	gtDirective	highlite.html#gtDirective	TokenClass.gtDirective		71
+nim	gtCommand	highlite.html#gtCommand	TokenClass.gtCommand		71
+nim	gtRule	highlite.html#gtRule	TokenClass.gtRule		71
+nim	gtHyperlink	highlite.html#gtHyperlink	TokenClass.gtHyperlink		71
+nim	gtLabel	highlite.html#gtLabel	TokenClass.gtLabel		71
+nim	gtReference	highlite.html#gtReference	TokenClass.gtReference		71
+nim	gtPrompt	highlite.html#gtPrompt	TokenClass.gtPrompt		71
+nim	gtProgramOutput	highlite.html#gtProgramOutput	TokenClass.gtProgramOutput		71
+nim	gtProgram	highlite.html#gtProgram	TokenClass.gtProgram		71
+nim	gtOption	highlite.html#gtOption	TokenClass.gtOption		71
+nim	gtOther	highlite.html#gtOther	TokenClass.gtOther		71
+nim	TokenClass	highlite.html#TokenClass	enum TokenClass		71
+nim	GeneralTokenizer	highlite.html#GeneralTokenizer	object GeneralTokenizer		79
+nim	sourceLanguageToStr	highlite.html#sourceLanguageToStr	const sourceLanguageToStr		88
+nim	sourceLanguageToAlpha	highlite.html#sourceLanguageToAlpha	const sourceLanguageToAlpha		90
+nim	tokenClassToStr	highlite.html#tokenClassToStr	const tokenClassToStr		93
+nim	getSourceLanguage	highlite.html#getSourceLanguage,string	proc getSourceLanguage(name: string): SourceLanguage		118
+nim	initGeneralTokenizer	highlite.html#initGeneralTokenizer,GeneralTokenizer,cstring	proc initGeneralTokenizer(g: var GeneralTokenizer; buf: cstring)		126
+nim	initGeneralTokenizer	highlite.html#initGeneralTokenizer,GeneralTokenizer,string	proc initGeneralTokenizer(g: var GeneralTokenizer; buf: string)		135
+nim	deinitGeneralTokenizer	highlite.html#deinitGeneralTokenizer,GeneralTokenizer	proc deinitGeneralTokenizer(g: var GeneralTokenizer)		138
+nim	getNextToken	highlite.html#getNextToken,GeneralTokenizer,SourceLanguage	proc getNextToken(g: var GeneralTokenizer; lang: SourceLanguage)		1002
+nim	tokenize	highlite.html#tokenize,string,SourceLanguage	proc tokenize(text: string; lang: SourceLanguage): seq[(string, TokenClass)]		1016
+nimgrp	initgeneraltokenizer	highlite.html#initGeneralTokenizer-procs-all	proc		126

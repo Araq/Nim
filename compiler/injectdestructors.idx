@@ -1,0 +1,3 @@
+nimTitle	injectdestructors	injectdestructors.html	module injectdestructors		0
+nim	sameLocation	injectdestructors.html#sameLocation,PNode,PNode	proc sameLocation(a, b: PNode): bool		1079
+nim	injectDestructorCalls	injectdestructors.html#injectDestructorCalls,ModuleGraph,IdGenerator,PSym,PNode	proc injectDestructorCalls(g: ModuleGraph; idgen: IdGenerator; owner: PSym; n: PNode): PNode		1247

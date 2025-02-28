@@ -1,0 +1,6 @@
+nimTitle	pathnorm	pathnorm.html	module std/pathnorm		0
+nim	PathIter	pathnorm.html#PathIter	object PathIter		20
+nim	hasNext	pathnorm.html#hasNext,PathIter,string	proc hasNext(it: PathIter; x: string): bool		24
+nim	next	pathnorm.html#next,PathIter,string	proc next(it: var PathIter; x: string): (int, int)		27
+nim	addNormalizePath	pathnorm.html#addNormalizePath,string,string,int	proc addNormalizePath(x: string; result: var string; state: var int; dirSep = DirSep)		59
+nim	normalizePath	pathnorm.html#normalizePath,string	proc normalizePath(path: string; dirSep = DirSep): string		112

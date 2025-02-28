@@ -1,0 +1,6 @@
+nimTitle	logic	logic.html	module std/logic		0
+nim	`->`	logic.html#->,bool,bool	proc `->`(a, b: bool): bool		4
+nim	`<->`	logic.html#<->,bool,bool	proc `<->`(a, b: bool): bool		5
+nim	forall	logic.html#forall,varargs[untyped]	proc forall(args: varargs[untyped]): bool		7
+nim	exists	logic.html#exists,varargs[untyped]	proc exists(args: varargs[untyped]): bool		8
+nim	old	logic.html#old,T	proc old[T](x: T): T		10

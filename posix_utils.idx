@@ -1,0 +1,13 @@
+nimTitle	posix_utils	posix_utils.html	module std/posix_utils		0
+nim	Uname	posix_utils.html#Uname	object Uname		20
+nim	uname	posix_utils.html#uname_2	proc uname(): Uname		26
+nim	fsync	posix_utils.html#fsync,int	proc fsync(fd: int)		45
+nim	stat	posix_utils.html#stat,string	proc stat(path: string): Stat		50
+nim	memoryLock	posix_utils.html#memoryLock,pointer,int	proc memoryLock(a1: pointer; a2: int)		55
+nim	memoryLockAll	posix_utils.html#memoryLockAll,int	proc memoryLockAll(flags: int)		60
+nim	memoryUnlock	posix_utils.html#memoryUnlock,pointer,int	proc memoryUnlock(a1: pointer; a2: int)		70
+nim	memoryUnlockAll	posix_utils.html#memoryUnlockAll	proc memoryUnlockAll()		75
+nim	sendSignal	posix_utils.html#sendSignal,Pid,int	proc sendSignal(pid: Pid; signal: int)		80
+nim	mkstemp	posix_utils.html#mkstemp,string,string	proc mkstemp(prefix: string; suffix = ""): (string, File)		86
+nim	mkdtemp	posix_utils.html#mkdtemp,string	proc mkdtemp(prefix: string): string		108
+nim	osReleaseFile	posix_utils.html#osReleaseFile	proc osReleaseFile(): Config		116

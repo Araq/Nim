@@ -1,0 +1,2 @@
+nimTitle	underscored_calls	underscored_calls.html	module std/private/underscored_calls		0
+nim	underscoredCalls	underscored_calls.html#underscoredCalls,NimNode,NimNode,NimNode	proc underscoredCalls(result, calls, arg0: NimNode)		15

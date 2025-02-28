@@ -1,0 +1,7 @@
+nimTitle	importer	importer.html	module importer		0
+nim	readExceptSet	importer.html#readExceptSet,PContext,PNode	proc readExceptSet(c: PContext; n: PNode): IntSet		23
+nim	declarePureEnumField	importer.html#declarePureEnumField,PContext,PSym	proc declarePureEnumField(c: PContext; s: PSym)		30
+nim	importAllSymbols	importer.html#importAllSymbols,PContext,PSym	proc importAllSymbols(c: PContext; fromMod: PSym)		210
+nim	evalImport	importer.html#evalImport,PContext,PNode	proc evalImport(c: PContext; n: PNode): PNode		346
+nim	evalFrom	importer.html#evalFrom,PContext,PNode	proc evalFrom(c: PContext; n: PNode): PNode		372
+nim	evalImportExcept	importer.html#evalImportExcept,PContext,PNode	proc evalImportExcept(c: PContext; n: PNode): PNode		387

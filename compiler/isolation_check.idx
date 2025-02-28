@@ -1,0 +1,3 @@
+nimTitle	isolation_check	isolation_check.html	module isolation_check		0
+nim	canAlias	isolation_check.html#canAlias,PType,PType	proc canAlias(arg, ret: PType): bool		144
+nim	checkIsolate	isolation_check.html#checkIsolate,PNode	proc checkIsolate(n: PNode): bool		166

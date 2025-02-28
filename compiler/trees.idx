@@ -1,0 +1,21 @@
+nimTitle	trees	trees.html	module trees		0
+nim	cyclicTree	trees.html#cyclicTree,PNode	proc cyclicTree(n: PNode): bool		26
+nim	exprStructuralEquivalent	trees.html#exprStructuralEquivalent,PNode,PNode	proc exprStructuralEquivalent(a, b: PNode; strictSymEquality = false): bool		34
+nim	sameTree	trees.html#sameTree,PNode,PNode	proc sameTree(a, b: PNode): bool		62
+nim	getMagic	trees.html#getMagic,PNode	proc getMagic(op: PNode): TMagic		86
+nim	isConstExpr	trees.html#isConstExpr,PNode	proc isConstExpr(n: PNode): bool		95
+nim	isCaseObj	trees.html#isCaseObj,PNode	proc isCaseObj(n: PNode): bool		99
+nim	isDeepConstExpr	trees.html#isDeepConstExpr,PNode	proc isDeepConstExpr(n: PNode; preventInheritance = false): bool		105
+nim	isRange	trees.html#isRange,PNode	proc isRange(n: PNode): bool		129
+nim	whichPragma	trees.html#whichPragma,PNode	proc whichPragma(n: PNode): TSpecialWord		142
+nim	isNoSideEffectPragma	trees.html#isNoSideEffectPragma,PNode	proc isNoSideEffectPragma(n: PNode): bool		161
+nim	findPragma	trees.html#findPragma,PNode,TSpecialWord	proc findPragma(n: PNode; which: TSpecialWord): PNode		167
+nim	effectSpec	trees.html#effectSpec,PNode,TSpecialWord	proc effectSpec(n: PNode; effectType: TSpecialWord): PNode		174
+nim	propSpec	trees.html#propSpec,PNode,TSpecialWord	proc propSpec(n: PNode; effectType: TSpecialWord): PNode		185
+nim	flattenStmts	trees.html#flattenStmts,PNode	proc flattenStmts(n: PNode): PNode		198
+nim	extractRange	trees.html#extractRange,TNodeKind,PNode,int,int	proc extractRange(k: TNodeKind; n: PNode; a, b: int): PNode		204
+nim	getRoot	trees.html#getRoot,PNode	proc getRoot(n: PNode): PSym		208
+nim	stupidStmtListExpr	trees.html#stupidStmtListExpr,PNode	proc stupidStmtListExpr(n: PNode): bool		228
+nim	dontInlineConstant	trees.html#dontInlineConstant,PNode,PNode	proc dontInlineConstant(orig, cnst: PNode): bool		233
+nim	isRunnableExamples	trees.html#isRunnableExamples,PNode	proc isRunnableExamples(n: PNode): bool		239
+nim	skipAddr	trees.html#skipAddr,PNode	proc skipAddr(n: PNode): PNode		244

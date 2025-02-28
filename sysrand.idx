@@ -1,0 +1,5 @@
+nimTitle	sysrand	sysrand.html	module std/sysrand		0
+nim	urandom	sysrand.html#urandom,openArray[byte]	proc urandom(dest: var openArray[byte]): bool		296
+nim	urandom	sysrand.html#urandom,Natural	proc urandom(size: Natural): seq[byte]		317
+heading	See also	sysrand.html#see-also	 See also		0
+nimgrp	urandom	sysrand.html#urandom-procs-all	proc		296

@@ -1,0 +1,4 @@
+nimTitle	rtarrays	rtarrays.html	module std/rtarrays		0
+nim	RtArray	rtarrays.html#RtArray	object RtArray		20
+nim	initRtArray	rtarrays.html#initRtArray,Natural	proc initRtArray[T](len: Natural): RtArray[T]		27
+nim	getRawData	rtarrays.html#getRawData,RtArray[T]	proc getRawData[T](x: var RtArray[T]): ptr UncheckedArray[T]		32

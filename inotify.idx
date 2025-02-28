@@ -1,0 +1,31 @@
+nimTitle	inotify	inotify.html	module std/inotify		0
+nim	InotifyEvent	inotify.html#InotifyEvent	object InotifyEvent		18
+nim	IN_ACCESS	inotify.html#IN_ACCESS	const IN_ACCESS		27
+nim	IN_MODIFY	inotify.html#IN_MODIFY	const IN_MODIFY		28
+nim	IN_ATTRIB	inotify.html#IN_ATTRIB	const IN_ATTRIB		29
+nim	IN_CLOSE_WRITE	inotify.html#IN_CLOSE_WRITE	const IN_CLOSE_WRITE		30
+nim	IN_CLOSE_NOWRITE	inotify.html#IN_CLOSE_NOWRITE	const IN_CLOSE_NOWRITE		31
+nim	IN_CLOSE	inotify.html#IN_CLOSE	const IN_CLOSE		32
+nim	IN_OPEN	inotify.html#IN_OPEN	const IN_OPEN		33
+nim	IN_MOVED_FROM	inotify.html#IN_MOVED_FROM	const IN_MOVED_FROM		34
+nim	IN_MOVED_TO	inotify.html#IN_MOVED_TO	const IN_MOVED_TO		35
+nim	IN_MOVE	inotify.html#IN_MOVE	const IN_MOVE		36
+nim	IN_CREATE	inotify.html#IN_CREATE	const IN_CREATE		37
+nim	IN_DELETE	inotify.html#IN_DELETE	const IN_DELETE		38
+nim	IN_DELETE_SELF	inotify.html#IN_DELETE_SELF	const IN_DELETE_SELF		39
+nim	IN_MOVE_SELF	inotify.html#IN_MOVE_SELF	const IN_MOVE_SELF		40
+nim	IN_UNMOUNT	inotify.html#IN_UNMOUNT	const IN_UNMOUNT		44
+nim	IN_Q_OVERFLOW	inotify.html#IN_Q_OVERFLOW	const IN_Q_OVERFLOW		45
+nim	IN_IGNORED	inotify.html#IN_IGNORED	const IN_IGNORED		46
+nim	IN_ONLYDIR	inotify.html#IN_ONLYDIR	const IN_ONLYDIR		50
+nim	IN_DONT_FOLLOW	inotify.html#IN_DONT_FOLLOW	const IN_DONT_FOLLOW		51
+nim	IN_EXCL_UNLINK	inotify.html#IN_EXCL_UNLINK	const IN_EXCL_UNLINK		52
+nim	IN_MASK_ADD	inotify.html#IN_MASK_ADD	const IN_MASK_ADD		53
+nim	IN_ISDIR	inotify.html#IN_ISDIR	const IN_ISDIR		54
+nim	IN_ONESHOT	inotify.html#IN_ONESHOT	const IN_ONESHOT		55
+nim	IN_ALL_EVENTS	inotify.html#IN_ALL_EVENTS	const IN_ALL_EVENTS		59
+nim	inotify_init	inotify.html#inotify_init	proc inotify_init(): FileHandle		64
+nim	inotify_init1	inotify.html#inotify_init1,cint	proc inotify_init1(flags: cint): FileHandle		68
+nim	inotify_add_watch	inotify.html#inotify_add_watch,cint,cstring,uint32	proc inotify_add_watch(fd: cint; name: cstring; mask: uint32): cint		73
+nim	inotify_rm_watch	inotify.html#inotify_rm_watch,cint,cint	proc inotify_rm_watch(fd: cint; wd: cint): cint		77
+nim	inotify_events	inotify.html#inotify_events.i,pointer,int	iterator inotify_events(evs: pointer; n: int): ptr InotifyEvent		81

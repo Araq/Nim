@@ -1,0 +1,8 @@
+nimTitle	appdirs	appdirs.html	module std/appdirs		0
+nim	getHomeDir	appdirs.html#getHomeDir	proc getHomeDir(): Path		9
+nim	getDataDir	appdirs.html#getDataDir	proc getDataDir(): Path		20
+nim	getConfigDir	appdirs.html#getConfigDir	proc getConfigDir(): Path		37
+nim	getCacheDir	appdirs.html#getCacheDir	proc getCacheDir(): Path		53
+nim	getCacheDir	appdirs.html#getCacheDir,Path	proc getCacheDir(app: Path): Path		71
+nim	getTempDir	appdirs.html#getTempDir	proc getTempDir(): Path		78
+nimgrp	getcachedir	appdirs.html#getCacheDir-procs-all	proc		53

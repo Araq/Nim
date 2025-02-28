@@ -1,0 +1,17 @@
+nimTitle	nimsets	nimsets.html	module nimsets		0
+nim	inSet	nimsets.html#inSet,PNode,PNode	proc inSet(s: PNode; elem: PNode): bool		18
+nim	overlap	nimsets.html#overlap,PNode,PNode	proc overlap(a, b: PNode): bool		33
+nim	someInSet	nimsets.html#someInSet,PNode,PNode,PNode	proc someInSet(s: PNode; a, b: PNode): bool		47
+nim	toBitSet	nimsets.html#toBitSet,ConfigRef,PNode	proc toBitSet(conf: ConfigRef; s: PNode): TBitSet		64
+nim	toTreeSet	nimsets.html#toTreeSet,ConfigRef,TBitSet,PType,TLineInfo	proc toTreeSet(conf: ConfigRef; s: TBitSet; settype: PType; info: TLineInfo): PNode		79
+nim	unionSets	nimsets.html#unionSets,ConfigRef,PNode,PNode	proc unionSets(conf: ConfigRef; a, b: PNode): PNode		119
+nim	diffSets	nimsets.html#diffSets,ConfigRef,PNode,PNode	proc diffSets(conf: ConfigRef; a, b: PNode): PNode		120
+nim	intersectSets	nimsets.html#intersectSets,ConfigRef,PNode,PNode	proc intersectSets(conf: ConfigRef; a, b: PNode): PNode		121
+nim	symdiffSets	nimsets.html#symdiffSets,ConfigRef,PNode,PNode	proc symdiffSets(conf: ConfigRef; a, b: PNode): PNode		122
+nim	containsSets	nimsets.html#containsSets,ConfigRef,PNode,PNode	proc containsSets(conf: ConfigRef; a, b: PNode): bool		124
+nim	equalSets	nimsets.html#equalSets,ConfigRef,PNode,PNode	proc equalSets(conf: ConfigRef; a, b: PNode): bool		129
+nim	complement	nimsets.html#complement,ConfigRef,PNode	proc complement(conf: ConfigRef; a: PNode): PNode		134
+nim	deduplicate	nimsets.html#deduplicate,ConfigRef,PNode	proc deduplicate(conf: ConfigRef; a: PNode): PNode		139
+nim	cardSet	nimsets.html#cardSet,ConfigRef,PNode	proc cardSet(conf: ConfigRef; a: PNode): BiggestInt		143
+nim	setHasRange	nimsets.html#setHasRange,PNode	proc setHasRange(s: PNode): bool		147
+nim	emptyRange	nimsets.html#emptyRange,PNode,PNode	proc emptyRange(a, b: PNode): bool		156

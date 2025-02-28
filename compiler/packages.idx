@@ -1,0 +1,6 @@
+nimTitle	packages	packages.html	module packages		0
+nim	getPackage	packages.html#getPackage,ConfigRef,IdentCache,FileIndex	proc getPackage(conf: ConfigRef; cache: IdentCache; fileIdx: FileIndex): PSym		23
+nim	getPackageSymbol	packages.html#getPackageSymbol,PSym	proc getPackageSymbol(sym: PSym): PSym		36
+nim	getPackageId	packages.html#getPackageId,PSym	proc getPackageId(sym: PSym): int		44
+nim	belongsToProjectPackage	packages.html#belongsToProjectPackage,ConfigRef,PSym	proc belongsToProjectPackage(conf: ConfigRef; sym: PSym): bool		48
+nim	belongsToProjectPackageMaybeNil	packages.html#belongsToProjectPackageMaybeNil,ConfigRef,PSym	proc belongsToProjectPackageMaybeNil(conf: ConfigRef; sym: PSym): bool		55

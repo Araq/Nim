@@ -1,0 +1,4 @@
+nimTitle	strbasics	strbasics.html	module std/strbasics		0
+nim	add	strbasics.html#add,string,openArray[char]	proc add(x: var string; y: openArray[char])		20
+nim	setSlice	strbasics.html#setSlice,string,Slice[int]	proc setSlice(s: var string; slice: Slice[int])		47
+nim	strip	strbasics.html#strip,string,set[char]	proc strip(a: var string; leading = true; trailing = true;\n      chars: set[char] = whitespaces)		92

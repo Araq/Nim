@@ -1,0 +1,88 @@
+nimTitle	jsffi	jsffi.html	module std/jsffi		0
+nim	toJsKey	jsffi.html#toJsKey,cstring,typeT	proc toJsKey[T: SomeInteger](text: cstring; t: type T): T		73
+nim	toJsKey	jsffi.html#toJsKey,cstring,typeT_2	proc toJsKey[T: enum](text: cstring; t: type T): T		75
+nim	toJsKey	jsffi.html#toJsKey,cstring,typecstring	proc toJsKey(text: cstring; t: type cstring): cstring		78
+nim	toJsKey	jsffi.html#toJsKey,cstring,typeT_3	proc toJsKey[T: SomeFloat](text: cstring; t: type T): T		81
+nim	JsKey	jsffi.html#JsKey	type JsKey		84
+nim	JsObject	jsffi.html#JsObject	type JsObject		87
+nim	JsAssoc	jsffi.html#JsAssoc	type JsAssoc		89
+nim	js	jsffi.html#js	type js		92
+nim	jsArguments	jsffi.html#jsArguments	var jsArguments		95
+nim	jsNull	jsffi.html#jsNull	var jsNull		97
+nim	jsUndefined	jsffi.html#jsUndefined	var jsUndefined		99
+nim	jsDirname	jsffi.html#jsDirname	var jsDirname		101
+nim	jsFilename	jsffi.html#jsFilename	var jsFilename		103
+nim	isNull	jsffi.html#isNull,T	proc isNull[T](x: T): bool		106
+nim	isUndefined	jsffi.html#isUndefined,T	proc isUndefined[T](x: T): bool		109
+nim	JsError	jsffi.html#JsError	object JsError		114
+nim	JsEvalError	jsffi.html#JsEvalError	object JsEvalError		116
+nim	JsRangeError	jsffi.html#JsRangeError	object JsRangeError		117
+nim	JsReferenceError	jsffi.html#JsReferenceError	object JsReferenceError		118
+nim	JsSyntaxError	jsffi.html#JsSyntaxError	object JsSyntaxError		119
+nim	JsTypeError	jsffi.html#JsTypeError	object JsTypeError		120
+nim	JsURIError	jsffi.html#JsURIError	object JsURIError		121
+nim	newJsObject	jsffi.html#newJsObject	proc newJsObject(): JsObject		124
+nim	newJsAssoc	jsffi.html#newJsAssoc	proc newJsAssoc[K: JsKey; V](): JsAssoc[K, V]		127
+nim	hasOwnProperty	jsffi.html#hasOwnProperty,JsObject,cstring	proc hasOwnProperty(x: JsObject; prop: cstring): bool		131
+nim	jsTypeOf	jsffi.html#jsTypeOf,JsObject	proc jsTypeOf(x: JsObject): cstring		135
+nim	jsNew	jsffi.html#jsNew,auto	proc jsNew(x: auto): JsObject		138
+nim	jsDelete	jsffi.html#jsDelete,auto	proc jsDelete(x: auto): JsObject		142
+nim	require	jsffi.html#require,cstring	proc require(module: cstring): JsObject		145
+nim	to	jsffi.html#to,JsObject,typedesc	proc to(x: JsObject; T: typedesc): T:type		149
+nim	toJs	jsffi.html#toJs,T	proc toJs[T](val: T): JsObject		152
+nim	toJs	jsffi.html#toJs.t,string	template toJs(s: string): JsObject		155
+nim	jsFromAst	jsffi.html#jsFromAst.m,untyped	macro jsFromAst(n: untyped): untyped		157
+nim	`&`	jsffi.html#&,cstring,cstring	proc `&`(a, b: cstring): cstring		163
+nim	`+`	jsffi.html#+,JsObject,JsObject	proc `+`(x, y: JsObject): JsObject		166
+nim	`-`	jsffi.html#-,JsObject,JsObject	proc `-`(x, y: JsObject): JsObject		167
+nim	`*`	jsffi.html#*,JsObject,JsObject	proc `*`(x, y: JsObject): JsObject		168
+nim	`/`	jsffi.html#/,JsObject,JsObject	proc `/`(x, y: JsObject): JsObject		169
+nim	`%`	jsffi.html#%,JsObject,JsObject	proc `%`(x, y: JsObject): JsObject		170
+nim	`+=`	jsffi.html#+=,JsObject,JsObject	proc `+=`(x, y: JsObject): JsObject		171
+nim	`-=`	jsffi.html#-=,JsObject,JsObject	proc `-=`(x, y: JsObject): JsObject		172
+nim	`*=`	jsffi.html#*=,JsObject,JsObject	proc `*=`(x, y: JsObject): JsObject		173
+nim	`/=`	jsffi.html#/=,JsObject,JsObject	proc `/=`(x, y: JsObject): JsObject		174
+nim	`%=`	jsffi.html#%=,JsObject,JsObject	proc `%=`(x, y: JsObject): JsObject		175
+nim	`++`	jsffi.html#++,JsObject	proc `++`(x: JsObject): JsObject		176
+nim	`--`	jsffi.html#--,JsObject	proc `--`(x: JsObject): JsObject		177
+nim	`>`	jsffi.html#>,JsObject,JsObject	proc `>`(x, y: JsObject): JsObject		178
+nim	`<`	jsffi.html#<,JsObject,JsObject	proc `<`(x, y: JsObject): JsObject		179
+nim	`>=`	jsffi.html#>=,JsObject,JsObject	proc `>=`(x, y: JsObject): JsObject		180
+nim	`<=`	jsffi.html#<=,JsObject,JsObject	proc `<=`(x, y: JsObject): JsObject		181
+nim	`**`	jsffi.html#**,JsObject,JsObject	proc `**`(x, y: JsObject): JsObject		182
+nim	`and`	jsffi.html#and,JsObject,JsObject	proc `and`(x, y: JsObject): JsObject		184
+nim	`or`	jsffi.html#or,JsObject,JsObject	proc `or`(x, y: JsObject): JsObject		185
+nim	`not`	jsffi.html#not,JsObject	proc `not`(x: JsObject): JsObject		186
+nim	`in`	jsffi.html#in,JsObject,JsObject	proc `in`(x, y: JsObject): JsObject		187
+nim	`[]`	jsffi.html#[],JsObject,cstring	proc `[]`(obj: JsObject; field: cstring): JsObject		189
+nim	`[]`	jsffi.html#[],JsObject,int	proc `[]`(obj: JsObject; field: int): JsObject		192
+nim	`[]=`	jsffi.html#[]=,JsObject,cstring,T	proc `[]=`[T](obj: JsObject; field: cstring; val: T)		195
+nim	`[]=`	jsffi.html#[]=,JsObject,int,T	proc `[]=`[T](obj: JsObject; field: int; val: T)		198
+nim	`[]`	jsffi.html#[],JsAssoc[K: JsKey,V],K	proc `[]`[K: JsKey; V](obj: JsAssoc[K, V]; field: K): V		201
+nim	`[]=`	jsffi.html#[]=,JsAssoc[K: JsKey,V],K,V	proc `[]=`[K: JsKey; V](obj: JsAssoc[K, V]; field: K; val: V)		205
+nim	`[]`	jsffi.html#[],JsAssoc[cstring,V],string	proc `[]`[V](obj: JsAssoc[cstring, V]; field: string): V		209
+nim	`[]=`	jsffi.html#[]=,JsAssoc[cstring,V],string,V	proc `[]=`[V](obj: JsAssoc[cstring, V]; field: string; val: V)		212
+nim	`==`	jsffi.html#==,JsRoot,JsRoot	proc `==`(x, y: JsRoot): bool		215
+nim	`.`	jsffi.html#..m,JsObject,untyped	macro `.`(obj: JsObject; field: untyped): JsObject		221
+nim	`.=`	jsffi.html#.=.m,JsObject,untyped,untyped	macro `.=`(obj: JsObject; field, value: untyped): untyped		245
+nim	`.()`	jsffi.html#.().m,JsObject,untyped,varargs[JsObject,jsFromAst]	macro `.()`(obj: JsObject; field: untyped; args: varargs[JsObject, jsFromAst]): JsObject		265
+nim	`.`	jsffi.html#..m,JsAssoc[K: cstring,V],untyped	macro `.`[K: cstring; V](obj: JsAssoc[K, V]; field: untyped): V		300
+nim	`.=`	jsffi.html#.=.m,JsAssoc[K: cstring,V],untyped,V	macro `.=`[K: cstring; V](obj: JsAssoc[K, V]; field: untyped; value: V): untyped		317
+nim	`.()`	jsffi.html#.().m,JsAssoc[K: cstring,V: proc],untyped,varargs[untyped]	macro `.()`[K: cstring; V: proc](obj: JsAssoc[K, V]; field: untyped;\n                           args: varargs[untyped]): auto		335
+nim	pairs	jsffi.html#pairs.i,JsObject	iterator pairs(obj: JsObject): (cstring, JsObject)		350
+nim	items	jsffi.html#items.i,JsObject	iterator items(obj: JsObject): JsObject		362
+nim	keys	jsffi.html#keys.i,JsObject	iterator keys(obj: JsObject): cstring		371
+nim	pairs	jsffi.html#pairs.i,JsAssoc[K: JsKey,V]	iterator pairs[K: JsKey; V](assoc: JsAssoc[K, V]): (K, V)		379
+nim	items	jsffi.html#items.i,JsAssoc[K,V]	iterator items[K, V](assoc: JsAssoc[K, V]): V		390
+nim	keys	jsffi.html#keys.i,JsAssoc[K: JsKey,V]	iterator keys[K: JsKey; V](assoc: JsAssoc[K, V]): K		399
+nim	`{}`	jsffi.html#{}.m,typedesc,varargs[untyped]	macro `{}`(typ: typedesc; xs: varargs[untyped]): auto		409
+nim	bindMethod	jsffi.html#bindMethod.m,typed	macro bindMethod(procedure: typed): auto		471
+nimgrp	tojskey	jsffi.html#toJsKey-procs-all	proc		73
+nimgrp	[]=	jsffi.html#[]=-procs-all	proc		195
+nimgrp	[]	jsffi.html#[]-procs-all	proc		189
+nimgrp	items	jsffi.html#items-iterators-all	iterator		362
+nimgrp	pairs	jsffi.html#pairs-iterators-all	iterator		350
+nimgrp	keys	jsffi.html#keys-iterators-all	iterator		371
+nimgrp	.()	jsffi.html#.()-macros-all	macro		265
+nimgrp	.	jsffi.html#.-macros-all	macro		221
+nimgrp	.=	jsffi.html#.=-macros-all	macro		245

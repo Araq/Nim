@@ -1,0 +1,85 @@
+markupTitle	Nim Experimental Features	manual_experimental.html	Nim Experimental Features		0
+heading	About this document	manual_experimental.html#about-this-document	 About this document		0
+heading	Void type	manual_experimental.html#void-type	 Void type		0
+heading	Generic nimdefine pragma	manual_experimental.html#generic-nimdefine-pragma	 Generic <tt class="docutils literal"><span class="pre"><span class="Identifier">define</span></span></tt> pragma		0
+heading	Top-down type inference	manual_experimental.html#topminusdown-type-inference	 Top-down type inference		0
+heading	Inferred generic parameters	manual_experimental.html#topminusdown-type-inference-inferred-generic-parameters	  Inferred generic parameters		0
+heading	Sequence literals	manual_experimental.html#topminusdown-type-inference-sequence-literals	  Sequence literals		0
+heading	Package level objects	manual_experimental.html#package-level-objects	 Package level objects		0
+idx	incomplete	manual_experimental.html#incomplete_1	Package level objects		0
+heading	Importing private symbols	manual_experimental.html#importing-private-symbols	 Importing private symbols		0
+heading	Code reordering	manual_experimental.html#code-reordering	 Code reordering		0
+heading	Special Operators	manual_experimental.html#special-operators	 Special Operators		0
+heading	dot operators	manual_experimental.html#special-operators-dot-operators	  dot operators		0
+heading	operator nim.	manual_experimental.html#special-operators-operator-nimdot	  operator <tt class="docutils literal"><span class="pre"><span class="Operator">.</span></span></tt>		0
+heading	operator nim.()	manual_experimental.html#special-operators-operator-nimdot	  operator <tt class="docutils literal"><span class="pre"><span class="Operator">.</span><span class="Punctuation">(</span><span class="Punctuation">)</span></span></tt>		0
+heading	operator nim.=	manual_experimental.html#special-operators-operator-nimdoteq	  operator <tt class="docutils literal"><span class="pre"><span class="Operator">.=</span></span></tt>		0
+heading	Call operator	manual_experimental.html#special-operators-call-operator	  Call operator		0
+heading	Extended macro pragmas	manual_experimental.html#extended-macro-pragmas	 Extended macro pragmas		0
+heading	Symbols as template/macro calls (alias syntax)	manual_experimental.html#symbols-as-templateslashmacro-calls-alias-syntax	 Symbols as template/macro calls (alias syntax)		0
+heading	Not nil annotation	manual_experimental.html#not-nil-annotation	 Not nil annotation		0
+heading	Strict not nil checking	manual_experimental.html#strict-not-nil-checking	 Strict not nil checking		0
+heading	nil	manual_experimental.html#strict-not-nil-checking-nil	  nil		0
+heading	not nil	manual_experimental.html#strict-not-nil-checking-not-nil	  not nil		0
+heading	local turn on/off	manual_experimental.html#strict-not-nil-checking-local-turn-onslashoff	  local turn on/off		0
+heading	nilability state	manual_experimental.html#strict-not-nil-checking-nilability-state	  nilability state		0
+heading	type nilability	manual_experimental.html#strict-not-nil-checking-type-nilability	  type nilability		0
+heading	params rules	manual_experimental.html#strict-not-nil-checking-params-rules	  params rules		0
+heading	assignment rules	manual_experimental.html#strict-not-nil-checking-assignment-rules	  assignment rules		0
+heading	call args rules	manual_experimental.html#strict-not-nil-checking-call-args-rules	  call args rules		0
+heading	branches rules	manual_experimental.html#strict-not-nil-checking-branches-rules	  branches rules		0
+heading	compound expressions: field, index expressions	manual_experimental.html#strict-not-nil-checking-compound-expressionscolon-field-index-expressions	  compound expressions: field, index expressions		0
+heading	element tracking	manual_experimental.html#strict-not-nil-checking-element-tracking	  element tracking		0
+heading	unstructured control flow rules	manual_experimental.html#strict-not-nil-checking-unstructured-control-flow-rules	  unstructured control flow rules		0
+heading	aliasing	manual_experimental.html#strict-not-nil-checking-aliasing	  aliasing		0
+heading	warnings and errors	manual_experimental.html#strict-not-nil-checking-warnings-and-errors	  warnings and errors		0
+heading	Aliasing restrictions in parameter passing	manual_experimental.html#aliasing-restrictions-in-parameter-passing	 Aliasing restrictions in parameter passing		0
+heading	Strict funcs	manual_experimental.html#strict-funcs	 Strict funcs		0
+heading	View types	manual_experimental.html#view-types	 View types		0
+heading	Path expressions	manual_experimental.html#view-types-path-expressions	  Path expressions		0
+heading	Start of a borrow	manual_experimental.html#view-types-start-of-a-borrow	  Start of a borrow		0
+heading	End of a borrow	manual_experimental.html#view-types-end-of-a-borrow	  End of a borrow		0
+heading	Reborrows	manual_experimental.html#view-types-reborrows	  Reborrows		0
+heading	Algorithm	manual_experimental.html#view-types-algorithm	  Algorithm		0
+heading	Concepts	manual_experimental.html#concepts	 Concepts		0
+heading	Concept diagnostics	manual_experimental.html#concepts-concept-diagnostics	  Concept diagnostics		0
+heading	Generic concepts and type binding rules	manual_experimental.html#concepts-generic-concepts-and-type-binding-rules	  Generic concepts and type binding rules		0
+heading	Concept derived values	manual_experimental.html#concepts-concept-derived-values	  Concept derived values		0
+heading	Concept refinement	manual_experimental.html#concepts-concept-refinement	  Concept refinement		0
+heading	Dynamic arguments for bindSym	manual_experimental.html#dynamic-arguments-for-bindsym	 Dynamic arguments for bindSym		0
+heading	Term rewriting macros	manual_experimental.html#term-rewriting-macros	 Term rewriting macros		0
+heading	Parameter constraints	manual_experimental.html#term-rewriting-macros-parameter-constraints	  Parameter constraints		0
+idx	parameter constraint	manual_experimental.html#parameter-constraint_1	Parameter constraints		0
+heading	Pattern operators	manual_experimental.html#term-rewriting-macros-pattern-operators	  Pattern operators		0
+heading	The nim| operator	manual_experimental.html#pattern-operators-the-nimbar-operator	   The <tt class="docutils literal"><span class="pre"><span class="Operator">|</span></span></tt> operator		0
+heading	The nim{} operator	manual_experimental.html#pattern-operators-the-nim-operator	   The <tt class="docutils literal"><span class="pre"><span class="Punctuation">{</span><span class="Punctuation">}</span></span></tt> operator		0
+heading	The nim~ operator	manual_experimental.html#pattern-operators-the-nimtilde-operator	   The <tt class="docutils literal"><span class="pre"><span class="Operator">~</span></span></tt> operator		0
+heading	The nim* operator	manual_experimental.html#pattern-operators-the-nimstar-operator	   The <tt class="docutils literal"><span class="pre"><span class="Operator">*</span></span></tt> operator		0
+heading	The nim** operator	manual_experimental.html#pattern-operators-the-nimstarstar-operator	   The <tt class="docutils literal"><span class="pre"><span class="Operator">**</span></span></tt> operator		0
+heading	Parameters	manual_experimental.html#term-rewriting-macros-parameters	  Parameters		0
+heading	noRewrite pragma	manual_experimental.html#term-rewriting-macros-norewrite-pragma	  noRewrite pragma		0
+heading	Example: Partial evaluation	manual_experimental.html#term-rewriting-macros-examplecolon-partial-evaluation	  Example: Partial evaluation		0
+heading	Example: Hoisting	manual_experimental.html#term-rewriting-macros-examplecolon-hoisting	  Example: Hoisting		0
+heading	AST based overloading	manual_experimental.html#ast-based-overloading	 AST based overloading		0
+heading	Parallel & Spawn	manual_experimental.html#parallel-amp-spawn	 Parallel &amp; Spawn		0
+idx	Structured	manual_experimental.html#structured_1	Parallel &amp; Spawn		0
+idx	Unstructured	manual_experimental.html#unstructured_1	Parallel &amp; Spawn		0
+heading	Spawn statement	manual_experimental.html#parallel-amp-spawn-spawn-statement	  Spawn statement		0
+idx	spawn	manual_experimental.html#spawn_1	Spawn statement		0
+idx	data flow variable	manual_experimental.html#data-flow-variable_1	Spawn statement		0
+heading	Parallel statement	manual_experimental.html#parallel-amp-spawn-parallel-statement	  Parallel statement		0
+idx	disjoint checker	manual_experimental.html#disjoint-checker_1	Parallel statement		0
+heading	Strict case objects	manual_experimental.html#strict-case-objects	 Strict case objects		0
+heading	Quirky routines	manual_experimental.html#quirky-routines	 Quirky routines		0
+heading	Threading under ARC/ORC	manual_experimental.html#threading-under-arcslashorc	 Threading under ARC/ORC		0
+heading	Isolation	manual_experimental.html#threading-under-arcslashorc-isolation	  Isolation		0
+heading	Alias analysis	manual_experimental.html#threading-under-arcslashorc-alias-analysis	  Alias analysis		0
+heading	Sendable pragma	manual_experimental.html#threading-under-arcslashorc-sendable-pragma	  Sendable pragma		0
+heading	Virtual pragma	manual_experimental.html#virtual-pragma	 Virtual pragma		0
+heading	Constructor pragma	manual_experimental.html#constructor-pragma	 Constructor pragma		0
+heading	Constructor Initializer	manual_experimental.html#constructor-initializer	 Constructor Initializer		0
+heading	Member pragma	manual_experimental.html#member-pragma	 Member pragma		0
+heading	Injected symbols in generic procs and templates	manual_experimental.html#injected-symbols-in-generic-procs-and-templates	 Injected symbols in generic procs and templates		0
+heading	VTable for methods	manual_experimental.html#vtable-for-methods	 VTable for methods		0
+heading	asmSyntax pragma	manual_experimental.html#asmsyntax-pragma	 asmSyntax pragma		0
+heading	Type-bound overloads	manual_experimental.html#typeminusbound-overloads	 Type-bound overloads		0

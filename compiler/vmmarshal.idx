@@ -1,0 +1,3 @@
+nimTitle	vmmarshal	vmmarshal.html	module vmmarshal		0
+nim	storeAny	vmmarshal.html#storeAny,string,PType,PNode,ConfigRef	proc storeAny(s: var string; t: PType; a: PNode; conf: ConfigRef)		140
+nim	loadAny	vmmarshal.html#loadAny,string,PType,IdentCache,ConfigRef,IdGenerator	proc loadAny(s: string; t: PType; cache: IdentCache; conf: ConfigRef;\n        idgen: IdGenerator): PNode		309

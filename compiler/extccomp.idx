@@ -1,0 +1,41 @@
+nimTitle	extccomp	extccomp.html	module extccomp		0
+nim	hasSwitchRange	extccomp.html#hasSwitchRange	TInfoCCProp.hasSwitchRange		27
+nim	hasComputedGoto	extccomp.html#hasComputedGoto	TInfoCCProp.hasComputedGoto		27
+nim	hasCpp	extccomp.html#hasCpp	TInfoCCProp.hasCpp		27
+nim	hasAssume	extccomp.html#hasAssume	TInfoCCProp.hasAssume		27
+nim	hasGcGuard	extccomp.html#hasGcGuard	TInfoCCProp.hasGcGuard		27
+nim	hasGnuAsm	extccomp.html#hasGnuAsm	TInfoCCProp.hasGnuAsm		27
+nim	hasDeclspec	extccomp.html#hasDeclspec	TInfoCCProp.hasDeclspec		27
+nim	hasAttribute	extccomp.html#hasAttribute	TInfoCCProp.hasAttribute		27
+nim	hasBuiltinUnreachable	extccomp.html#hasBuiltinUnreachable	TInfoCCProp.hasBuiltinUnreachable		27
+nim	TInfoCCProp	extccomp.html#TInfoCCProp	enum TInfoCCProp		27
+nim	TInfoCCProps	extccomp.html#TInfoCCProps	type TInfoCCProps		37
+nim	TInfoCC	extccomp.html#TInfoCC	tuple TInfoCC		38
+nim	CC	extccomp.html#CC	const CC		297
+nim	hExt	extccomp.html#hExt	const hExt		312
+nim	nameToCC	extccomp.html#nameToCC,string	proc nameToCC(name: string): TSystemCC		319
+nim	isVSCompatible	extccomp.html#isVSCompatible,ConfigRef	proc isVSCompatible(conf: ConfigRef): bool		333
+nim	setCC	extccomp.html#setCC,ConfigRef,string,TLineInfo	proc setCC(conf: ConfigRef; ccname: string; info: TLineInfo)		364
+nim	addLinkOption	extccomp.html#addLinkOption,ConfigRef,string	proc addLinkOption(conf: ConfigRef; option: string)		378
+nim	addCompileOption	extccomp.html#addCompileOption,ConfigRef,string	proc addCompileOption(conf: ConfigRef; option: string)		381
+nim	addLinkOptionCmd	extccomp.html#addLinkOptionCmd,ConfigRef,string	proc addLinkOptionCmd(conf: ConfigRef; option: string)		385
+nim	addCompileOptionCmd	extccomp.html#addCompileOptionCmd,ConfigRef,string	proc addCompileOptionCmd(conf: ConfigRef; option: string)		388
+nim	initVars	extccomp.html#initVars,ConfigRef	proc initVars(conf: ConfigRef)		391
+nim	completeCfilePath	extccomp.html#completeCfilePath,ConfigRef,AbsoluteFile,bool	proc completeCfilePath(conf: ConfigRef; cfile: AbsoluteFile;\n                  createSubDir: bool = true): AbsoluteFile		400
+nim	toObjFile	extccomp.html#toObjFile,ConfigRef,AbsoluteFile	proc toObjFile(conf: ConfigRef; filename: AbsoluteFile): AbsoluteFile		405
+nim	addFileToCompile	extccomp.html#addFileToCompile,ConfigRef,Cfile	proc addFileToCompile(conf: ConfigRef; cf: Cfile)		409
+nim	addLocalCompileOption	extccomp.html#addLocalCompileOption,ConfigRef,string,AbsoluteFile	proc addLocalCompileOption(conf: ConfigRef; option: string; nimfile: AbsoluteFile)		412
+nim	resetCompilationLists	extccomp.html#resetCompilationLists,ConfigRef	proc resetCompilationLists(conf: ConfigRef)		419
+nim	addExternalFileToLink	extccomp.html#addExternalFileToLink,ConfigRef,AbsoluteFile	proc addExternalFileToLink(conf: ConfigRef; filename: AbsoluteFile)		427
+nim	execExternalProgram	extccomp.html#execExternalProgram,ConfigRef,string	proc execExternalProgram(conf: ConfigRef; cmd: string; msg = hintExecuting)		434
+nim	ccHasSaneOverflow	extccomp.html#ccHasSaneOverflow,ConfigRef	proc ccHasSaneOverflow(conf: ConfigRef): bool		556
+nim	getCompileCFileCmd	extccomp.html#getCompileCFileCmd,ConfigRef,Cfile	proc getCompileCFileCmd(conf: ConfigRef; cfile: Cfile; isMainFile = false;\n                   produceOutput = false): string		574
+nim	addExternalFileToCompile	extccomp.html#addExternalFileToCompile,ConfigRef,Cfile	proc addExternalFileToCompile(conf: ConfigRef; c: var Cfile)		686
+nim	addExternalFileToCompile	extccomp.html#addExternalFileToCompile,ConfigRef,AbsoluteFile	proc addExternalFileToCompile(conf: ConfigRef; filename: AbsoluteFile)		698
+nim	callCCompiler	extccomp.html#callCCompiler,ConfigRef	proc callCCompiler(conf: ConfigRef)		913
+nim	jsonBuildInstructionsFile	extccomp.html#jsonBuildInstructionsFile,ConfigRef	proc jsonBuildInstructionsFile(conf: ConfigRef): AbsoluteFile		1001
+nim	writeJsonBuildInstructions	extccomp.html#writeJsonBuildInstructions,ConfigRef,StringTableRef	proc writeJsonBuildInstructions(conf: ConfigRef; deps: StringTableRef)		1025
+nim	changeDetectedViaJsonBuildInstructions	extccomp.html#changeDetectedViaJsonBuildInstructions,ConfigRef,AbsoluteFile	proc changeDetectedViaJsonBuildInstructions(conf: ConfigRef; jsonFile: AbsoluteFile): bool		1060
+nim	runJsonBuildInstructions	extccomp.html#runJsonBuildInstructions,ConfigRef,AbsoluteFile	proc runJsonBuildInstructions(conf: ConfigRef; jsonFile: AbsoluteFile)		1080
+nim	writeMapping	extccomp.html#writeMapping,ConfigRef,Rope	proc writeMapping(conf: ConfigRef; symbolMapping: Rope)		1109
+nimgrp	addexternalfiletocompile	extccomp.html#addExternalFileToCompile-procs-all	proc		686

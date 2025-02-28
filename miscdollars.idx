@@ -1,0 +1,3 @@
+nimTitle	miscdollars	miscdollars.html	module std/private/miscdollars		0
+nim	toLocation	miscdollars.html#toLocation.t,string,,int,int	template toLocation(result: var string; file: string | cstring; line: int; col: int)		3
+nim	tupleObjectDollar	miscdollars.html#tupleObjectDollar.t,string,T	template tupleObjectDollar[T: tuple | object](result: var string; x: T)		18

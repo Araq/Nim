@@ -1,0 +1,12 @@
+nimTitle	envvars	envvars.html	module std/envvars		0
+nim	ReadEnvEffect	envvars.html#ReadEnvEffect	object ReadEnvEffect		18
+nim	WriteEnvEffect	envvars.html#WriteEnvEffect	object WriteEnvEffect		20
+nim	getEnv	envvars.html#getEnv,string,string	proc getEnv(key: string; default = ""): string		83
+nim	existsEnv	envvars.html#existsEnv,string	proc existsEnv(key: string): bool		105
+nim	putEnv	envvars.html#putEnv,string,string	proc putEnv(key, val: string)		119
+nim	delEnv	envvars.html#delEnv,string	proc delEnv(key: string)		137
+nim	envPairs	envvars.html#envPairs.i	iterator envPairs(): tuple[key, value: string]		208
+idx	environment variable	envvars.html#environment-variable_1	Module envvars		0
+idx	environment variable	envvars.html#environment-variable_2	Module envvars		0
+idx	environment variable	envvars.html#environment-variable_3	Module envvars		0
+idx	environments variables	envvars.html#environments-variables_1	Module envvars		0

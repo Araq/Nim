@@ -1,0 +1,128 @@
+nimTitle	net	net.html	module std/net		0
+nim	Certificate	net.html#Certificate	type Certificate		119
+nim	SslError	net.html#SslError	object SslError		121
+nim	CVerifyNone	net.html#CVerifyNone	SslCVerifyMode.CVerifyNone		123
+nim	CVerifyPeer	net.html#CVerifyPeer	SslCVerifyMode.CVerifyPeer		123
+nim	CVerifyPeerUseEnvVars	net.html#CVerifyPeerUseEnvVars	SslCVerifyMode.CVerifyPeerUseEnvVars		123
+nim	SslCVerifyMode	net.html#SslCVerifyMode	enum SslCVerifyMode		123
+nim	protSSLv2	net.html#protSSLv2	SslProtVersion.protSSLv2		126
+nim	protSSLv3	net.html#protSSLv3	SslProtVersion.protSSLv3		126
+nim	protTLSv1	net.html#protTLSv1	SslProtVersion.protTLSv1		126
+nim	protSSLv23	net.html#protSSLv23	SslProtVersion.protSSLv23		126
+nim	SslProtVersion	net.html#SslProtVersion	enum SslProtVersion		126
+nim	SslContext	net.html#SslContext	type SslContext		129
+nim	AcceptNoClient	net.html#AcceptNoClient	SslAcceptResult.AcceptNoClient		134
+nim	AcceptNoHandshake	net.html#AcceptNoHandshake	SslAcceptResult.AcceptNoHandshake		134
+nim	AcceptSuccess	net.html#AcceptSuccess	SslAcceptResult.AcceptSuccess		134
+nim	SslAcceptResult	net.html#SslAcceptResult	enum SslAcceptResult		134
+nim	handshakeAsClient	net.html#handshakeAsClient	SslHandshakeType.handshakeAsClient		137
+nim	handshakeAsServer	net.html#handshakeAsServer	SslHandshakeType.handshakeAsServer		137
+nim	SslHandshakeType	net.html#SslHandshakeType	enum SslHandshakeType		137
+nim	SslClientGetPskFunc	net.html#SslClientGetPskFunc	type SslClientGetPskFunc		140
+nim	SslServerGetPskFunc	net.html#SslServerGetPskFunc	type SslServerGetPskFunc		142
+nim	BufferSize	net.html#BufferSize	const BufferSize		153
+nim	MaxLineLength	net.html#MaxLineLength	const MaxLineLength		154
+nim	SocketImpl	net.html#SocketImpl	object SocketImpl		157
+nim	Socket	net.html#Socket	type Socket		176
+nim	OptAcceptConn	net.html#OptAcceptConn	SOBool.OptAcceptConn		178
+nim	OptBroadcast	net.html#OptBroadcast	SOBool.OptBroadcast		178
+nim	OptDebug	net.html#OptDebug	SOBool.OptDebug		178
+nim	OptDontRoute	net.html#OptDontRoute	SOBool.OptDontRoute		178
+nim	OptKeepAlive	net.html#OptKeepAlive	SOBool.OptKeepAlive		178
+nim	OptOOBInline	net.html#OptOOBInline	SOBool.OptOOBInline		178
+nim	OptReuseAddr	net.html#OptReuseAddr	SOBool.OptReuseAddr		178
+nim	OptReusePort	net.html#OptReusePort	SOBool.OptReusePort		178
+nim	OptNoDelay	net.html#OptNoDelay	SOBool.OptNoDelay		178
+nim	SOBool	net.html#SOBool	enum SOBool		178
+nim	ReadFullLine	net.html#ReadFullLine	ReadLineResult.ReadFullLine		182
+nim	ReadPartialLine	net.html#ReadPartialLine	ReadLineResult.ReadPartialLine		182
+nim	ReadDisconnected	net.html#ReadDisconnected	ReadLineResult.ReadDisconnected		182
+nim	ReadNone	net.html#ReadNone	ReadLineResult.ReadNone		182
+nim	ReadLineResult	net.html#ReadLineResult	enum ReadLineResult		182
+nim	TimeoutError	net.html#TimeoutError	object TimeoutError		185
+nim	SocketFlag	net.html#SocketFlag	enum SocketFlag		187
+nim	IpAddressFamily	net.html#IpAddressFamily	enum IpAddressFamily		195
+nim	IpAddress	net.html#IpAddress	object IpAddress		199
+nim	socketError	net.html#socketError,Socket,int,set[SocketFlag]	proc socketError(socket: Socket; err: int = -1; async = false;\n            lastError = -1.OSErrorCode; flags: set[SocketFlag] = {})		234
+nim	isDisconnectionError	net.html#isDisconnectionError,set[SocketFlag],OSErrorCode	proc isDisconnectionError(flags: set[SocketFlag]; lastError: OSErrorCode): bool		238
+nim	toOSFlags	net.html#toOSFlags,set[SocketFlag]	proc toOSFlags(socketFlags: set[SocketFlag]): cint		256
+nim	newSocket	net.html#newSocket,SocketHandle,Domain,SockType,Protocol	proc newSocket(fd: SocketHandle; domain: Domain = AF_INET;\n          sockType: SockType = SOCK_STREAM; protocol: Protocol = IPPROTO_TCP;\n          buffered = true): owned(Socket)		265
+nim	newSocket	net.html#newSocket,cint,cint,cint	proc newSocket(domain, sockType, protocol: cint; buffered = true;\n          inheritable = defined(nimInheritHandles)): owned(Socket)		283
+nim	newSocket	net.html#newSocket,Domain,SockType,Protocol	proc newSocket(domain: Domain = AF_INET; sockType: SockType = SOCK_STREAM;\n          protocol: Protocol = IPPROTO_TCP; buffered = true;\n          inheritable = defined(nimInheritHandles)): owned(Socket)		298
+nim	parseIpAddress	net.html#parseIpAddress,string	proc parseIpAddress(addressStr: string): IpAddress		482
+nim	isIpAddress	net.html#isIpAddress,string	proc isIpAddress(addressStr: string): bool		497
+nim	toSockAddr	net.html#toSockAddr,IpAddress,Port,Sockaddr_storage,SockLen	proc toSockAddr(address: IpAddress; port: Port; sa: var Sockaddr_storage;\n           sl: var SockLen)		506
+nim	fromSockAddr	net.html#fromSockAddr,,SockLen,IpAddress,Port	proc fromSockAddr(sa: Sockaddr_storage | SockAddr | Sockaddr_in | Sockaddr_in6;\n             sl: SockLen; address: var IpAddress; port: var Port)		544
+nim	sslHandle	net.html#sslHandle,Socket	proc sslHandle(self: Socket): SslPtr		559
+nim	raiseSSLError	net.html#raiseSSLError,string	proc raiseSSLError(s = "")		564
+nim	getExtraData	net.html#getExtraData,SslContext,int	proc getExtraData(ctx: SslContext; index: int): RootRef		580
+nim	setExtraData	net.html#setExtraData,SslContext,int,RootRef	proc setExtraData(ctx: SslContext; index: int; data: RootRef)		589
+nim	newContext	net.html#newContext,string,string,string,string	proc newContext(protVersion = protSSLv23; verifyMode = CVerifyPeer; certFile = "";\n           keyFile = ""; cipherList = CiphersIntermediate; caDir = "";\n           caFile = ""; ciphersuites = CiphersModern): SslContext		624
+nim	destroyContext	net.html#destroyContext,SslContext	proc destroyContext(ctx: SslContext)		739
+nim	pskIdentityHint=	net.html#pskIdentityHint=,SslContext,string	proc pskIdentityHint=(ctx: SslContext; hint: string)		749
+nim	clientGetPskFunc	net.html#clientGetPskFunc,SslContext	proc clientGetPskFunc(ctx: SslContext): SslClientGetPskFunc		756
+nim	clientGetPskFunc=	net.html#clientGetPskFunc=,SslContext,SslClientGetPskFunc	proc clientGetPskFunc=(ctx: SslContext; fun: SslClientGetPskFunc)		774
+nim	serverGetPskFunc	net.html#serverGetPskFunc,SslContext	proc serverGetPskFunc(ctx: SslContext): SslServerGetPskFunc		783
+nim	serverGetPskFunc=	net.html#serverGetPskFunc=,SslContext,SslServerGetPskFunc	proc serverGetPskFunc=(ctx: SslContext; fun: SslServerGetPskFunc)		796
+nim	getPskIdentity	net.html#getPskIdentity,Socket	proc getPskIdentity(socket: Socket): string		804
+nim	wrapSocket	net.html#wrapSocket,SslContext,Socket	proc wrapSocket(ctx: SslContext; socket: Socket)		809
+nim	wrapConnectedSocket	net.html#wrapConnectedSocket,SslContext,Socket,SslHandshakeType,string	proc wrapConnectedSocket(ctx: SslContext; socket: Socket;\n                    handshake: SslHandshakeType; hostname: string = "")		856
+nim	getPeerCertificates	net.html#getPeerCertificates,SslPtr	proc getPeerCertificates(sslHandle: SslPtr): seq[Certificate]		889
+nim	getPeerCertificates	net.html#getPeerCertificates,Socket	proc getPeerCertificates(socket: Socket): seq[Certificate]		908
+nim	sessionIdContext=	net.html#sessionIdContext=,SslContext,string	proc sessionIdContext=(ctx: SslContext; sidCtx: string)		919
+nim	getSocketError	net.html#getSocketError,Socket	proc getSocketError(socket: Socket): OSErrorCode		935
+nim	listen	net.html#listen,Socket	proc listen(socket: Socket; backlog = SOMAXCONN)		1009
+nim	bindAddr	net.html#bindAddr,Socket,string	proc bindAddr(socket: Socket; port = Port(0); address = "")		1018
+nim	acceptAddr	net.html#acceptAddr,Socket,,string	proc acceptAddr(server: Socket; client: var owned(Socket); address: var string;\n           flags = {SafeDisconn}; inheritable = defined(nimInheritHandles))		1040
+nim	accept	net.html#accept,Socket,	proc accept(server: Socket; client: var owned(Socket); flags = {SafeDisconn};\n       inheritable = defined(nimInheritHandles))		1139
+nim	close	net.html#close,Socket	proc close(socket: Socket; flags = {SafeDisconn})		1215
+nim	toCInt	net.html#toCInt,SOBool	proc toCInt(opt: SOBool): cint		1276
+nim	getSockOpt	net.html#getSockOpt,Socket,SOBool	proc getSockOpt(socket: Socket; opt: SOBool; level = SOL_SOCKET): bool		1289
+nim	getLocalAddr	net.html#getLocalAddr,Socket	proc getLocalAddr(socket: Socket): (string, Port)		1295
+nim	getPeerAddr	net.html#getPeerAddr,Socket	proc getPeerAddr(socket: Socket): (string, Port)		1302
+nim	setSockOpt	net.html#setSockOpt,Socket,SOBool,bool	proc setSockOpt(socket: Socket; opt: SOBool; value: bool; level = SOL_SOCKET)		1308
+nim	connectUnix	net.html#connectUnix,Socket,string	proc connectUnix(socket: Socket; path: string)		1319
+nim	bindUnix	net.html#bindUnix,Socket,string	proc bindUnix(socket: Socket; path: string)		1328
+nim	gotHandshake	net.html#gotHandshake,Socket	proc gotHandshake(socket: Socket): bool		1338
+nim	hasDataBuffered	net.html#hasDataBuffered,Socket	proc hasDataBuffered(s: Socket): bool		1348
+nim	recv	net.html#recv,Socket,pointer,int	proc recv(socket: Socket; data: pointer; size: int): int		1397
+nim	recv	net.html#recv,Socket,pointer,int,int	proc recv(socket: Socket; data: pointer; size: int; timeout: int): int		1479
+nim	recv	net.html#recv,Socket,string,int,int	proc recv(socket: Socket; data: var string; size: int; timeout = -1;\n     flags = {SafeDisconn}): int		1497
+nim	recv	net.html#recv,Socket,int,int	proc recv(socket: Socket; size: int; timeout = -1; flags = {SafeDisconn}): string		1532
+nim	readLine	net.html#readLine,Socket,string,int	proc readLine(socket: Socket; line: var string; timeout = -1; flags = {SafeDisconn};\n         maxLength = MaxLineLength)		1577
+nim	recvLine	net.html#recvLine,Socket,int	proc recvLine(socket: Socket; timeout = -1; flags = {SafeDisconn};\n         maxLength = MaxLineLength): string		1634
+nim	recvFrom	net.html#recvFrom,Socket,string,int,T,Port,int32	proc recvFrom[T: string | IpAddress](socket: Socket; data: var string; length: int;\n                                address: var T; port: var Port; flags = 0'i32): int		1657
+nim	skip	net.html#skip,Socket,int,int	proc skip(socket: Socket; size: int; timeout = -1)		1705
+nim	send	net.html#send,Socket,pointer,int	proc send(socket: Socket; data: pointer; size: int): int		1720
+nim	send	net.html#send,Socket,string,int	proc send(socket: Socket; data: string; flags = {SafeDisconn}; maxRetries = 100)		1739
+nim	`&=`	net.html#&=.t,Socket,typed	template `&=`(socket: Socket; data: typed)		1771
+nim	trySend	net.html#trySend,Socket,string	proc trySend(socket: Socket; data: string): bool		1775
+nim	sendTo	net.html#sendTo,Socket,string,Port,pointer,int,Domain,int32	proc sendTo(socket: Socket; address: string; port: Port; data: pointer; size: int;\n       af: Domain = AF_INET; flags = 0'i32)		1780
+nim	sendTo	net.html#sendTo,Socket,string,Port,string	proc sendTo(socket: Socket; address: string; port: Port; data: string)		1815
+nim	sendTo	net.html#sendTo,Socket,IpAddress,Port,string,int32	proc sendTo(socket: Socket; address: IpAddress; port: Port; data: string;\n       flags = 0'i32): int		1828
+nim	isSsl	net.html#isSsl,Socket	proc isSsl(socket: Socket): bool		1853
+nim	getFd	net.html#getFd,Socket	proc getFd(socket: Socket): SocketHandle		1860
+nim	IPv4_any	net.html#IPv4_any	proc IPv4_any(): IpAddress		1876
+nim	IPv4_loopback	net.html#IPv4_loopback	proc IPv4_loopback(): IpAddress		1883
+nim	IPv4_broadcast	net.html#IPv4_broadcast	proc IPv4_broadcast(): IpAddress		1889
+nim	IPv6_any	net.html#IPv6_any	proc IPv6_any(): IpAddress		1895
+nim	IPv6_loopback	net.html#IPv6_loopback	proc IPv6_loopback(): IpAddress		1902
+nim	`==`	net.html#==,IpAddress,IpAddress	proc `==`(lhs, rhs: IpAddress): bool		1911
+nim	`$`	net.html#$,IpAddress	proc `$`(address: IpAddress): string		1922
+nim	dial	net.html#dial,string,Port	proc dial(address: string; port: Port; protocol = IPPROTO_TCP; buffered = true): owned(\n    Socket)		1990
+nim	connect	net.html#connect,Socket,string	proc connect(socket: Socket; address: string; port = Port(0))		2051
+nim	connect	net.html#connect,Socket,string,int	proc connect(socket: Socket; address: string; port = Port(0); timeout: int)		2126
+nim	getPrimaryIPAddr	net.html#getPrimaryIPAddr	proc getPrimaryIPAddr(dest = parseIpAddress("8.8.8.8")): IpAddress		2158
+heading	SSL	net.html#ssl	 SSL		0
+heading	SSL on Windows	net.html#ssl-on-windows	 SSL on Windows		0
+heading	Examples	net.html#examples	 Examples		0
+heading	Connecting to a server	net.html#examples-connecting-to-a-server	  Connecting to a server		0
+heading	Creating a server	net.html#examples-creating-a-server	  Creating a server		0
+idx	getsockname	net.html#getsockname_1	Creating a server		0
+idx	getpeername	net.html#getpeername_1	Creating a server		0
+nimgrp	getpeercertificates	net.html#getPeerCertificates-procs-all	proc		889
+nimgrp	sendto	net.html#sendTo-procs-all	proc		1780
+nimgrp	connect	net.html#connect-procs-all	proc		2051
+nimgrp	recv	net.html#recv-procs-all	proc		1397
+nimgrp	send	net.html#send-procs-all	proc		1720
+nimgrp	newsocket	net.html#newSocket-procs-all	proc		265

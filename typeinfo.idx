@@ -1,0 +1,90 @@
+nimTitle	typeinfo	typeinfo.html	module std/typeinfo		0
+nim	akNone	typeinfo.html#akNone	AnyKind.akNone		48
+nim	akBool	typeinfo.html#akBool	AnyKind.akBool		48
+nim	akChar	typeinfo.html#akChar	AnyKind.akChar		48
+nim	akEnum	typeinfo.html#akEnum	AnyKind.akEnum		48
+nim	akArray	typeinfo.html#akArray	AnyKind.akArray		48
+nim	akObject	typeinfo.html#akObject	AnyKind.akObject		48
+nim	akTuple	typeinfo.html#akTuple	AnyKind.akTuple		48
+nim	akSet	typeinfo.html#akSet	AnyKind.akSet		48
+nim	akRange	typeinfo.html#akRange	AnyKind.akRange		48
+nim	akPtr	typeinfo.html#akPtr	AnyKind.akPtr		48
+nim	akRef	typeinfo.html#akRef	AnyKind.akRef		48
+nim	akSequence	typeinfo.html#akSequence	AnyKind.akSequence		48
+nim	akProc	typeinfo.html#akProc	AnyKind.akProc		48
+nim	akPointer	typeinfo.html#akPointer	AnyKind.akPointer		48
+nim	akString	typeinfo.html#akString	AnyKind.akString		48
+nim	akCString	typeinfo.html#akCString	AnyKind.akCString		48
+nim	akInt	typeinfo.html#akInt	AnyKind.akInt		48
+nim	akInt8	typeinfo.html#akInt8	AnyKind.akInt8		48
+nim	akInt16	typeinfo.html#akInt16	AnyKind.akInt16		48
+nim	akInt32	typeinfo.html#akInt32	AnyKind.akInt32		48
+nim	akInt64	typeinfo.html#akInt64	AnyKind.akInt64		48
+nim	akFloat	typeinfo.html#akFloat	AnyKind.akFloat		48
+nim	akFloat32	typeinfo.html#akFloat32	AnyKind.akFloat32		48
+nim	akFloat64	typeinfo.html#akFloat64	AnyKind.akFloat64		48
+nim	akFloat128	typeinfo.html#akFloat128	AnyKind.akFloat128		48
+nim	akUInt	typeinfo.html#akUInt	AnyKind.akUInt		48
+nim	akUInt8	typeinfo.html#akUInt8	AnyKind.akUInt8		48
+nim	akUInt16	typeinfo.html#akUInt16	AnyKind.akUInt16		48
+nim	akUInt32	typeinfo.html#akUInt32	AnyKind.akUInt32		48
+nim	akUInt64	typeinfo.html#akUInt64	AnyKind.akUInt64		48
+nim	AnyKind	typeinfo.html#AnyKind	enum AnyKind		48
+nim	Any	typeinfo.html#Any	object Any		81
+nim	toAny	typeinfo.html#toAny,T	proc toAny[T](x: var T): Any		164
+nim	kind	typeinfo.html#kind,Any	proc kind(x: Any): AnyKind		170
+nim	size	typeinfo.html#size,Any	proc size(x: Any): int		174
+nim	baseTypeKind	typeinfo.html#baseTypeKind,Any	proc baseTypeKind(x: Any): AnyKind		178
+nim	baseTypeSize	typeinfo.html#baseTypeSize,Any	proc baseTypeSize(x: Any): int		185
+nim	invokeNew	typeinfo.html#invokeNew,Any	proc invokeNew(x: Any)		192
+nim	invokeNewSeq	typeinfo.html#invokeNewSeq,Any,int	proc invokeNewSeq(x: Any; len: int)		201
+nim	extendSeq	typeinfo.html#extendSeq,Any	proc extendSeq(x: Any)		213
+nim	setObjectRuntimeType	typeinfo.html#setObjectRuntimeType,Any	proc setObjectRuntimeType(x: Any)		231
+nim	`[]`	typeinfo.html#[],Any,int	proc `[]`(x: Any; i: int): Any		246
+nim	`[]=`	typeinfo.html#[]=,Any,int,Any	proc `[]=`(x: Any; i: int; y: Any)		272
+nim	len	typeinfo.html#len,Any	proc len(x: Any): int		301
+nim	base	typeinfo.html#base,Any	proc base(x: Any): Any		318
+nim	isNil	typeinfo.html#isNil,Any	proc isNil(x: Any): bool		323
+nim	getPointer	typeinfo.html#getPointer,Any	proc getPointer(x: Any): pointer		333
+nim	setPointer	typeinfo.html#setPointer,Any,pointer	proc setPointer(x: Any; y: pointer)		340
+nim	fields	typeinfo.html#fields.i,Any	iterator fields(x: Any): tuple[name: string, any: Any]		364
+nim	`[]=`	typeinfo.html#[]=,Any,string,Any	proc `[]=`(x: Any; fieldName: string; value: Any)		402
+nim	`[]`	typeinfo.html#[],Any,string	proc `[]`(x: Any; fieldName: string): Any		416
+nim	`[]`	typeinfo.html#[],Any	proc `[]`(x: Any): Any		432
+nim	`[]=`	typeinfo.html#[]=,Any,Any	proc `[]=`(x, y: Any)		438
+nim	getInt	typeinfo.html#getInt,Any	proc getInt(x: Any): int		444
+nim	getInt8	typeinfo.html#getInt8,Any	proc getInt8(x: Any): int8		449
+nim	getInt16	typeinfo.html#getInt16,Any	proc getInt16(x: Any): int16		454
+nim	getInt32	typeinfo.html#getInt32,Any	proc getInt32(x: Any): int32		459
+nim	getInt64	typeinfo.html#getInt64,Any	proc getInt64(x: Any): int64		464
+nim	getBiggestInt	typeinfo.html#getBiggestInt,Any	proc getBiggestInt(x: Any): BiggestInt		469
+nim	setBiggestInt	typeinfo.html#setBiggestInt,Any,BiggestInt	proc setBiggestInt(x: Any; y: BiggestInt)		495
+nim	getUInt	typeinfo.html#getUInt,Any	proc getUInt(x: Any): uint		520
+nim	getUInt8	typeinfo.html#getUInt8,Any	proc getUInt8(x: Any): uint8		525
+nim	getUInt16	typeinfo.html#getUInt16,Any	proc getUInt16(x: Any): uint16		530
+nim	getUInt32	typeinfo.html#getUInt32,Any	proc getUInt32(x: Any): uint32		535
+nim	getUInt64	typeinfo.html#getUInt64,Any	proc getUInt64(x: Any): uint64		540
+nim	getBiggestUint	typeinfo.html#getBiggestUint,Any	proc getBiggestUint(x: Any): uint64		545
+nim	setBiggestUint	typeinfo.html#setBiggestUint,Any,uint64	proc setBiggestUint(x: Any; y: uint64)		557
+nim	getChar	typeinfo.html#getChar,Any	proc getChar(x: Any): char		569
+nim	getBool	typeinfo.html#getBool,Any	proc getBool(x: Any): bool		575
+nim	skipRange	typeinfo.html#skipRange,Any	proc skipRange(x: Any): Any		581
+nim	getEnumOrdinal	typeinfo.html#getEnumOrdinal,Any,string	proc getEnumOrdinal(x: Any; name: string): int		587
+nim	getEnumField	typeinfo.html#getEnumField,Any,int	proc getEnumField(x: Any; ordinalValue: int): string		603
+nim	getEnumField	typeinfo.html#getEnumField,Any	proc getEnumField(x: Any): string		621
+nim	getFloat	typeinfo.html#getFloat,Any	proc getFloat(x: Any): float		625
+nim	getFloat32	typeinfo.html#getFloat32,Any	proc getFloat32(x: Any): float32		630
+nim	getFloat64	typeinfo.html#getFloat64,Any	proc getFloat64(x: Any): float64		635
+nim	getBiggestFloat	typeinfo.html#getBiggestFloat,Any	proc getBiggestFloat(x: Any): BiggestFloat		640
+nim	setBiggestFloat	typeinfo.html#setBiggestFloat,Any,BiggestFloat	proc setBiggestFloat(x: Any; y: BiggestFloat)		649
+nim	getString	typeinfo.html#getString,Any	proc getString(x: Any): string		658
+nim	setString	typeinfo.html#setString,Any,string	proc setString(x: Any; y: string)		667
+nim	getCString	typeinfo.html#getCString,Any	proc getCString(x: Any): cstring		672
+nim	assign	typeinfo.html#assign,Any,Any	proc assign(x, y: Any)		677
+nim	elements	typeinfo.html#elements.i,Any	iterator elements(x: Any): int		683
+nim	inclSetElement	typeinfo.html#inclSetElement,Any,int	proc inclSetElement(x: Any; elem: int)		705
+idx	runtime type information	typeinfo.html#runtime-type-information_1	Module typeinfo		0
+idx	RTTI	typeinfo.html#rtti_1	Module typeinfo		0
+nimgrp	[]=	typeinfo.html#[]=-procs-all	proc		272
+nimgrp	[]	typeinfo.html#[]-procs-all	proc		246
+nimgrp	getenumfield	typeinfo.html#getEnumField-procs-all	proc		603

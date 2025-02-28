@@ -1,0 +1,5 @@
+nimTitle	rdstdin	rdstdin.html	module std/rdstdin		0
+nim	readLineFromStdin	rdstdin.html#readLineFromStdin,string,string	proc readLineFromStdin(prompt: string; line: var string): bool		60
+nim	readLineFromStdin	rdstdin.html#readLineFromStdin,string	proc readLineFromStdin(prompt: string): string		72
+idx	stdin	rdstdin.html#stdin_1	Module rdstdin		0
+nimgrp	readlinefromstdin	rdstdin.html#readLineFromStdin-procs-all	proc		60

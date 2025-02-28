@@ -1,0 +1,19 @@
+nimTitle	lenientops	lenientops.html	module std/lenientops		0
+nim	`+`	lenientops.html#+,I,F	proc `+`[I: SomeInteger; F: SomeFloat](i: I; f: F): F		27
+nim	`+`	lenientops.html#+,F,I	proc `+`[I: SomeInteger; F: SomeFloat](f: F; i: I): F		29
+nim	`-`	lenientops.html#-,I,F	proc `-`[I: SomeInteger; F: SomeFloat](i: I; f: F): F		32
+nim	`-`	lenientops.html#-,F,I	proc `-`[I: SomeInteger; F: SomeFloat](f: F; i: I): F		34
+nim	`*`	lenientops.html#*,I,F	proc `*`[I: SomeInteger; F: SomeFloat](i: I; f: F): F		37
+nim	`*`	lenientops.html#*,F,I	proc `*`[I: SomeInteger; F: SomeFloat](f: F; i: I): F		39
+nim	`/`	lenientops.html#/,I,F	proc `/`[I: SomeInteger; F: SomeFloat](i: I; f: F): F		42
+nim	`/`	lenientops.html#/,F,I	proc `/`[I: SomeInteger; F: SomeFloat](f: F; i: I): F		44
+nim	`<`	lenientops.html#<,I,F	proc `<`[I: SomeInteger; F: SomeFloat](i: I; f: F): bool		47
+nim	`<`	lenientops.html#<,F,I	proc `<`[I: SomeInteger; F: SomeFloat](f: F; i: I): bool		49
+nim	`<=`	lenientops.html#<=,I,F	proc `<=`[I: SomeInteger; F: SomeFloat](i: I; f: F): bool		51
+nim	`<=`	lenientops.html#<=,F,I	proc `<=`[I: SomeInteger; F: SomeFloat](f: F; i: I): bool		53
+nimgrp	+	lenientops.html#+-procs-all	proc		27
+nimgrp	-	lenientops.html#--procs-all	proc		32
+nimgrp	/	lenientops.html#/-procs-all	proc		42
+nimgrp	*	lenientops.html#*-procs-all	proc		37
+nimgrp	<=	lenientops.html#<=-procs-all	proc		51
+nimgrp	<	lenientops.html#<-procs-all	proc		47

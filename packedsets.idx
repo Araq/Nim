@@ -1,0 +1,34 @@
+nimTitle	packedsets	packedsets.html	module std/packedsets		0
+nim	PackedSet	packedsets.html#PackedSet	object PackedSet		46
+nim	items	packedsets.html#items.i,PackedSet[A]	iterator items[A](s: PackedSet[A]): A		138
+nim	initPackedSet	packedsets.html#initPackedSet	proc initPackedSet[A](): PackedSet[A]		160
+nim	contains	packedsets.html#contains,PackedSet[A],A	proc contains[A](s: PackedSet[A]; key: A): bool		182
+nim	incl	packedsets.html#incl,PackedSet[A],A	proc incl[A](s: var PackedSet[A]; key: A)		213
+nim	incl	packedsets.html#incl,PackedSet[A],PackedSet[A]	proc incl[A](s: var PackedSet[A]; other: PackedSet[A])		243
+nim	toPackedSet	packedsets.html#toPackedSet,openArray[A]	proc toPackedSet[A](x: openArray[A]): PackedSet[A]		260
+nim	containsOrIncl	packedsets.html#containsOrIncl,PackedSet[A],A	proc containsOrIncl[A](s: var PackedSet[A]; key: A): bool		276
+nim	excl	packedsets.html#excl,PackedSet[A],A	proc excl[A](s: var PackedSet[A]; key: A)		311
+nim	excl	packedsets.html#excl,PackedSet[A],PackedSet[A]	proc excl[A](s: var PackedSet[A]; other: PackedSet[A])		329
+nim	len	packedsets.html#len,PackedSet[A]	proc len[A](s: PackedSet[A]): int		347
+nim	missingOrExcl	packedsets.html#missingOrExcl,PackedSet[A],A	proc missingOrExcl[A](s: var PackedSet[A]; key: A): bool		361
+nim	clear	packedsets.html#clear,PackedSet[A]	proc clear[A](result: var PackedSet[A])		382
+nim	isNil	packedsets.html#isNil,PackedSet[A]	proc isNil[A](x: PackedSet[A]): bool		398
+nim	`=copy`	packedsets.html#=copy,PackedSet[A],PackedSet[A]	proc `=copy`[A](dest: var PackedSet[A]; src: PackedSet[A])		410
+nim	assign	packedsets.html#assign,PackedSet[A],PackedSet[A]	proc assign[A](dest: var PackedSet[A]; src: PackedSet[A])		441
+nim	union	packedsets.html#union,PackedSet[A],PackedSet[A]	proc union[A](s1, s2: PackedSet[A]): PackedSet[A]		454
+nim	intersection	packedsets.html#intersection,PackedSet[A],PackedSet[A]	proc intersection[A](s1, s2: PackedSet[A]): PackedSet[A]		469
+nim	difference	packedsets.html#difference,PackedSet[A],PackedSet[A]	proc difference[A](s1, s2: PackedSet[A]): PackedSet[A]		486
+nim	symmetricDifference	packedsets.html#symmetricDifference,PackedSet[A],PackedSet[A]	proc symmetricDifference[A](s1, s2: PackedSet[A]): PackedSet[A]		503
+nim	`+`	packedsets.html#+,PackedSet[A],PackedSet[A]	proc `+`[A](s1, s2: PackedSet[A]): PackedSet[A]		518
+nim	`*`	packedsets.html#*,PackedSet[A],PackedSet[A]	proc `*`[A](s1, s2: PackedSet[A]): PackedSet[A]		522
+nim	`-`	packedsets.html#-,PackedSet[A],PackedSet[A]	proc `-`[A](s1, s2: PackedSet[A]): PackedSet[A]		526
+nim	disjoint	packedsets.html#disjoint,PackedSet[A],PackedSet[A]	proc disjoint[A](s1, s2: PackedSet[A]): bool		530
+nim	card	packedsets.html#card,PackedSet[A]	proc card[A](s: PackedSet[A]): int		545
+nim	`<=`	packedsets.html#<=,PackedSet[A],PackedSet[A]	proc `<=`[A](s1, s2: PackedSet[A]): bool		552
+nim	`<`	packedsets.html#<,PackedSet[A],PackedSet[A]	proc `<`[A](s1, s2: PackedSet[A]): bool		571
+nim	`==`	packedsets.html#==,PackedSet[A],PackedSet[A]	proc `==`[A](s1, s2: PackedSet[A]): bool		587
+nim	`$`	packedsets.html#$,PackedSet[A]	proc `$`[A](s: PackedSet[A]): string		595
+idx	sparse bit set	packedsets.html#sparse-bit-set_1	Module packedsets		0
+heading	See also	packedsets.html#see-also	 See also		0
+nimgrp	excl	packedsets.html#excl-procs-all	proc		311
+nimgrp	incl	packedsets.html#incl-procs-all	proc		213

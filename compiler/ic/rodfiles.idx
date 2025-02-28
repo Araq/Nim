@@ -1,0 +1,68 @@
+nimTitle	rodfiles	ic/rodfiles.html	module ic/rodfiles		0
+nim	versionSection	ic/rodfiles.html#versionSection	RodSection.versionSection		74
+nim	configSection	ic/rodfiles.html#configSection	RodSection.configSection		74
+nim	stringsSection	ic/rodfiles.html#stringsSection	RodSection.stringsSection		74
+nim	checkSumsSection	ic/rodfiles.html#checkSumsSection	RodSection.checkSumsSection		74
+nim	depsSection	ic/rodfiles.html#depsSection	RodSection.depsSection		74
+nim	numbersSection	ic/rodfiles.html#numbersSection	RodSection.numbersSection		74
+nim	exportsSection	ic/rodfiles.html#exportsSection	RodSection.exportsSection		74
+nim	hiddenSection	ic/rodfiles.html#hiddenSection	RodSection.hiddenSection		74
+nim	reexportsSection	ic/rodfiles.html#reexportsSection	RodSection.reexportsSection		74
+nim	compilerProcsSection	ic/rodfiles.html#compilerProcsSection	RodSection.compilerProcsSection		74
+nim	trmacrosSection	ic/rodfiles.html#trmacrosSection	RodSection.trmacrosSection		74
+nim	convertersSection	ic/rodfiles.html#convertersSection	RodSection.convertersSection		74
+nim	methodsSection	ic/rodfiles.html#methodsSection	RodSection.methodsSection		74
+nim	pureEnumsSection	ic/rodfiles.html#pureEnumsSection	RodSection.pureEnumsSection		74
+nim	toReplaySection	ic/rodfiles.html#toReplaySection	RodSection.toReplaySection		74
+nim	topLevelSection	ic/rodfiles.html#topLevelSection	RodSection.topLevelSection		74
+nim	bodiesSection	ic/rodfiles.html#bodiesSection	RodSection.bodiesSection		74
+nim	symsSection	ic/rodfiles.html#symsSection	RodSection.symsSection		74
+nim	typesSection	ic/rodfiles.html#typesSection	RodSection.typesSection		74
+nim	typeInstCacheSection	ic/rodfiles.html#typeInstCacheSection	RodSection.typeInstCacheSection		74
+nim	procInstCacheSection	ic/rodfiles.html#procInstCacheSection	RodSection.procInstCacheSection		74
+nim	attachedOpsSection	ic/rodfiles.html#attachedOpsSection	RodSection.attachedOpsSection		74
+nim	methodsPerGenericTypeSection	ic/rodfiles.html#methodsPerGenericTypeSection	RodSection.methodsPerGenericTypeSection		74
+nim	enumToStringProcsSection	ic/rodfiles.html#enumToStringProcsSection	RodSection.enumToStringProcsSection		74
+nim	methodsPerTypeSection	ic/rodfiles.html#methodsPerTypeSection	RodSection.methodsPerTypeSection		74
+nim	dispatchersSection	ic/rodfiles.html#dispatchersSection	RodSection.dispatchersSection		74
+nim	typeInfoSection	ic/rodfiles.html#typeInfoSection	RodSection.typeInfoSection		74
+nim	backendFlagsSection	ic/rodfiles.html#backendFlagsSection	RodSection.backendFlagsSection		74
+nim	aliveSymsSection	ic/rodfiles.html#aliveSymsSection	RodSection.aliveSymsSection		74
+nim	sideChannelSection	ic/rodfiles.html#sideChannelSection	RodSection.sideChannelSection		74
+nim	namespaceSection	ic/rodfiles.html#namespaceSection	RodSection.namespaceSection		74
+nim	symnamesSection	ic/rodfiles.html#symnamesSection	RodSection.symnamesSection		74
+nim	RodSection	ic/rodfiles.html#RodSection	enum RodSection		74
+nim	ok	ic/rodfiles.html#ok	RodFileError.ok		108
+nim	tooBig	ic/rodfiles.html#tooBig	RodFileError.tooBig		108
+nim	cannotOpen	ic/rodfiles.html#cannotOpen	RodFileError.cannotOpen		108
+nim	ioFailure	ic/rodfiles.html#ioFailure	RodFileError.ioFailure		108
+nim	wrongHeader	ic/rodfiles.html#wrongHeader	RodFileError.wrongHeader		108
+nim	wrongSection	ic/rodfiles.html#wrongSection	RodFileError.wrongSection		108
+nim	configMismatch	ic/rodfiles.html#configMismatch	RodFileError.configMismatch		108
+nim	includeFileChanged	ic/rodfiles.html#includeFileChanged	RodFileError.includeFileChanged		108
+nim	RodFileError	ic/rodfiles.html#RodFileError	enum RodFileError		108
+nim	RodFile	ic/rodfiles.html#RodFile	object RodFile		112
+nim	storePrim	ic/rodfiles.html#storePrim,RodFile,string	proc storePrim(f: var RodFile; s: string)		127
+nim	storePrim	ic/rodfiles.html#storePrim,RodFile,T	proc storePrim[T](f: var RodFile; x: T)		142
+nim	storeSeq	ic/rodfiles.html#storeSeq,RodFile,seq[T]	proc storeSeq[T](f: var RodFile; s: seq[T])		162
+nim	storeOrderedTable	ic/rodfiles.html#storeOrderedTable,RodFile,OrderedTable[K,T]	proc storeOrderedTable[K, T](f: var RodFile; s: OrderedTable[K, T])		175
+nim	loadPrim	ic/rodfiles.html#loadPrim,RodFile,string	proc loadPrim(f: var RodFile; s: var string)		187
+nim	loadPrim	ic/rodfiles.html#loadPrim,RodFile,T	proc loadPrim[T](f: var RodFile; x: var T)		199
+nim	loadSeq	ic/rodfiles.html#loadSeq,RodFile,seq[T]	proc loadSeq[T](f: var RodFile; s: var seq[T])		217
+nim	loadOrderedTable	ic/rodfiles.html#loadOrderedTable,RodFile,OrderedTable[K,T]	proc loadOrderedTable[K, T](f: var RodFile; s: var OrderedTable[K, T])		228
+nim	storeHeader	ic/rodfiles.html#storeHeader,RodFile	proc storeHeader(f: var RodFile; cookie = defaultCookie)		241
+nim	loadHeader	ic/rodfiles.html#loadHeader,RodFile	proc loadHeader(f: var RodFile; cookie = defaultCookie)		247
+nim	storeSection	ic/rodfiles.html#storeSection,RodFile,RodSection	proc storeSection(f: var RodFile; s: RodSection)		256
+nim	loadSection	ic/rodfiles.html#loadSection,RodFile,RodSection	proc loadSection(f: var RodFile; expected: RodSection)		263
+nim	create	ic/rodfiles.html#create,string	proc create(filename: string): RodFile		271
+nim	close	ic/rodfiles.html#close,RodFile	proc close(f: var RodFile)		277
+nim	open	ic/rodfiles.html#open,string	proc open(filename: string): RodFile		279
+nimgrp	loadprim	ic/rodfiles.html#loadPrim-procs-all	proc		187
+nimgrp	storeprim	ic/rodfiles.html#storePrim-procs-all	proc		127
+heading	Overview	ic/rodfiles.html#overview	 Overview		0
+heading	A basic but "wrong" example of the lifecycle:	ic/rodfiles.html#overview-a-basic-but-wrong-example-of-the-lifecyclecolon	  A basic but &quot;wrong&quot; example of the lifecycle:		0
+heading	Issues with the Example	ic/rodfiles.html#a-basic-but-wrong-example-of-the-lifecyclecolon-issues-with-the-example	   Issues with the Example		0
+heading	API Notes	ic/rodfiles.html#api-notes	 API Notes		0
+heading	Valid inputs for Rod files	ic/rodfiles.html#api-notes-valid-inputs-for-rod-files	  Valid inputs for Rod files		0
+heading	Note on error handling style	ic/rodfiles.html#api-notes-note-on-error-handling-style	  Note on error handling style		0
+heading	Misc	ic/rodfiles.html#api-notes-misc	  Misc		0

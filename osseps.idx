@@ -1,0 +1,14 @@
+nimTitle	osseps	osseps.html	module std/private/osseps		0
+nim	doslikeFileSystem	osseps.html#doslikeFileSystem	const doslikeFileSystem		9
+nim	CurDir	osseps.html#CurDir	const CurDir		12
+nim	ParDir	osseps.html#ParDir	const ParDir		21
+nim	DirSep	osseps.html#DirSep	const DirSep		29
+nim	AltSep	osseps.html#AltSep	const AltSep		38
+nim	PathSep	osseps.html#PathSep	const PathSep		46
+nim	FileSystemCaseSensitive	osseps.html#FileSystemCaseSensitive	const FileSystemCaseSensitive		55
+nim	ExeExt	osseps.html#ExeExt	const ExeExt		62
+nim	ScriptExt	osseps.html#ScriptExt	const ScriptExt		72
+nim	DynlibFormat	osseps.html#DynlibFormat	const DynlibFormat		78
+nim	ExtSep	osseps.html#ExtSep	const ExtSep		91
+idx	DLL	osseps.html#dll_1	Module osseps		0
+idx	shared object	osseps.html#shared-object_1	Module osseps		0

@@ -1,0 +1,61 @@
+nimTitle	parsejson	parsejson.html	module std/parsejson		0
+nim	jsonError	parsejson.html#jsonError	JsonEventKind.jsonError		21
+nim	jsonEof	parsejson.html#jsonEof	JsonEventKind.jsonEof		21
+nim	jsonString	parsejson.html#jsonString	JsonEventKind.jsonString		21
+nim	jsonInt	parsejson.html#jsonInt	JsonEventKind.jsonInt		21
+nim	jsonFloat	parsejson.html#jsonFloat	JsonEventKind.jsonFloat		21
+nim	jsonTrue	parsejson.html#jsonTrue	JsonEventKind.jsonTrue		21
+nim	jsonFalse	parsejson.html#jsonFalse	JsonEventKind.jsonFalse		21
+nim	jsonNull	parsejson.html#jsonNull	JsonEventKind.jsonNull		21
+nim	jsonObjectStart	parsejson.html#jsonObjectStart	JsonEventKind.jsonObjectStart		21
+nim	jsonObjectEnd	parsejson.html#jsonObjectEnd	JsonEventKind.jsonObjectEnd		21
+nim	jsonArrayStart	parsejson.html#jsonArrayStart	JsonEventKind.jsonArrayStart		21
+nim	jsonArrayEnd	parsejson.html#jsonArrayEnd	JsonEventKind.jsonArrayEnd		21
+nim	JsonEventKind	parsejson.html#JsonEventKind	enum JsonEventKind		21
+nim	tkError	parsejson.html#tkError	TokKind.tkError		35
+nim	tkEof	parsejson.html#tkEof	TokKind.tkEof		35
+nim	tkString	parsejson.html#tkString	TokKind.tkString		35
+nim	tkInt	parsejson.html#tkInt	TokKind.tkInt		35
+nim	tkFloat	parsejson.html#tkFloat	TokKind.tkFloat		35
+nim	tkTrue	parsejson.html#tkTrue	TokKind.tkTrue		35
+nim	tkFalse	parsejson.html#tkFalse	TokKind.tkFalse		35
+nim	tkNull	parsejson.html#tkNull	TokKind.tkNull		35
+nim	tkCurlyLe	parsejson.html#tkCurlyLe	TokKind.tkCurlyLe		35
+nim	tkCurlyRi	parsejson.html#tkCurlyRi	TokKind.tkCurlyRi		35
+nim	tkBracketLe	parsejson.html#tkBracketLe	TokKind.tkBracketLe		35
+nim	tkBracketRi	parsejson.html#tkBracketRi	TokKind.tkBracketRi		35
+nim	tkColon	parsejson.html#tkColon	TokKind.tkColon		35
+nim	tkComma	parsejson.html#tkComma	TokKind.tkComma		35
+nim	TokKind	parsejson.html#TokKind	enum TokKind		35
+nim	errNone	parsejson.html#errNone	JsonError.errNone		51
+nim	errInvalidToken	parsejson.html#errInvalidToken	JsonError.errInvalidToken		51
+nim	errStringExpected	parsejson.html#errStringExpected	JsonError.errStringExpected		51
+nim	errColonExpected	parsejson.html#errColonExpected	JsonError.errColonExpected		51
+nim	errCommaExpected	parsejson.html#errCommaExpected	JsonError.errCommaExpected		51
+nim	errBracketRiExpected	parsejson.html#errBracketRiExpected	JsonError.errBracketRiExpected		51
+nim	errCurlyRiExpected	parsejson.html#errCurlyRiExpected	JsonError.errCurlyRiExpected		51
+nim	errQuoteExpected	parsejson.html#errQuoteExpected	JsonError.errQuoteExpected		51
+nim	errEOC_Expected	parsejson.html#errEOC_Expected	JsonError.errEOC_Expected		51
+nim	errEofExpected	parsejson.html#errEofExpected	JsonError.errEofExpected		51
+nim	errExprExpected	parsejson.html#errExprExpected	JsonError.errExprExpected		51
+nim	JsonError	parsejson.html#JsonError_2	enum JsonError		51
+nim	JsonParser	parsejson.html#JsonParser	object JsonParser		68
+nim	JsonKindError	parsejson.html#JsonKindError	object JsonKindError		77
+nim	JsonParsingError	parsejson.html#JsonParsingError	object JsonParsingError		79
+nim	errorMessages	parsejson.html#errorMessages	const errorMessages		82
+nim	open	parsejson.html#open,JsonParser,Stream,string	proc open(my: var JsonParser; input: Stream; filename: string;\n     rawStringLiterals = false)		107
+nim	close	parsejson.html#close,JsonParser	proc close(my: var JsonParser)		120
+nim	str	parsejson.html#str,JsonParser	proc str(my: JsonParser): string		124
+nim	getInt	parsejson.html#getInt,JsonParser	proc getInt(my: JsonParser): BiggestInt		130
+nim	getFloat	parsejson.html#getFloat,JsonParser	proc getFloat(my: JsonParser): float		135
+nim	kind	parsejson.html#kind,JsonParser	proc kind(my: JsonParser): JsonEventKind		140
+nim	getColumn	parsejson.html#getColumn,JsonParser	proc getColumn(my: JsonParser): int		144
+nim	getLine	parsejson.html#getLine,JsonParser	proc getLine(my: JsonParser): int		148
+nim	getFilename	parsejson.html#getFilename,JsonParser	proc getFilename(my: JsonParser): string		152
+nim	errorMsg	parsejson.html#errorMsg,JsonParser	proc errorMsg(my: JsonParser): string		156
+nim	errorMsgExpected	parsejson.html#errorMsgExpected,JsonParser,string	proc errorMsgExpected(my: JsonParser; e: string): string		162
+nim	parseEscapedUTF16	parsejson.html#parseEscapedUTF16,cstring,int	proc parseEscapedUTF16(buf: cstring; pos: var int): int		168
+nim	getTok	parsejson.html#getTok,JsonParser	proc getTok(my: var JsonParser): TokKind		354
+nim	next	parsejson.html#next,JsonParser	proc next(my: var JsonParser)		399
+nim	raiseParseErr	parsejson.html#raiseParseErr,JsonParser,string	proc raiseParseErr(p: JsonParser; msg: string)		516
+nim	eat	parsejson.html#eat,JsonParser,TokKind	proc eat(p: var JsonParser; tok: TokKind)		520

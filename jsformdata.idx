@@ -1,0 +1,19 @@
+nimTitle	jsformdata	jsformdata.html	module std/jsformdata		0
+nim	FormData	jsformdata.html#FormData	type FormData		7
+nim	newFormData	jsformdata.html#newFormData	proc newFormData(): FormData		9
+nim	add	jsformdata.html#add,FormData,cstring,	proc add(self: FormData; name: cstring; value: SomeNumber | bool | cstring | Blob)		11
+nim	add	jsformdata.html#add,FormData,cstring,,cstring	proc add(self: FormData; name: cstring; value: SomeNumber | bool | cstring | Blob;\n    filename: cstring)		16
+nim	delete	jsformdata.html#delete,FormData,cstring	proc delete(self: FormData; name: cstring)		21
+nim	getAll	jsformdata.html#getAll,FormData,cstring	proc getAll(self: FormData; name: cstring): seq[cstring]		26
+nim	hasKey	jsformdata.html#hasKey,FormData,cstring	proc hasKey(self: FormData; name: cstring): bool		29
+nim	keys	jsformdata.html#keys,FormData	proc keys(self: FormData): seq[cstring]		32
+nim	values	jsformdata.html#values,FormData	proc values(self: FormData): seq[cstring]		35
+nim	pairs	jsformdata.html#pairs,FormData	proc pairs(self: FormData): seq[tuple[key, val: cstring]]		38
+nim	put	jsformdata.html#put,FormData,cstring,,cstring	proc put(self: FormData; name: cstring; value: SomeNumber | bool | cstring | Blob;\n    filename: cstring)		41
+nim	`[]=`	jsformdata.html#[]=,FormData,cstring,	proc `[]=`(self: FormData; name: cstring; value: SomeNumber | bool | cstring | Blob)		44
+nim	`[]`	jsformdata.html#[],FormData,cstring	proc `[]`(self: FormData; name: cstring): cstring		47
+nim	clear	jsformdata.html#clear,FormData	proc clear(self: FormData)		50
+nim	toCstring	jsformdata.html#toCstring,FormData	proc toCstring(self: FormData): cstring		54
+nim	`$`	jsformdata.html#$,FormData	proc `$`(self: FormData): string		56
+nim	len	jsformdata.html#len,FormData	proc len(self: FormData): int		58
+nimgrp	add	jsformdata.html#add-procs-all	proc		11

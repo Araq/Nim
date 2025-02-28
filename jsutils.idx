@@ -1,0 +1,26 @@
+nimTitle	jsutils	jsutils.html	module std/private/jsutils		0
+nim	ArrayBuffer	jsutils.html#ArrayBuffer	type ArrayBuffer		5
+nim	Float64Array	jsutils.html#Float64Array	type Float64Array		6
+nim	Uint32Array	jsutils.html#Uint32Array	type Uint32Array		7
+nim	Uint8Array	jsutils.html#Uint8Array	type Uint8Array		8
+nim	BigUint64Array	jsutils.html#BigUint64Array	type BigUint64Array		9
+nim	newArrayBuffer	jsutils.html#newArrayBuffer,int	proc newArrayBuffer(n: int): ArrayBuffer		12
+nim	newFloat64Array	jsutils.html#newFloat64Array,ArrayBuffer	proc newFloat64Array(buffer: ArrayBuffer): Float64Array		13
+nim	newUint32Array	jsutils.html#newUint32Array,ArrayBuffer	proc newUint32Array(buffer: ArrayBuffer): Uint32Array		14
+nim	newBigUint64Array	jsutils.html#newBigUint64Array,ArrayBuffer	proc newBigUint64Array(buffer: ArrayBuffer): BigUint64Array		15
+nim	newUint8Array	jsutils.html#newUint8Array,int	proc newUint8Array(n: int): Uint8Array		17
+nim	`[]`	jsutils.html#[],Uint32Array,int	proc `[]`(arr: Uint32Array; i: int): uint32		19
+nim	`[]`	jsutils.html#[],Uint8Array,int	proc `[]`(arr: Uint8Array; i: int): uint8		20
+nim	`[]`	jsutils.html#[],BigUint64Array,int	proc `[]`(arr: BigUint64Array; i: int): JsBigInt		21
+nim	`[]=`	jsutils.html#[]=,Float64Array,int,float	proc `[]=`(arr: Float64Array; i: int; v: float)		22
+nim	jsTypeOf	jsutils.html#jsTypeOf,T	proc jsTypeOf[T](x: T): cstring		24
+nim	jsConstructorName	jsutils.html#jsConstructorName,T	proc jsConstructorName[T](a: T): cstring		34
+nim	hasJsBigInt	jsutils.html#hasJsBigInt	proc hasJsBigInt(): bool		42
+nim	hasBigUint64Array	jsutils.html#hasBigUint64Array	proc hasBigUint64Array(): bool		45
+nim	getProtoName	jsutils.html#getProtoName,T	proc getProtoName[T](a: T): cstring		48
+nim	maxSafeInteger	jsutils.html#maxSafeInteger	const maxSafeInteger		61
+nim	isInteger	jsutils.html#isInteger,T	proc isInteger[T](x: T): bool		68
+nim	isSafeInteger	jsutils.html#isSafeInteger,T	proc isSafeInteger[T](x: T): bool		76
+nim	jsNoBigInt64	jsutils.html#jsNoBigInt64	const jsNoBigInt64		86
+nim	hasWorkingInt64	jsutils.html#hasWorkingInt64	const hasWorkingInt64		95
+nimgrp	[]	jsutils.html#[]-procs-all	proc		19

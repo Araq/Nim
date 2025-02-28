@@ -1,0 +1,10 @@
+nimTitle	linter	linter.html	module linter		0
+nim	Letters	linter.html#Letters	const Letters		19
+nim	identLen	linter.html#identLen,string,int	proc identLen(line: string; start: int): int		21
+nim	differ	linter.html#differ,string,int,int,string	proc differ(line: string; a, b: int; x: string): string		78
+nim	styleCheckDef	linter.html#styleCheckDef.t,PContext,TLineInfo,PSym,TSymKind	template styleCheckDef(ctx: PContext; info: TLineInfo; sym: PSym; k: TSymKind)		95
+nim	styleCheckDef	linter.html#styleCheckDef.t,PContext,TLineInfo,PSym	template styleCheckDef(ctx: PContext; info: TLineInfo; s: PSym)		111
+nim	styleCheckDef	linter.html#styleCheckDef.t,PContext,PSym	template styleCheckDef(ctx: PContext; s: PSym)		115
+nim	styleCheckUse	linter.html#styleCheckUse.t,PContext,TLineInfo,PSym	template styleCheckUse(ctx: PContext; info: TLineInfo; sym: PSym)		137
+nim	checkPragmaUse	linter.html#checkPragmaUse.t,PContext,TLineInfo,TSpecialWord,string,PSym	template checkPragmaUse(ctx: PContext; info: TLineInfo; w: TSpecialWord;\n               pragmaName: string; sym: PSym)		152
+nimgrp	stylecheckdef	linter.html#styleCheckDef-templates-all	template		95

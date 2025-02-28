@@ -1,0 +1,7 @@
+markupTitle	Source Code Filters	filters.html	Source Code Filters		0
+heading	Usage	filters.html#usage	 Usage		0
+heading	Pipe operator	filters.html#pipe-operator	 Pipe operator		0
+heading	Available filters	filters.html#available-filters	 Available filters		0
+heading	Replace filter	filters.html#available-filters-replace-filter	  Replace filter		0
+heading	Strip filter	filters.html#available-filters-strip-filter	  Strip filter		0
+heading	StdTmpl filter	filters.html#available-filters-stdtmpl-filter	  StdTmpl filter		0

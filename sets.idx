@@ -1,0 +1,70 @@
+nimTitle	sets	sets.html	module std/sets		0
+nim	HashSet	sets.html#HashSet	object HashSet		66
+nim	OrderedSet	sets.html#OrderedSet	object OrderedSet		78
+nim	SomeSet	sets.html#SomeSet	type SomeSet		85
+nim	defaultInitialSize	sets.html#defaultInitialSize	const defaultInitialSize		89
+nim	init	sets.html#init,HashSet[A]	proc init[A](s: var HashSet[A]; initialSize = defaultInitialSize)		98
+nim	initHashSet	sets.html#initHashSet	proc initHashSet[A](initialSize = defaultInitialSize): HashSet[A]		117
+nim	`[]`	sets.html#[],HashSet[A],A	proc `[]`[A](s: var HashSet[A]; key: A): var A		136
+nim	contains	sets.html#contains,HashSet[A],A	proc contains[A](s: HashSet[A]; key: A): bool		151
+nim	len	sets.html#len,HashSet[A]	proc len[A](s: HashSet[A]): int		172
+nim	card	sets.html#card,HashSet[A]	proc card[A](s: HashSet[A]): int		186
+nim	incl	sets.html#incl,HashSet[A],A	proc incl[A](s: var HashSet[A]; key: A)		193
+nim	incl	sets.html#incl,HashSet[A],HashSet[A]	proc incl[A](s: var HashSet[A]; other: HashSet[A])		210
+nim	toHashSet	sets.html#toHashSet,openArray[A]	proc toHashSet[A](keys: openArray[A]): HashSet[A]		228
+nim	items	sets.html#items.i,HashSet[A]	iterator items[A](s: HashSet[A]): A		248
+nim	containsOrIncl	sets.html#containsOrIncl,HashSet[A],A	proc containsOrIncl[A](s: var HashSet[A]; key: A): bool		274
+nim	excl	sets.html#excl,HashSet[A],A	proc excl[A](s: var HashSet[A]; key: A)		294
+nim	excl	sets.html#excl,HashSet[A],HashSet[A]	proc excl[A](s: var HashSet[A]; other: HashSet[A])		311
+nim	missingOrExcl	sets.html#missingOrExcl,HashSet[A],A	proc missingOrExcl[A](s: var HashSet[A]; key: A): bool		330
+nim	pop	sets.html#pop,HashSet[A]	proc pop[A](s: var HashSet[A]): A		350
+nim	clear	sets.html#clear,HashSet[A]	proc clear[A](s: var HashSet[A])		369
+nim	union	sets.html#union,HashSet[A],HashSet[A]	proc union[A](s1, s2: HashSet[A]): HashSet[A]		390
+nim	intersection	sets.html#intersection,HashSet[A],HashSet[A]	proc intersection[A](s1, s2: HashSet[A]): HashSet[A]		412
+nim	difference	sets.html#difference,HashSet[A],HashSet[A]	proc difference[A](s1, s2: HashSet[A]): HashSet[A]		443
+nim	symmetricDifference	sets.html#symmetricDifference,HashSet[A],HashSet[A]	proc symmetricDifference[A](s1, s2: HashSet[A]): HashSet[A]		467
+nim	`+`	sets.html#+,HashSet[A],HashSet[A]	proc `+`[A](s1, s2: HashSet[A]): HashSet[A]		491
+nim	`*`	sets.html#*,HashSet[A],HashSet[A]	proc `*`[A](s1, s2: HashSet[A]): HashSet[A]		495
+nim	`-`	sets.html#-,HashSet[A],HashSet[A]	proc `-`[A](s1, s2: HashSet[A]): HashSet[A]		499
+nim	`-+-`	sets.html#-+-,HashSet[A],HashSet[A]	proc `-+-`[A](s1, s2: HashSet[A]): HashSet[A]		503
+nim	disjoint	sets.html#disjoint,HashSet[A],HashSet[A]	proc disjoint[A](s1, s2: HashSet[A]): bool		508
+nim	`<`	sets.html#<,HashSet[A],HashSet[A]	proc `<`[A](s, t: HashSet[A]): bool		521
+nim	`<=`	sets.html#<=,HashSet[A],HashSet[A]	proc `<=`[A](s, t: HashSet[A]): bool		536
+nim	`==`	sets.html#==,HashSet[A],HashSet[A]	proc `==`[A](s, t: HashSet[A]): bool		557
+nim	map	sets.html#map,HashSet[A],proc(A)	proc map[A, B](data: HashSet[A]; op: proc (x: A): B {.closure.}): HashSet[B]		567
+nim	hash	sets.html#hash,HashSet[A]	proc hash[A](s: HashSet[A]): Hash		581
+nim	`$`	sets.html#$,HashSet[A]	proc `$`[A](s: HashSet[A]): string		587
+nim	initSet	sets.html#initSet	proc initSet[A](initialSize = defaultInitialSize): HashSet[A]		603
+nim	toSet	sets.html#toSet,openArray[A]	proc toSet[A](keys: openArray[A]): HashSet[A]		606
+nim	isValid	sets.html#isValid,HashSet[A]	proc isValid[A](s: HashSet[A]): bool		609
+nim	init	sets.html#init,OrderedSet[A]	proc init[A](s: var OrderedSet[A]; initialSize = defaultInitialSize)		638
+nim	initOrderedSet	sets.html#initOrderedSet	proc initOrderedSet[A](initialSize = defaultInitialSize): OrderedSet[A]		657
+nim	toOrderedSet	sets.html#toOrderedSet,openArray[A]	proc toOrderedSet[A](keys: openArray[A]): OrderedSet[A]		676
+nim	contains	sets.html#contains,OrderedSet[A],A	proc contains[A](s: OrderedSet[A]; key: A): bool		696
+nim	incl	sets.html#incl,OrderedSet[A],A	proc incl[A](s: var OrderedSet[A]; key: A)		717
+nim	incl	sets.html#incl,HashSet[A],OrderedSet[A]	proc incl[A](s: var HashSet[A]; other: OrderedSet[A])		734
+nim	containsOrIncl	sets.html#containsOrIncl,OrderedSet[A],A	proc containsOrIncl[A](s: var OrderedSet[A]; key: A): bool		750
+nim	excl	sets.html#excl,OrderedSet[A],A	proc excl[A](s: var OrderedSet[A]; key: A)		769
+nim	missingOrExcl	sets.html#missingOrExcl,OrderedSet[A],A	proc missingOrExcl[A](s: var OrderedSet[A]; key: A): bool		785
+nim	clear	sets.html#clear,OrderedSet[A]	proc clear[A](s: var OrderedSet[A])		805
+nim	len	sets.html#len,OrderedSet[A]	proc len[A](s: OrderedSet[A]): int		825
+nim	card	sets.html#card,OrderedSet[A]	proc card[A](s: OrderedSet[A]): int		839
+nim	`==`	sets.html#==,OrderedSet[A],OrderedSet[A]	proc `==`[A](s, t: OrderedSet[A]): bool		846
+nim	hash	sets.html#hash,OrderedSet[A]	proc hash[A](s: OrderedSet[A]): Hash		870
+nim	`$`	sets.html#$,OrderedSet[A]	proc `$`[A](s: OrderedSet[A]): string		876
+nim	items	sets.html#items.i,OrderedSet[A]	iterator items[A](s: OrderedSet[A]): A		894
+nim	pairs	sets.html#pairs.i,OrderedSet[A]	iterator pairs[A](s: OrderedSet[A]): tuple[a: int, b: A]		918
+idx	hash set	sets.html#hash-set_1	Module sets		0
+nimgrp	missingorexcl	sets.html#missingOrExcl-procs-all	proc		330
+nimgrp	excl	sets.html#excl-procs-all	proc		294
+nimgrp	containsorincl	sets.html#containsOrIncl-procs-all	proc		274
+nimgrp	==	sets.html#==-procs-all	proc		557
+nimgrp	$	sets.html#$-procs-all	proc		587
+nimgrp	card	sets.html#card-procs-all	proc		186
+nimgrp	contains	sets.html#contains-procs-all	proc		151
+nimgrp	init	sets.html#init-procs-all	proc		98
+nimgrp	incl	sets.html#incl-procs-all	proc		193
+nimgrp	clear	sets.html#clear-procs-all	proc		369
+nimgrp	len	sets.html#len-procs-all	proc		172
+nimgrp	hash	sets.html#hash-procs-all	proc		581
+nimgrp	items	sets.html#items-iterators-all	iterator		248

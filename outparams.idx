@@ -1,0 +1,2 @@
+nimTitle	outparams	outparams.html	module std/outparams		0
+nim	outParamsAt	outparams.html#outParamsAt.m,staticopenArray[int],untyped	macro outParamsAt(positions: static openArray[int]; n: untyped): untyped		14

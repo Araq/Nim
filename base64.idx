@@ -1,0 +1,12 @@
+nimTitle	base64	base64.html	module std/base64		0
+nim	encode	base64.html#encode,openArray[T]	proc encode[T: byte | char](s: openArray[T]; safe = false): string		138
+nim	encode	base64.html#encode,openArray[T]_2	proc encode[T: SomeInteger and not byte](s: openArray[T]; safe = false): string		157
+nim	encodeMime	base64.html#encodeMime,string,string	proc encodeMime(s: string; lineLen = 75.Positive; newLine = "\r\n"; safe = false): string		162
+nim	initDecodeTable	base64.html#initDecodeTable	proc initDecodeTable(): array[256, char]		200
+nim	decode	base64.html#decode,string	proc decode(s: string): string		216
+heading	Basic usage	base64.html#basic-usage	 Basic usage		0
+heading	Encoding data	base64.html#basic-usage-encoding-data	  Encoding data		0
+heading	Decoding data	base64.html#basic-usage-decoding-data	  Decoding data		0
+heading	URL Safe Base64	base64.html#basic-usage-url-safe-base64	  URL Safe Base64		0
+heading	See also	base64.html#see-also	 See also		0
+nimgrp	encode	base64.html#encode-procs-all	proc		138

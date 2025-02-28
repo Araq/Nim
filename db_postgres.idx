@@ -1,0 +1,53 @@
+nimTitle	db_postgres	db_postgres.html	module src/db_connector/db_postgres		0
+nim	DbConn	db_postgres.html#DbConn	type DbConn		104
+nim	Row	db_postgres.html#Row	type Row		105
+nim	InstantRow	db_postgres.html#InstantRow	object InstantRow		107
+nim	SqlPrepared	db_postgres.html#SqlPrepared	type SqlPrepared		109
+nim	dbError	db_postgres.html#dbError,DbConn	proc dbError(db: DbConn)		111
+nim	dbQuote	db_postgres.html#dbQuote,string	proc dbQuote(s: string): string		118
+nim	tryExec	db_postgres.html#tryExec,DbConn,SqlQuery,varargs[string,]	proc tryExec(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): bool		131
+nim	tryExec	db_postgres.html#tryExec,DbConn,SqlPrepared,varargs[string,]	proc tryExec(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): bool		139
+nim	exec	db_postgres.html#exec,DbConn,SqlQuery,varargs[string,]	proc exec(db: DbConn; query: SqlQuery; args: varargs[string, `$`])		150
+nim	exec	db_postgres.html#exec,DbConn,SqlPrepared,varargs[string]	proc exec(db: DbConn; stmtName: SqlPrepared; args: varargs[string])		158
+nim	prepare	db_postgres.html#prepare,DbConn,string,SqlQuery,int	proc prepare(db: DbConn; stmtName: string; query: SqlQuery; nParams: int): SqlPrepared		200
+nim	fastRows	db_postgres.html#fastRows.i,DbConn,SqlQuery,varargs[string,]	iterator fastRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		238
+nim	fastRows	db_postgres.html#fastRows.i,DbConn,SqlPrepared,varargs[string,]	iterator fastRows(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): Row		246
+nim	instantRows	db_postgres.html#instantRows.i,DbConn,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): InstantRow		269
+nim	instantRows	db_postgres.html#instantRows.i,DbConn,SqlPrepared,varargs[string,]	iterator instantRows(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): InstantRow		277
+nim	instantRows	db_postgres.html#instantRows.i,DbConn,DbColumns,SqlQuery,varargs[string,]	iterator instantRows(db: DbConn; columns: var DbColumns; query: SqlQuery;\n            args: varargs[string, `$`]): InstantRow		430
+nim	`[]`	db_postgres.html#[],InstantRow,int	proc `[]`(row: InstantRow; col: int): string		452
+nim	unsafeColumnAt	db_postgres.html#unsafeColumnAt,InstantRow,int	proc unsafeColumnAt(row: InstantRow; index: int): cstring		456
+nim	len	db_postgres.html#len,InstantRow	proc len(row: InstantRow): int		460
+nim	getRow	db_postgres.html#getRow,DbConn,SqlQuery,varargs[string,]	proc getRow(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		471
+nim	getRow	db_postgres.html#getRow,DbConn,SqlPrepared,varargs[string,]	proc getRow(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): Row		478
+nim	getAllRows	db_postgres.html#getAllRows,DbConn,SqlQuery,varargs[string,]	proc getAllRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): seq[Row]		493
+nim	getAllRows	db_postgres.html#getAllRows,DbConn,SqlPrepared,varargs[string,]	proc getAllRows(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): seq[\n    Row]		500
+nim	rows	db_postgres.html#rows.i,DbConn,SqlQuery,varargs[string,]	iterator rows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): Row		507
+nim	rows	db_postgres.html#rows.i,DbConn,SqlPrepared,varargs[string,]	iterator rows(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): Row		512
+nim	getValue	db_postgres.html#getValue,DbConn,SqlQuery,varargs[string,]	proc getValue(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): string		524
+nim	getValue	db_postgres.html#getValue,DbConn,SqlPrepared,varargs[string,]	proc getValue(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): string		534
+nim	tryInsertID	db_postgres.html#tryInsertID,DbConn,SqlQuery,varargs[string,]	proc tryInsertID(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		544
+nim	insertID	db_postgres.html#insertID,DbConn,SqlQuery,varargs[string,]	proc insertID(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		560
+nim	tryInsert	db_postgres.html#tryInsert,DbConn,SqlQuery,string,varargs[string,]	proc tryInsert(db: DbConn; query: SqlQuery; pkName: string;\n          args: varargs[string, `$`]): int64		570
+nim	insert	db_postgres.html#insert,DbConn,SqlQuery,string,varargs[string,]	proc insert(db: DbConn; query: SqlQuery; pkName: string; args: varargs[string, `$`]): int64		584
+nim	execAffectedRows	db_postgres.html#execAffectedRows,DbConn,SqlQuery,varargs[string,]	proc execAffectedRows(db: DbConn; query: SqlQuery; args: varargs[string, `$`]): int64		592
+nim	execAffectedRows	db_postgres.html#execAffectedRows,DbConn,SqlPrepared,varargs[string,]	proc execAffectedRows(db: DbConn; stmtName: SqlPrepared; args: varargs[string, `$`]): int64		603
+nim	close	db_postgres.html#close,DbConn	proc close(db: DbConn)		616
+nim	open	db_postgres.html#open,string,string,string,string	proc open(connection, user, password, database: string): DbConn		620
+nim	setEncoding	db_postgres.html#setEncoding,DbConn,string	proc setEncoding(connection: DbConn; encoding: string): bool		644
+nimgrp	getallrows	db_postgres.html#getAllRows-procs-all	proc		493
+nimgrp	getvalue	db_postgres.html#getValue-procs-all	proc		524
+nimgrp	execaffectedrows	db_postgres.html#execAffectedRows-procs-all	proc		592
+nimgrp	exec	db_postgres.html#exec-procs-all	proc		150
+nimgrp	tryexec	db_postgres.html#tryExec-procs-all	proc		131
+nimgrp	getrow	db_postgres.html#getRow-procs-all	proc		471
+nimgrp	fastrows	db_postgres.html#fastRows-iterators-all	iterator		238
+nimgrp	rows	db_postgres.html#rows-iterators-all	iterator		507
+nimgrp	instantrows	db_postgres.html#instantRows-iterators-all	iterator		269
+idx	PostgreSQL	db_postgres.html#postgresql_1	Module db_postgres		0
+heading	Parameter substitution	db_postgres.html#parameter-substitution	 Parameter substitution		0
+heading	Unix Socket	db_postgres.html#unix-socket	 Unix Socket		0
+heading	Examples	db_postgres.html#examples	 Examples		0
+heading	Opening a connection to a database	db_postgres.html#examples-opening-a-connection-to-a-database	  Opening a connection to a database		0
+heading	Creating a table	db_postgres.html#examples-creating-a-table	  Creating a table		0
+heading	Inserting data	db_postgres.html#examples-inserting-data	  Inserting data		0

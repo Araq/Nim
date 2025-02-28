@@ -1,0 +1,52 @@
+nimTitle	rationals	rationals.html	module std/rationals		0
+nim	Rational	rationals.html#Rational	object Rational		28
+nim	reduce	rationals.html#reduce,Rational[T: SomeInteger]	proc reduce[T: SomeInteger](x: var Rational[T])		32
+nim	initRational	rationals.html#initRational,T,T	proc initRational[T: SomeInteger](num, den: T): Rational[T]		54
+nim	`//`	rationals.html#//,T,T	proc `//`[T](num, den: T): Rational[T]		63
+nim	`$`	rationals.html#$,Rational[T]	proc `$`[T](x: Rational[T]): string		71
+nim	toRational	rationals.html#toRational,T	proc toRational[T: SomeInteger](x: T): Rational[T]		78
+nim	toRational	rationals.html#toRational,float,int	proc toRational(x: float; n: int = high(int) shr 32): Rational[int]		84
+nim	toFloat	rationals.html#toFloat,Rational[T]	proc toFloat[T](x: Rational[T]): float		113
+nim	toInt	rationals.html#toInt,Rational[T]	proc toInt[T](x: Rational[T]): int		117
+nim	`+`	rationals.html#+,Rational[T],Rational[T]	proc `+`[T](x, y: Rational[T]): Rational[T]		122
+nim	`+`	rationals.html#+,Rational[T],T	proc `+`[T](x: Rational[T]; y: T): Rational[T]		130
+nim	`+`	rationals.html#+,T,Rational[T]	proc `+`[T](x: T; y: Rational[T]): Rational[T]		134
+nim	`+=`	rationals.html#+=,Rational[T],Rational[T]	proc `+=`[T](x: var Rational[T]; y: Rational[T])		138
+nim	`+=`	rationals.html#+=,Rational[T],T	proc `+=`[T](x: var Rational[T]; y: T)		145
+nim	`-`	rationals.html#-,Rational[T]	proc `-`[T](x: Rational[T]): Rational[T]		149
+nim	`-`	rationals.html#-,Rational[T],Rational[T]	proc `-`[T](x, y: Rational[T]): Rational[T]		153
+nim	`-`	rationals.html#-,Rational[T],T	proc `-`[T](x: Rational[T]; y: T): Rational[T]		161
+nim	`-`	rationals.html#-,T,Rational[T]	proc `-`[T](x: T; y: Rational[T]): Rational[T]		165
+nim	`-=`	rationals.html#-=,Rational[T],Rational[T]	proc `-=`[T](x: var Rational[T]; y: Rational[T])		169
+nim	`-=`	rationals.html#-=,Rational[T],T	proc `-=`[T](x: var Rational[T]; y: T)		176
+nim	`*`	rationals.html#*,Rational[T],Rational[T]	proc `*`[T](x, y: Rational[T]): Rational[T]		180
+nim	`*`	rationals.html#*,Rational[T],T	proc `*`[T](x: Rational[T]; y: T): Rational[T]		185
+nim	`*`	rationals.html#*,T,Rational[T]	proc `*`[T](x: T; y: Rational[T]): Rational[T]		190
+nim	`*=`	rationals.html#*=,Rational[T],Rational[T]	proc `*=`[T](x: var Rational[T]; y: Rational[T])		195
+nim	`*=`	rationals.html#*=,Rational[T],T	proc `*=`[T](x: var Rational[T]; y: T)		201
+nim	reciprocal	rationals.html#reciprocal,Rational[T]	proc reciprocal[T](x: Rational[T]): Rational[T]		206
+nim	`/`	rationals.html#/,Rational[T],Rational[T]	proc `/`[T](x, y: Rational[T]): Rational[T]		216
+nim	`/`	rationals.html#/,Rational[T],T	proc `/`[T](x: Rational[T]; y: T): Rational[T]		221
+nim	`/`	rationals.html#/,T,Rational[T]	proc `/`[T](x: T; y: Rational[T]): Rational[T]		226
+nim	`/=`	rationals.html#/=,Rational[T],Rational[T]	proc `/=`[T](x: var Rational[T]; y: Rational[T])		231
+nim	`/=`	rationals.html#/=,Rational[T],T	proc `/=`[T](x: var Rational[T]; y: T)		237
+nim	cmp	rationals.html#cmp,Rational,Rational	proc cmp(x, y: Rational): int		242
+nim	`<`	rationals.html#<,Rational,Rational	proc `<`(x, y: Rational): bool		249
+nim	`<=`	rationals.html#<=,Rational,Rational	proc `<=`(x, y: Rational): bool		253
+nim	`==`	rationals.html#==,Rational,Rational	proc `==`(x, y: Rational): bool		257
+nim	abs	rationals.html#abs,Rational[T]	proc abs[T](x: Rational[T]): Rational[T]		261
+nim	`div`	rationals.html#div,Rational[T: SomeInteger],Rational[T: SomeInteger]	proc `div`[T: SomeInteger](x, y: Rational[T]): T		268
+nim	`mod`	rationals.html#mod,Rational[T: SomeInteger],Rational[T: SomeInteger]	proc `mod`[T: SomeInteger](x, y: Rational[T]): Rational[T]		272
+nim	floorDiv	rationals.html#floorDiv,Rational[T: SomeInteger],Rational[T: SomeInteger]	proc floorDiv[T: SomeInteger](x, y: Rational[T]): T		278
+nim	floorMod	rationals.html#floorMod,Rational[T: SomeInteger],Rational[T: SomeInteger]	proc floorMod[T: SomeInteger](x, y: Rational[T]): Rational[T]		287
+nim	hash	rationals.html#hash,Rational[T]	proc hash[T](x: Rational[T]): Hash		295
+nim	`^`	rationals.html#^,Rational[T: SomeInteger],T	proc `^`[T: SomeInteger](x: Rational[T]; y: T): Rational[T]		307
+nimgrp	+	rationals.html#+-procs-all	proc		122
+nimgrp	-	rationals.html#--procs-all	proc		149
+nimgrp	/	rationals.html#/-procs-all	proc		216
+nimgrp	-=	rationals.html#-=-procs-all	proc		169
+nimgrp	*	rationals.html#*-procs-all	proc		180
+nimgrp	torational	rationals.html#toRational-procs-all	proc		78
+nimgrp	*=	rationals.html#*=-procs-all	proc		195
+nimgrp	/=	rationals.html#/=-procs-all	proc		231
+nimgrp	+=	rationals.html#+=-procs-all	proc		138

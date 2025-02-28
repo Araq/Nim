@@ -1,0 +1,6 @@
+nimTitle	astyaml	astyaml.html	module astyaml		0
+nim	addYamlString	astyaml.html#addYamlString,string,string	proc addYamlString(res: var string; s: string)		15
+nim	lineInfoToStr	astyaml.html#lineInfoToStr,ConfigRef,TLineInfo	proc lineInfoToStr(conf: ConfigRef; info: TLineInfo): string		43
+nim	treeToYaml	astyaml.html#treeToYaml,ConfigRef,PNode,int,int	proc treeToYaml(conf: ConfigRef; n: PNode; indent: int = 0; maxRecDepth: int = -1): string		141
+nim	typeToYaml	astyaml.html#typeToYaml,ConfigRef,PType,int,int	proc typeToYaml(conf: ConfigRef; n: PType; indent: int = 0; maxRecDepth: int = -1): string		146
+nim	symToYaml	astyaml.html#symToYaml,ConfigRef,PSym,int,int	proc symToYaml(conf: ConfigRef; n: PSym; indent: int = 0; maxRecDepth: int = -1): string		151

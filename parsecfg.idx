@@ -1,0 +1,38 @@
+nimTitle	parsecfg	parsecfg.html	module std/parsecfg		0
+nim	cfgEof	parsecfg.html#cfgEof	CfgEventKind.cfgEof		184
+nim	cfgSectionStart	parsecfg.html#cfgSectionStart	CfgEventKind.cfgSectionStart		184
+nim	cfgKeyValuePair	parsecfg.html#cfgKeyValuePair	CfgEventKind.cfgKeyValuePair		184
+nim	cfgOption	parsecfg.html#cfgOption	CfgEventKind.cfgOption		184
+nim	cfgError	parsecfg.html#cfgError	CfgEventKind.cfgError		184
+nim	CfgEventKind	parsecfg.html#CfgEventKind	enum CfgEventKind		184
+nim	CfgEvent	parsecfg.html#CfgEvent	object CfgEvent		191
+nim	CfgParser	parsecfg.html#CfgParser	object CfgParser		214
+nim	open	parsecfg.html#open,CfgParser,Stream,string,int	proc open(c: var CfgParser; input: Stream; filename: string; lineOffset = 0)		225
+nim	close	parsecfg.html#close,CfgParser	proc close(c: var CfgParser)		237
+nim	getColumn	parsecfg.html#getColumn,CfgParser	proc getColumn(c: CfgParser): int		241
+nim	getLine	parsecfg.html#getLine,CfgParser	proc getLine(c: CfgParser): int		245
+nim	getFilename	parsecfg.html#getFilename,CfgParser	proc getFilename(c: CfgParser): string		249
+nim	errorStr	parsecfg.html#errorStr,CfgParser,string	proc errorStr(c: CfgParser; msg: string): string		428
+nim	warningStr	parsecfg.html#warningStr,CfgParser,string	proc warningStr(c: CfgParser; msg: string): string		434
+nim	ignoreMsg	parsecfg.html#ignoreMsg,CfgParser,CfgEvent	proc ignoreMsg(c: CfgParser; e: CfgEvent): string		440
+nim	next	parsecfg.html#next,CfgParser	proc next(c: var CfgParser): CfgEvent		471
+nim	Config	parsecfg.html#Config	type Config		501
+nim	newConfig	parsecfg.html#newConfig	proc newConfig(): Config		503
+nim	loadConfig	parsecfg.html#loadConfig,Stream,string	proc loadConfig(stream: Stream; filename: string = "[stream]"): Config		508
+nim	loadConfig	parsecfg.html#loadConfig,string	proc loadConfig(filename: string): Config		541
+nim	writeConfig	parsecfg.html#writeConfig,Config,Stream	proc writeConfig(dict: Config; stream: Stream)		566
+nim	`$`	parsecfg.html#$,Config	proc `$`(dict: Config): string		606
+nim	writeConfig	parsecfg.html#writeConfig,Config,string	proc writeConfig(dict: Config; filename: string)		615
+nim	getSectionValue	parsecfg.html#getSectionValue,Config,string,string,string	proc getSectionValue(dict: Config; section, key: string; defaultVal = ""): string		624
+nim	setSectionKey	parsecfg.html#setSectionKey,Config,string,string,string	proc setSectionKey(dict: var Config; section, key, value: string)		635
+nim	delSection	parsecfg.html#delSection,Config,string	proc delSection(dict: var Config; section: string)		643
+nim	delSectionKey	parsecfg.html#delSectionKey,Config,string,string	proc delSectionKey(dict: var Config; section, key: string)		647
+nim	sections	parsecfg.html#sections.i,Config	iterator sections(dict: Config): lent string		656
+heading	Configuration file example	parsecfg.html#configuration-file-example	  Configuration file example		0
+heading	Creating a configuration file	parsecfg.html#creating-a-configuration-file	  Creating a configuration file		0
+heading	Reading a configuration file	parsecfg.html#reading-a-configuration-file	  Reading a configuration file		0
+heading	Modifying a configuration file	parsecfg.html#modifying-a-configuration-file	  Modifying a configuration file		0
+heading	Deleting a section key in a configuration file	parsecfg.html#deleting-a-section-key-in-a-configuration-file	  Deleting a section key in a configuration file		0
+heading	Supported INI File structure	parsecfg.html#supported-ini-file-structure	  Supported INI File structure		0
+nimgrp	writeconfig	parsecfg.html#writeConfig-procs-all	proc		566
+nimgrp	loadconfig	parsecfg.html#loadConfig-procs-all	proc		508

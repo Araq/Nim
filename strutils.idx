@@ -1,0 +1,163 @@
+nimTitle	strutils	strutils.html	module std/strutils		0
+nim	Whitespace	strutils.html#Whitespace	const Whitespace		91
+nim	Letters	strutils.html#Letters	const Letters		95
+nim	UppercaseLetters	strutils.html#UppercaseLetters	const UppercaseLetters		98
+nim	LowercaseLetters	strutils.html#LowercaseLetters	const LowercaseLetters		101
+nim	PunctuationChars	strutils.html#PunctuationChars	const PunctuationChars		104
+nim	Digits	strutils.html#Digits	const Digits		107
+nim	HexDigits	strutils.html#HexDigits	const HexDigits		110
+nim	IdentChars	strutils.html#IdentChars	const IdentChars		113
+nim	IdentStartChars	strutils.html#IdentStartChars	const IdentStartChars		116
+nim	Newlines	strutils.html#Newlines	const Newlines		119
+nim	PrintableChars	strutils.html#PrintableChars	const PrintableChars		123
+nim	AllChars	strutils.html#AllChars	const AllChars		126
+nim	isAlphaAscii	strutils.html#isAlphaAscii,char	proc isAlphaAscii(c: char): bool		138
+nim	isAlphaNumeric	strutils.html#isAlphaNumeric,char	proc isAlphaNumeric(c: char): bool		149
+nim	isDigit	strutils.html#isDigit,char	proc isDigit(c: char): bool		159
+nim	isSpaceAscii	strutils.html#isSpaceAscii,char	proc isSpaceAscii(c: char): bool		168
+nim	isLowerAscii	strutils.html#isLowerAscii,char	proc isLowerAscii(c: char): bool		176
+nim	isUpperAscii	strutils.html#isUpperAscii,char	proc isUpperAscii(c: char): bool		190
+nim	toLowerAscii	strutils.html#toLowerAscii,char	proc toLowerAscii(c: char): char		204
+nim	toLowerAscii	strutils.html#toLowerAscii,string	proc toLowerAscii(s: string): string		227
+nim	toUpperAscii	strutils.html#toUpperAscii,char	proc toUpperAscii(c: char): char		240
+nim	toUpperAscii	strutils.html#toUpperAscii,string	proc toUpperAscii(s: string): string		259
+nim	capitalizeAscii	strutils.html#capitalizeAscii,string	proc capitalizeAscii(s: string): string		272
+nim	nimIdentNormalize	strutils.html#nimIdentNormalize,string	proc nimIdentNormalize(s: string): string		286
+nim	normalize	strutils.html#normalize,string	proc normalize(s: string): string		312
+nim	cmpIgnoreCase	strutils.html#cmpIgnoreCase,string,string	proc cmpIgnoreCase(a, b: string): int		334
+nim	cmpIgnoreStyle	strutils.html#cmpIgnoreStyle,string,string	proc cmpIgnoreStyle(a, b: string): int		349
+nim	split	strutils.html#split.i,string,char,int	iterator split(s: string; sep: char; maxsplit: int = -1): string		421
+nim	split	strutils.html#split.i,string,set[char],int	iterator split(s: string; seps: set[char] = Whitespace; maxsplit: int = -1): string		451
+nim	split	strutils.html#split.i,string,string,int	iterator split(s: string; sep: string; maxsplit: int = -1): string		508
+nim	rsplit	strutils.html#rsplit.i,string,char,int	iterator rsplit(s: string; sep: char; maxsplit: int = -1): string		564
+nim	rsplit	strutils.html#rsplit.i,string,set[char],int	iterator rsplit(s: string; seps: set[char] = Whitespace; maxsplit: int = -1): string		591
+nim	rsplit	strutils.html#rsplit.i,string,string,int,bool	iterator rsplit(s: string; sep: string; maxsplit: int = -1; keepSeparators: bool = false): string		621
+nim	splitLines	strutils.html#splitLines.i,string	iterator splitLines(s: string; keepEol = false): string		653
+nim	splitWhitespace	strutils.html#splitWhitespace.i,string,int	iterator splitWhitespace(s: string; maxsplit: int = -1): string		704
+nim	split	strutils.html#split,string,char,int	proc split(s: string; sep: char; maxsplit: int = -1): seq[string]		746
+nim	split	strutils.html#split,string,set[char],int	proc split(s: string; seps: set[char] = Whitespace; maxsplit: int = -1): seq[string]		761
+nim	split	strutils.html#split,string,string,int	proc split(s: string; sep: string; maxsplit: int = -1): seq[string]		780
+nim	rsplit	strutils.html#rsplit,string,char,int	proc rsplit(s: string; sep: char; maxsplit: int = -1): seq[string]		805
+nim	rsplit	strutils.html#rsplit,string,set[char],int	proc rsplit(s: string; seps: set[char] = Whitespace; maxsplit: int = -1): seq[string]		834
+nim	rsplit	strutils.html#rsplit,string,string,int	proc rsplit(s: string; sep: string; maxsplit: int = -1): seq[string]		867
+nim	splitLines	strutils.html#splitLines,string	proc splitLines(s: string; keepEol = false): seq[string]		909
+nim	splitWhitespace	strutils.html#splitWhitespace,string,int	proc splitWhitespace(s: string; maxsplit: int = -1): seq[string]		920
+nim	toBin	strutils.html#toBin,BiggestInt,Positive	proc toBin(x: BiggestInt; len: Positive): string		930
+nim	toOct	strutils.html#toOct,BiggestInt,Positive	proc toOct(x: BiggestInt; len: Positive): string		952
+nim	toHex	strutils.html#toHex,T,Positive	proc toHex[T: SomeInteger](x: T; len: Positive): string		987
+nim	toHex	strutils.html#toHex,T	proc toHex[T: SomeInteger](x: T): string		1009
+nim	toHex	strutils.html#toHex,string	proc toHex(s: string): string		1022
+nim	toOctal	strutils.html#toOctal,char	proc toOctal(c: char): string		1047
+nim	fromBin	strutils.html#fromBin,string	proc fromBin[T: SomeInteger](s: string): T		1066
+nim	fromOct	strutils.html#fromOct,string	proc fromOct[T: SomeInteger](s: string): T		1089
+nim	fromHex	strutils.html#fromHex,string	proc fromHex[T: SomeInteger](s: string): T		1112
+nim	intToStr	strutils.html#intToStr,int,Positive	proc intToStr(x: int; minchars: Positive = 1): string		1135
+nim	parseInt	strutils.html#parseInt,string	proc parseInt(s: string): int		1150
+nim	parseBiggestInt	strutils.html#parseBiggestInt,string	proc parseBiggestInt(s: string): BiggestInt		1161
+nim	parseUInt	strutils.html#parseUInt,string	proc parseUInt(s: string): uint		1171
+nim	parseBiggestUInt	strutils.html#parseBiggestUInt,string	proc parseBiggestUInt(s: string): BiggestUInt		1180
+nim	parseFloat	strutils.html#parseFloat,string	proc parseFloat(s: string): float		1190
+nim	parseBinInt	strutils.html#parseBinInt,string	proc parseBinInt(s: string): int		1203
+nim	parseOctInt	strutils.html#parseOctInt,string	proc parseOctInt(s: string): int		1221
+nim	parseHexInt	strutils.html#parseHexInt,string	proc parseHexInt(s: string): int		1232
+nim	parseHexStr	strutils.html#parseHexStr,string	proc parseHexStr(s: string): string		1258
+nim	parseBool	strutils.html#parseBool,string	proc parseBool(s: string): bool		1289
+nim	parseEnum	strutils.html#parseEnum,string	proc parseEnum[T: enum](s: string): T		1305
+nim	parseEnum	strutils.html#parseEnum,string,T	proc parseEnum[T: enum](s: string; default: T): T		1325
+nim	repeat	strutils.html#repeat,char,Natural	proc repeat(c: char; count: Natural): string		1344
+nim	repeat	strutils.html#repeat,string,Natural	proc repeat(s: string; n: Natural): string		1353
+nim	spaces	strutils.html#spaces,Natural	proc spaces(n: Natural): string		1361
+nim	align	strutils.html#align,string,Natural,char	proc align(s: string; count: Natural; padding = ' '): string		1381
+nim	alignLeft	strutils.html#alignLeft,string,Natural,char	proc alignLeft(s: string; count: Natural; padding = ' '): string		1408
+nim	center	strutils.html#center,string,int,char	proc center(s: string; width: int; fillChar: char = ' '): string		1435
+nim	indent	strutils.html#indent,string,Natural,string	proc indent(s: string; count: Natural; padding: string = " "): string		1470
+nim	unindent	strutils.html#unindent,string,Natural,string	proc unindent(s: string; count: Natural = int.high; padding: string = " "): string		1495
+nim	indentation	strutils.html#indentation,string	proc indentation(s: string): Natural		1528
+nim	dedent	strutils.html#dedent,string,Natural	proc dedent(s: string; count: Natural = indentation(s)): string		1541
+nim	delete	strutils.html#delete,string,Slice[int]	proc delete(s: var string; slice: Slice[int])		1566
+nim	delete	strutils.html#delete,string,int,int	proc delete(s: var string; first, last: int)		1596
+nim	startsWith	strutils.html#startsWith,string,char	proc startsWith(s: string; prefix: char): bool		1620
+nim	startsWith	strutils.html#startsWith,string,string	proc startsWith(s, prefix: string): bool		1633
+nim	endsWith	strutils.html#endsWith,string,char	proc endsWith(s: string; suffix: char): bool		1649
+nim	endsWith	strutils.html#endsWith,string,string	proc endsWith(s, suffix: string): bool		1662
+nim	continuesWith	strutils.html#continuesWith,string,string,Natural	proc continuesWith(s, substr: string; start: Natural): bool		1678
+nim	removePrefix	strutils.html#removePrefix,string,set[char]	proc removePrefix(s: var string; chars: set[char] = Newlines)		1700
+nim	removePrefix	strutils.html#removePrefix,string,char	proc removePrefix(s: var string; c: char)		1722
+nim	removePrefix	strutils.html#removePrefix,string,string	proc removePrefix(s: var string; prefix: string)		1736
+nim	removeSuffix	strutils.html#removeSuffix,string,set[char]	proc removeSuffix(s: var string; chars: set[char] = Newlines)		1750
+nim	removeSuffix	strutils.html#removeSuffix,string,char	proc removeSuffix(s: var string; c: char)		1773
+nim	removeSuffix	strutils.html#removeSuffix,string,string	proc removeSuffix(s: var string; suffix: string)		1792
+nim	addSep	strutils.html#addSep,string,string,Natural	proc addSep(dest: var string; sep = ", "; startLen: Natural = 0)		1809
+nim	allCharsInSet	strutils.html#allCharsInSet,string,set[char]	proc allCharsInSet(s: string; theSet: set[char]): bool		1832
+nim	abbrev	strutils.html#abbrev,string,openArray[string]	proc abbrev(s: string; possibilities: openArray[string]): int		1842
+nim	join	strutils.html#join,openArray[string],string	proc join(a: openArray[string]; sep: string = ""): string		1864
+nim	join	strutils.html#join,openArray[T],string	proc join[T: not string](a: openArray[T]; sep: string = ""): string		1881
+nim	SkipTable	strutils.html#SkipTable	type SkipTable		1894
+nim	initSkipTable	strutils.html#initSkipTable,SkipTable,string	proc initSkipTable(a: var SkipTable; sub: string)		1896
+nim	initSkipTable	strutils.html#initSkipTable,string	proc initSkipTable(sub: string): SkipTable		1910
+nim	find	strutils.html#find,SkipTable,string,string,Natural,int	proc find(a: SkipTable; s, sub: string; start: Natural = 0; last = -1): int		1919
+nim	find	strutils.html#find,string,char,Natural,int	proc find(s: string; sub: char; start: Natural = 0; last = -1): int		1959
+nim	find	strutils.html#find,string,set[char],Natural,int	proc find(s: string; chars: set[char]; start: Natural = 0; last = -1): int		1991
+nim	find	strutils.html#find,string,string,Natural,int	proc find(s, sub: string; start: Natural = 0; last = -1): int		2017
+nim	rfind	strutils.html#rfind,string,char,Natural,int	proc rfind(s: string; sub: char; start: Natural = 0; last = -1): int		2051
+nim	rfind	strutils.html#rfind,string,set[char],Natural,int	proc rfind(s: string; chars: set[char]; start: Natural = 0; last = -1): int		2069
+nim	rfind	strutils.html#rfind,string,string,Natural,int	proc rfind(s, sub: string; start: Natural = 0; last = -1): int		2087
+nim	count	strutils.html#count,string,char	proc count(s: string; sub: char): int		2117
+nim	count	strutils.html#count,string,set[char]	proc count(s: string; subs: set[char]): int		2126
+nim	count	strutils.html#count,string,string,bool	proc count(s: string; sub: string; overlapping: bool = false): int		2137
+nim	countLines	strutils.html#countLines,string	proc countLines(s: string): int		2155
+nim	contains	strutils.html#contains,string,string	proc contains(s, sub: string): bool		2182
+nim	contains	strutils.html#contains,string,set[char]	proc contains(s: string; chars: set[char]): bool		2189
+nim	replace	strutils.html#replace,string,string,string	proc replace(s, sub: string; by = ""): string		2196
+nim	replace	strutils.html#replace,string,char,char	proc replace(s: string; sub, by: char): string		2237
+nim	replaceWord	strutils.html#replaceWord,string,string,string	proc replaceWord(s, sub: string; by = ""): string		2256
+nim	multiReplace	strutils.html#multiReplace,string,varargs[]	proc multiReplace(s: string; replacements: varargs[(string, string)]): string		2286
+nim	insertSep	strutils.html#insertSep,string,char,int	proc insertSep(s: string; sep = '_'; digits = 3): string		2335
+nim	escape	strutils.html#escape,string,string,string	proc escape(s: string; prefix = "\""; suffix = "\""): string		2369
+nim	unescape	strutils.html#unescape,string,string,string	proc unescape(s: string; prefix = "\""; suffix = "\""): string		2401
+nim	validIdentifier	strutils.html#validIdentifier,string	proc validIdentifier(s: string): bool		2444
+nim	ffDefault	strutils.html#ffDefault	FloatFormatMode.ffDefault		2464
+nim	ffDecimal	strutils.html#ffDecimal	FloatFormatMode.ffDecimal		2464
+nim	ffScientific	strutils.html#ffScientific	FloatFormatMode.ffScientific		2464
+nim	FloatFormatMode	strutils.html#FloatFormatMode	enum FloatFormatMode		2464
+nim	formatBiggestFloat	strutils.html#formatBiggestFloat,BiggestFloat,FloatFormatMode,range[],char	proc formatBiggestFloat(f: BiggestFloat; format: FloatFormatMode = ffDefault;\n                   precision: range[-1 .. 32] = 16; decimalSep = '.'): string		2470
+nim	formatFloat	strutils.html#formatFloat,float,FloatFormatMode,range[],char	proc formatFloat(f: float; format: FloatFormatMode = ffDefault;\n            precision: range[-1 .. 32] = 16; decimalSep = '.'): string		2546
+nim	trimZeros	strutils.html#trimZeros,string,char	proc trimZeros(x: var string; decimalSep = '.')		2567
+nim	bpIEC	strutils.html#bpIEC	BinaryPrefixMode.bpIEC		2588
+nim	bpColloquial	strutils.html#bpColloquial	BinaryPrefixMode.bpColloquial		2588
+nim	BinaryPrefixMode	strutils.html#BinaryPrefixMode	enum BinaryPrefixMode		2588
+nim	formatSize	strutils.html#formatSize,int64,char	proc formatSize(bytes: int64; decimalSep = '.'; prefix = bpIEC; includeSpace = false): string		2592
+nim	formatEng	strutils.html#formatEng,BiggestFloat,range[],bool,bool,string,char	proc formatEng(f: BiggestFloat; precision: range[0 .. 32] = 10; trim: bool = true;\n          siPrefix: bool = false; unit: string = ""; decimalSep = '.';\n          useUnitSpace = false): string		2648
+nim	addf	strutils.html#addf,string,string,varargs[string,]	proc addf(s: var string; formatstr: string; a: varargs[string, `$`])		2799
+nim	`%`	strutils.html#%,string,openArray[string]	proc `%`(formatstr: string; a: openArray[string]): string		2862
+nim	`%`	strutils.html#%,string,string	proc `%`(formatstr, a: string): string		2915
+nim	format	strutils.html#format,string,varargs[string,]	proc format(formatstr: string; a: varargs[string, `$`]): string		2922
+nim	strip	strutils.html#strip,string,set[char]	proc strip(s: string; leading = true; trailing = true; chars: set[char] = Whitespace): string		2934
+nim	stripLineEnd	strutils.html#stripLineEnd,string	proc stripLineEnd(s: var string)		2970
+nim	tokenize	strutils.html#tokenize.i,string,set[char]	iterator tokenize(s: string; seps: set[char] = Whitespace): tuple[token: string,\n    isSep: bool]		2996
+nim	isEmptyOrWhitespace	strutils.html#isEmptyOrWhitespace,string	proc isEmptyOrWhitespace(s: string): bool		3032
+idx	chomp	strutils.html#chomp_1	Module strutils		0
+idx	substitution	strutils.html#substitution_1	Module strutils		0
+idx	string interpolation	strutils.html#string-interpolation_1	Module strutils		0
+nimgrp	replace	strutils.html#replace-procs-all	proc		2196
+nimgrp	tohex	strutils.html#toHex-procs-all	proc		987
+nimgrp	removesuffix	strutils.html#removeSuffix-procs-all	proc		1750
+nimgrp	toupperascii	strutils.html#toUpperAscii-procs-all	proc		240
+nimgrp	endswith	strutils.html#endsWith-procs-all	proc		1649
+nimgrp	removeprefix	strutils.html#removePrefix-procs-all	proc		1700
+nimgrp	count	strutils.html#count-procs-all	proc		2117
+nimgrp	find	strutils.html#find-procs-all	proc		1919
+nimgrp	rsplit	strutils.html#rsplit-procs-all	proc		805
+nimgrp	join	strutils.html#join-procs-all	proc		1864
+nimgrp	rfind	strutils.html#rfind-procs-all	proc		2051
+nimgrp	startswith	strutils.html#startsWith-procs-all	proc		1620
+nimgrp	delete	strutils.html#delete-procs-all	proc		1566
+nimgrp	tolowerascii	strutils.html#toLowerAscii-procs-all	proc		204
+nimgrp	contains	strutils.html#contains-procs-all	proc		2182
+nimgrp	%	strutils.html#%-procs-all	proc		2862
+nimgrp	split	strutils.html#split-procs-all	proc		746
+nimgrp	repeat	strutils.html#repeat-procs-all	proc		1344
+nimgrp	parseenum	strutils.html#parseEnum-procs-all	proc		1305
+nimgrp	initskiptable	strutils.html#initSkipTable-procs-all	proc		1896
+nimgrp	split	strutils.html#split-iterators-all	iterator		421
+nimgrp	rsplit	strutils.html#rsplit-iterators-all	iterator		564

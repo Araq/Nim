@@ -1,0 +1,9 @@
+nimTitle	pipelines	pipelines.html	module pipelines		0
+nim	setPipeLinePass	pipelines.html#setPipeLinePass,ModuleGraph,PipelinePass	proc setPipeLinePass(graph: ModuleGraph; pass: PipelinePass)		17
+nim	processImplicitImports	pipelines.html#processImplicitImports,ModuleGraph,seq[string],TNodeKind,PSym,PContext,PPassContext,IdGenerator	proc processImplicitImports(graph: ModuleGraph; implicits: seq[string];\n                       nodeKind: TNodeKind; m: PSym; ctx: PContext;\n                       bModule: PPassContext; idgen: IdGenerator)		50
+nim	prePass	pipelines.html#prePass,PContext,PNode	proc prePass(c: PContext; n: PNode)		66
+nim	processPipelineModule	pipelines.html#processPipelineModule,ModuleGraph,PSym,IdGenerator,PLLStream	proc processPipelineModule(graph: ModuleGraph; module: PSym; idgen: IdGenerator;\n                      stream: PLLStream): bool		94
+nim	compilePipelineModule	pipelines.html#compilePipelineModule,ModuleGraph,FileIndex,TSymFlags,PSym	proc compilePipelineModule(graph: ModuleGraph; fileIdx: FileIndex; flags: TSymFlags;\n                      fromModule: PSym = nil): PSym		220
+nim	connectPipelineCallbacks	pipelines.html#connectPipelineCallbacks,ModuleGraph	proc connectPipelineCallbacks(graph: ModuleGraph)		282
+nim	compilePipelineSystemModule	pipelines.html#compilePipelineSystemModule,ModuleGraph	proc compilePipelineSystemModule(graph: ModuleGraph)		286
+nim	compilePipelineProject	pipelines.html#compilePipelineProject,ModuleGraph	proc compilePipelineProject(graph: ModuleGraph; projectFileIdx = InvalidFileIdx)		293

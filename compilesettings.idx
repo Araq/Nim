@@ -1,0 +1,5 @@
+nimTitle	compilesettings	compilesettings.html	module std/compilesettings		0
+nim	SingleValueSetting	compilesettings.html#SingleValueSetting	enum SingleValueSetting		20
+nim	MultipleValueSetting	compilesettings.html#MultipleValueSetting	enum MultipleValueSetting		41
+nim	querySetting	compilesettings.html#querySetting,SingleValueSetting	proc querySetting(setting: SingleValueSetting): string		50
+nim	querySettingSeq	compilesettings.html#querySettingSeq,MultipleValueSetting	proc querySettingSeq(setting: MultipleValueSetting): seq[string]		62

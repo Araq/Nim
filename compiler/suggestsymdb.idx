@@ -1,0 +1,26 @@
+nimTitle	suggestsymdb	suggestsymdb.html	module suggestsymdb		0
+nim	PackedBoolArray	suggestsymdb.html#PackedBoolArray	object PackedBoolArray		5
+nim	TinyLineInfo	suggestsymdb.html#TinyLineInfo	object TinyLineInfo		9
+nim	SymInfoPair	suggestsymdb.html#SymInfoPair	object SymInfoPair		13
+nim	SuggestFileSymbolDatabase	suggestsymdb.html#SuggestFileSymbolDatabase	object SuggestFileSymbolDatabase		20
+nim	SuggestSymbolDatabase	suggestsymdb.html#SuggestSymbolDatabase	type SuggestSymbolDatabase		30
+nim	newPackedBoolArray	suggestsymdb.html#newPackedBoolArray	proc newPackedBoolArray(): PackedBoolArray		33
+nim	low	suggestsymdb.html#low,PackedBoolArray	proc low(s: PackedBoolArray): int		39
+nim	high	suggestsymdb.html#high,PackedBoolArray	proc high(s: PackedBoolArray): int		42
+nim	`[]`	suggestsymdb.html#[],PackedBoolArray,int	proc `[]`(s: PackedBoolArray; idx: int): bool		45
+nim	`[]=`	suggestsymdb.html#[]=,PackedBoolArray,int,bool	proc `[]=`(s: var PackedBoolArray; idx: int; v: bool)		48
+nim	add	suggestsymdb.html#add,PackedBoolArray,bool	proc add(s: var PackedBoolArray; v: bool)		54
+nim	reverse	suggestsymdb.html#reverse,PackedBoolArray	proc reverse(s: var PackedBoolArray)		59
+nim	getSymInfoPair	suggestsymdb.html#getSymInfoPair,SuggestFileSymbolDatabase,int	proc getSymInfoPair(s: SuggestFileSymbolDatabase; idx: int): SymInfoPair		67
+nim	reverse	suggestsymdb.html#reverse,SuggestFileSymbolDatabase	proc reverse(s: var SuggestFileSymbolDatabase)		88
+nim	newSuggestFileSymbolDatabase	suggestsymdb.html#newSuggestFileSymbolDatabase,FileIndex,bool	proc newSuggestFileSymbolDatabase(aFileIndex: FileIndex; aTrackCaughtExceptions: bool): SuggestFileSymbolDatabase		95
+nim	exactEquals	suggestsymdb.html#exactEquals,TinyLineInfo,TinyLineInfo	proc exactEquals(a, b: TinyLineInfo): bool		107
+nim	`==`	suggestsymdb.html#==,SymInfoPair,SymInfoPair	proc `==`(a, b: SymInfoPair): bool		110
+nim	cmp	suggestsymdb.html#cmp,TinyLineInfo,TinyLineInfo	proc cmp(a: TinyLineInfo; b: TinyLineInfo): int		113
+nim	compare	suggestsymdb.html#compare,SuggestFileSymbolDatabase,int,int	proc compare(s: var SuggestFileSymbolDatabase; i, j: int): int		118
+nim	sort	suggestsymdb.html#sort,SuggestFileSymbolDatabase	proc sort(s: var SuggestFileSymbolDatabase)		184
+nim	add	suggestsymdb.html#add,SuggestFileSymbolDatabase,SymInfoPair	proc add(s: var SuggestFileSymbolDatabase; v: SymInfoPair)		188
+nim	add	suggestsymdb.html#add,SuggestSymbolDatabase,SymInfoPair,bool	proc add(s: var SuggestSymbolDatabase; v: SymInfoPair; trackCaughtExceptions: bool)		201
+nim	findSymInfoIndex	suggestsymdb.html#findSymInfoIndex,SuggestFileSymbolDatabase,TLineInfo	proc findSymInfoIndex(s: var SuggestFileSymbolDatabase; li: TLineInfo): int		204
+nimgrp	reverse	suggestsymdb.html#reverse-procs-all	proc		59
+nimgrp	add	suggestsymdb.html#add-procs-all	proc		54

@@ -1,0 +1,11 @@
+nimTitle	oscommon	oscommon.html	module std/private/oscommon		0
+nim	weirdTarget	oscommon.html#weirdTarget	const weirdTarget		13
+nim	supportedSystem	oscommon.html#supportedSystem	const supportedSystem		14
+nim	ReadDirEffect	oscommon.html#ReadDirEffect	object ReadDirEffect		18
+nim	WriteDirEffect	oscommon.html#WriteDirEffect	object WriteDirEffect		21
+nim	getSymlinkFileKind	oscommon.html#getSymlinkFileKind,string	proc getSymlinkFileKind(path: string): tuple[pc: PathComponent, isSpecial: bool]		72
+nim	tryMoveFSObject	oscommon.html#tryMoveFSObject,string,string,bool	proc tryMoveFSObject(source, dest: string; isDir: bool): bool		84
+nim	maxSymlinkLen	oscommon.html#maxSymlinkLen	const maxSymlinkLen		109
+nim	fileExists	oscommon.html#fileExists,string	proc fileExists(filename: string): bool		111
+nim	dirExists	oscommon.html#dirExists,string	proc dirExists(dir: string): bool		129
+nim	symlinkExists	oscommon.html#symlinkExists,string	proc symlinkExists(link: string): bool		146

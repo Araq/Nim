@@ -1,0 +1,10 @@
+nimTitle	strimpl	strimpl.html	module std/private/strimpl		0
+nim	toLowerAscii	strimpl.html#toLowerAscii,char	proc toLowerAscii(c: char): char		1
+nim	cmpIgnoreStyleImpl	strimpl.html#cmpIgnoreStyleImpl.t,T,T,staticbool	template cmpIgnoreStyleImpl[T: string | cstring](a, b: T; firstCharCaseSensitive: static\n    bool = false)		12
+nim	cmpIgnoreCaseImpl	strimpl.html#cmpIgnoreCaseImpl.t,T,T,staticbool	template cmpIgnoreCaseImpl[T: string | cstring](a, b: T; firstCharCaseSensitive: static\n    bool = false)		40
+nim	startsWithImpl	strimpl.html#startsWithImpl.t,T,T	template startsWithImpl[T: string | cstring](s, prefix: T)		55
+nim	endsWithImpl	strimpl.html#endsWithImpl.t,T,T	template endsWithImpl[T: string | cstring](s, suffix: T)		64
+nim	cmpNimIdentifier	strimpl.html#cmpNimIdentifier,T,T	proc cmpNimIdentifier[T: string | cstring](a, b: T): int		75
+nim	find	strimpl.html#find,cstring,char,Natural,int	proc find(s: cstring; sub: char; start: Natural = 0; last = 0): int		80
+nim	find	strimpl.html#find,cstring,cstring,Natural,int	proc find(s, sub: cstring; start: Natural = 0; last = 0): int		95
+nimgrp	find	strimpl.html#find-procs-all	proc		80

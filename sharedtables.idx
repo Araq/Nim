@@ -1,0 +1,16 @@
+nimTitle	sharedtables	sharedtables.html	module std/sharedtables		0
+nim	SharedTable	sharedtables.html#SharedTable	object SharedTable		25
+nim	defaultInitialSize	sharedtables.html#defaultInitialSize	const defaultInitialSize		15
+nim	withValue	sharedtables.html#withValue.t,SharedTable[A,B],A,untyped,untyped	template withValue[A, B](t: var SharedTable[A, B]; key: A; value, body: untyped)		63
+nim	withValue	sharedtables.html#withValue.t,SharedTable[A,B],A,untyped,untyped,untyped	template withValue[A, B](t: var SharedTable[A, B]; key: A; value, body1, body2: untyped)		97
+nim	mget	sharedtables.html#mget,SharedTable[A,B],A	proc mget[A, B](t: var SharedTable[A, B]; key: A): var B		139
+nim	mgetOrPut	sharedtables.html#mgetOrPut,SharedTable[A,B],A,B	proc mgetOrPut[A, B](t: var SharedTable[A, B]; key: A; val: B): var B		156
+nim	hasKeyOrPut	sharedtables.html#hasKeyOrPut,SharedTable[A,B],A,B	proc hasKeyOrPut[A, B](t: var SharedTable[A, B]; key: A; val: B): bool		164
+nim	withKey	sharedtables.html#withKey,SharedTable[A,B],A,proc(A,B,bool)	proc withKey[A, B](t: var SharedTable[A, B]; key: A;\n              mapper: proc (key: A; val: var B; pairExists: var bool))		173
+nim	`[]=`	sharedtables.html#[]=,SharedTable[A,B],A,B	proc `[]=`[A, B](t: var SharedTable[A, B]; key: A; val: B)		221
+nim	add	sharedtables.html#add,SharedTable[A,B],A,B	proc add[A, B](t: var SharedTable[A, B]; key: A; val: B)		226
+nim	del	sharedtables.html#del,SharedTable[A,B],A	proc del[A, B](t: var SharedTable[A, B]; key: A)		232
+nim	len	sharedtables.html#len,SharedTable[A,B]	proc len[A, B](t: var SharedTable[A, B]): int		237
+nim	init	sharedtables.html#init,SharedTable[A,B],int	proc init[A, B](t: var SharedTable[A, B]; initialSize = 32)		242
+nim	deinitSharedTable	sharedtables.html#deinitSharedTable,SharedTable[A,B]	proc deinitSharedTable[A, B](t: var SharedTable[A, B])		253
+nimgrp	withvalue	sharedtables.html#withValue-templates-all	template		63

@@ -1,0 +1,47 @@
+nimTitle	algorithm	algorithm.html	module std/algorithm		0
+nim	Descending	algorithm.html#Descending	SortOrder.Descending		52
+nim	Ascending	algorithm.html#Ascending	SortOrder.Ascending		52
+nim	SortOrder	algorithm.html#SortOrder	enum SortOrder		52
+nim	`*`	algorithm.html#*,int,SortOrder	proc `*`(x: int; order: SortOrder): int		55
+nim	fill	algorithm.html#fill,openArray[T],Natural,Natural,T	proc fill[T](a: var openArray[T]; first, last: Natural; value: T)		77
+nim	fill	algorithm.html#fill,openArray[T],T	proc fill[T](a: var openArray[T]; value: T)		90
+nim	reverse	algorithm.html#reverse,openArray[T],Natural,Natural	proc reverse[T](a: var openArray[T]; first, last: Natural)		101
+nim	reverse	algorithm.html#reverse,openArray[T]	proc reverse[T](a: var openArray[T])		123
+nim	reversed	algorithm.html#reversed,openArray[T]	proc reversed[T](a: openArray[T]): seq[T]		138
+nim	reversed	algorithm.html#reversed,openArray[T],Natural,int	proc reversed[T](a: openArray[T]; first: Natural; last: int): seq[T]		151
+nim	binarySearch	algorithm.html#binarySearch,openArray[T],K,proc(T,K)	proc binarySearch[T, K](a: openArray[T]; key: K;\n                   cmp: proc (x: T; y: K): int {.closure.}): int		160
+nim	binarySearch	algorithm.html#binarySearch,openArray[T],T	proc binarySearch[T](a: openArray[T]; key: T): int		211
+nim	lowerBound	algorithm.html#lowerBound,openArray[T],K,proc(T,K)	proc lowerBound[T, K](a: openArray[T]; key: K; cmp: proc (x: T; k: K): int {.closure.}): int		222
+nim	lowerBound	algorithm.html#lowerBound,openArray[T],T	proc lowerBound[T](a: openArray[T]; key: T): int		258
+nim	upperBound	algorithm.html#upperBound,openArray[T],K,proc(T,K)	proc upperBound[T, K](a: openArray[T]; key: K; cmp: proc (x: T; k: K): int {.closure.}): int		272
+nim	upperBound	algorithm.html#upperBound,openArray[T],T	proc upperBound[T](a: openArray[T]; key: T): int		308
+nim	sort	algorithm.html#sort,openArray[T],proc(T,T)	proc sort[T](a: var openArray[T]; cmp: proc (x, y: T): int {.closure.};\n        order = SortOrder.Ascending)		369
+nim	sort	algorithm.html#sort,openArray[T]	proc sort[T](a: var openArray[T]; order = SortOrder.Ascending)		422
+nim	sorted	algorithm.html#sorted,openArray[T],proc(T,T)	proc sorted[T](a: openArray[T]; cmp: proc (x, y: T): int {.closure.};\n          order = SortOrder.Ascending): seq[T]		432
+nim	sorted	algorithm.html#sorted,openArray[T]	proc sorted[T](a: openArray[T]; order = SortOrder.Ascending): seq[T]		454
+nim	sortedByIt	algorithm.html#sortedByIt.t,untyped,untyped	template sortedByIt(seq1, op: untyped): untyped		472
+nim	isSorted	algorithm.html#isSorted,openArray[T],proc(T,T)	proc isSorted[T](a: openArray[T]; cmp: proc (x, y: T): int {.closure.};\n            order = SortOrder.Ascending): bool		508
+nim	isSorted	algorithm.html#isSorted,openArray[T]	proc isSorted[T](a: openArray[T]; order = SortOrder.Ascending): bool		535
+nim	merge	algorithm.html#merge,seq[T],openArray[T],openArray[T],proc(T,T)	proc merge[T](result: var seq[T]; x, y: openArray[T];\n         cmp: proc (x, y: T): int {.closure.})		555
+nim	merge	algorithm.html#merge,seq[T],openArray[T],openArray[T]	proc merge[T](result: var seq[T]; x, y: openArray[T])		632
+nim	product	algorithm.html#product,openArray[seq[T]]	proc product[T](x: openArray[seq[T]]): seq[seq[T]]		647
+nim	nextPermutation	algorithm.html#nextPermutation,openArray[T]	proc nextPermutation[T](x: var openArray[T]): bool		684
+nim	prevPermutation	algorithm.html#prevPermutation,openArray[T]	proc prevPermutation[T](x: var openArray[T]): bool		724
+nim	rotateLeft	algorithm.html#rotateLeft,openArray[T],HSlice[int,int],int	proc rotateLeft[T](arg: var openArray[T]; slice: HSlice[int, int]; dist: int): int		813
+nim	rotateLeft	algorithm.html#rotateLeft,openArray[T],int	proc rotateLeft[T](arg: var openArray[T]; dist: int): int		851
+nim	rotatedLeft	algorithm.html#rotatedLeft,openArray[T],HSlice[int,int],int	proc rotatedLeft[T](arg: openArray[T]; slice: HSlice[int, int]; dist: int): seq[T]		871
+nim	rotatedLeft	algorithm.html#rotatedLeft,openArray[T],int	proc rotatedLeft[T](arg: openArray[T]; dist: int): seq[T]		901
+heading	Basic usage	algorithm.html#basic-usage	 Basic usage		0
+heading	See also	algorithm.html#see-also	 See also		0
+nimgrp	rotateleft	algorithm.html#rotateLeft-procs-all	proc		813
+nimgrp	sort	algorithm.html#sort-procs-all	proc		369
+nimgrp	issorted	algorithm.html#isSorted-procs-all	proc		508
+nimgrp	lowerbound	algorithm.html#lowerBound-procs-all	proc		222
+nimgrp	reverse	algorithm.html#reverse-procs-all	proc		101
+nimgrp	sorted	algorithm.html#sorted-procs-all	proc		432
+nimgrp	reversed	algorithm.html#reversed-procs-all	proc		138
+nimgrp	binarysearch	algorithm.html#binarySearch-procs-all	proc		160
+nimgrp	merge	algorithm.html#merge-procs-all	proc		555
+nimgrp	rotatedleft	algorithm.html#rotatedLeft-procs-all	proc		871
+nimgrp	fill	algorithm.html#fill-procs-all	proc		77
+nimgrp	upperbound	algorithm.html#upperBound-procs-all	proc		272

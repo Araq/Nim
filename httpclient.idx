@@ -1,0 +1,86 @@
+nimTitle	httpclient	httpclient.html	module std/httpclient		0
+nim	Response	httpclient.html#Response	type Response		275
+nim	AsyncResponse	httpclient.html#AsyncResponse	type AsyncResponse		282
+nim	code	httpclient.html#code	proc code(response: Response | AsyncResponse): HttpCode		289
+nim	contentType	httpclient.html#contentType	proc contentType(response: Response | AsyncResponse): string		297
+nim	contentLength	httpclient.html#contentLength	proc contentLength(response: Response | AsyncResponse): int		303
+nim	lastModified	httpclient.html#lastModified	proc lastModified(response: Response | AsyncResponse): DateTime		313
+nim	body	httpclient.html#body,Response	proc body(response: Response): string		323
+nim	body	httpclient.html#body,AsyncResponse	proc body(response: AsyncResponse): Future[string]		331
+nim	Proxy	httpclient.html#Proxy	type Proxy		339
+nim	MultipartEntries	httpclient.html#MultipartEntries	type MultipartEntries		352
+nim	MultipartData	httpclient.html#MultipartData	type MultipartData		353
+nim	ProtocolError	httpclient.html#ProtocolError	object ProtocolError		356
+nim	HttpRequestError	httpclient.html#HttpRequestError	object HttpRequestError		360
+nim	defUserAgent	httpclient.html#defUserAgent	const defUserAgent		364
+nim	newProxy	httpclient.html#newProxy,string,string	proc newProxy(url: string; auth = ""): Proxy		390
+nim	newProxy	httpclient.html#newProxy,Uri,string	proc newProxy(url: Uri; auth = ""): Proxy		394
+nim	newMultipartData	httpclient.html#newMultipartData	proc newMultipartData(): MultipartData		398
+nim	`$`	httpclient.html#$,MultipartData	proc `$`(data: MultipartData): string		402
+nim	add	httpclient.html#add,MultipartData,string,string,string,string	proc add(p: MultipartData; name, content: string; filename: string = "";\n    contentType: string = ""; useStream = true)		415
+nim	add	httpclient.html#add,MultipartData,MultipartEntries	proc add(p: MultipartData; xs: MultipartEntries): MultipartData		443
+nim	newMultipartData	httpclient.html#newMultipartData,MultipartEntries	proc newMultipartData(xs: MultipartEntries): MultipartData		455
+nim	addFiles	httpclient.html#addFiles,MultipartData,openArray[tuple[string,string]]	proc addFiles(p: MultipartData; xs: openArray[tuple[name, file: string]];\n         mimeDb = newMimetypes(); useStream = true): MultipartData		466
+nim	`[]=`	httpclient.html#[]=,MultipartData,string,string	proc `[]=`(p: MultipartData; name, content: string)		488
+nim	`[]=`	httpclient.html#[]=,MultipartData,string,tuple[string,string,string]	proc `[]=`(p: MultipartData; name: string;\n      file: tuple[name, contentType, content: string])		497
+nim	ProgressChangedProc	httpclient.html#ProgressChangedProc	type ProgressChangedProc		588
+nim	HttpClientBase	httpclient.html#HttpClientBase	type HttpClientBase		592
+nim	HttpClient	httpclient.html#HttpClient	type HttpClient		620
+nim	newHttpClient	httpclient.html#newHttpClient,int,Proxy,int	proc newHttpClient(userAgent = defUserAgent; maxRedirects = 5;\n              sslContext = getDefaultSSL(); proxy: Proxy = nil; timeout = -1;\n              headers = newHttpHeaders()): HttpClient		622
+nim	AsyncHttpClient	httpclient.html#AsyncHttpClient	type AsyncHttpClient		663
+nim	newAsyncHttpClient	httpclient.html#newAsyncHttpClient,int,Proxy	proc newAsyncHttpClient(userAgent = defUserAgent; maxRedirects = 5;\n                   sslContext = getDefaultSSL(); proxy: Proxy = nil;\n                   headers = newHttpHeaders()): AsyncHttpClient		665
+nim	close	httpclient.html#close	proc close(client: HttpClient | AsyncHttpClient)		705
+nim	getSocket	httpclient.html#getSocket,HttpClient	proc getSocket(client: HttpClient): Socket		711
+nim	getSocket	httpclient.html#getSocket,AsyncHttpClient	proc getSocket(client: AsyncHttpClient): AsyncSocket		723
+nim	request	httpclient.html#request,AsyncHttpClient,,string,HttpHeaders,MultipartData	proc request(client: AsyncHttpClient; url: Uri | string;\n        httpMethod: HttpMethod | string = HttpGet; body = "";\n        headers: HttpHeaders = nil; multipart: MultipartData = nil): Future[\n    AsyncResponse]		1131
+nim	request	httpclient.html#request,HttpClient,,string,HttpHeaders,MultipartData	proc request(client: HttpClient; url: Uri | string;\n        httpMethod: HttpMethod | string = HttpGet; body = "";\n        headers: HttpHeaders = nil; multipart: MultipartData = nil): Response		1135
+nim	head	httpclient.html#head,AsyncHttpClient,	proc head(client: AsyncHttpClient; url: Uri | string): Future[AsyncResponse]		1243
+nim	head	httpclient.html#head,HttpClient,	proc head(client: HttpClient; url: Uri | string): Response		1244
+nim	get	httpclient.html#get,AsyncHttpClient,	proc get(client: AsyncHttpClient; url: Uri | string): Future[AsyncResponse]		1250
+nim	get	httpclient.html#get,HttpClient,	proc get(client: HttpClient; url: Uri | string): Response		1251
+nim	getContent	httpclient.html#getContent,AsyncHttpClient,	proc getContent(client: AsyncHttpClient; url: Uri | string): Future[string]		1257
+nim	getContent	httpclient.html#getContent,HttpClient,	proc getContent(client: HttpClient; url: Uri | string): string		1258
+nim	delete	httpclient.html#delete,AsyncHttpClient,	proc delete(client: AsyncHttpClient; url: Uri | string): Future[AsyncResponse]		1263
+nim	delete	httpclient.html#delete,HttpClient,	proc delete(client: HttpClient; url: Uri | string): Response		1264
+nim	deleteContent	httpclient.html#deleteContent,AsyncHttpClient,	proc deleteContent(client: AsyncHttpClient; url: Uri | string): Future[string]		1269
+nim	deleteContent	httpclient.html#deleteContent,HttpClient,	proc deleteContent(client: HttpClient; url: Uri | string): string		1270
+nim	post	httpclient.html#post,AsyncHttpClient,,string,MultipartData	proc post(client: AsyncHttpClient; url: Uri | string; body = "";\n     multipart: MultipartData = nil): Future[AsyncResponse]		1275
+nim	post	httpclient.html#post,HttpClient,,string,MultipartData	proc post(client: HttpClient; url: Uri | string; body = "";\n     multipart: MultipartData = nil): Response		1277
+nim	postContent	httpclient.html#postContent,AsyncHttpClient,,string,MultipartData	proc postContent(client: AsyncHttpClient; url: Uri | string; body = "";\n            multipart: MultipartData = nil): Future[string]		1282
+nim	postContent	httpclient.html#postContent,HttpClient,,string,MultipartData	proc postContent(client: HttpClient; url: Uri | string; body = "";\n            multipart: MultipartData = nil): string		1284
+nim	put	httpclient.html#put,AsyncHttpClient,,string,MultipartData	proc put(client: AsyncHttpClient; url: Uri | string; body = "";\n    multipart: MultipartData = nil): Future[AsyncResponse]		1289
+nim	put	httpclient.html#put,HttpClient,,string,MultipartData	proc put(client: HttpClient; url: Uri | string; body = "";\n    multipart: MultipartData = nil): Response		1291
+nim	putContent	httpclient.html#putContent,AsyncHttpClient,,string,MultipartData	proc putContent(client: AsyncHttpClient; url: Uri | string; body = "";\n           multipart: MultipartData = nil): Future[string]		1296
+nim	putContent	httpclient.html#putContent,HttpClient,,string,MultipartData	proc putContent(client: HttpClient; url: Uri | string; body = "";\n           multipart: MultipartData = nil): string		1297
+nim	patch	httpclient.html#patch,AsyncHttpClient,,string,MultipartData	proc patch(client: AsyncHttpClient; url: Uri | string; body = "";\n      multipart: MultipartData = nil): Future[AsyncResponse]		1302
+nim	patch	httpclient.html#patch,HttpClient,,string,MultipartData	proc patch(client: HttpClient; url: Uri | string; body = "";\n      multipart: MultipartData = nil): Response		1304
+nim	patchContent	httpclient.html#patchContent,AsyncHttpClient,,string,MultipartData	proc patchContent(client: AsyncHttpClient; url: Uri | string; body = "";\n             multipart: MultipartData = nil): Future[string]		1309
+nim	patchContent	httpclient.html#patchContent,HttpClient,,string,MultipartData	proc patchContent(client: HttpClient; url: Uri | string; body = "";\n             multipart: MultipartData = nil): string		1311
+nim	downloadFile	httpclient.html#downloadFile,HttpClient,,string	proc downloadFile(client: HttpClient; url: Uri | string; filename: string)		1316
+nim	downloadFile	httpclient.html#downloadFile,AsyncHttpClient,,string	proc downloadFile(client: AsyncHttpClient; url: Uri | string; filename: string): Future[\n    void]		1354
+heading	Retrieving a website	httpclient.html#retrieving-a-website	 Retrieving a website		0
+heading	Using HTTP POST	httpclient.html#using-http-post	 Using HTTP POST		0
+heading	Progress reporting	httpclient.html#progress-reporting	 Progress reporting		0
+heading	SSL/TLS support	httpclient.html#sslslashtls-support	 SSL/TLS support		0
+heading	Timeouts	httpclient.html#timeouts	 Timeouts		0
+heading	Proxy	httpclient.html#proxy	 Proxy		0
+heading	Redirects	httpclient.html#redirects	 Redirects		0
+nimgrp	body	httpclient.html#body-procs-all	proc		323
+nimgrp	request	httpclient.html#request-procs-all	proc		1131
+nimgrp	getsocket	httpclient.html#getSocket-procs-all	proc		711
+nimgrp	postcontent	httpclient.html#postContent-procs-all	proc		1282
+nimgrp	newmultipartdata	httpclient.html#newMultipartData-procs-all	proc		398
+nimgrp	patchcontent	httpclient.html#patchContent-procs-all	proc		1309
+nimgrp	[]=	httpclient.html#[]=-procs-all	proc		488
+nimgrp	putcontent	httpclient.html#putContent-procs-all	proc		1296
+nimgrp	delete	httpclient.html#delete-procs-all	proc		1263
+nimgrp	getcontent	httpclient.html#getContent-procs-all	proc		1257
+nimgrp	post	httpclient.html#post-procs-all	proc		1275
+nimgrp	get	httpclient.html#get-procs-all	proc		1250
+nimgrp	downloadfile	httpclient.html#downloadFile-procs-all	proc		1316
+nimgrp	add	httpclient.html#add-procs-all	proc		415
+nimgrp	deletecontent	httpclient.html#deleteContent-procs-all	proc		1269
+nimgrp	newproxy	httpclient.html#newProxy-procs-all	proc		390
+nimgrp	head	httpclient.html#head-procs-all	proc		1243
+nimgrp	put	httpclient.html#put-procs-all	proc		1289
+nimgrp	patch	httpclient.html#patch-procs-all	proc		1302

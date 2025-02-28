@@ -1,0 +1,11 @@
+nimTitle	socketstreams	socketstreams.html	module std/socketstreams		0
+nim	ReadSocketStream	socketstreams.html#ReadSocketStream	type ReadSocketStream		70
+nim	ReadSocketStreamObj	socketstreams.html#ReadSocketStreamObj	object ReadSocketStreamObj		71
+nim	WriteSocketStream	socketstreams.html#WriteSocketStream	type WriteSocketStream		75
+nim	WriteSocketStreamObj	socketstreams.html#WriteSocketStreamObj	object WriteSocketStreamObj		76
+nim	newReadSocketStream	socketstreams.html#newReadSocketStream,Socket	proc newReadSocketStream(s: Socket): owned ReadSocketStream		155
+nim	resetStream	socketstreams.html#resetStream,ReadSocketStream	proc resetStream(s: ReadSocketStream)		165
+nim	newWriteSocketStream	socketstreams.html#newWriteSocketStream,Socket	proc newWriteSocketStream(s: Socket): owned WriteSocketStream		169
+nim	resetStream	socketstreams.html#resetStream,WriteSocketStream	proc resetStream(s: WriteSocketStream)		180
+heading	Examples	socketstreams.html#examples	 Examples		0
+nimgrp	resetstream	socketstreams.html#resetStream-procs-all	proc		165

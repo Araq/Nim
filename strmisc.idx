@@ -1,0 +1,4 @@
+nimTitle	strmisc	strmisc.html	module std/strmisc		0
+nim	expandTabs	strmisc.html#expandTabs,string,int	proc expandTabs(s: string; tabSize: int = 8): string		15
+nim	partition	strmisc.html#partition,string,string,bool	proc partition(s: string; sep: string; right: bool = false): (string, string, string)		48
+nim	rpartition	strmisc.html#rpartition,string,string	proc rpartition(s: string; sep: string): (string, string, string)		70

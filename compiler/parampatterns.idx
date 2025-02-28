@@ -1,0 +1,25 @@
+nimTitle	parampatterns	parampatterns.html	module parampatterns		0
+nim	aqNone	parampatterns.html#aqNone	TAliasRequest.aqNone		22
+nim	aqShouldAlias	parampatterns.html#aqShouldAlias	TAliasRequest.aqShouldAlias		22
+nim	aqNoAlias	parampatterns.html#aqNoAlias	TAliasRequest.aqNoAlias		22
+nim	TAliasRequest	parampatterns.html#TAliasRequest	enum TAliasRequest		22
+nim	MaxStackSize	parampatterns.html#MaxStackSize	const MaxStackSize		45
+nim	whichAlias	parampatterns.html#whichAlias,PSym	proc whichAlias(p: PSym): TAliasRequest		53
+nim	semNodeKindConstraints	parampatterns.html#semNodeKindConstraints,PNode,ConfigRef,Natural	proc semNodeKindConstraints(n: PNode; conf: ConfigRef; start: Natural): PNode		120
+nim	seUnknown	parampatterns.html#seUnknown	TSideEffectAnalysis.seUnknown		136
+nim	seSideEffect	parampatterns.html#seSideEffect	TSideEffectAnalysis.seSideEffect		136
+nim	seNoSideEffect	parampatterns.html#seNoSideEffect	TSideEffectAnalysis.seNoSideEffect		136
+nim	TSideEffectAnalysis	parampatterns.html#TSideEffectAnalysis	enum TSideEffectAnalysis		136
+nim	checkForSideEffects	parampatterns.html#checkForSideEffects,PNode	proc checkForSideEffects(n: PNode): TSideEffectAnalysis		139
+nim	arNone	parampatterns.html#arNone	TAssignableResult.arNone		178
+nim	arLValue	parampatterns.html#arLValue	TAssignableResult.arLValue		178
+nim	arLocalLValue	parampatterns.html#arLocalLValue	TAssignableResult.arLocalLValue		178
+nim	arDiscriminant	parampatterns.html#arDiscriminant	TAssignableResult.arDiscriminant		178
+nim	arAddressableConst	parampatterns.html#arAddressableConst	TAssignableResult.arAddressableConst		178
+nim	arLentValue	parampatterns.html#arLentValue	TAssignableResult.arLentValue		178
+nim	arStrange	parampatterns.html#arStrange	TAssignableResult.arStrange		178
+nim	TAssignableResult	parampatterns.html#TAssignableResult	enum TAssignableResult		178
+nim	exprRoot	parampatterns.html#exprRoot,PNode	proc exprRoot(n: PNode; allowCalls = true): PSym		188
+nim	isAssignable	parampatterns.html#isAssignable,PSym,PNode	proc isAssignable(owner: PSym; n: PNode): TAssignableResult		219
+nim	isLValue	parampatterns.html#isLValue,PNode	proc isLValue(n: PNode): bool		314
+nim	matchNodeKinds	parampatterns.html#matchNodeKinds,PNode,PNode	proc matchNodeKinds(p, n: PNode): bool		317

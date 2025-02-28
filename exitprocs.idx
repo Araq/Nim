@@ -1,0 +1,6 @@
+nimTitle	exitprocs	exitprocs.html	module std/exitprocs		0
+nim	addExitProc	exitprocs.html#addExitProc,proc)	proc addExitProc(cl: proc () {.closure.})		56
+nim	addExitProc	exitprocs.html#addExitProc,proc)_2	proc addExitProc(cl: proc () {.noconv.})		66
+nim	getProgramResult	exitprocs.html#getProgramResult	proc getProgramResult(): int		73
+nim	setProgramResult	exitprocs.html#setProgramResult,int	proc setProgramResult(a: int)		81
+nimgrp	addexitproc	exitprocs.html#addExitProc-procs-all	proc		56

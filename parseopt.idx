@@ -1,0 +1,20 @@
+nimTitle	parseopt	parseopt.html	module std/parseopt		0
+nim	cmdEnd	parseopt.html#cmdEnd	CmdLineKind.cmdEnd		183
+nim	cmdArgument	parseopt.html#cmdArgument	CmdLineKind.cmdArgument		183
+nim	cmdLongOption	parseopt.html#cmdLongOption	CmdLineKind.cmdLongOption		183
+nim	cmdShortOption	parseopt.html#cmdShortOption	CmdLineKind.cmdShortOption		183
+nim	CmdLineKind	parseopt.html#CmdLineKind	enum CmdLineKind		183
+nim	OptParser	parseopt.html#OptParser	object OptParser		188
+nim	initOptParser	parseopt.html#initOptParser,seq[string],set[char],seq[string]	proc initOptParser(cmdline: seq[string]; shortNoVal: set[char] = {};\n              longNoVal: seq[string] = @[]; allowWhitespaceAfterColon = true): OptParser		221
+nim	initOptParser	parseopt.html#initOptParser,string,set[char],seq[string]	proc initOptParser(cmdline = ""; shortNoVal: set[char] = {};\n              longNoVal: seq[string] = @[]; allowWhitespaceAfterColon = true): OptParser		273
+nim	next	parseopt.html#next,OptParser	proc next(p: var OptParser)		325
+nim	cmdLineRest	parseopt.html#cmdLineRest,OptParser	proc cmdLineRest(p: OptParser): string		396
+nim	remainingArgs	parseopt.html#remainingArgs,OptParser	proc remainingArgs(p: OptParser): seq[string]		413
+nim	getopt	parseopt.html#getopt.i,OptParser	iterator getopt(p: var OptParser): tuple[kind: CmdLineKind, key, val: string]		431
+nim	getopt	parseopt.html#getopt.i,seq[string],set[char],seq[string]	iterator getopt(cmdline: seq[string] = @[]; shortNoVal: set[char] = {};\n       longNoVal: seq[string] = @[]): tuple[kind: CmdLineKind, key, val: string]		472
+heading	Supported Syntax	parseopt.html#supported-syntax	 Supported Syntax		0
+heading	Parsing	parseopt.html#parsing	 Parsing		0
+heading	nimshortNoVal and nimlongNoVal	parseopt.html#nimshortnoval-and-nimlongnoval	 <tt class="docutils literal"><span class="pre"><span class="Identifier">shortNoVal</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Identifier">longNoVal</span></span></tt>		0
+heading	See also	parseopt.html#see-also	 See also		0
+nimgrp	initoptparser	parseopt.html#initOptParser-procs-all	proc		221
+nimgrp	getopt	parseopt.html#getopt-iterators-all	iterator		431

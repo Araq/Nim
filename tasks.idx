@@ -1,0 +1,6 @@
+nimTitle	tasks	tasks.html	module std/tasks		0
+nim	Task	tasks.html#Task	object Task		63
+nim	`=copy`	tasks.html#=copy,Task,Task	proc `=copy`(x: var Task; y: Task)		69
+nim	`=destroy`	tasks.html#=destroy,Task	proc `=destroy`(t: Task)		73
+nim	invoke	tasks.html#invoke,Task,pointer	proc invoke(task: Task; res: pointer = nil)		87
+nim	toTask	tasks.html#toTask.m	macro toTask(e: typed{nkCall | nkInfix | nkPrefix | nkPostfix | nkCommand |\n    nkCallStrLit}): Task		126

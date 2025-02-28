@@ -1,0 +1,11 @@
+nimTitle	sugar	sugar.html	module std/sugar		0
+nim	`=>`	sugar.html#=>.m,untyped,untyped	macro `=>`(p, b: untyped): untyped		55
+nim	`->`	sugar.html#->.m,untyped,untyped	macro `->`(p, b: untyped): untyped		136
+nim	dump	sugar.html#dump.m,untyped	macro dump(x: untyped): untyped		155
+nim	dumpToString	sugar.html#dumpToString.m,untyped	macro dumpToString(x: untyped): string		183
+nim	capture	sugar.html#capture.m,varargs[typed],untyped	macro capture(locals: varargs[typed]; body: untyped): untyped		216
+nim	dup	sugar.html#dup.m,T,varargs[untyped]	macro dup[T](arg: T; calls: varargs[untyped]): T		254
+nim	collect	sugar.html#collect.m,untyped,untyped	macro collect(init, body: untyped): untyped		366
+nim	collect	sugar.html#collect.m,untyped	macro collect(body: untyped): untyped		403
+idx	in-place	sugar.html#inminusplace_1	Module sugar		0
+nimgrp	collect	sugar.html#collect-macros-all	macro		366

@@ -1,0 +1,47 @@
+nimTitle	dragonbox	dragonbox.html	module std/private/dragonbox		0
+nim	dtoaMinBufferLength	dragonbox.html#dtoaMinBufferLength	const dtoaMinBufferLength		31
+nim	dragonbox_Assert	dragonbox.html#dragonbox_Assert.t,untyped	template dragonbox_Assert(x: untyped): untyped		41
+nim	ValueType	dragonbox.html#ValueType	type ValueType		49
+nim	BitsType	dragonbox.html#BitsType	type BitsType		50
+nim	Double	dragonbox.html#Double	object Double		53
+nim	significandSize	dragonbox.html#significandSize	const significandSize		57
+nim	exponentBias	dragonbox.html#exponentBias	const exponentBias		61
+nim	maxIeeeExponent	dragonbox.html#maxIeeeExponent	const maxIeeeExponent		64
+nim	hiddenBit	dragonbox.html#hiddenBit	const hiddenBit		67
+nim	significandMask	dragonbox.html#significandMask	const significandMask		70
+nim	exponentMask	dragonbox.html#exponentMask	const exponentMask		73
+nim	signMask	dragonbox.html#signMask	const signMask		76
+nim	constructDouble	dragonbox.html#constructDouble,BitsType	proc constructDouble(bits: BitsType): Double		78
+nim	constructDouble	dragonbox.html#constructDouble,ValueType	proc constructDouble(value: ValueType): Double		81
+nim	physicalSignificand	dragonbox.html#physicalSignificand,Double	proc physicalSignificand(this: Double): BitsType		84
+nim	physicalExponent	dragonbox.html#physicalExponent,Double	proc physicalExponent(this: Double): BitsType		87
+nim	isFinite	dragonbox.html#isFinite,Double	proc isFinite(this: Double): bool		90
+nim	isInf	dragonbox.html#isInf,Double	proc isInf(this: Double): bool		93
+nim	isNaN	dragonbox.html#isNaN,Double	proc isNaN(this: Double): bool		97
+nim	isZero	dragonbox.html#isZero,Double	proc isZero(this: Double): bool		101
+nim	signBit	dragonbox.html#signBit,Double	proc signBit(this: Double): int		104
+nim	floorDivPow2	dragonbox.html#floorDivPow2,int32,int32	proc floorDivPow2(x: int32; n: int32): int32		117
+nim	floorLog2Pow10	dragonbox.html#floorLog2Pow10,int32	proc floorLog2Pow10(e: int32): int32		120
+nim	floorLog10Pow2	dragonbox.html#floorLog10Pow2,int32	proc floorLog10Pow2(e: int32): int32		125
+nim	floorLog10ThreeQuartersPow2	dragonbox.html#floorLog10ThreeQuartersPow2,int32	proc floorLog10ThreeQuartersPow2(e: int32): int32		130
+nim	uint64x2	dragonbox.html#uint64x2	object uint64x2		140
+nim	computePow10	dragonbox.html#computePow10,int32	proc computePow10(k: int32): uint64x2		145
+nim	multipleOfPow2	dragonbox.html#multipleOfPow2,uint64,int32	proc multipleOfPow2(value: uint64; e2: int32): bool		777
+nim	multipleOfPow5	dragonbox.html#multipleOfPow5,uint64,int32	proc multipleOfPow5(value: uint64; e5: int32): bool		783
+nim	FloatingDecimal64	dragonbox.html#FloatingDecimal64	object FloatingDecimal64		821
+nim	toDecimal64AsymmetricInterval	dragonbox.html#toDecimal64AsymmetricInterval,int32	proc toDecimal64AsymmetricInterval(e2: int32): FloatingDecimal64		826
+nim	computeDelta	dragonbox.html#computeDelta,uint64x2,int32	proc computeDelta(pow10: uint64x2; betaMinus1: int32): uint32		859
+nim	lo32	dragonbox.html#lo32,uint64	proc lo32(x: uint64): uint32		882
+nim	hi32	dragonbox.html#hi32,uint64	proc hi32(x: uint64): uint32		885
+nim	mul128	dragonbox.html#mul128,uint64,uint64	proc mul128(a: uint64; b: uint64): uint64x2		888
+nim	mulShift	dragonbox.html#mulShift,uint64,uint64x2	proc mulShift(x: uint64; y: uint64x2): uint64		901
+nim	mulParity	dragonbox.html#mulParity,uint64,uint64x2,int32	proc mulParity(twoF: uint64; pow10: uint64x2; betaMinus1: int32): bool		909
+nim	isIntegralEndpoint	dragonbox.html#isIntegralEndpoint,uint64,int32,int32	proc isIntegralEndpoint(twoF: uint64; e2: int32; minusK: int32): bool		918
+nim	isIntegralMidpoint	dragonbox.html#isIntegralMidpoint,uint64,int32,int32	proc isIntegralMidpoint(twoF: uint64; e2: int32; minusK: int32): bool		927
+nim	toDecimal64	dragonbox.html#toDecimal64,uint64,uint64	proc toDecimal64(ieeeSignificand: uint64; ieeeExponent: uint64): FloatingDecimal64		936
+nim	utoa8DigitsSkipTrailingZeros	dragonbox.html#utoa8DigitsSkipTrailingZeros,openArray[char],int,uint32	proc utoa8DigitsSkipTrailingZeros(buf: var openArray[char]; pos: int; digits: uint32): int		1055
+nim	printDecimalDigitsBackwards	dragonbox.html#printDecimalDigitsBackwards,openArray[char],int,uint64	proc printDecimalDigitsBackwards(buf: var openArray[char]; pos: int; output64: uint64): int		1073
+nim	decimalLength	dragonbox.html#decimalLength,uint64	proc decimalLength(v: uint64): int		1149
+nim	formatDigits	dragonbox.html#formatDigits,openArray[char],T,uint64,int	proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint64;\n                         decimalExponent: int; forceTrailingDotZero = false): int		1189
+nim	toChars	dragonbox.html#toChars,openArray[char],float	proc toChars(buffer: var openArray[char]; v: float; forceTrailingDotZero = false): int		1282
+nimgrp	constructdouble	dragonbox.html#constructDouble-procs-all	proc		78

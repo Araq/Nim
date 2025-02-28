@@ -1,0 +1,4 @@
+nimTitle	stackframes	stackframes.html	module std/stackframes		0
+nim	procName	stackframes.html#procName.t	template procName(): string		4
+nim	getPFrame	stackframes.html#getPFrame.t	template getPFrame(): PFrame		11
+nim	setFrameMsg	stackframes.html#setFrameMsg.t,string,string	template setFrameMsg(msg: string; prefix = " ")		19

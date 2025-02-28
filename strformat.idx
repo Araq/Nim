@@ -1,0 +1,26 @@
+nimTitle	strformat	strformat.html	module std/strformat		0
+nim	alignString	strformat.html#alignString,string,int,char,char	proc alignString(s: string; minimumWidth: int; align = '\x00'; fill = ' '): string		339
+nim	StandardFormatSpecifier	strformat.html#StandardFormatSpecifier	object StandardFormatSpecifier		359
+nim	parseStandardFormatSpecifier	strformat.html#parseStandardFormatSpecifier,string,int	proc parseStandardFormatSpecifier(s: string; start = 0; ignoreUnknownSuffix = false): StandardFormatSpecifier		432
+nim	formatValue	strformat.html#formatValue,string,T,staticstring	proc formatValue[T: SomeInteger](result: var string; value: T;\n                            specifier: static string)		493
+nim	formatValue	strformat.html#formatValue,string,T,string	proc formatValue[T: SomeInteger](result: var string; value: T; specifier: string)		507
+nim	formatValue	strformat.html#formatValue,string,SomeFloat,staticstring	proc formatValue(result: var string; value: SomeFloat; specifier: static string)		569
+nim	formatValue	strformat.html#formatValue,string,SomeFloat,string	proc formatValue(result: var string; value: SomeFloat; specifier: string)		582
+nim	formatValue	strformat.html#formatValue,string,string,staticstring	proc formatValue(result: var string; value: string; specifier: static string)		595
+nim	formatValue	strformat.html#formatValue,string,string,string	proc formatValue(result: var string; value: string; specifier: string)		613
+nim	fmt	strformat.html#fmt.t,staticstring,staticchar,staticchar	template fmt(pattern: static string; openChar: static char; closeChar: static char): string		753
+nim	fmt	strformat.html#fmt.t,staticstring	template fmt(pattern: static string): untyped		772
+nim	`&`	strformat.html#&.t	template `&`(pattern: string{lit}): string		776
+idx	interpolation	strformat.html#interpolation_1	Module strformat		0
+idx	format	strformat.html#format_1	Module strformat		0
+heading	nimfmt vs. nim&	strformat.html#nimfmt-vsdot-nimamp	 <tt class="docutils literal"><span class="pre"><span class="Identifier">fmt</span></span></tt> vs. <tt class="docutils literal"><span class="pre"><span class="Operator">&amp;</span></span></tt>		0
+heading	Formatting strings	strformat.html#formatting-strings	 Formatting strings		0
+heading	Formatting floats	strformat.html#formatting-floats	 Formatting floats		0
+heading	Expressions	strformat.html#expressions	 Expressions		0
+heading	Debugging strings	strformat.html#debugging-strings	 Debugging strings		0
+heading	Implementation details	strformat.html#implementation-details	 Implementation details		0
+heading	Standard format specifiers for strings, integers and floats	strformat.html#standard-format-specifiers-for-strings-integers-and-floats	 Standard format specifiers for strings, integers and floats		0
+heading	Limitations	strformat.html#limitations	 Limitations		0
+heading	Future directions	strformat.html#future-directions	 Future directions		0
+nimgrp	formatvalue	strformat.html#formatValue-procs-all	proc		493
+nimgrp	fmt	strformat.html#fmt-templates-all	template		753

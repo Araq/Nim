@@ -1,0 +1,3 @@
+nimTitle	patterns	patterns.html	module patterns		0
+nim	sameTrees	patterns.html#sameTrees,PNode,PNode	proc sameTrees(a, b: PNode): bool		55
+nim	applyRule	patterns.html#applyRule,PContext,PSym,PNode	proc applyRule(c: PContext; s: PSym; n: PNode): PNode		277

@@ -1,0 +1,5 @@
+nimTitle	treetab	treetab.html	module treetab		0
+nim	hashTree	treetab.html#hashTree,PNode	proc hashTree(n: PNode): Hash		19
+nim	nodeTableGet	treetab.html#nodeTableGet,TNodeTable,PNode	proc nodeTableGet(t: TNodeTable; key: PNode): int		75
+nim	nodeTablePut	treetab.html#nodeTablePut,TNodeTable,PNode,int	proc nodeTablePut(t: var TNodeTable; key: PNode; val: int)		89
+nim	nodeTableTestOrSet	treetab.html#nodeTableTestOrSet,TNodeTable,PNode,int	proc nodeTableTestOrSet(t: var TNodeTable; key: PNode; val: int): int		105

@@ -1,0 +1,6 @@
+nimTitle	condsyms	condsyms.html	module condsyms		0
+nim	defineSymbol	condsyms.html#defineSymbol,StringTableRef,string,string	proc defineSymbol(symbols: StringTableRef; symbol: string; value: string = "true")		18
+nim	undefSymbol	condsyms.html#undefSymbol,StringTableRef,string	proc undefSymbol(symbols: StringTableRef; symbol: string)		21
+nim	definedSymbolNames	condsyms.html#definedSymbolNames.i,StringTableRef	iterator definedSymbolNames(symbols: StringTableRef): string		27
+nim	countDefinedSymbols	condsyms.html#countDefinedSymbols,StringTableRef	proc countDefinedSymbols(symbols: StringTableRef): int		31
+nim	initDefines	condsyms.html#initDefines,StringTableRef	proc initDefines(symbols: StringTableRef)		34

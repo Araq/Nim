@@ -1,0 +1,8 @@
+nimTitle	rlocks	rlocks.html	module std/rlocks		0
+nim	RLock	rlocks.html#RLock	type RLock		22
+nim	initRLock	rlocks.html#initRLock,SysLockObj	proc initRLock(lock: var RLock)		24
+nim	deinitRLock	rlocks.html#deinitRLock,SysLockObj	proc deinitRLock(lock: RLock)		34
+nim	tryAcquire	rlocks.html#tryAcquire,SysLockObj	proc tryAcquire(lock: var RLock): bool		38
+nim	acquire	rlocks.html#acquire,SysLockObj	proc acquire(lock: var RLock)		42
+nim	release	rlocks.html#release,SysLockObj	proc release(lock: var RLock)		46
+nim	withRLock	rlocks.html#withRLock.t,SysLockObj,untyped	template withRLock(lock: RLock; code: untyped)		50

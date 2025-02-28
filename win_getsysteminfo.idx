@@ -1,0 +1,3 @@
+nimTitle	win_getsysteminfo	win_getsysteminfo.html	module std/private/win_getsysteminfo		0
+nim	SystemInfo	win_getsysteminfo.html#SystemInfo	object SystemInfo		2
+nim	getSystemInfo	win_getsysteminfo.html#getSystemInfo,ptr.SystemInfo	proc getSystemInfo(lpSystemInfo: ptr SystemInfo)		14

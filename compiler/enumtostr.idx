@@ -1,0 +1,3 @@
+nimTitle	enumtostr	enumtostr.html	module enumtostr		0
+nim	genEnumToStrProc	enumtostr.html#genEnumToStrProc,PType,TLineInfo,ModuleGraph,IdGenerator	proc genEnumToStrProc(t: PType; info: TLineInfo; g: ModuleGraph; idgen: IdGenerator): PSym		8
+nim	genCaseObjDiscMapping	enumtostr.html#genCaseObjDiscMapping,PType,PSym,TLineInfo,ModuleGraph,IdGenerator	proc genCaseObjDiscMapping(t: PType; field: PSym; info: TLineInfo; g: ModuleGraph;\n                      idgen: IdGenerator): PSym		70

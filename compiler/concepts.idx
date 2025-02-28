@@ -1,0 +1,5 @@
+nimTitle	concepts	concepts.html	module concepts		0
+nim	semConceptDeclaration	concepts.html#semConceptDeclaration,PContext,PNode	proc semConceptDeclaration(c: PContext; n: PNode): PNode		58
+nim	conceptMatch	concepts.html#conceptMatch,PContext,PType,PType,LayeredIdTableObj,PType	proc conceptMatch(c: PContext; concpt, arg: PType; bindings: var LayeredIdTable;\n             invocation: PType): bool		371
+heading	Code dealing with Concept declarations	concepts.html#code-dealing-with-concept-declarations	 Code dealing with Concept declarations		0
+heading	Concept matching	concepts.html#concept-matching	 Concept matching		0

@@ -1,0 +1,3 @@
+nimTitle	expanddefaults	expanddefaults.html	module expanddefaults		0
+nim	caseObjDefaultBranch	expanddefaults.html#caseObjDefaultBranch,PNode,Int128	proc caseObjDefaultBranch(obj: PNode; branch: Int128): int		12
+nim	expandDefault	expanddefaults.html#expandDefault,PType,TLineInfo	proc expandDefault(t: PType; info: TLineInfo): PNode		30

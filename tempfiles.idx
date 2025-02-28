@@ -1,0 +1,4 @@
+nimTitle	tempfiles	tempfiles.html	module std/tempfiles		0
+nim	genTempPath	tempfiles.html#genTempPath,string,string,string	proc genTempPath(prefix, suffix: string; dir = ""): string		126
+nim	createTempFile	tempfiles.html#createTempFile,string,string,string	proc createTempFile(prefix, suffix: string; dir = ""): tuple[cfile: File,\n    path: string]		135
+nim	createTempDir	tempfiles.html#createTempDir,string,string,string	proc createTempDir(prefix, suffix: string; dir = ""): string		169

@@ -1,0 +1,4 @@
+nimTitle	nimprof	nimprof.html	module std/nimprof		0
+nim	setSamplingFrequency	nimprof.html#setSamplingFrequency,int	proc setSamplingFrequency(intervalInUs: int)		64
+nim	disableProfiling	nimprof.html#disableProfiling	proc disableProfiling()		218
+nim	enableProfiling	nimprof.html#enableProfiling	proc enableProfiling()		223

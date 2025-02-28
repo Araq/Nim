@@ -1,0 +1,92 @@
+nimTitle	msgs	msgs.html	module msgs		0
+nim	InstantiationInfo	msgs.html#InstantiationInfo	type InstantiationInfo		21
+nim	instLoc	msgs.html#instLoc.t	template instLoc(): InstantiationInfo		22
+nim	flushDot	msgs.html#flushDot,ConfigRef	proc flushDot(conf: ConfigRef)		31
+nim	toCChar	msgs.html#toCChar,char,string	proc toCChar(c: char; result: var string)		40
+nim	makeCString	msgs.html#makeCString,string	proc makeCString(s: string): Rope		51
+nim	fileInfoKnown	msgs.html#fileInfoKnown,ConfigRef,AbsoluteFile	proc fileInfoKnown(conf: ConfigRef; filename: AbsoluteFile): bool		89
+nim	fileInfoIdx	msgs.html#fileInfoIdx,ConfigRef,AbsoluteFile,bool	proc fileInfoIdx(conf: ConfigRef; filename: AbsoluteFile; isKnownFile: var bool): FileIndex		99
+nim	fileInfoIdx	msgs.html#fileInfoIdx,ConfigRef,AbsoluteFile	proc fileInfoIdx(conf: ConfigRef; filename: AbsoluteFile): FileIndex		125
+nim	fileInfoIdx	msgs.html#fileInfoIdx,ConfigRef,RelativeFile,bool	proc fileInfoIdx(conf: ConfigRef; filename: RelativeFile; isKnownFile: var bool): FileIndex		129
+nim	fileInfoIdx	msgs.html#fileInfoIdx,ConfigRef,RelativeFile	proc fileInfoIdx(conf: ConfigRef; filename: RelativeFile): FileIndex		132
+nim	newLineInfo	msgs.html#newLineInfo,FileIndex,int,int	proc newLineInfo(fileInfoIdx: FileIndex; line, col: int): TLineInfo		136
+nim	newLineInfo	msgs.html#newLineInfo,ConfigRef,AbsoluteFile,int,int	proc newLineInfo(conf: ConfigRef; filename: AbsoluteFile; line, col: int): TLineInfo		147
+nim	gCmdLineInfo	msgs.html#gCmdLineInfo	const gCmdLineInfo		150
+nim	suggestWriteln	msgs.html#suggestWriteln,ConfigRef,string	proc suggestWriteln(conf: ConfigRef; s: string)		158
+nim	msgQuit	msgs.html#msgQuit,int8	proc msgQuit(x: int8)		166
+nim	msgQuit	msgs.html#msgQuit,string	proc msgQuit(x: string)		167
+nim	suggestQuit	msgs.html#suggestQuit	proc suggestQuit()		169
+nim	ColOffset	msgs.html#ColOffset	const ColOffset		186
+nim	commandLineDesc	msgs.html#commandLineDesc	const commandLineDesc		187
+nim	getInfoContextLen	msgs.html#getInfoContextLen,ConfigRef	proc getInfoContextLen(conf: ConfigRef): int		189
+nim	setInfoContextLen	msgs.html#setInfoContextLen,ConfigRef,int	proc setInfoContextLen(conf: ConfigRef; L: int)		190
+nim	pushInfoContext	msgs.html#pushInfoContext,ConfigRef,TLineInfo,string	proc pushInfoContext(conf: ConfigRef; info: TLineInfo; detail: string = "")		192
+nim	popInfoContext	msgs.html#popInfoContext,ConfigRef	proc popInfoContext(conf: ConfigRef)		195
+nim	getInfoContext	msgs.html#getInfoContext,ConfigRef,int	proc getInfoContext(conf: ConfigRef; index: int): TLineInfo		198
+nim	toFilename	msgs.html#toFilename.t,ConfigRef,FileIndex	template toFilename(conf: ConfigRef; fileIdx: FileIndex): string		203
+nim	toProjPath	msgs.html#toProjPath,ConfigRef,FileIndex	proc toProjPath(conf: ConfigRef; fileIdx: FileIndex): string		209
+nim	toFullPath	msgs.html#toFullPath,ConfigRef,FileIndex	proc toFullPath(conf: ConfigRef; fileIdx: FileIndex): string		214
+nim	setDirtyFile	msgs.html#setDirtyFile,ConfigRef,FileIndex,AbsoluteFile	proc setDirtyFile(conf: ConfigRef; fileIdx: FileIndex; filename: AbsoluteFile)		220
+nim	setHash	msgs.html#setHash,ConfigRef,FileIndex,string	proc setHash(conf: ConfigRef; fileIdx: FileIndex; hash: string)		225
+nim	getHash	msgs.html#getHash,ConfigRef,FileIndex	proc getHash(conf: ConfigRef; fileIdx: FileIndex): string		233
+nim	toFullPathConsiderDirty	msgs.html#toFullPathConsiderDirty,ConfigRef,FileIndex	proc toFullPathConsiderDirty(conf: ConfigRef; fileIdx: FileIndex): AbsoluteFile		240
+nim	toFilename	msgs.html#toFilename.t,ConfigRef,TLineInfo	template toFilename(conf: ConfigRef; info: TLineInfo): string		248
+nim	toProjPath	msgs.html#toProjPath.t,ConfigRef,TLineInfo	template toProjPath(conf: ConfigRef; info: TLineInfo): string		251
+nim	toFullPath	msgs.html#toFullPath.t,ConfigRef,TLineInfo	template toFullPath(conf: ConfigRef; info: TLineInfo): string		254
+nim	toFullPathConsiderDirty	msgs.html#toFullPathConsiderDirty.t,ConfigRef,TLineInfo	template toFullPathConsiderDirty(conf: ConfigRef; info: TLineInfo): string		257
+nim	toFilenameOption	msgs.html#toFilenameOption,ConfigRef,FileIndex,FilenameOption	proc toFilenameOption(conf: ConfigRef; fileIdx: FileIndex; opt: FilenameOption): string		260
+nim	toMsgFilename	msgs.html#toMsgFilename,ConfigRef,FileIndex	proc toMsgFilename(conf: ConfigRef; fileIdx: FileIndex): string		282
+nim	toMsgFilename	msgs.html#toMsgFilename.t,ConfigRef,TLineInfo	template toMsgFilename(conf: ConfigRef; info: TLineInfo): string		285
+nim	toLinenumber	msgs.html#toLinenumber,TLineInfo	proc toLinenumber(info: TLineInfo): int		288
+nim	toColumn	msgs.html#toColumn,TLineInfo	proc toColumn(info: TLineInfo): int		291
+nim	toFileLineCol	msgs.html#toFileLineCol,ConfigRef,TLineInfo	proc toFileLineCol(conf: ConfigRef; info: TLineInfo): string		298
+nim	`$`	msgs.html#$,ConfigRef,TLineInfo	proc `$`(conf: ConfigRef; info: TLineInfo): string		302
+nim	`$`	msgs.html#$,TLineInfo	proc `$`(info: TLineInfo): string		304
+nim	`??`	msgs.html#??,ConfigRef,TLineInfo,string	proc `??`(conf: ConfigRef; info: TLineInfo; filename: string): bool		306
+nim	msgStdout	msgs.html#msgStdout	MsgFlag.msgStdout		311
+nim	msgSkipHook	msgs.html#msgSkipHook	MsgFlag.msgSkipHook		311
+nim	msgNoUnitSep	msgs.html#msgNoUnitSep	MsgFlag.msgNoUnitSep		311
+nim	MsgFlag	msgs.html#MsgFlag	enum MsgFlag		311
+nim	MsgFlags	msgs.html#MsgFlags	type MsgFlags		315
+nim	msgWriteln	msgs.html#msgWriteln,ConfigRef,string,MsgFlags	proc msgWriteln(conf: ConfigRef; s: string; flags: MsgFlags = {})		317
+nim	msgKindToString	msgs.html#msgKindToString,TMsgKind	proc msgKindToString(kind: TMsgKind): string		403
+nim	doNothing	msgs.html#doNothing	TErrorHandling.doNothing		408
+nim	doAbort	msgs.html#doAbort	TErrorHandling.doAbort		408
+nim	doRaise	msgs.html#doRaise	TErrorHandling.doRaise		408
+nim	TErrorHandling	msgs.html#TErrorHandling	enum TErrorHandling		408
+nim	log	msgs.html#log,string	proc log(s: string)		410
+nim	`==`	msgs.html#==,TLineInfo,TLineInfo	proc `==`(a, b: TLineInfo): bool		451
+nim	exactEquals	msgs.html#exactEquals,TLineInfo,TLineInfo	proc exactEquals(a, b: TLineInfo): bool		454
+nim	numLines	msgs.html#numLines,ConfigRef,FileIndex	proc numLines(conf: ConfigRef; fileIdx: FileIndex): int		482
+nim	sourceLine	msgs.html#sourceLine,ConfigRef,TLineInfo	proc sourceLine(conf: ConfigRef; i: TLineInfo): string		494
+nim	formatMsg	msgs.html#formatMsg,ConfigRef,TLineInfo,TMsgKind,string	proc formatMsg(conf: ConfigRef; info: TLineInfo; msg: TMsgKind; arg: string): string		513
+nim	liMessage	msgs.html#liMessage,ConfigRef,TLineInfo,TMsgKind,string,TErrorHandling,InstantiationInfo	proc liMessage(conf: ConfigRef; info: TLineInfo; msg: TMsgKind; arg: string;\n          eh: TErrorHandling; info2: InstantiationInfo; isRaw = false;\n          ignoreError = false)		520
+nim	rawMessage	msgs.html#rawMessage.t,ConfigRef,TMsgKind,openArray[string]	template rawMessage(conf: ConfigRef; msg: TMsgKind; args: openArray[string])		594
+nim	rawMessage	msgs.html#rawMessage.t,ConfigRef,TMsgKind,string	template rawMessage(conf: ConfigRef; msg: TMsgKind; arg: string)		598
+nim	fatal	msgs.html#fatal.t,ConfigRef,TLineInfo,string	template fatal(conf: ConfigRef; info: TLineInfo; arg = ""; msg = errFatal)		601
+nim	globalAssert	msgs.html#globalAssert.t,ConfigRef,untyped,TLineInfo,string	template globalAssert(conf: ConfigRef; cond: untyped; info: TLineInfo = unknownLineInfo;\n             arg = "")		604
+nim	globalError	msgs.html#globalError.t,ConfigRef,TLineInfo,TMsgKind,string	template globalError(conf: ConfigRef; info: TLineInfo; msg: TMsgKind; arg = "")		611
+nim	globalError	msgs.html#globalError.t,ConfigRef,TLineInfo,string	template globalError(conf: ConfigRef; info: TLineInfo; arg: string)		616
+nim	localError	msgs.html#localError.t,ConfigRef,TLineInfo,TMsgKind,string	template localError(conf: ConfigRef; info: TLineInfo; msg: TMsgKind; arg = "")		619
+nim	localError	msgs.html#localError.t,ConfigRef,TLineInfo,string	template localError(conf: ConfigRef; info: TLineInfo; arg: string)		622
+nim	message	msgs.html#message.t,ConfigRef,TLineInfo,TMsgKind,string	template message(conf: ConfigRef; info: TLineInfo; msg: TMsgKind; arg = "")		625
+nim	warningDeprecated	msgs.html#warningDeprecated,ConfigRef,TLineInfo,string	proc warningDeprecated(conf: ConfigRef; info: TLineInfo = gCmdLineInfo; msg = "")		628
+nim	internalError	msgs.html#internalError.t,ConfigRef,TLineInfo,string	template internalError(conf: ConfigRef; info: TLineInfo; errMsg: string)		636
+nim	internalError	msgs.html#internalError.t,ConfigRef,string	template internalError(conf: ConfigRef; errMsg: string)		639
+nim	internalAssert	msgs.html#internalAssert.t,ConfigRef,bool	template internalAssert(conf: ConfigRef; e: bool)		642
+nim	lintReport	msgs.html#lintReport.t,ConfigRef,TLineInfo,string,string,string	template lintReport(conf: ConfigRef; info: TLineInfo; beau, got: string; extraMsg = "")		649
+nim	quotedFilename	msgs.html#quotedFilename,ConfigRef,FileIndex	proc quotedFilename(conf: ConfigRef; fi: FileIndex): Rope		654
+nim	quotedFilename	msgs.html#quotedFilename,ConfigRef,TLineInfo	proc quotedFilename(conf: ConfigRef; i: TLineInfo): Rope		662
+nim	listWarnings	msgs.html#listWarnings,ConfigRef	proc listWarnings(conf: ConfigRef)		669
+nim	listHints	msgs.html#listHints,ConfigRef	proc listHints(conf: ConfigRef)		670
+nim	genSuccessX	msgs.html#genSuccessX,ConfigRef	proc genSuccessX(conf: ConfigRef)		672
+nimgrp	$	msgs.html#$-procs-all	proc		302
+nimgrp	newlineinfo	msgs.html#newLineInfo-procs-all	proc		136
+nimgrp	quotedfilename	msgs.html#quotedFilename-procs-all	proc		654
+nimgrp	fileinfoidx	msgs.html#fileInfoIdx-procs-all	proc		99
+nimgrp	msgquit	msgs.html#msgQuit-procs-all	proc		166
+nimgrp	tofilename	msgs.html#toFilename-templates-all	template		203
+nimgrp	internalerror	msgs.html#internalError-templates-all	template		636
+nimgrp	globalerror	msgs.html#globalError-templates-all	template		611
+nimgrp	rawmessage	msgs.html#rawMessage-templates-all	template		594
+nimgrp	localerror	msgs.html#localError-templates-all	template		619

@@ -1,0 +1,10 @@
+nimTitle	marshal	marshal.html	module std/marshal		0
+nim	load	marshal.html#load,Stream,T	proc load[T](s: Stream; data: var T)		282
+nim	store	marshal.html#store,Stream,sinkT	proc store[T](s: Stream; data: sink T)		295
+nim	`$$`	marshal.html#$$,sinkT	proc `$$`[T](x: sink T): string		317
+nim	to	marshal.html#to,string	proc to[T](data: string): T		348
+idx	serialization	marshal.html#serialization_1	Module marshal		0
+idx	deserialization	marshal.html#deserialization_1	Module marshal		0
+idx	JSON	marshal.html#json_1	Module marshal		0
+heading	Basic usage	marshal.html#basic-usage	 Basic usage		0
+heading	See also	marshal.html#see-also	 See also		0

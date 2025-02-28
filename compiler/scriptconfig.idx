@@ -1,0 +1,3 @@
+nimTitle	scriptconfig	scriptconfig.html	module scriptconfig		0
+nim	setupVM	scriptconfig.html#setupVM,PSym,IdentCache,string,ModuleGraph,IdGenerator	proc setupVM(module: PSym; cache: IdentCache; scriptName: string; graph: ModuleGraph;\n        idgen: IdGenerator): PEvalContext		34
+nim	runNimScript	scriptconfig.html#runNimScript,IdentCache,AbsoluteFile,IdGenerator,ConfigRef,PLLStream	proc runNimScript(cache: IdentCache; scriptName: AbsoluteFile; idgen: IdGenerator;\n             freshDefines = true; conf: ConfigRef; stream: PLLStream)		196

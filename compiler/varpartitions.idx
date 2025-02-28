@@ -1,0 +1,12 @@
+nimTitle	varpartitions	varpartitions.html	module varpartitions		0
+nim	MutationInfo	varpartitions.html#MutationInfo	object MutationInfo		87
+nim	constParameters	varpartitions.html#constParameters	Goal.constParameters		94
+nim	borrowChecking	varpartitions.html#borrowChecking	Goal.borrowChecking		94
+nim	cursorInference	varpartitions.html#cursorInference	Goal.cursorInference		94
+nim	Goal	varpartitions.html#Goal	enum Goal		94
+nim	Partitions	varpartitions.html#Partitions	object Partitions		99
+nim	`$`	varpartitions.html#$,ConfigRef,MutationInfo	proc `$`(config: ConfigRef; g: MutationInfo): string		117
+nim	hasSideEffect	varpartitions.html#hasSideEffect,Partitions,MutationInfo	proc hasSideEffect(c: var Partitions; info: var MutationInfo): bool		132
+nim	computeGraphPartitions	varpartitions.html#computeGraphPartitions,PSym,PNode,ModuleGraph,set[Goal]	proc computeGraphPartitions(s: PSym; n: PNode; g: ModuleGraph; goals: set[Goal]): Partitions		929
+nim	checkBorrowedLocations	varpartitions.html#checkBorrowedLocations,Partitions,PNode,ConfigRef	proc checkBorrowedLocations(par: var Partitions; body: PNode; config: ConfigRef)		974
+nim	computeCursors	varpartitions.html#computeCursors,PSym,PNode,ModuleGraph	proc computeCursors(s: PSym; n: PNode; g: ModuleGraph)		1003

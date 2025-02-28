@@ -1,0 +1,35 @@
+nimTitle	iterators	iterators.html	module system/iterators		0
+nim	items	iterators.html#items.i,openArray[T]	iterator items[T: not char](a: openArray[T]): lent2 T		16
+nim	items	iterators.html#items.i,openArray[T]_2	iterator items[T: char](a: openArray[T]): T		23
+nim	mitems	iterators.html#mitems.i,openArray[T]	iterator mitems[T](a: var openArray[T]): var T		33
+nim	items	iterators.html#items.i,array[IX,T]	iterator items[IX, T](a: array[IX, T]): T		40
+nim	mitems	iterators.html#mitems.i,array[IX,T]	iterator mitems[IX, T](a: var array[IX, T]): var T		49
+nim	items	iterators.html#items.i,set[T]	iterator items[T](a: set[T]): T		58
+nim	items	iterators.html#items.i,cstring	iterator items(a: cstring): char		70
+nim	mitems	iterators.html#mitems.i,cstring	iterator mitems(a: var cstring): var char		99
+nim	items	iterators.html#items.i,typedesc[T]	iterator items[T: enum and Ordinal](E: typedesc[T]): T		130
+nim	items	iterators.html#items.i,Slice[T: Ordinal]	iterator items[T: Ordinal](s: Slice[T]): T		140
+nim	pairs	iterators.html#pairs.i,openArray[T]	iterator pairs[T](a: openArray[T]): tuple[key: int, val: T]		146
+nim	mpairs	iterators.html#mpairs.i,openArray[T]	iterator mpairs[T](a: var openArray[T]): tuple[key: int, val: var T]		153
+nim	pairs	iterators.html#pairs.i,array[IX,T]	iterator pairs[IX, T](a: array[IX, T]): tuple[key: IX, val: T]		161
+nim	mpairs	iterators.html#mpairs.i,array[IX,T]	iterator mpairs[IX, T](a: var array[IX, T]): tuple[key: IX, val: var T]		170
+nim	pairs	iterators.html#pairs.i,seq[T]	iterator pairs[T](a: seq[T]): tuple[key: int, val: T]		180
+nim	mpairs	iterators.html#mpairs.i,seq[T]	iterator mpairs[T](a: var seq[T]): tuple[key: int, val: var T]		189
+nim	pairs	iterators.html#pairs.i,string	iterator pairs(a: string): tuple[key: int, val: char]		199
+nim	mpairs	iterators.html#mpairs.i,string	iterator mpairs(a: var string): tuple[key: int, val: var char]		208
+nim	pairs	iterators.html#pairs.i,cstring	iterator pairs(a: cstring): tuple[key: int, val: char]		218
+nim	mpairs	iterators.html#mpairs.i,cstring	iterator mpairs(a: var cstring): tuple[key: int, val: var char]		232
+nim	items	iterators.html#items.i,seq[T]	iterator items[T](a: seq[T]): lent2 T		247
+nim	mitems	iterators.html#mitems.i,seq[T]	iterator mitems[T](a: var seq[T]): var T		256
+nim	items	iterators.html#items.i,string	iterator items(a: string): char		265
+nim	mitems	iterators.html#mitems.i,string	iterator mitems(a: var string): var char		274
+nim	fields	iterators.html#fields.i,T	iterator fields[T: tuple | object](x: T): RootObj		284
+nim	fields	iterators.html#fields.i,S,T	iterator fields[S: tuple | object; T: tuple | object](x: S; y: T): tuple[key: string,\n    val: RootObj]		296
+nim	fieldPairs	iterators.html#fieldPairs.i,T	iterator fieldPairs[T: tuple | object](x: T): tuple[key: string, val: RootObj]		309
+nim	fieldPairs	iterators.html#fieldPairs.i,S,T	iterator fieldPairs[S: tuple | object; T: tuple | object](x: S; y: T): tuple[key: string,\n    a, b: RootObj]		337
+nimgrp	items	iterators.html#items-iterators-all	iterator		16
+nimgrp	mpairs	iterators.html#mpairs-iterators-all	iterator		153
+nimgrp	mitems	iterators.html#mitems-iterators-all	iterator		33
+nimgrp	fieldpairs	iterators.html#fieldPairs-iterators-all	iterator		309
+nimgrp	pairs	iterators.html#pairs-iterators-all	iterator		146
+nimgrp	fields	iterators.html#fields-iterators-all	iterator		284

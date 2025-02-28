@@ -1,0 +1,24 @@
+markupTitle	Nim DocGen Tools Guide	docgen.html	Nim DocGen Tools Guide		0
+heading	Introduction	docgen.html#introduction	 Introduction		0
+idx	documentation generation tools	docgen.html#documentation-generation-tools_1	Introduction		0
+heading	Quick start	docgen.html#introduction-quick-start	  Quick start		0
+heading	Documentation Comments	docgen.html#introduction-documentation-comments	  Documentation Comments		0
+heading	Structuring output directories	docgen.html#introduction-structuring-output-directories	  Structuring output directories		0
+heading	Index files	docgen.html#introduction-index-files	  Index files		0
+heading	Document Types	docgen.html#document-types	 Document Types		0
+heading	Example of Nim file input	docgen.html#document-types-example-of-nim-file-input	  Example of Nim file input		0
+heading	HTML	docgen.html#document-types-html	  HTML		0
+heading	LaTeX	docgen.html#document-types-latex	  LaTeX		0
+heading	JSON	docgen.html#document-types-json	  JSON		0
+heading	Simple documentation links	docgen.html#simple-documentation-links	 Simple documentation links		0
+heading	Nim local referencing	docgen.html#simple-documentation-links-nim-local-referencing	  Nim local referencing		0
+heading	Nim external referencing	docgen.html#simple-documentation-links-nim-external-referencing	  Nim external referencing		0
+heading	Related Options	docgen.html#related-options	 Related Options		0
+heading	Project switch	docgen.html#related-options-project-switch	  Project switch		0
+heading	Index switch	docgen.html#related-options-index-switch	  Index switch		0
+heading	Buildindex command	docgen.html#related-options-buildindex-command	  Buildindex command		0
+heading	See source switch	docgen.html#related-options-see-source-switch	  See source switch		0
+heading	Other Input Formats	docgen.html#other-input-formats	 Other Input Formats		0
+heading	HTML anchor generation	docgen.html#html-anchor-generation	 HTML anchor generation		0
+heading	Index (idx) file format	docgen.html#index-idx-file-format	 Index (idx) file format		0
+heading	Additional resources	docgen.html#additional-resources	 Additional resources		0

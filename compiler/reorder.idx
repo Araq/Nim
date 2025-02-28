@@ -1,0 +1,3 @@
+nimTitle	reorder	reorder.html	module reorder		0
+nim	includeModule	reorder.html#includeModule,ModuleGraph,PSym,FileIndex	proc includeModule(graph: ModuleGraph; s: PSym; fileIdx: FileIndex): PNode		119
+nim	reorder	reorder.html#reorder,ModuleGraph,PNode,PSym	proc reorder(graph: ModuleGraph; n: PNode; module: PSym): PNode		421

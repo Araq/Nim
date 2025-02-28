@@ -1,0 +1,53 @@
+nimTitle	fenv	fenv.html	module std/fenv		0
+nim	FE_DIVBYZERO	fenv.html#FE_DIVBYZERO	var FE_DIVBYZERO		19
+nim	FE_INEXACT	fenv.html#FE_INEXACT	var FE_INEXACT		21
+nim	FE_INVALID	fenv.html#FE_INVALID	var FE_INVALID		23
+nim	FE_OVERFLOW	fenv.html#FE_OVERFLOW	var FE_OVERFLOW		25
+nim	FE_UNDERFLOW	fenv.html#FE_UNDERFLOW	var FE_UNDERFLOW		27
+nim	FE_ALL_EXCEPT	fenv.html#FE_ALL_EXCEPT	var FE_ALL_EXCEPT		29
+nim	FE_DOWNWARD	fenv.html#FE_DOWNWARD	var FE_DOWNWARD		31
+nim	FE_TONEAREST	fenv.html#FE_TONEAREST	var FE_TONEAREST		33
+nim	FE_TOWARDZERO	fenv.html#FE_TOWARDZERO	var FE_TOWARDZERO		35
+nim	FE_UPWARD	fenv.html#FE_UPWARD	var FE_UPWARD		37
+nim	FE_DFL_ENV	fenv.html#FE_DFL_ENV	var FE_DFL_ENV		39
+nim	Tfenv	fenv.html#Tfenv	object Tfenv		45
+nim	Tfexcept	fenv.html#Tfexcept	object Tfexcept		50
+nim	feclearexcept	fenv.html#feclearexcept,cint	proc feclearexcept(excepts: cint): cint		61
+nim	fegetexceptflag	fenv.html#fegetexceptflag,ptr.Tfexcept,cint	proc fegetexceptflag(flagp: ptr Tfexcept; excepts: cint): cint		64
+nim	feraiseexcept	fenv.html#feraiseexcept,cint	proc feraiseexcept(excepts: cint): cint		69
+nim	fesetexceptflag	fenv.html#fesetexceptflag,ptr.Tfexcept,cint	proc fesetexceptflag(flagp: ptr Tfexcept; excepts: cint): cint		72
+nim	fetestexcept	fenv.html#fetestexcept,cint	proc fetestexcept(excepts: cint): cint		77
+nim	fegetround	fenv.html#fegetround	proc fegetround(): cint		81
+nim	fesetround	fenv.html#fesetround,cint	proc fesetround(roundingDirection: cint): cint		84
+nim	fegetenv	fenv.html#fegetenv,ptr.Tfenv	proc fegetenv(envp: ptr Tfenv): cint		87
+nim	feholdexcept	fenv.html#feholdexcept,ptr.Tfenv	proc feholdexcept(envp: ptr Tfenv): cint		91
+nim	fesetenv	fenv.html#fesetenv,ptr.Tfenv	proc fesetenv(a1: ptr Tfenv): cint		96
+nim	feupdateenv	fenv.html#feupdateenv,ptr.Tfenv	proc feupdateenv(envp: ptr Tfenv): cint		100
+nim	fpRadix	fenv.html#fpRadix.t	template fpRadix(): int		128
+nim	mantissaDigits	fenv.html#mantissaDigits.t,typedesc[float32]	template mantissaDigits(T: typedesc[float32]): int		132
+nim	digits	fenv.html#digits.t,typedesc[float32]	template digits(T: typedesc[float32]): int		135
+nim	minExponent	fenv.html#minExponent.t,typedesc[float32]	template minExponent(T: typedesc[float32]): int		138
+nim	maxExponent	fenv.html#maxExponent.t,typedesc[float32]	template maxExponent(T: typedesc[float32]): int		140
+nim	min10Exponent	fenv.html#min10Exponent.t,typedesc[float32]	template min10Exponent(T: typedesc[float32]): int		142
+nim	max10Exponent	fenv.html#max10Exponent.t,typedesc[float32]	template max10Exponent(T: typedesc[float32]): int		145
+nim	minimumPositiveValue	fenv.html#minimumPositiveValue.t,typedesc[float32]	template minimumPositiveValue(T: typedesc[float32]): float32		148
+nim	maximumPositiveValue	fenv.html#maximumPositiveValue.t,typedesc[float32]	template maximumPositiveValue(T: typedesc[float32]): float32		151
+nim	epsilon	fenv.html#epsilon.t,typedesc[float32]	template epsilon(T: typedesc[float32]): float32		154
+nim	mantissaDigits	fenv.html#mantissaDigits.t,typedesc[float64]	template mantissaDigits(T: typedesc[float64]): int		158
+nim	digits	fenv.html#digits.t,typedesc[float64]	template digits(T: typedesc[float64]): int		161
+nim	minExponent	fenv.html#minExponent.t,typedesc[float64]	template minExponent(T: typedesc[float64]): int		164
+nim	maxExponent	fenv.html#maxExponent.t,typedesc[float64]	template maxExponent(T: typedesc[float64]): int		166
+nim	min10Exponent	fenv.html#min10Exponent.t,typedesc[float64]	template min10Exponent(T: typedesc[float64]): int		168
+nim	max10Exponent	fenv.html#max10Exponent.t,typedesc[float64]	template max10Exponent(T: typedesc[float64]): int		171
+nim	minimumPositiveValue	fenv.html#minimumPositiveValue.t,typedesc[float64]	template minimumPositiveValue(T: typedesc[float64]): float64		174
+nim	maximumPositiveValue	fenv.html#maximumPositiveValue.t,typedesc[float64]	template maximumPositiveValue(T: typedesc[float64]): float64		177
+nim	epsilon	fenv.html#epsilon.t,typedesc[float64]	template epsilon(T: typedesc[float64]): float64		180
+nimgrp	minimumpositivevalue	fenv.html#minimumPositiveValue-templates-all	template		148
+nimgrp	digits	fenv.html#digits-templates-all	template		135
+nimgrp	maximumpositivevalue	fenv.html#maximumPositiveValue-templates-all	template		151
+nimgrp	min10exponent	fenv.html#min10Exponent-templates-all	template		142
+nimgrp	mantissadigits	fenv.html#mantissaDigits-templates-all	template		132
+nimgrp	minexponent	fenv.html#minExponent-templates-all	template		138
+nimgrp	max10exponent	fenv.html#max10Exponent-templates-all	template		145
+nimgrp	epsilon	fenv.html#epsilon-templates-all	template		154
+nimgrp	maxexponent	fenv.html#maxExponent-templates-all	template		140

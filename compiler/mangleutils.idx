@@ -1,0 +1,4 @@
+nimTitle	mangleutils	mangleutils.html	module mangleutils		0
+nim	mangle	mangleutils.html#mangle,string	proc mangle(name: string): string		4
+nim	mangleParamExt	mangleutils.html#mangleParamExt,PSym	proc mangleParamExt(s: PSym): string		51
+nim	mangleProcNameExt	mangleutils.html#mangleProcNameExt,ModuleGraph,PSym	proc mangleProcNameExt(graph: ModuleGraph; s: PSym): string		55

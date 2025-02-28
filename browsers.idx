@@ -1,0 +1,5 @@
+nimTitle	browsers	browsers.html	module std/browsers		0
+nim	osOpenCmd	browsers.html#osOpenCmd	const osOpenCmd		32
+nim	openDefaultBrowser	browsers.html#openDefaultBrowser,string	proc openDefaultBrowser(url: string)		63
+nim	openDefaultBrowser	browsers.html#openDefaultBrowser	proc openDefaultBrowser()		80
+nimgrp	opendefaultbrowser	browsers.html#openDefaultBrowser-procs-all	proc		63

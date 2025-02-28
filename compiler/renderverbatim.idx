@@ -1,0 +1,2 @@
+nimTitle	renderverbatim	renderverbatim.html	module renderverbatim		0
+nim	extractRunnableExamplesSource	renderverbatim.html#extractRunnableExamplesSource,ConfigRef,PNode,int	proc extractRunnableExamplesSource(conf: ConfigRef; n: PNode; indent = 0): string		91

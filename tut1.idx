@@ -1,0 +1,72 @@
+markupTitle	Nim Tutorial (Part I)	tut1.html	Nim Tutorial (Part I)		0
+heading	Introduction	tut1.html#introduction	 Introduction		0
+heading	The first program	tut1.html#the-first-program	 The first program		0
+idx	local type inference	tut1.html#local-type-inference_1	The first program		0
+heading	Lexical elements	tut1.html#lexical-elements	 Lexical elements		0
+heading	String and character literals	tut1.html#lexical-elements-string-and-character-literals	  String and character literals		0
+heading	Comments	tut1.html#lexical-elements-comments	  Comments		0
+heading	Numbers	tut1.html#lexical-elements-numbers	  Numbers		0
+heading	The var statement	tut1.html#the-var-statement	 The var statement		0
+heading	Constants	tut1.html#constants	 Constants		0
+heading	The let statement	tut1.html#the-let-statement	 The let statement		0
+heading	The assignment statement	tut1.html#the-assignment-statement	 The assignment statement		0
+heading	Control flow statements	tut1.html#control-flow-statements	 Control flow statements		0
+heading	If statement	tut1.html#control-flow-statements-if-statement	  If statement		0
+heading	Case statement	tut1.html#control-flow-statements-case-statement	  Case statement		0
+heading	While statement	tut1.html#control-flow-statements-while-statement	  While statement		0
+heading	For statement	tut1.html#control-flow-statements-for-statement	  For statement		0
+heading	Scopes and the block statement	tut1.html#control-flow-statements-scopes-and-the-block-statement	  Scopes and the block statement		0
+heading	Break statement	tut1.html#control-flow-statements-break-statement	  Break statement		0
+heading	Continue statement	tut1.html#control-flow-statements-continue-statement	  Continue statement		0
+heading	When statement	tut1.html#control-flow-statements-when-statement	  When statement		0
+heading	Statements and indentation	tut1.html#statements-and-indentation	 Statements and indentation		0
+heading	Procedures	tut1.html#procedures	 Procedures		0
+heading	Result variable	tut1.html#procedures-result-variable	  Result variable		0
+heading	Parameters	tut1.html#procedures-parameters	  Parameters		0
+heading	Discard statement	tut1.html#procedures-discard-statement	  Discard statement		0
+heading	Named arguments	tut1.html#procedures-named-arguments	  Named arguments		0
+heading	Default values	tut1.html#procedures-default-values	  Default values		0
+heading	Overloaded procedures	tut1.html#procedures-overloaded-procedures	  Overloaded procedures		0
+heading	Operators	tut1.html#procedures-operators	  Operators		0
+heading	Forward declarations	tut1.html#procedures-forward-declarations	  Forward declarations		0
+heading	Funcs and methods	tut1.html#procedures-funcs-and-methods	  Funcs and methods		0
+heading	Iterators	tut1.html#iterators	 Iterators		0
+heading	Basic types	tut1.html#basic-types	 Basic types		0
+heading	Booleans	tut1.html#basic-types-booleans	  Booleans		0
+heading	Characters	tut1.html#basic-types-characters	  Characters		0
+heading	Strings	tut1.html#basic-types-strings	  Strings		0
+heading	Integers	tut1.html#basic-types-integers	  Integers		0
+idx	arithmetic bit shifts	tut1.html#arithmetic-bit-shifts_1	Integers		0
+idx	Automatic type conversion	tut1.html#automatic-type-conversion_1	Integers		0
+idx	RangeDefect	tut1.html#rangedefect_1	Integers		0
+heading	Floats	tut1.html#basic-types-floats	  Floats		0
+heading	Type Conversion	tut1.html#basic-types-type-conversion	  Type Conversion		0
+heading	Internal type representation	tut1.html#internal-type-representation	 Internal type representation		0
+heading	Advanced types	tut1.html#advanced-types	 Advanced types		0
+heading	Enumerations	tut1.html#advanced-types-enumerations	  Enumerations		0
+heading	Ordinal types	tut1.html#advanced-types-ordinal-types	  Ordinal types		0
+heading	Subranges	tut1.html#advanced-types-subranges	  Subranges		0
+heading	Sets	tut1.html#advanced-types-sets	  Sets		0
+heading	Bit fields	tut1.html#sets-bit-fields	   Bit fields		0
+heading	Arrays	tut1.html#advanced-types-arrays	  Arrays		0
+heading	Sequences	tut1.html#advanced-types-sequences	  Sequences		0
+heading	Open arrays	tut1.html#advanced-types-open-arrays	  Open arrays		0
+idx	openarray	tut1.html#openarray_1	Open arrays		0
+heading	Varargs	tut1.html#advanced-types-varargs	  Varargs		0
+heading	Slices	tut1.html#advanced-types-slices	  Slices		0
+heading	Objects	tut1.html#advanced-types-objects	  Objects		0
+heading	Tuples	tut1.html#advanced-types-tuples	  Tuples		0
+heading	Reference and pointer types	tut1.html#advanced-types-reference-and-pointer-types	  Reference and pointer types		0
+idx	traced	tut1.html#traced_1	Reference and pointer types		0
+idx	untraced	tut1.html#untraced_1	Reference and pointer types		0
+heading	Procedural type	tut1.html#advanced-types-procedural-type	  Procedural type		0
+idx	functional	tut1.html#functional_1	Procedural type		0
+heading	Distinct type	tut1.html#advanced-types-distinct-type	  Distinct type		0
+heading	Modules	tut1.html#modules	 Modules		0
+idx	information hiding	tut1.html#information-hiding_1	Modules		0
+idx	separate compilation	tut1.html#separate-compilation_1	Modules		0
+idx	import	tut1.html#import_1	Modules		0
+heading	Excluding symbols	tut1.html#modules-excluding-symbols	  Excluding symbols		0
+heading	From statement	tut1.html#modules-from-statement	  From statement		0
+heading	Include statement	tut1.html#modules-include-statement	  Include statement		0
+heading	Part 2	tut1.html#part-2	 Part 2		0

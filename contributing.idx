@@ -1,0 +1,33 @@
+markupTitle	Contributing	contributing.html	Contributing		0
+heading	Writing tests	contributing.html#writing-tests	 Writing tests		0
+heading	Stdlib	contributing.html#writing-tests-stdlib	  Stdlib		0
+heading	Compiler	contributing.html#writing-tests-compiler	  Compiler		0
+heading	Running tests	contributing.html#running-tests	 Running tests		0
+heading	Comparing tests	contributing.html#comparing-tests	 Comparing tests		0
+heading	Deprecation	contributing.html#deprecation	 Deprecation		0
+heading	Documentation	contributing.html#documentation	 Documentation		0
+heading	Best practices	contributing.html#best-practices	 Best practices		0
+heading	The cmdgit stuff	contributing.html#the-cmdgit-stuff	 The <tt class="docutils literal"><span class="pre"><span class="program">git</span></span></tt> stuff		0
+heading	General commit rules	contributing.html#the-cmdgit-stuff-general-commit-rules	  General commit rules		0
+heading	Continuous Integration (CI)	contributing.html#the-cmdgit-stuff-continuous-integration-ci	  Continuous Integration (CI)		0
+heading	Debugging CI failures, flaky tests, etc	contributing.html#the-cmdgit-stuff-debugging-ci-failures-flaky-tests-etc	  Debugging CI failures, flaky tests, etc		0
+heading	Code reviews	contributing.html#the-cmdgit-stuff-code-reviews	  Code reviews		0
+heading	Documentation Style	contributing.html#documentation-style	 Documentation Style		0
+heading	General Guidelines	contributing.html#documentation-style-general-guidelines	  General Guidelines		0
+heading	Module-level documentation	contributing.html#documentation-style-moduleminuslevel-documentation	  Module-level documentation		0
+heading	Procs, Templates, Macros, Converters, and Iterators	contributing.html#documentation-style-procs-templates-macros-converters-and-iterators	  Procs, Templates, Macros, Converters, and Iterators		0
+heading	Types	contributing.html#documentation-style-types	  Types		0
+heading	Var, Let, and Const	contributing.html#documentation-style-var-let-and-const	  Var, Let, and Const		0
+heading	Evolving the stdlib	contributing.html#evolving-the-stdlib	 Evolving the stdlib		0
+heading	What the compiler itself needs must be part of the stdlib	contributing.html#evolving-the-stdlib-what-the-compiler-itself-needs-must-be-part-of-the-stdlib	  What the compiler itself needs must be part of the stdlib		0
+heading	Vocabulary types must be part of the stdlib	contributing.html#evolving-the-stdlib-vocabulary-types-must-be-part-of-the-stdlib	  Vocabulary types must be part of the stdlib		0
+heading	Existing, battle-tested modules stay	contributing.html#evolving-the-stdlib-existing-battleminustested-modules-stay	  Existing, battle-tested modules stay		0
+heading	Syntactic helpers can start as experimental stdlib modules	contributing.html#evolving-the-stdlib-syntactic-helpers-can-start-as-experimental-stdlib-modules	  Syntactic helpers can start as experimental stdlib modules		0
+heading	Other new stdlib modules do not start as stdlib modules	contributing.html#evolving-the-stdlib-other-new-stdlib-modules-do-not-start-as-stdlib-modules	  Other new stdlib modules do not start as stdlib modules		0
+heading	Little additions are acceptable	contributing.html#evolving-the-stdlib-little-additions-are-acceptable	  Little additions are acceptable		0
+heading	Conventions	contributing.html#evolving-the-stdlib-conventions	  Conventions		0
+heading	Breaking Changes	contributing.html#breaking-changes	 Breaking Changes		0
+heading	Run-time breaking changes	contributing.html#breaking-changes-runminustime-breaking-changes	  Run-time breaking changes		0
+heading	Compile-time breaking changes	contributing.html#breaking-changes-compileminustime-breaking-changes	  Compile-time breaking changes		0
+heading	Compiler/language spec bugfixes	contributing.html#breaking-changes-compilerslashlanguage-spec-bugfixes	  Compiler/language spec bugfixes		0
+heading	Non-breaking changes	contributing.html#breaking-changes-nonminusbreaking-changes	  Non-breaking changes		0

@@ -1,0 +1,16 @@
+nimTitle	parsecsv	parsecsv.html	module std/parsecsv		0
+nim	CsvRow	parsecsv.html#CsvRow	type CsvRow		76
+nim	CsvParser	parsecsv.html#CsvParser	object CsvParser		77
+nim	CsvError	parsecsv.html#CsvError	object CsvError		91
+nim	open	parsecsv.html#open,CsvParser,Stream,string,char,char,char	proc open(self: var CsvParser; input: Stream; filename: string; separator = ',';\n     quote = '\"'; escape = '\x00'; skipInitialSpace = false)		107
+nim	open	parsecsv.html#open,CsvParser,string,char,char,char	proc open(self: var CsvParser; filename: string; separator = ','; quote = '\"';\n     escape = '\x00'; skipInitialSpace = false)		141
+nim	processedRows	parsecsv.html#processedRows,CsvParser	proc processedRows(self: var CsvParser): int		202
+nim	readRow	parsecsv.html#readRow,CsvParser,int	proc readRow(self: var CsvParser; columns = 0): bool		227
+nim	close	parsecsv.html#close,CsvParser	proc close(self: var CsvParser)		292
+nim	readHeaderRow	parsecsv.html#readHeaderRow,CsvParser	proc readHeaderRow(self: var CsvParser)		296
+nim	rowEntry	parsecsv.html#rowEntry,CsvParser,string	proc rowEntry(self: var CsvParser; entry: string): var string		322
+idx	CSV	parsecsv.html#csv_1	Module parsecsv		0
+idx	comma separated value	parsecsv.html#comma-separated-value_1	Module parsecsv		0
+heading	Basic usage	parsecsv.html#basic-usage	 Basic usage		0
+heading	See also	parsecsv.html#see-also	 See also		0
+nimgrp	open	parsecsv.html#open-procs-all	proc		107

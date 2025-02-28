@@ -1,0 +1,7 @@
+nimTitle	mimetypes	mimetypes.html	module std/mimetypes		0
+nim	MimeDB	mimetypes.html#MimeDB	object MimeDB		37
+nim	mimes	mimetypes.html#mimes	const mimes		40
+nim	newMimetypes	mimetypes.html#newMimetypes	proc newMimetypes(): MimeDB		1037
+nim	getMimetype	mimetypes.html#getMimetype,MimeDB,string,string	proc getMimetype(mimedb: MimeDB; ext: string; default = "text/plain"): string		1043
+nim	getExt	mimetypes.html#getExt,MimeDB,string,string	proc getExt(mimedb: MimeDB; mimetype: string; default = "txt"): string		1054
+nim	register	mimetypes.html#register,MimeDB,string,string	proc register(mimedb: var MimeDB; ext: string; mimetype: string)		1065

@@ -1,0 +1,13 @@
+nimTitle	cgen	cgen.html	module cgen		0
+nim	cgDeclFrmt	cgen.html#cgDeclFrmt.t,PSym	template cgDeclFrmt(s: PSym): string		437
+nim	multiFormat	cgen.html#multiFormat,string,staticopenArray[char],openArray[seq[string]]	proc multiFormat(frmt: var string; chars: static openArray[char];\n            args: openArray[seq[string]])		473
+nim	fillObjectFields	cgen.html#fillObjectFields,BModule,PType	proc fillObjectFields(m: BModule; typ: PType)		756
+nim	genTypeInfo	cgen.html#genTypeInfo,ConfigRef,BModule,PType,TLineInfo	proc genTypeInfo(config: ConfigRef; m: BModule; t: PType; info: TLineInfo): Rope		2034
+nim	genProcAux	cgen.html#genProcAux,BModule,PSym	proc genProcAux(m: BModule; prc: PSym)		1272
+nim	registerInitProcs	cgen.html#registerInitProcs,BModuleList,PSym,set[ModuleBackendFlag]	proc registerInitProcs(g: BModuleList; m: PSym; flags: set[ModuleBackendFlag])		1881
+nim	whichInitProcs	cgen.html#whichInitProcs,BModule	proc whichInitProcs(m: BModule): set[ModuleBackendFlag]		1901
+nim	newModule	cgen.html#newModule,BModuleList,PSym,ConfigRef	proc newModule(g: BModuleList; module: PSym; conf: ConfigRef): BModule		2339
+nim	setupCgen	cgen.html#setupCgen,ModuleGraph,PSym,IdGenerator	proc setupCgen(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		2352
+nim	genTopLevelStmt	cgen.html#genTopLevelStmt,BModule,PNode	proc genTopLevelStmt(m: BModule; n: PNode)		2422
+nim	finalCodegenActions	cgen.html#finalCodegenActions,ModuleGraph,BModule,PNode	proc finalCodegenActions(graph: ModuleGraph; m: BModule; n: PNode)		2516
+nim	cgenWriteModules	cgen.html#cgenWriteModules,RootRef,ConfigRef	proc cgenWriteModules(backend: RootRef; config: ConfigRef)		2596

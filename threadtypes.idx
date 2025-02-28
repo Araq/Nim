@@ -1,0 +1,24 @@
+nimTitle	threadtypes	threadtypes.html	module std/private/threadtypes		0
+nim	hasSharedHeap	threadtypes.html#hasSharedHeap	const hasSharedHeap		3
+nim	pthreadh	threadtypes.html#pthreadh	const pthreadh		65
+nim	SysThread	threadtypes.html#SysThread	type SysThread		76
+nim	Pthread_attr	threadtypes.html#Pthread_attr	object Pthread_attr		78
+nim	Timespec	threadtypes.html#Timespec	object Timespec		91
+nim	pthread_attr_init	threadtypes.html#pthread_attr_init,Pthread_attr	proc pthread_attr_init(a1: var Pthread_attr): cint		95
+nim	pthread_attr_setstack	threadtypes.html#pthread_attr_setstack,ptr.Pthread_attr,pointer,int	proc pthread_attr_setstack(a1: ptr Pthread_attr; a2: pointer; a3: int): cint		97
+nim	pthread_attr_setstacksize	threadtypes.html#pthread_attr_setstacksize,Pthread_attr,int	proc pthread_attr_setstacksize(a1: var Pthread_attr; a2: int): cint		99
+nim	pthread_attr_destroy	threadtypes.html#pthread_attr_destroy,Pthread_attr	proc pthread_attr_destroy(a1: var Pthread_attr): cint		101
+nim	pthread_create	threadtypes.html#pthread_create,SysThread,Pthread_attr,proc(pointer),pointer	proc pthread_create(a1: var SysThread; a2: var Pthread_attr;\n               a3: proc (x: pointer): pointer {.noconv.}; a4: pointer): cint		104
+nim	pthread_join	threadtypes.html#pthread_join,SysThread,ptr.pointer	proc pthread_join(a1: SysThread; a2: ptr pointer): cint		108
+nim	pthread_cancel	threadtypes.html#pthread_cancel,SysThread	proc pthread_cancel(a1: SysThread): cint		111
+nim	CpuSet	threadtypes.html#CpuSet	object CpuSet		114
+nim	cpusetZero	threadtypes.html#cpusetZero,CpuSet	proc cpusetZero(s: var CpuSet)		118
+nim	cpusetIncl	threadtypes.html#cpusetIncl,cint,CpuSet	proc cpusetIncl(cpu: cint; s: var CpuSet)		119
+nim	setAffinity	threadtypes.html#setAffinity,SysThread,csize_t,CpuSet	proc setAffinity(thread: SysThread; setsize: csize_t; s: var CpuSet)		137
+nim	emulatedThreadVars	threadtypes.html#emulatedThreadVars	const emulatedThreadVars		142
+nim	ThreadLocalStorage	threadtypes.html#ThreadLocalStorage	type ThreadLocalStorage		148
+nim	PGcThread	threadtypes.html#PGcThread	type PGcThread		149
+nim	GcThread	threadtypes.html#GcThread	object GcThread		150
+nim	hasAllocStack	threadtypes.html#hasAllocStack	const hasAllocStack		162
+nim	Thread	threadtypes.html#Thread	object Thread		165
+nim	`=copy`	threadtypes.html#=copy,Thread[TArg],Thread[TArg]	proc `=copy`[TArg](x: var Thread[TArg]; y: Thread[TArg])		176

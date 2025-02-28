@@ -1,0 +1,2 @@
+nimTitle	cpuinfo	cpuinfo.html	module std/cpuinfo		0
+nim	countProcessors	cpuinfo.html#countProcessors	proc countProcessors(): int		107

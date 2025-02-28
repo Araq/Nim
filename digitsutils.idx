@@ -1,0 +1,7 @@
+nimTitle	digitsutils	digitsutils.html	module std/private/digitsutils		0
+nim	utoa2Digits	digitsutils.html#utoa2Digits,openArray[char],int,uint32	proc utoa2Digits(buf: var openArray[char]; pos: int; digits: uint32)		32
+nim	trailingZeros2Digits	digitsutils.html#trailingZeros2Digits,uint32	proc trailingZeros2Digits(digits: uint32): int		37
+nim	addInt	digitsutils.html#addInt,string,uint64	proc addInt(result: var string; x: uint64)		85
+nim	addInt	digitsutils.html#addInt,string,int64	proc addInt(result: var string; x: int64)		92
+nim	addInt	digitsutils.html#addInt,string,int	proc addInt(result: var string; x: int)		115
+nimgrp	addint	digitsutils.html#addInt-procs-all	proc		85

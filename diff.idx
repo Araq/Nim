@@ -1,0 +1,5 @@
+nimTitle	diff	diff.html	module experimental/diff		0
+nim	Item	diff.html#Item	object Item		52
+nim	diffInt	diff.html#diffInt,openArray[int],openArray[int]	proc diffInt(arrayA, arrayB: openArray[int]): seq[Item]		282
+nim	diffText	diff.html#diffText,string,string	proc diffText(textA, textB: string): seq[Item]		306
+idx	diff	diff.html#diff_1	Module diff		0

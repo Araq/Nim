@@ -1,0 +1,9 @@
+nimTitle	iclineinfos	ic/iclineinfos.html	module ic/iclineinfos		0
+nim	PackedLineInfo	ic/iclineinfos.html#PackedLineInfo	type PackedLineInfo		40
+nim	LineInfoManager	ic/iclineinfos.html#LineInfoManager	object LineInfoManager		42
+nim	NoLineInfo	ic/iclineinfos.html#NoLineInfo	const NoLineInfo		46
+nim	pack	ic/iclineinfos.html#pack,LineInfoManager,LitId,int32,int32	proc pack(m: var LineInfoManager; file: LitId; line, col: int32): PackedLineInfo		48
+nim	unpack	ic/iclineinfos.html#unpack,LineInfoManager,PackedLineInfo	proc unpack(m: LineInfoManager; i: PackedLineInfo): (LitId, int32, int32)		59
+nim	getFileId	ic/iclineinfos.html#getFileId,LineInfoManager,PackedLineInfo	proc getFileId(m: LineInfoManager; i: PackedLineInfo): LitId		69
+nim	store	ic/iclineinfos.html#store,RodFile,LineInfoManager	proc store(r: var RodFile; m: LineInfoManager)		72
+nim	load	ic/iclineinfos.html#load,RodFile,LineInfoManager	proc load(r: var RodFile; m: var LineInfoManager)		73

@@ -1,0 +1,29 @@
+nimTitle	parser	parser.html	module parser		0
+nim	Parser	parser.html#Parser	object Parser		69
+nim	isOperator	parser.html#isOperator,Token	proc isOperator(tok: Token): bool		97
+nim	getTok	parser.html#getTok,Parser	proc getTok(p: var Parser)		98
+nim	parMessage	parser.html#parMessage,Parser,TMsgKind,string	proc parMessage(p: Parser; msg: TMsgKind; arg: string = "")		99
+nim	skipComment	parser.html#skipComment,Parser,PNode	proc skipComment(p: var Parser; node: PNode)		100
+nim	newNodeP	parser.html#newNodeP,TNodeKind,Parser	proc newNodeP(kind: TNodeKind; p: Parser): PNode		101
+nim	newIntNodeP	parser.html#newIntNodeP,TNodeKind,BiggestInt,Parser	proc newIntNodeP(kind: TNodeKind; intVal: BiggestInt; p: Parser): PNode		102
+nim	newFloatNodeP	parser.html#newFloatNodeP,TNodeKind,BiggestFloat,Parser	proc newFloatNodeP(kind: TNodeKind; floatVal: BiggestFloat; p: Parser): PNode		103
+nim	newStrNodeP	parser.html#newStrNodeP,TNodeKind,sinkstring,Parser	proc newStrNodeP(kind: TNodeKind; strVal: sink string; p: Parser): PNode		104
+nim	newIdentNodeP	parser.html#newIdentNodeP,PIdent,Parser	proc newIdentNodeP(ident: PIdent; p: Parser): PNode		105
+nim	expectIdentOrKeyw	parser.html#expectIdentOrKeyw,Parser	proc expectIdentOrKeyw(p: Parser)		106
+nim	expectIdent	parser.html#expectIdent,Parser	proc expectIdent(p: Parser)		107
+nim	parLineInfo	parser.html#parLineInfo,Parser	proc parLineInfo(p: Parser): TLineInfo		108
+nim	eat	parser.html#eat,Parser,TokType	proc eat(p: var Parser; tokType: TokType)		109
+nim	skipInd	parser.html#skipInd,Parser	proc skipInd(p: var Parser)		110
+nim	optPar	parser.html#optPar,Parser	proc optPar(p: var Parser)		111
+nim	optInd	parser.html#optInd,Parser,PNode	proc optInd(p: var Parser; n: PNode)		112
+nim	indAndComment	parser.html#indAndComment,Parser,PNode	proc indAndComment(p: var Parser; n: PNode; maybeMissEquals = false)		113
+nim	setBaseFlags	parser.html#setBaseFlags,PNode,NumericalBase	proc setBaseFlags(n: PNode; base: NumericalBase)		114
+nim	parseSymbol	parser.html#parseSymbol,Parser	proc parseSymbol(p: var Parser; mode = smNormal): PNode		115
+nim	openParser	parser.html#openParser,Parser,FileIndex,PLLStream,IdentCache,ConfigRef	proc openParser(p: var Parser; fileIdx: FileIndex; inputStream: PLLStream;\n           cache: IdentCache; config: ConfigRef)		149
+nim	openParser	parser.html#openParser,Parser,AbsoluteFile,PLLStream,IdentCache,ConfigRef	proc openParser(p: var Parser; filename: AbsoluteFile; inputStream: PLLStream;\n           cache: IdentCache; config: ConfigRef)		162
+nim	closeParser	parser.html#closeParser,Parser	proc closeParser(p: var Parser)		166
+nim	checkFirstLineIndentation	parser.html#checkFirstLineIndentation,Parser	proc checkFirstLineIndentation(p: var Parser)		2530
+nim	parseTopLevelStmt	parser.html#parseTopLevelStmt,Parser	proc parseTopLevelStmt(p: var Parser): PNode		2534
+nim	parseAll	parser.html#parseAll,Parser	proc parseAll(p: var Parser): PNode		2564
+nim	parseString	parser.html#parseString,string,IdentCache,ConfigRef,string,int,ErrorHandler	proc parseString(s: string; cache: IdentCache; config: ConfigRef;\n            filename: string = ""; line: int = 0;\n            errorHandler: ErrorHandler = nil): PNode		2574
+nimgrp	openparser	parser.html#openParser-procs-all	proc		149

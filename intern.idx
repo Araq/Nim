@@ -1,0 +1,24 @@
+markupTitle	Internals of the Nim Compiler	intern.html	Internals of the Nim Compiler		0
+heading	Directory structure	intern.html#directory-structure	 Directory structure		0
+heading	Bootstrapping the compiler	intern.html#bootstrapping-the-compiler	 Bootstrapping the compiler		0
+heading	Reproducible builds	intern.html#bootstrapping-the-compiler-reproducible-builds	  Reproducible builds		0
+heading	Debugging the compiler	intern.html#debugging-the-compiler	 Debugging the compiler		0
+heading	Bisecting for regressions	intern.html#debugging-the-compiler-bisecting-for-regressions	  Bisecting for regressions		0
+heading	Building an instrumented compiler	intern.html#debugging-the-compiler-building-an-instrumented-compiler	  Building an instrumented compiler		0
+heading	Debug logging	intern.html#debugging-the-compiler-debug-logging	  Debug logging		0
+heading	Native debugging	intern.html#debugging-the-compiler-native-debugging	  Native debugging		0
+heading	The compiler's architecture	intern.html#the-compiler-s-architecture	 The compiler's architecture		0
+heading	Short description of Nim's modules	intern.html#the-compiler-s-architecture-short-description-of-nim-s-modules	  Short description of Nim's modules		0
+heading	The syntax tree	intern.html#the-compiler-s-architecture-the-syntax-tree	  The syntax tree		0
+heading	Runtimes	intern.html#runtimes	 Runtimes		0
+heading	Coding Guidelines	intern.html#coding-guidelines	 Coding Guidelines		0
+heading	Porting to new platforms	intern.html#porting-to-new-platforms	 Porting to new platforms		0
+heading	Runtime type information	intern.html#runtime-type-information	 Runtime type information		0
+heading	Magics and compilerProcs	intern.html#magics-and-compilerprocs	 Magics and compilerProcs		0
+heading	Code generation for closures	intern.html#code-generation-for-closures	 Code generation for closures		0
+idx	lambda lifting	intern.html#lambda-lifting_1	Code generation for closures		0
+heading	Design	intern.html#code-generation-for-closures-design	  Design		0
+heading	Accumulator	intern.html#code-generation-for-closures-accumulator	  Accumulator		0
+heading	Internals	intern.html#code-generation-for-closures-internals	  Internals		0
+heading	Notes on type and AST representation	intern.html#notes-on-type-and-ast-representation	 Notes on type and AST representation		0
+heading	Integer literals	intern.html#notes-on-type-and-ast-representation-integer-literals	  Integer literals		0

@@ -1,0 +1,11 @@
+nimTitle	astmsgs	astmsgs.html	module astmsgs		0
+nim	typSym	astmsgs.html#typSym,PType	proc typSym(t: PType): PSym		5
+nim	addDeclaredLoc	astmsgs.html#addDeclaredLoc,string,ConfigRef,PSym	proc addDeclaredLoc(result: var string; conf: ConfigRef; sym: PSym)		10
+nim	addDeclaredLocMaybe	astmsgs.html#addDeclaredLocMaybe,string,ConfigRef,PSym	proc addDeclaredLocMaybe(result: var string; conf: ConfigRef; sym: PSym)		13
+nim	addDeclaredLoc	astmsgs.html#addDeclaredLoc,string,ConfigRef,PType	proc addDeclaredLoc(result: var string; conf: ConfigRef; typ: PType)		17
+nim	addTypeNodeDeclaredLoc	astmsgs.html#addTypeNodeDeclaredLoc,string,ConfigRef,PType	proc addTypeNodeDeclaredLoc(result: var string; conf: ConfigRef; typ: PType)		27
+nim	addDeclaredLocMaybe	astmsgs.html#addDeclaredLocMaybe,string,ConfigRef,PType	proc addDeclaredLocMaybe(result: var string; conf: ConfigRef; typ: PType)		33
+nim	quoteExpr	astmsgs.html#quoteExpr.t,string	template quoteExpr(a: string): untyped		36
+nim	genFieldDefect	astmsgs.html#genFieldDefect,ConfigRef,string,PSym	proc genFieldDefect(conf: ConfigRef; field: string; disc: PSym): string		40
+nimgrp	adddeclaredloc	astmsgs.html#addDeclaredLoc-procs-all	proc		10
+nimgrp	adddeclaredlocmaybe	astmsgs.html#addDeclaredLocMaybe-procs-all	proc		13

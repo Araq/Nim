@@ -1,0 +1,20 @@
+nimTitle	nimlexbase	nimlexbase.html	module nimlexbase		0
+nim	Lrz	nimlexbase.html#Lrz	const Lrz		23
+nim	Apo	nimlexbase.html#Apo	const Apo		24
+nim	Tabulator	nimlexbase.html#Tabulator	const Tabulator		25
+nim	ESC	nimlexbase.html#ESC	const ESC		26
+nim	CR	nimlexbase.html#CR	const CR		27
+nim	FF	nimlexbase.html#FF	const FF		28
+nim	LF	nimlexbase.html#LF	const LF		29
+nim	BEL	nimlexbase.html#BEL	const BEL		30
+nim	BACKSPACE	nimlexbase.html#BACKSPACE	const BACKSPACE		31
+nim	VT	nimlexbase.html#VT	const VT		32
+nim	EndOfFile	nimlexbase.html#EndOfFile	const EndOfFile		35
+nim	NewLines	nimlexbase.html#NewLines	const NewLines		41
+nim	TBaseLexer	nimlexbase.html#TBaseLexer	object TBaseLexer		44
+nim	openBaseLexer	nimlexbase.html#openBaseLexer,TBaseLexer,PLLStream,int	proc openBaseLexer(L: var TBaseLexer; inputstream: PLLStream; bufLen: int = 8192)		57
+nim	closeBaseLexer	nimlexbase.html#closeBaseLexer,TBaseLexer	proc closeBaseLexer(L: var TBaseLexer)		60
+nim	getCurrentLine	nimlexbase.html#getCurrentLine,TBaseLexer,bool	proc getCurrentLine(L: TBaseLexer; marker: bool = true): string		61
+nim	getColNumber	nimlexbase.html#getColNumber,TBaseLexer,int	proc getColNumber(L: TBaseLexer; pos: int): int		62
+nim	handleCR	nimlexbase.html#handleCR,TBaseLexer,int	proc handleCR(L: var TBaseLexer; pos: int): int		63
+nim	handleLF	nimlexbase.html#handleLF,TBaseLexer,int	proc handleLF(L: var TBaseLexer; pos: int): int		67

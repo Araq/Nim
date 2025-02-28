@@ -1,0 +1,5 @@
+nimTitle	vmdeps	vmdeps.html	module vmdeps		0
+nim	opSlurp	vmdeps.html#opSlurp,string,TLineInfo,PSym,ConfigRef	proc opSlurp(file: string; info: TLineInfo; module: PSym; conf: ConfigRef): string		18
+nim	opMapTypeToAst	vmdeps.html#opMapTypeToAst,IdentCache,PType,TLineInfo,IdGenerator	proc opMapTypeToAst(cache: IdentCache; t: PType; info: TLineInfo; idgen: IdGenerator): PNode		323
+nim	opMapTypeInstToAst	vmdeps.html#opMapTypeInstToAst,IdentCache,PType,TLineInfo,IdGenerator	proc opMapTypeInstToAst(cache: IdentCache; t: PType; info: TLineInfo;\n                   idgen: IdGenerator): PNode		328
+nim	opMapTypeImplToAst	vmdeps.html#opMapTypeImplToAst,IdentCache,PType,TLineInfo,IdGenerator	proc opMapTypeImplToAst(cache: IdentCache; t: PType; info: TLineInfo;\n                   idgen: IdGenerator): PNode		333

@@ -1,0 +1,20 @@
+nimTitle	docgen	docgen.html	module docgen		0
+nim	PDoc	docgen.html#PDoc	type PDoc		111
+nim	presentationPath	docgen.html#presentationPath,ConfigRef,AbsoluteFile	proc presentationPath(conf: ConfigRef; file: AbsoluteFile): RelativeFile		178
+nim	newDocumentor	docgen.html#newDocumentor,AbsoluteFile,IdentCache,ConfigRef,string,PSym	proc newDocumentor(filename: AbsoluteFile; cache: IdentCache; conf: ConfigRef;\n              outExt: string = HtmlExt; module: PSym = nil;\n              standaloneDoc = false; preferMarkdown = true; hasToc = true): PDoc		324
+nim	documentRaises	docgen.html#documentRaises,IdentCache,PNode	proc documentRaises(cache: IdentCache; n: PNode)		1345
+nim	generateDoc	docgen.html#generateDoc,PDoc,PNode,PNode,ConfigRef,DocFlags	proc generateDoc(d: PDoc; n, orig: PNode; config: ConfigRef;\n            docFlags: DocFlags = kDefault)		1365
+nim	finishGenerateDoc	docgen.html#finishGenerateDoc,PDoc	proc finishGenerateDoc(d: var PDoc)		1450
+nim	generateJson	docgen.html#generateJson,PDoc,PNode,ConfigRef,bool	proc generateJson(d: PDoc; n: PNode; config: ConfigRef; includeComments: bool = true)		1566
+nim	generateTags	docgen.html#generateTags,PDoc,PNode,string	proc generateTags(d: PDoc; n: PNode; r: var string)		1611
+nim	generateIndex	docgen.html#generateIndex,PDoc	proc generateIndex(d: PDoc)		1763
+nim	writeOutput	docgen.html#writeOutput,PDoc	proc writeOutput(d: PDoc; useWarning = false; groupedToc = false)		1775
+nim	writeOutputJson	docgen.html#writeOutputJson,PDoc	proc writeOutputJson(d: PDoc; useWarning = false)		1806
+nim	handleDocOutputOptions	docgen.html#handleDocOutputOptions,ConfigRef	proc handleDocOutputOptions(conf: ConfigRef)		1830
+nim	commandDoc	docgen.html#commandDoc,IdentCache,ConfigRef	proc commandDoc(cache: IdentCache; conf: ConfigRef)		1837
+nim	commandRst2Html	docgen.html#commandRst2Html,IdentCache,ConfigRef	proc commandRst2Html(cache: IdentCache; conf: ConfigRef; preferMarkdown = false)		1865
+nim	commandRst2TeX	docgen.html#commandRst2TeX,IdentCache,ConfigRef	proc commandRst2TeX(cache: IdentCache; conf: ConfigRef; preferMarkdown = false)		1869
+nim	commandJson	docgen.html#commandJson,IdentCache,ConfigRef	proc commandJson(cache: IdentCache; conf: ConfigRef)		1873
+nim	commandTags	docgen.html#commandTags,IdentCache,ConfigRef	proc commandTags(cache: IdentCache; conf: ConfigRef)		1897
+nim	commandBuildIndex	docgen.html#commandBuildIndex,ConfigRef,string	proc commandBuildIndex(conf: ConfigRef; dir: string; outFile = RelativeFile"")		1919
+nim	commandBuildIndexJson	docgen.html#commandBuildIndexJson,ConfigRef,string	proc commandBuildIndexJson(conf: ConfigRef; dir: string; outFile = RelativeFile"")		1942

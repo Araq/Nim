@@ -1,0 +1,2 @@
+nimTitle	filter_tmpl	filter_tmpl.html	module filter_tmpl		0
+nim	filterTmpl	filter_tmpl.html#filterTmpl,ConfigRef,PLLStream,AbsoluteFile,PNode	proc filterTmpl(conf: ConfigRef; stdin: PLLStream; filename: AbsoluteFile;\n           call: PNode): PLLStream		204

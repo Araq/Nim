@@ -1,0 +1,9 @@
+nimTitle	setutils	setutils.html	module std/setutils		0
+nim	toSet	setutils.html#toSet.t,untyped	template toSet(iter: untyped): untyped		24
+nim	fullSet	setutils.html#fullSet,typedesc[T]	proc fullSet[T](U: typedesc[T]): set[T]		42
+nim	complement	setutils.html#complement,set[T]	proc complement[T](s: set[T]): set[T]		54
+nim	`[]=`	setutils.html#[]=,set[T],T,bool	proc `[]=`[T](t: var set[T]; key: T; val: bool)		65
+nim	symmetricDifference	setutils.html#symmetricDifference,set[T],set[T]	proc symmetricDifference[T](x, y: set[T]): set[T]		80
+nim	`-+-`	setutils.html#-+-,set[T],set[T]	proc `-+-`[T](x, y: set[T]): set[T]		90
+nim	toggle	setutils.html#toggle,set[T],set[T]	proc toggle[T](x: var set[T]; y: set[T])		96
+heading	See also	setutils.html#see-also	 See also		0

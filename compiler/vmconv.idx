@@ -1,0 +1,5 @@
+nimTitle	vmconv	vmconv.html	module vmconv		0
+nim	elementType	vmconv.html#elementType.t,typedesc	template elementType(T: typedesc): typedesc		6
+nim	fromLit	vmconv.html#fromLit,PNode,typedesc	proc fromLit(a: PNode; T: typedesc): auto		11
+nim	toLit	vmconv.html#toLit,T	proc toLit[T](a: T): PNode		22
+nim	toTimeLit	vmconv.html#toTimeLit,Time,PCtx,PNode,TLineInfo	proc toTimeLit(a: Time; c: PCtx; obj: PNode; info: TLineInfo): PNode		49

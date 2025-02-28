@@ -1,0 +1,14 @@
+nimTitle	idents	idents.html	module idents		0
+nim	PIdent	idents.html#PIdent	type PIdent		21
+nim	TIdent	idents.html#TIdent	object TIdent		22
+nim	IdentCache	idents.html#IdentCache	type IdentCache		28
+nim	resetIdentCache	idents.html#resetIdentCache	proc resetIdentCache()		33
+nim	cmpIgnoreStyle	idents.html#cmpIgnoreStyle,cstring,cstring,int	proc cmpIgnoreStyle(a, b: cstring; blen: int): int		35
+nim	getIdent	idents.html#getIdent,IdentCache,cstring,int,Hash	proc getIdent(ic: IdentCache; identifier: cstring; length: int; h: Hash): PIdent		69
+nim	getIdent	idents.html#getIdent,IdentCache,string	proc getIdent(ic: IdentCache; identifier: string): PIdent		99
+nim	getIdent	idents.html#getIdent,IdentCache,string,Hash	proc getIdent(ic: IdentCache; identifier: string; h: Hash): PIdent		103
+nim	newIdentCache	idents.html#newIdentCache	proc newIdentCache(): IdentCache		106
+nim	whichKeyword	idents.html#whichKeyword,PIdent	proc whichKeyword(id: PIdent): TSpecialWord		116
+nim	hash	idents.html#hash,PIdent	proc hash(x: PIdent): Hash		120
+nim	`==`	idents.html#==,PIdent,PIdent	proc `==`(a, b: PIdent): bool		121
+nimgrp	getident	idents.html#getIdent-procs-all	proc		69

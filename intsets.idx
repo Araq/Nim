@@ -1,0 +1,4 @@
+nimTitle	intsets	intsets.html	module std/intsets		0
+nim	IntSet	intsets.html#IntSet	type IntSet		18
+nim	toIntSet	intsets.html#toIntSet,openArray[int]	proc toIntSet(x: openArray[int]): IntSet		20
+nim	initIntSet	intsets.html#initIntSet	proc initIntSet(): IntSet		22

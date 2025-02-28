@@ -1,0 +1,2 @@
+nimTitle	importutils	importutils.html	module std/importutils		0
+nim	privateAccess	importutils.html#privateAccess,typedesc	proc privateAccess(t: typedesc)		23

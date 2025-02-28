@@ -1,0 +1,15 @@
+nimTitle	sighashes	sighashes.html	module sighashes		0
+nim	CoProc	sighashes.html#CoProc	ConsiderFlag.CoProc		39
+nim	CoType	sighashes.html#CoType	ConsiderFlag.CoType		39
+nim	CoOwnerSig	sighashes.html#CoOwnerSig	ConsiderFlag.CoOwnerSig		39
+nim	CoIgnoreRange	sighashes.html#CoIgnoreRange	ConsiderFlag.CoIgnoreRange		39
+nim	CoConsiderOwned	sighashes.html#CoConsiderOwned	ConsiderFlag.CoConsiderOwned		39
+nim	CoDistinct	sighashes.html#CoDistinct	ConsiderFlag.CoDistinct		39
+nim	CoHashTypeInsideNode	sighashes.html#CoHashTypeInsideNode	ConsiderFlag.CoHashTypeInsideNode		39
+nim	ConsiderFlag	sighashes.html#ConsiderFlag	enum ConsiderFlag		39
+nim	hashType	sighashes.html#hashType,PType,ConfigRef,set[ConsiderFlag]	proc hashType(t: PType; conf: ConfigRef; flags: set[ConsiderFlag] = {CoType}): SigHash		273
+nim	hashNonProc	sighashes.html#hashNonProc,PSym	proc hashNonProc(s: PSym): SigHash		304
+nim	hashOwner	sighashes.html#hashOwner,PSym	proc hashOwner(s: PSym): SigHash		321
+nim	sigHash	sighashes.html#sigHash,PSym,ConfigRef	proc sigHash(s: PSym; conf: ConfigRef): SigHash		335
+nim	symBodyDigest	sighashes.html#symBodyDigest,ModuleGraph,PSym	proc symBodyDigest(graph: ModuleGraph; sym: PSym): SigHash		341
+nim	idOrSig	sighashes.html#idOrSig,PSym,string,CountTable[SigHash],ConfigRef	proc idOrSig(s: PSym; currentModule: string; sigCollisions: var CountTable[SigHash];\n        conf: ConfigRef): Rope		410

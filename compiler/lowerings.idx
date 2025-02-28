@@ -1,0 +1,34 @@
+nimTitle	lowerings	lowerings.html	module lowerings		0
+nim	genPrefix	lowerings.html#genPrefix	const genPrefix		13
+nim	newDeref	lowerings.html#newDeref,PNode	proc newDeref(n: PNode): PNode		21
+nim	newTupleAccess	lowerings.html#newTupleAccess,ModuleGraph,PNode,int	proc newTupleAccess(g: ModuleGraph; tup: PNode; i: int): PNode		25
+nim	addVar	lowerings.html#addVar,PNode,PNode	proc addVar(father, v: PNode)		41
+nim	addVar	lowerings.html#addVar,PNode,PNode,PNode	proc addVar(father, v, value: PNode)		48
+nim	newAsgnStmt	lowerings.html#newAsgnStmt,PNode,PNode	proc newAsgnStmt(le, ri: PNode): PNode		55
+nim	newFastAsgnStmt	lowerings.html#newFastAsgnStmt,PNode,PNode	proc newFastAsgnStmt(le, ri: PNode): PNode		60
+nim	newFastMoveStmt	lowerings.html#newFastMoveStmt,ModuleGraph,PNode,PNode	proc newFastMoveStmt(g: ModuleGraph; le, ri: PNode): PNode		65
+nim	lowerTupleUnpacking	lowerings.html#lowerTupleUnpacking,ModuleGraph,PNode,IdGenerator,PSym	proc lowerTupleUnpacking(g: ModuleGraph; n: PNode; idgen: IdGenerator; owner: PSym): PNode		72
+nim	evalOnce	lowerings.html#evalOnce,ModuleGraph,PNode,IdGenerator,PSym	proc evalOnce(g: ModuleGraph; value: PNode; idgen: IdGenerator; owner: PSym): PNode		98
+nim	newTupleAccessRaw	lowerings.html#newTupleAccessRaw,PNode,int	proc newTupleAccessRaw(tup: PNode; i: int): PNode		115
+nim	newTryFinally	lowerings.html#newTryFinally,PNode,PNode	proc newTryFinally(body, final: PNode): PNode		122
+nim	lowerSwap	lowerings.html#lowerSwap,ModuleGraph,PNode,IdGenerator,PSym	proc lowerSwap(g: ModuleGraph; n: PNode; idgen: IdGenerator; owner: PSym): PNode		125
+nim	createObj	lowerings.html#createObj,ModuleGraph,IdGenerator,PSym,TLineInfo	proc createObj(g: ModuleGraph; idgen: IdGenerator; owner: PSym; info: TLineInfo;\n          final = true): PType		146
+nim	rawAddField	lowerings.html#rawAddField,PType,PSym	proc rawAddField(obj: PType; field: PSym)		166
+nim	rawIndirectAccess	lowerings.html#rawIndirectAccess,PNode,PSym,TLineInfo	proc rawIndirectAccess(a: PNode; field: PSym; info: TLineInfo): PNode		173
+nim	rawDirectAccess	lowerings.html#rawDirectAccess,PSym,PSym	proc rawDirectAccess(obj, field: PSym): PNode		184
+nim	addField	lowerings.html#addField,PType,PSym,IdentCache,IdGenerator	proc addField(obj: PType; s: PSym; cache: IdentCache; idgen: IdGenerator): PSym		213
+nim	addUniqueField	lowerings.html#addUniqueField,PType,PSym,IdentCache,IdGenerator	proc addUniqueField(obj: PType; s: PSym; cache: IdentCache; idgen: IdGenerator): PSym		233
+nim	newDotExpr	lowerings.html#newDotExpr,PSym,PSym	proc newDotExpr(obj, b: PSym): PNode		247
+nim	indirectAccess	lowerings.html#indirectAccess,PNode,ItemId,TLineInfo	proc indirectAccess(a: PNode; b: ItemId; info: TLineInfo): PNode		255
+nim	indirectAccess	lowerings.html#indirectAccess,PNode,string,TLineInfo,IdentCache	proc indirectAccess(a: PNode; b: string; info: TLineInfo; cache: IdentCache): PNode		278
+nim	getFieldFromObj	lowerings.html#getFieldFromObj,PType,PSym	proc getFieldFromObj(t: PType; v: PSym): PSym		302
+nim	indirectAccess	lowerings.html#indirectAccess,PNode,PSym,TLineInfo	proc indirectAccess(a: PNode; b: PSym; info: TLineInfo): PNode		313
+nim	indirectAccess	lowerings.html#indirectAccess,PSym,PSym,TLineInfo	proc indirectAccess(a, b: PSym; info: TLineInfo): PNode		317
+nim	genAddrOf	lowerings.html#genAddrOf,PNode,IdGenerator	proc genAddrOf(n: PNode; idgen: IdGenerator; typeKind = tyPtr): PNode		320
+nim	genDeref	lowerings.html#genDeref,PNode	proc genDeref(n: PNode; k = nkHiddenDeref): PNode		326
+nim	callCodegenProc	lowerings.html#callCodegenProc,ModuleGraph,string,TLineInfo,PNode,PNode,PNode,PNode	proc callCodegenProc(g: ModuleGraph; name: string; info: TLineInfo = unknownLineInfo;\n                arg1: PNode = nil; arg2: PNode = nil; arg3: PNode = nil;\n                optionalArgs: PNode = nil): PNode		331
+nim	newIntLit	lowerings.html#newIntLit,ModuleGraph,TLineInfo,BiggestInt	proc newIntLit(g: ModuleGraph; info: TLineInfo; value: BiggestInt): PNode		349
+nim	genHigh	lowerings.html#genHigh,ModuleGraph,PNode	proc genHigh(g: ModuleGraph; n: PNode): PNode		353
+nim	genLen	lowerings.html#genLen,ModuleGraph,PNode	proc genLen(g: ModuleGraph; n: PNode): PNode		362
+nimgrp	indirectaccess	lowerings.html#indirectAccess-procs-all	proc		255
+nimgrp	addvar	lowerings.html#addVar-procs-all	proc		41

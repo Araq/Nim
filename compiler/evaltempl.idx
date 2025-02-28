@@ -1,0 +1,4 @@
+nimTitle	evaltempl	evaltempl.html	module evaltempl		0
+nim	evalTemplateLimit	evaltempl.html#evalTemplateLimit	const evalTemplateLimit		163
+nim	wrapInComesFrom	evaltempl.html#wrapInComesFrom,TLineInfo,PSym,PNode	proc wrapInComesFrom(info: TLineInfo; sym: PSym; res: PNode): PNode		165
+nim	evalTemplate	evaltempl.html#evalTemplate,PNode,PSym,PSym,ConfigRef,IdentCache,ref.int,IdGenerator	proc evalTemplate(n: PNode; tmpl, genSymOwner: PSym; conf: ConfigRef; ic: IdentCache;\n             instID: ref int; idgen: IdGenerator; fromHlo = false): PNode		187

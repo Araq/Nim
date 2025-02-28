@@ -1,0 +1,7 @@
+nimTitle	spawn	spawn.html	module spawn		0
+nim	srVoid	spawn.html#srVoid	TSpawnResult.srVoid		27
+nim	srFlowVar	spawn.html#srFlowVar	TSpawnResult.srFlowVar		27
+nim	srByVar	spawn.html#srByVar	TSpawnResult.srByVar		27
+nim	TSpawnResult	spawn.html#TSpawnResult	enum TSpawnResult		27
+nim	spawnResult	spawn.html#spawnResult,PType,bool	proc spawnResult(t: PType; inParallel: bool): TSpawnResult		34
+nim	wrapProcForSpawn	spawn.html#wrapProcForSpawn,ModuleGraph,IdGenerator,PSym,PNode,PType,PNode,PNode	proc wrapProcForSpawn(g: ModuleGraph; idgen: IdGenerator; owner: PSym;\n                 spawnExpr: PNode; retType: PType; barrier: PNode = nil;\n                 dest: PNode = nil): PNode		330

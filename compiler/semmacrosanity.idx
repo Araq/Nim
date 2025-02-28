@@ -1,0 +1,2 @@
+nimTitle	semmacrosanity	semmacrosanity.html	module semmacrosanity		0
+nim	annotateType	semmacrosanity.html#annotateType,PNode,PType,ConfigRef	proc annotateType(n: PNode; t: PType; conf: ConfigRef)		89

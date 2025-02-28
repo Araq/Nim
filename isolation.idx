@@ -1,0 +1,8 @@
+nimTitle	isolation	isolation.html	module std/isolation		0
+nim	Isolated	isolation.html#Isolated	object Isolated		18
+nim	`=copy`	isolation.html#=copy,Isolated[T],Isolated[T]	proc `=copy`[T](dest: var Isolated[T]; src: Isolated[T])		21
+nim	`=sink`	isolation.html#=sink,Isolated[T],Isolated[T]	proc `=sink`[T](dest: var Isolated[T]; src: Isolated[T])		23
+nim	`=destroy`	isolation.html#=destroy,Isolated[T]	proc `=destroy`[T](dest: var Isolated[T])		27
+nim	isolate	isolation.html#isolate,sinkT	proc isolate[T](value: sink T): Isolated[T]		31
+nim	unsafeIsolate	isolation.html#unsafeIsolate,sinkT	proc unsafeIsolate[T](value: sink T): Isolated[T]		39
+nim	extract	isolation.html#extract,Isolated[T]	proc extract[T](src: var Isolated[T]): T		46

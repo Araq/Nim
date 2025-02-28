@@ -1,0 +1,6 @@
+nimTitle	effecttraits	effecttraits.html	module std/effecttraits		0
+nim	getRaisesList	effecttraits.html#getRaisesList,NimNode	proc getRaisesList(fn: NimNode): NimNode		28
+nim	getTagsList	effecttraits.html#getTagsList,NimNode	proc getTagsList(fn: NimNode): NimNode		36
+nim	getForbidsList	effecttraits.html#getForbidsList,NimNode	proc getForbidsList(fn: NimNode): NimNode		44
+nim	isGcSafe	effecttraits.html#isGcSafe,NimNode	proc isGcSafe(fn: NimNode): bool		52
+nim	hasNoSideEffects	effecttraits.html#hasNoSideEffects,NimNode	proc hasNoSideEffects(fn: NimNode): bool		60

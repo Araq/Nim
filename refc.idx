@@ -1,0 +1,10 @@
+markupTitle	refc.md	refc.html	refc.md		0
+heading	Tweaking the refc GC	refc.html#tweaking-the-refc-gc	 Tweaking the refc GC		0
+heading	Cycle collector	refc.html#cycle-collector	  Cycle collector		0
+heading	Soft real-time support	refc.html#soft-realminustime-support	  Soft real-time support		0
+idx	useRealtimeGC	refc.html#userealtimegc_1	Soft real-time support		0
+heading	Time measurement with garbage collectors	refc.html#time-measurement-with-garbage-collectors	  Time measurement with garbage collectors		0
+heading	Tweaking the garbage collector	refc.html#tweaking-the-garbage-collector	  Tweaking the garbage collector		0
+heading	Thread coordination	refc.html#thread-coordination	  Thread coordination		0
+heading	Keeping track of memory	refc.html#keeping-track-of-memory	 Keeping track of memory		0
+heading	Heap dump	refc.html#heap-dump	 Heap dump		0

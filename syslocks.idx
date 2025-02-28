@@ -1,0 +1,17 @@
+nimTitle	syslocks	syslocks.html	module std/private/syslocks		0
+nim	SysLockAttr	syslocks.html#SysLockAttr	object SysLockAttr		110
+nim	SysLock	syslocks.html#SysLock	type SysLock		171
+nim	SysCond	syslocks.html#SysCond	type SysCond		172
+nim	initSysLock	syslocks.html#initSysLock.t,SysLockObj,ptr.SysLockAttr	template initSysLock(L: var SysLock; attr: ptr SysLockAttr = nil)		174
+nim	deinitSys	syslocks.html#deinitSys.t,SysLockObj	template deinitSys(L: SysLock)		176
+nim	acquireSys	syslocks.html#acquireSys.t,SysLockObj	template acquireSys(L: var SysLock)		178
+nim	tryAcquireSys	syslocks.html#tryAcquireSys.t,SysLockObj	template tryAcquireSys(L: var SysLock): bool		180
+nim	releaseSys	syslocks.html#releaseSys.t,SysLockObj	template releaseSys(L: var SysLock)		182
+nim	SysLockType_Reentrant	syslocks.html#SysLockType_Reentrant	var SysLockType_Reentrant		186
+nim	initSysLockAttr	syslocks.html#initSysLockAttr,SysLockAttr	proc initSysLockAttr(a: var SysLockAttr)		188
+nim	setSysLockType	syslocks.html#setSysLockType,SysLockAttr,SysLockType	proc setSysLockType(a: var SysLockAttr; t: SysLockType)		190
+nim	initSysCond	syslocks.html#initSysCond.t,SysCondObj,ptr.SysCondAttr	template initSysCond(cond: var SysCond; cond_attr: ptr SysCondAttr = nil)		222
+nim	deinitSysCond	syslocks.html#deinitSysCond.t,SysCondObj	template deinitSysCond(cond: SysCond)		224
+nim	waitSysCond	syslocks.html#waitSysCond.t,SysCondObj,SysLockObj	template waitSysCond(cond: var SysCond; lock: var SysLock)		227
+nim	signalSysCond	syslocks.html#signalSysCond.t,SysCondObj	template signalSysCond(cond: var SysCond)		229
+nim	broadcastSysCond	syslocks.html#broadcastSysCond.t,SysCondObj	template broadcastSysCond(cond: var SysCond)		231

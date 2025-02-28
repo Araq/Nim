@@ -1,0 +1,56 @@
+nimTitle	nre	nre.html	module std/nre		0
+nim	RegexDesc	nre.html#RegexDesc	object RegexDesc		77
+nim	Regex	nre.html#Regex	type Regex		84
+nim	RegexMatch	nre.html#RegexMatch	object RegexMatch		156
+nim	Captures	nre.html#Captures	type Captures		198
+nim	CaptureBounds	nre.html#CaptureBounds	type CaptureBounds		199
+nim	RegexError	nre.html#RegexError	type RegexError		201
+nim	RegexInternalError	nre.html#RegexInternalError	type RegexInternalError		203
+nim	InvalidUnicodeError	nre.html#InvalidUnicodeError	type InvalidUnicodeError		206
+nim	SyntaxError	nre.html#SyntaxError	type SyntaxError		210
+nim	StudyError	nre.html#StudyError	type StudyError		216
+nim	captureCount	nre.html#captureCount,Regex	proc captureCount(pattern: Regex): int		302
+nim	captureNameId	nre.html#captureNameId,Regex	proc captureNameId(pattern: Regex): Table[string, int]		305
+nim	captureBounds	nre.html#captureBounds,RegexMatch	proc captureBounds(pattern: RegexMatch): CaptureBounds		330
+nim	captures	nre.html#captures,RegexMatch	proc captures(pattern: RegexMatch): Captures		332
+nim	contains	nre.html#contains,CaptureBounds,int	proc contains(pattern: CaptureBounds; i: int): bool		334
+nim	contains	nre.html#contains,Captures,int	proc contains(pattern: Captures; i: int): bool		338
+nim	`[]`	nre.html#[],CaptureBounds,int	proc `[]`(pattern: CaptureBounds; i: int): HSlice[int, int]		341
+nim	`[]`	nre.html#[],Captures,int	proc `[]`(pattern: Captures; i: int): string		349
+nim	match	nre.html#match,RegexMatch	proc match(pattern: RegexMatch): string		355
+nim	matchBounds	nre.html#matchBounds,RegexMatch	proc matchBounds(pattern: RegexMatch): HSlice[int, int]		358
+nim	contains	nre.html#contains,CaptureBounds,string	proc contains(pattern: CaptureBounds; name: string): bool		361
+nim	contains	nre.html#contains,Captures,string	proc contains(pattern: Captures; name: string): bool		368
+nim	`[]`	nre.html#[],CaptureBounds,string	proc `[]`(pattern: CaptureBounds; name: string): HSlice[int, int]		375
+nim	`[]`	nre.html#[],Captures,string	proc `[]`(pattern: Captures; name: string): string		381
+nim	toTable	nre.html#toTable,Captures	proc toTable(pattern: Captures): Table[string, string]		392
+nim	toTable	nre.html#toTable,CaptureBounds	proc toTable(pattern: CaptureBounds): Table[string, HSlice[int, int]]		396
+nim	items	nre.html#items.i,CaptureBounds	iterator items(pattern: CaptureBounds; default = none(HSlice[int, int])): Option[\n    HSlice[int, int]]		411
+nim	items	nre.html#items.i,Captures,Option[string]	iterator items(pattern: Captures; default: Option[string] = none(string)): Option[string]		415
+nim	toSeq	nre.html#toSeq,CaptureBounds	proc toSeq(pattern: CaptureBounds; default = none(HSlice[int, int])): seq[\n    Option[HSlice[int, int]]]		419
+nim	toSeq	nre.html#toSeq,Captures,Option[string]	proc toSeq(pattern: Captures; default: Option[string] = none(string)): seq[\n    Option[string]]		424
+nim	`$`	nre.html#$,RegexMatch	proc `$`(pattern: RegexMatch): string		429
+nim	`==`	nre.html#==,Regex,Regex	proc `==`(a, b: Regex): bool		432
+nim	`==`	nre.html#==,RegexMatch,RegexMatch	proc `==`(a, b: RegexMatch): bool		440
+nim	re	nre.html#re,string	proc re(pattern: string): Regex		499
+nim	match	nre.html#match,string,Regex,int	proc match(str: string; pattern: Regex; start = 0; endpos = int.high): Option[\n    RegexMatch]		542
+nim	findIter	nre.html#findIter.i,string,Regex,int	iterator findIter(str: string; pattern: Regex; start = 0; endpos = int.high): RegexMatch		559
+nim	find	nre.html#find,string,Regex,int	proc find(str: string; pattern: Regex; start = 0; endpos = int.high): Option[\n    RegexMatch]		610
+nim	findAll	nre.html#findAll,string,Regex,int	proc findAll(str: string; pattern: Regex; start = 0; endpos = int.high): seq[string]		623
+nim	contains	nre.html#contains,string,Regex,int	proc contains(str: string; pattern: Regex; start = 0; endpos = int.high): bool		628
+nim	split	nre.html#split,string,Regex,int,int	proc split(str: string; pattern: Regex; maxSplit = -1; start = 0): seq[string]		639
+nim	replace	nre.html#replace,string,Regex,proc(RegexMatch)	proc replace(str: string; pattern: Regex; subproc: proc (match: RegexMatch): string): string		718
+nim	replace	nre.html#replace,string,Regex,proc(string)	proc replace(str: string; pattern: Regex; subproc: proc (match: string): string): string		743
+nim	replace	nre.html#replace,string,Regex,string	proc replace(str: string; pattern: Regex; sub: string): string		747
+nim	escapeRe	nre.html#escapeRe,string	proc escapeRe(str: string): string		752
+heading	What is NRE?	nre.html#what-is-nreqmark	 What is NRE?		0
+heading	Licencing	nre.html#what-is-nreqmark-licencing	  Licencing		0
+heading	Options	nre.html#licencing-options	   Options		0
+nimgrp	totable	nre.html#toTable-procs-all	proc		392
+nimgrp	replace	nre.html#replace-procs-all	proc		718
+nimgrp	==	nre.html#==-procs-all	proc		432
+nimgrp	contains	nre.html#contains-procs-all	proc		334
+nimgrp	[]	nre.html#[]-procs-all	proc		341
+nimgrp	toseq	nre.html#toSeq-procs-all	proc		419
+nimgrp	match	nre.html#match-procs-all	proc		355
+nimgrp	items	nre.html#items-iterators-all	iterator		411

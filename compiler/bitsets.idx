@@ -1,0 +1,15 @@
+nimTitle	bitsets	bitsets.html	module bitsets		0
+nim	TBitSet	bitsets.html#TBitSet	type TBitSet		18
+nim	ElemSize	bitsets.html#ElemSize	const ElemSize		22
+nim	bitSetIn	bitsets.html#bitSetIn,TBitSet,BiggestInt	proc bitSetIn(x: TBitSet; e: BiggestInt): bool		29
+nim	bitSetIncl	bitsets.html#bitSetIncl,TBitSet,BiggestInt	proc bitSetIncl(x: var TBitSet; elem: BiggestInt)		32
+nim	bitSetExcl	bitsets.html#bitSetExcl,TBitSet,BiggestInt	proc bitSetExcl(x: var TBitSet; elem: BiggestInt)		37
+nim	bitSetInit	bitsets.html#bitSetInit,TBitSet,int	proc bitSetInit(b: var TBitSet; length: int)		41
+nim	bitSetUnion	bitsets.html#bitSetUnion,TBitSet,TBitSet	proc bitSetUnion(x: var TBitSet; y: TBitSet)		44
+nim	bitSetDiff	bitsets.html#bitSetDiff,TBitSet,TBitSet	proc bitSetDiff(x: var TBitSet; y: TBitSet)		47
+nim	bitSetSymDiff	bitsets.html#bitSetSymDiff,TBitSet,TBitSet	proc bitSetSymDiff(x: var TBitSet; y: TBitSet)		50
+nim	bitSetIntersect	bitsets.html#bitSetIntersect,TBitSet,TBitSet	proc bitSetIntersect(x: var TBitSet; y: TBitSet)		53
+nim	bitSetEquals	bitsets.html#bitSetEquals,TBitSet,TBitSet	proc bitSetEquals(x, y: TBitSet): bool		56
+nim	bitSetContains	bitsets.html#bitSetContains,TBitSet,TBitSet	proc bitSetContains(x, y: TBitSet): bool		62
+nim	bitSetCard	bitsets.html#bitSetCard,TBitSet	proc bitSetCard(x: TBitSet): BiggestInt		89
+nim	bitSetToWord	bitsets.html#bitSetToWord,TBitSet,int	proc bitSetToWord(s: TBitSet; size: int): BiggestUInt		94

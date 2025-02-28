@@ -1,0 +1,2 @@
+nimTitle	ntpath	ntpath.html	module std/private/ntpath		0
+nim	splitDrive	ntpath.html#splitDrive,string	proc splitDrive(p: string): tuple[drive, path: string]		15

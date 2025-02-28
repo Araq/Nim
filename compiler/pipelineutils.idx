@@ -1,0 +1,5 @@
+nimTitle	pipelineutils	pipelineutils.html	module pipelineutils		0
+nim	skipCodegen	pipelineutils.html#skipCodegen,ConfigRef,PNode	proc skipCodegen(config: ConfigRef; n: PNode): bool		3
+nim	resolveMod	pipelineutils.html#resolveMod,ConfigRef,string,string	proc resolveMod(conf: ConfigRef; module, relativeTo: string): FileIndex		9
+nim	prepareConfigNotes	pipelineutils.html#prepareConfigNotes,ModuleGraph,PSym	proc prepareConfigNotes(graph: ModuleGraph; module: PSym)		16
+nim	moduleHasChanged	pipelineutils.html#moduleHasChanged,ModuleGraph,PSym	proc moduleHasChanged(graph: ModuleGraph; module: PSym): bool		24

@@ -1,0 +1,2 @@
+nimTitle	wordwrap	wordwrap.html	module std/wordwrap		0
+nim	wrapWords	wordwrap.html#wrapWords,string,int,set[char],string	proc wrapWords(s: string; maxLineWidth = 80; splitLongWords = true;\n          seps: set[char] = Whitespace; newLine = "\n"): string		22

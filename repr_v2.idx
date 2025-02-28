@@ -1,0 +1,24 @@
+nimTitle	repr_v2	repr_v2.html	module system/repr_v2		0
+nim	repr	repr_v2.html#repr,NimNode	proc repr(x: NimNode): string		15
+nim	repr	repr_v2.html#repr,int	proc repr(x: int): string		17
+nim	repr	repr_v2.html#repr,int64	proc repr(x: int64): string		21
+nim	repr	repr_v2.html#repr,uint64	proc repr(x: uint64): string		25
+nim	repr	repr_v2.html#repr,float	proc repr(x: float): string		29
+nim	repr	repr_v2.html#repr,bool	proc repr(x: bool): string		33
+nim	repr	repr_v2.html#repr,char	proc repr(x: char): string		37
+nim	repr	repr_v2.html#repr	proc repr(x: string | cstring): string		54
+nim	repr	repr_v2.html#repr,Enum	proc repr[Enum: enum](x: Enum): string		70
+nim	reprDiscriminant	repr_v2.html#reprDiscriminant,int	proc reprDiscriminant(e: int): string		77
+nim	repr	repr_v2.html#repr,pointer	proc repr(p: pointer): string		82
+nim	repr	repr_v2.html#repr_2	proc repr(p: proc | iterator {.closure.}): string		98
+nim	repr	repr_v2.html#repr.t,T	template repr[T: distinct | (range and not enum)](x: T): string		102
+nim	repr	repr_v2.html#repr.t,typedesc	template repr(t: typedesc): string		110
+nim	repr	repr_v2.html#repr,T	proc repr[T: tuple | object](x: T): string		133
+nim	repr	repr_v2.html#repr_3	proc repr[T](x: ref T | ptr T): string		147
+nim	repr	repr_v2.html#repr,set[T]	proc repr[T](x: set[T]): string		167
+nim	repr	repr_v2.html#repr,seq[T]	proc repr[T](x: seq[T]): string		175
+nim	repr	repr_v2.html#repr,array[IDX,T]	proc repr[T, IDX](x: array[IDX, T]): string		183
+nim	repr	repr_v2.html#repr,openArray[T]	proc repr[T](x: openArray[T]): string		187
+nim	repr	repr_v2.html#repr,UncheckedArray[T]	proc repr[T](x: UncheckedArray[T]): string		195
+nimgrp	repr	repr_v2.html#repr-procs-all	proc		15
+nimgrp	repr	repr_v2.html#repr-templates-all	template		102

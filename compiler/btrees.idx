@@ -1,0 +1,10 @@
+nimTitle	btrees	btrees.html	module btrees		0
+nim	BTree	btrees.html#BTree	object BTree		30
+nim	initBTree	btrees.html#initBTree	proc initBTree[Key, Val](): BTree[Key, Val]		34
+nim	getOrDefault	btrees.html#getOrDefault,BTree[Key,Val],Key	proc getOrDefault[Key, Val](b: BTree[Key, Val]; key: Key): Val		40
+nim	contains	btrees.html#contains,BTree[Key,Val],Key	proc contains[Key, Val](b: BTree[Key, Val]; key: Key): bool		52
+nim	add	btrees.html#add,BTree[Key,Val],Key,Val	proc add[Key, Val](b: var BTree[Key, Val]; key: Key; val: Val)		121
+nim	hasNext	btrees.html#hasNext,BTree[Key,Val],int	proc hasNext[Key, Val](b: BTree[Key, Val]; index: int): bool		148
+nim	next	btrees.html#next,BTree[Key,Val],int	proc next[Key, Val](b: BTree[Key, Val]; index: int): (Key, Val, int)		158
+nim	pairs	btrees.html#pairs.i,BTree[Key,Val]	iterator pairs[Key, Val](b: BTree[Key, Val]): (Key, Val)		173
+nim	len	btrees.html#len,BTree[Key,Val]	proc len[Key, Val](b: BTree[Key, Val]): int		180

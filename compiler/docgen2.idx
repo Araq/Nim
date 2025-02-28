@@ -1,0 +1,8 @@
+nimTitle	docgen2	docgen2.html	module docgen2		0
+nim	closeDoc	docgen2.html#closeDoc,ModuleGraph,PPassContext,PNode	proc closeDoc(graph: ModuleGraph; p: PPassContext; n: PNode): PNode		41
+nim	closeJson	docgen2.html#closeJson,ModuleGraph,PPassContext,PNode	proc closeJson(graph: ModuleGraph; p: PPassContext; n: PNode): PNode		46
+nim	processNode	docgen2.html#processNode,PPassContext,PNode	proc processNode(c: PPassContext; n: PNode): PNode		51
+nim	processNodeJson	docgen2.html#processNodeJson,PPassContext,PNode	proc processNodeJson(c: PPassContext; n: PNode): PNode		57
+nim	openHtml	docgen2.html#openHtml,ModuleGraph,PSym,IdGenerator	proc openHtml(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		73
+nim	openTex	docgen2.html#openTex,ModuleGraph,PSym,IdGenerator	proc openTex(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		76
+nim	openJson	docgen2.html#openJson,ModuleGraph,PSym,IdGenerator	proc openJson(graph: ModuleGraph; module: PSym; idgen: IdGenerator): PPassContext		79

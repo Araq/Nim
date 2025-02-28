@@ -1,0 +1,50 @@
+nimTitle	stats	stats.html	module std/stats		0
+nim	RunningStat	stats.html#RunningStat	object RunningStat		66
+nim	RunningRegress	stats.html#RunningRegress	object RunningRegress		71
+nim	clear	stats.html#clear,RunningStat	proc clear(s: var RunningStat)		79
+nim	push	stats.html#push,RunningStat,float	proc push(s: var RunningStat; x: float)		90
+nim	push	stats.html#push,RunningStat,int	proc push(s: var RunningStat; x: int)		112
+nim	push	stats.html#push,RunningStat,openArray[]	proc push(s: var RunningStat; x: openArray[float | int])		119
+nim	mean	stats.html#mean,RunningStat	proc mean(s: RunningStat): float		127
+nim	variance	stats.html#variance,RunningStat	proc variance(s: RunningStat): float		131
+nim	varianceS	stats.html#varianceS,RunningStat	proc varianceS(s: RunningStat): float		135
+nim	standardDeviation	stats.html#standardDeviation,RunningStat	proc standardDeviation(s: RunningStat): float		140
+nim	standardDeviationS	stats.html#standardDeviationS,RunningStat	proc standardDeviationS(s: RunningStat): float		144
+nim	skewness	stats.html#skewness,RunningStat	proc skewness(s: RunningStat): float		148
+nim	skewnessS	stats.html#skewnessS,RunningStat	proc skewnessS(s: RunningStat): float		152
+nim	kurtosis	stats.html#kurtosis,RunningStat	proc kurtosis(s: RunningStat): float		157
+nim	kurtosisS	stats.html#kurtosisS,RunningStat	proc kurtosisS(s: RunningStat): float		161
+nim	`+`	stats.html#+,RunningStat,RunningStat	proc `+`(a, b: RunningStat): RunningStat		166
+nim	`+=`	stats.html#+=,RunningStat,RunningStat	proc `+=`(a: var RunningStat; b: RunningStat)		195
+nim	`$`	stats.html#$,RunningStat	proc `$`(a: RunningStat): string		199
+nim	mean	stats.html#mean,openArray[T]	proc mean[T](x: openArray[T]): float		218
+nim	variance	stats.html#variance,openArray[T]	proc variance[T](x: openArray[T]): float		224
+nim	varianceS	stats.html#varianceS,openArray[T]	proc varianceS[T](x: openArray[T]): float		230
+nim	standardDeviation	stats.html#standardDeviation,openArray[T]	proc standardDeviation[T](x: openArray[T]): float		236
+nim	standardDeviationS	stats.html#standardDeviationS,openArray[T]	proc standardDeviationS[T](x: openArray[T]): float		242
+nim	skewness	stats.html#skewness,openArray[T]	proc skewness[T](x: openArray[T]): float		248
+nim	skewnessS	stats.html#skewnessS,openArray[T]	proc skewnessS[T](x: openArray[T]): float		254
+nim	kurtosis	stats.html#kurtosis,openArray[T]	proc kurtosis[T](x: openArray[T]): float		260
+nim	kurtosisS	stats.html#kurtosisS,openArray[T]	proc kurtosisS[T](x: openArray[T]): float		266
+nim	clear	stats.html#clear,RunningRegress	proc clear(r: var RunningRegress)		274
+nim	push	stats.html#push,RunningRegress,float,float	proc push(r: var RunningRegress; x, y: float)		281
+nim	push	stats.html#push,RunningRegress,int,int	proc push(r: var RunningRegress; x, y: int)		289
+nim	push	stats.html#push,RunningRegress,openArray[],openArray[]	proc push(r: var RunningRegress; x, y: openArray[float | int])		296
+nim	slope	stats.html#slope,RunningRegress	proc slope(r: RunningRegress): float		302
+nim	intercept	stats.html#intercept,RunningRegress	proc intercept(r: RunningRegress): float		307
+nim	correlation	stats.html#correlation,RunningRegress	proc correlation(r: RunningRegress): float		311
+nim	`+`	stats.html#+,RunningRegress,RunningRegress	proc `+`(a, b: RunningRegress): RunningRegress		317
+nim	`+=`	stats.html#+=,RunningRegress,RunningRegress	proc `+=`(a: var RunningRegress; b: RunningRegress)		333
+nimgrp	standarddeviations	stats.html#standardDeviationS-procs-all	proc		144
+nimgrp	standarddeviation	stats.html#standardDeviation-procs-all	proc		140
+nimgrp	skewnesss	stats.html#skewnessS-procs-all	proc		152
+nimgrp	+	stats.html#+-procs-all	proc		166
+nimgrp	mean	stats.html#mean-procs-all	proc		127
+nimgrp	skewness	stats.html#skewness-procs-all	proc		148
+nimgrp	kurtosis	stats.html#kurtosis-procs-all	proc		157
+nimgrp	clear	stats.html#clear-procs-all	proc		79
+nimgrp	variance	stats.html#variance-procs-all	proc		131
+nimgrp	kurtosiss	stats.html#kurtosisS-procs-all	proc		161
+nimgrp	+=	stats.html#+=-procs-all	proc		195
+nimgrp	variances	stats.html#varianceS-procs-all	proc		135
+nimgrp	push	stats.html#push-procs-all	proc		90

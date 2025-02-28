@@ -1,0 +1,31 @@
+markupTitle	Nim Standard Library	lib.html	Nim Standard Library		0
+heading	Nimble	lib.html#nimble	 Nimble		0
+heading	Pure libraries	lib.html#pure-libraries	 Pure libraries		0
+heading	Automatic imports	lib.html#pure-libraries-automatic-imports	  Automatic imports		0
+heading	Core	lib.html#pure-libraries-core	  Core		0
+heading	Algorithms	lib.html#pure-libraries-algorithms	  Algorithms		0
+heading	Collections	lib.html#pure-libraries-collections	  Collections		0
+heading	String handling	lib.html#pure-libraries-string-handling	  String handling		0
+heading	Time handling	lib.html#pure-libraries-time-handling	  Time handling		0
+heading	Generic Operating System Services	lib.html#pure-libraries-generic-operating-system-services	  Generic Operating System Services		0
+heading	Math libraries	lib.html#pure-libraries-math-libraries	  Math libraries		0
+heading	Internet Protocols and Support	lib.html#pure-libraries-internet-protocols-and-support	  Internet Protocols and Support		0
+heading	Threading	lib.html#pure-libraries-threading	  Threading		0
+heading	Parsers	lib.html#pure-libraries-parsers	  Parsers		0
+heading	Docutils	lib.html#pure-libraries-docutils	  Docutils		0
+heading	XML Processing	lib.html#pure-libraries-xml-processing	  XML Processing		0
+heading	Generators	lib.html#pure-libraries-generators	  Generators		0
+heading	Hashing	lib.html#pure-libraries-hashing	  Hashing		0
+heading	Serialization	lib.html#pure-libraries-serialization	  Serialization		0
+heading	Miscellaneous	lib.html#pure-libraries-miscellaneous	  Miscellaneous		0
+heading	Modules for the JavaScript backend	lib.html#pure-libraries-modules-for-the-javascript-backend	  Modules for the JavaScript backend		0
+heading	Impure libraries	lib.html#impure-libraries	 Impure libraries		0
+heading	Regular expressions	lib.html#impure-libraries-regular-expressions	  Regular expressions		0
+heading	Database support	lib.html#impure-libraries-database-support	  Database support		0
+heading	Generic Operating System Services	lib.html#impure-libraries-generic-operating-system-services	  Generic Operating System Services		0
+heading	Wrappers	lib.html#wrappers	 Wrappers		0
+heading	Windows-specific	lib.html#wrappers-windowsminusspecific	  Windows-specific		0
+heading	UNIX specific	lib.html#wrappers-unix-specific	  UNIX specific		0
+heading	Regular expressions	lib.html#wrappers-regular-expressions	  Regular expressions		0
+heading	Database support	lib.html#wrappers-database-support	  Database support		0
+heading	Network Programming and Internet Protocols	lib.html#wrappers-network-programming-and-internet-protocols	  Network Programming and Internet Protocols		0

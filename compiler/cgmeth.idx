@@ -1,0 +1,8 @@
+nimTitle	cgmeth	cgmeth.html	module cgmeth		0
+nim	getDispatcher	cgmeth.html#getDispatcher,PSym	proc getDispatcher(s: PSym): PSym		45
+nim	methodCall	cgmeth.html#methodCall,PNode,ConfigRef	proc methodCall(n: PNode; conf: ConfigRef): PNode		53
+nim	methodDef	cgmeth.html#methodDef,ModuleGraph,IdGenerator,PSym	proc methodDef(g: ModuleGraph; idgen: IdGenerator; s: PSym)		160
+nim	relevantCol	cgmeth.html#relevantCol,seq[PSym],int	proc relevantCol(methods: seq[PSym]; col: int): bool		201
+nim	sortBucket	cgmeth.html#sortBucket,seq[PSym],IntSet	proc sortBucket(a: var seq[PSym]; relevantCols: IntSet)		221
+nim	genIfDispatcher	cgmeth.html#genIfDispatcher,ModuleGraph,seq[PSym],IntSet,IdGenerator	proc genIfDispatcher(g: ModuleGraph; methods: seq[PSym]; relevantCols: IntSet;\n                idgen: IdGenerator): PSym		240
+nim	generateIfMethodDispatchers	cgmeth.html#generateIfMethodDispatchers,ModuleGraph,IdGenerator	proc generateIfMethodDispatchers(g: ModuleGraph; idgen: IdGenerator)		299

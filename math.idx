@@ -1,0 +1,160 @@
+nimTitle	math	math.html	module std/math		0
+nim	divmod	math.html#divmod,T,T	proc divmod[T: SomeInteger](x, y: T): (T, T)		98
+nim	binom	math.html#binom,int,int	proc binom(n, k: int): int		117
+nim	fac	math.html#fac,int	proc fac(n: int): int		135
+nim	PI	math.html#PI	const PI		163
+nim	TAU	math.html#TAU	const TAU		164
+nim	E	math.html#E	const E		165
+nim	MaxFloat64Precision	math.html#MaxFloat64Precision	const MaxFloat64Precision		167
+nim	MaxFloat32Precision	math.html#MaxFloat32Precision	const MaxFloat32Precision		170
+nim	MaxFloatPrecision	math.html#MaxFloatPrecision	const MaxFloatPrecision		173
+nim	MinFloatNormal	math.html#MinFloatNormal	const MinFloatNormal		177
+nim	fcNormal	math.html#fcNormal	FloatClass.fcNormal		182
+nim	fcSubnormal	math.html#fcSubnormal	FloatClass.fcSubnormal		182
+nim	fcZero	math.html#fcZero	FloatClass.fcZero		182
+nim	fcNegZero	math.html#fcNegZero	FloatClass.fcNegZero		182
+nim	fcNan	math.html#fcNan	FloatClass.fcNan		182
+nim	fcInf	math.html#fcInf	FloatClass.fcInf		182
+nim	fcNegInf	math.html#fcNegInf	FloatClass.fcNegInf		182
+nim	FloatClass	math.html#FloatClass	enum FloatClass		182
+nim	isNaN	math.html#isNaN,SomeFloat	proc isNaN(x: SomeFloat): bool		193
+nim	signbit	math.html#signbit,SomeFloat	proc signbit(x: SomeFloat): bool		231
+nim	copySign	math.html#copySign,T,T	proc copySign[T: SomeFloat](x, y: T): T		245
+nim	classify	math.html#classify,float	proc classify(x: float): FloatClass		270
+nim	almostEqual	math.html#almostEqual,T,T,Natural	proc almostEqual[T: SomeFloat](x, y: T; unitsInLastPlace: Natural = 4): bool		295
+nim	isPowerOfTwo	math.html#isPowerOfTwo,int	proc isPowerOfTwo(x: int): bool		324
+nim	nextPowerOfTwo	math.html#nextPowerOfTwo,int	proc nextPowerOfTwo(x: int): int		339
+nim	sqrt	math.html#sqrt,float32	proc sqrt(x: float32): float32		368
+nim	sqrt	math.html#sqrt,float64	proc sqrt(x: float64): float64		369
+nim	cbrt	math.html#cbrt,float32	proc cbrt(x: float32): float32		377
+nim	cbrt	math.html#cbrt,float64	proc cbrt(x: float64): float64		378
+nim	ln	math.html#ln,float32	proc ln(x: float32): float32		387
+nim	ln	math.html#ln,float64	proc ln(x: float64): float64		388
+nim	log	math.html#log,T,T	proc log[T: SomeFloat](x, base: T): T		412
+nim	log10	math.html#log10,float32	proc log10(x: float32): float32		428
+nim	log10	math.html#log10,float64	proc log10(x: float64): float64		429
+nim	exp	math.html#exp,float32	proc exp(x: float32): float32		440
+nim	exp	math.html#exp,float64	proc exp(x: float64): float64		441
+nim	sin	math.html#sin,float32	proc sin(x: float32): float32		450
+nim	sin	math.html#sin,float64	proc sin(x: float64): float64		451
+nim	cos	math.html#cos,float32	proc cos(x: float32): float32		459
+nim	cos	math.html#cos,float64	proc cos(x: float64): float64		460
+nim	tan	math.html#tan,float32	proc tan(x: float32): float32		468
+nim	tan	math.html#tan,float64	proc tan(x: float64): float64		469
+nim	sinh	math.html#sinh,float32	proc sinh(x: float32): float32		477
+nim	sinh	math.html#sinh,float64	proc sinh(x: float64): float64		478
+nim	cosh	math.html#cosh,float32	proc cosh(x: float32): float32		486
+nim	cosh	math.html#cosh,float64	proc cosh(x: float64): float64		487
+nim	tanh	math.html#tanh,float32	proc tanh(x: float32): float32		495
+nim	tanh	math.html#tanh,float64	proc tanh(x: float64): float64		496
+nim	arcsin	math.html#arcsin,float32	proc arcsin(x: float32): float32		504
+nim	arcsin	math.html#arcsin,float64	proc arcsin(x: float64): float64		505
+nim	arccos	math.html#arccos,float32	proc arccos(x: float32): float32		513
+nim	arccos	math.html#arccos,float64	proc arccos(x: float64): float64		514
+nim	arctan	math.html#arctan,float32	proc arctan(x: float32): float32		522
+nim	arctan	math.html#arctan,float64	proc arctan(x: float64): float64		523
+nim	arctan2	math.html#arctan2,float32,float32	proc arctan2(y, x: float32): float32		532
+nim	arctan2	math.html#arctan2,float64,float64	proc arctan2(y, x: float64): float64		533
+nim	arcsinh	math.html#arcsinh,float32	proc arcsinh(x: float32): float32		544
+nim	arcsinh	math.html#arcsinh,float64	proc arcsinh(x: float64): float64		545
+nim	arccosh	math.html#arccosh,float32	proc arccosh(x: float32): float32		550
+nim	arccosh	math.html#arccosh,float64	proc arccosh(x: float64): float64		551
+nim	arctanh	math.html#arctanh,float32	proc arctanh(x: float32): float32		556
+nim	arctanh	math.html#arctanh,float64	proc arctanh(x: float64): float64		557
+nim	cot	math.html#cot,T	proc cot[T: float32 | float64](x: T): T		590
+nim	sec	math.html#sec,T	proc sec[T: float32 | float64](x: T): T		592
+nim	csc	math.html#csc,T	proc csc[T: float32 | float64](x: T): T		594
+nim	coth	math.html#coth,T	proc coth[T: float32 | float64](x: T): T		597
+nim	sech	math.html#sech,T	proc sech[T: float32 | float64](x: T): T		599
+nim	csch	math.html#csch,T	proc csch[T: float32 | float64](x: T): T		601
+nim	arccot	math.html#arccot,T	proc arccot[T: float32 | float64](x: T): T		604
+nim	arcsec	math.html#arcsec,T	proc arcsec[T: float32 | float64](x: T): T		606
+nim	arccsc	math.html#arccsc,T	proc arccsc[T: float32 | float64](x: T): T		608
+nim	arccoth	math.html#arccoth,T	proc arccoth[T: float32 | float64](x: T): T		611
+nim	arcsech	math.html#arcsech,T	proc arcsech[T: float32 | float64](x: T): T		613
+nim	arccsch	math.html#arccsch,T	proc arccsch[T: float32 | float64](x: T): T		615
+nim	hypot	math.html#hypot,float32,float32	proc hypot(x, y: float32): float32		621
+nim	hypot	math.html#hypot,float64,float64	proc hypot(x, y: float64): float64		622
+nim	pow	math.html#pow,float32,float32	proc pow(x, y: float32): float32		627
+nim	pow	math.html#pow,float64,float64	proc pow(x, y: float64): float64		628
+nim	erf	math.html#erf,float32	proc erf(x: float32): float32		644
+nim	erf	math.html#erf,float64	proc erf(x: float64): float64		645
+nim	erfc	math.html#erfc,float32	proc erfc(x: float32): float32		649
+nim	erfc	math.html#erfc,float64	proc erfc(x: float64): float64		650
+nim	gamma	math.html#gamma,float32	proc gamma(x: float32): float32		654
+nim	gamma	math.html#gamma,float64	proc gamma(x: float64): float64		655
+nim	lgamma	math.html#lgamma,float32	proc lgamma(x: float32): float32		666
+nim	lgamma	math.html#lgamma,float64	proc lgamma(x: float64): float64		667
+nim	floor	math.html#floor,float32	proc floor(x: float32): float32		675
+nim	floor	math.html#floor,float64	proc floor(x: float64): float64		676
+nim	ceil	math.html#ceil,float32	proc ceil(x: float32): float32		688
+nim	ceil	math.html#ceil,float64	proc ceil(x: float64): float64		689
+nim	round	math.html#round,float32	proc round(x: float32): float32		758
+nim	round	math.html#round,float64	proc round(x: float64): float64		759
+nim	trunc	math.html#trunc,float32	proc trunc(x: float32): float32		776
+nim	trunc	math.html#trunc,float64	proc trunc(x: float64): float64		777
+nim	`mod`	math.html#mod,float32,float32	proc `mod`(x, y: float32): float32		788
+nim	`mod`	math.html#mod,float64,float64	proc `mod`(x, y: float64): float64		789
+nim	round	math.html#round,T,int	proc round[T: float32 | float64](x: T; places: int): T		840
+nim	floorDiv	math.html#floorDiv,T,T	proc floorDiv[T: SomeInteger](x, y: T): T		860
+nim	floorMod	math.html#floorMod,T,T	proc floorMod[T: SomeNumber](x, y: T): T		880
+nim	euclDiv	math.html#euclDiv,T,T	proc euclDiv[T: SomeInteger](x, y: T): T		897
+nim	euclMod	math.html#euclMod,T,T	proc euclMod[T: SomeNumber](x, y: T): T		912
+nim	ceilDiv	math.html#ceilDiv,T,T	proc ceilDiv[T: SomeInteger](x, y: T): T		925
+nim	frexp	math.html#frexp,T	proc frexp[T: float32 | float64](x: T): tuple[frac: T, exp: int]		977
+nim	frexp	math.html#frexp,T,int	proc frexp[T: float32 | float64](x: T; exponent: var int): T		1019
+nim	log2	math.html#log2,float32	proc log2(x: float32): float32		1047
+nim	log2	math.html#log2,float64	proc log2(x: float64): float64		1048
+nim	splitDecimal	math.html#splitDecimal,T	proc splitDecimal[T: float32 | float64](x: T): tuple[intpart: T, floatpart: T]		1061
+nim	degToRad	math.html#degToRad,T	proc degToRad[T: float32 | float64](d: T): T		1081
+nim	radToDeg	math.html#radToDeg,T	proc radToDeg[T: float32 | float64](d: T): T		1091
+nim	sgn	math.html#sgn,T	proc sgn[T: SomeNumber](x: T): int		1101
+nim	sum	math.html#sum,openArray[T]	proc sum[T](x: openArray[T]): T		1118
+nim	prod	math.html#prod,openArray[T]	proc prod[T](x: openArray[T]): T		1133
+nim	cumprod	math.html#cumprod,openArray[T]	proc cumprod[T](x: var openArray[T])		1148
+nim	cumproded	math.html#cumproded,openArray[T]	proc cumproded[T](x: openArray[T]): seq[T]		1162
+nim	cumsummed	math.html#cumsummed,openArray[T]	proc cumsummed[T](x: openArray[T]): seq[T]		1179
+nim	cumsum	math.html#cumsum,openArray[T]	proc cumsum[T](x: var openArray[T])		1197
+nim	`^`	math.html#^,T,Natural	proc `^`[T: SomeNumber](x: T; y: Natural): T		1212
+nim	`^`	math.html#^,T,U	proc `^`[T: SomeNumber; U: SomeFloat](x: T; y: U): float		1248
+nim	gcd	math.html#gcd,T,T	proc gcd[T](x, y: T): T		1286
+nim	gcd	math.html#gcd,SomeInteger,SomeInteger	proc gcd(x, y: SomeInteger): SomeInteger		1307
+nim	gcd	math.html#gcd,openArray[T]	proc gcd[T](x: openArray[T]): T		1341
+nim	lcm	math.html#lcm,T,T	proc lcm[T](x, y: T): T		1353
+nim	clamp	math.html#clamp,T,Slice[T]	proc clamp[T](val: T; bounds: Slice[T]): T		1364
+nim	lcm	math.html#lcm,openArray[T]	proc lcm[T](x: openArray[T]): T		1376
+heading	See also	math.html#see-also	 See also		0
+nimgrp	log2	math.html#log2-procs-all	proc		1047
+nimgrp	pow	math.html#pow-procs-all	proc		627
+nimgrp	ceil	math.html#ceil-procs-all	proc		688
+nimgrp	floor	math.html#floor-procs-all	proc		675
+nimgrp	sinh	math.html#sinh-procs-all	proc		477
+nimgrp	arctan2	math.html#arctan2-procs-all	proc		532
+nimgrp	gamma	math.html#gamma-procs-all	proc		654
+nimgrp	round	math.html#round-procs-all	proc		758
+nimgrp	arcsinh	math.html#arcsinh-procs-all	proc		544
+nimgrp	cbrt	math.html#cbrt-procs-all	proc		377
+nimgrp	mod	math.html#mod-procs-all	proc		788
+nimgrp	tan	math.html#tan-procs-all	proc		468
+nimgrp	sin	math.html#sin-procs-all	proc		450
+nimgrp	gcd	math.html#gcd-procs-all	proc		1286
+nimgrp	hypot	math.html#hypot-procs-all	proc		621
+nimgrp	ln	math.html#ln-procs-all	proc		387
+nimgrp	sqrt	math.html#sqrt-procs-all	proc		368
+nimgrp	exp	math.html#exp-procs-all	proc		440
+nimgrp	trunc	math.html#trunc-procs-all	proc		776
+nimgrp	arctanh	math.html#arctanh-procs-all	proc		556
+nimgrp	arcsin	math.html#arcsin-procs-all	proc		504
+nimgrp	arctan	math.html#arctan-procs-all	proc		522
+nimgrp	arccosh	math.html#arccosh-procs-all	proc		550
+nimgrp	frexp	math.html#frexp-procs-all	proc		977
+nimgrp	^	math.html#^-procs-all	proc		1212
+nimgrp	arccos	math.html#arccos-procs-all	proc		513
+nimgrp	erfc	math.html#erfc-procs-all	proc		649
+nimgrp	erf	math.html#erf-procs-all	proc		644
+nimgrp	log10	math.html#log10-procs-all	proc		428
+nimgrp	tanh	math.html#tanh-procs-all	proc		495
+nimgrp	cos	math.html#cos-procs-all	proc		459
+nimgrp	lcm	math.html#lcm-procs-all	proc		1353
+nimgrp	lgamma	math.html#lgamma-procs-all	proc		666
+nimgrp	cosh	math.html#cosh-procs-all	proc		486

@@ -1,0 +1,11 @@
+nimTitle	lexbase	lexbase.html	module std/lexbase		0
+nim	EndOfFile	lexbase.html#EndOfFile	const EndOfFile		21
+nim	NewLines	lexbase.html#NewLines	const NewLines		22
+nim	BaseLexer	lexbase.html#BaseLexer	object BaseLexer		31
+nim	close	lexbase.html#close,BaseLexer	proc close(L: var BaseLexer)		42
+nim	handleCR	lexbase.html#handleCR,BaseLexer,int	proc handleCR(L: var BaseLexer; pos: int): int		106
+nim	handleLF	lexbase.html#handleLF,BaseLexer,int	proc handleLF(L: var BaseLexer; pos: int): int		117
+nim	handleRefillChar	lexbase.html#handleRefillChar,BaseLexer,int	proc handleRefillChar(L: var BaseLexer; pos: int): int		126
+nim	open	lexbase.html#open,BaseLexer,Stream,int,set[char]	proc open(L: var BaseLexer; input: Stream; bufLen: int = 8192;\n     refillChars: set[char] = NewLines)		137
+nim	getColNumber	lexbase.html#getColNumber,BaseLexer,int	proc getColNumber(L: BaseLexer; pos: int): int		153
+nim	getCurrentLine	lexbase.html#getCurrentLine,BaseLexer,bool	proc getCurrentLine(L: BaseLexer; marker: bool = true): string		157

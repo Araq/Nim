@@ -1,0 +1,10 @@
+nimTitle	encodings	encodings.html	module std/encodings		0
+nim	EncodingConverter	encodings.html#EncodingConverter	type EncodingConverter		49
+nim	EncodingError	encodings.html#EncodingError	object EncodingError		58
+nim	getCurrentEncoding	encodings.html#getCurrentEncoding	proc getCurrentEncoding(uiApp = false): string		331
+nim	open	encodings.html#open,string,string	proc open(destEncoding = "UTF-8"; srcEncoding = "CP1252"): EncodingConverter		340
+nim	close	encodings.html#close,EncodingConverter	proc close(c: EncodingConverter)		359
+nim	convert	encodings.html#convert,EncodingConverter,string	proc convert(c: EncodingConverter; s: string): string		457
+nim	convert	encodings.html#convert,string,string,string	proc convert(s: string; destEncoding = "UTF-8"; srcEncoding = "CP1252"): string		500
+idx	iconv	encodings.html#iconv_1	Module encodings		0
+nimgrp	convert	encodings.html#convert-procs-all	proc		457

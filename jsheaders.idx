@@ -1,0 +1,15 @@
+nimTitle	jsheaders	jsheaders.html	module std/jsheaders		0
+nim	Headers	jsheaders.html#Headers	type Headers		5
+nim	newHeaders	jsheaders.html#newHeaders	proc newHeaders(): Headers		7
+nim	add	jsheaders.html#add,Headers,cstring,cstring	proc add(self: Headers; key: cstring; value: cstring)		10
+nim	delete	jsheaders.html#delete,Headers,cstring	proc delete(self: Headers; key: cstring)		14
+nim	hasKey	jsheaders.html#hasKey,Headers,cstring	proc hasKey(self: Headers; key: cstring): bool		19
+nim	keys	jsheaders.html#keys,Headers	proc keys(self: Headers): seq[cstring]		22
+nim	values	jsheaders.html#values,Headers	proc values(self: Headers): seq[cstring]		25
+nim	entries	jsheaders.html#entries,Headers	proc entries(self: Headers): seq[tuple[key, value: cstring]]		28
+nim	`[]`	jsheaders.html#[],Headers,cstring	proc `[]`(self: Headers; key: cstring): cstring		31
+nim	`[]=`	jsheaders.html#[]=,Headers,cstring,cstring	proc `[]=`(self: Headers; key: cstring; value: cstring)		35
+nim	clear	jsheaders.html#clear,Headers	proc clear(self: Headers)		39
+nim	toCstring	jsheaders.html#toCstring,Headers	proc toCstring(self: Headers): cstring		43
+nim	`$`	jsheaders.html#$,Headers	proc `$`(self: Headers): string		46
+nim	len	jsheaders.html#len,Headers	proc len(self: Headers): int		48
