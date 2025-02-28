@@ -30,7 +30,7 @@ proc rawGetDeep[X, A](t: X, key: A, hc: var Hash): int {.inline, outParamsAt: [3
   rawGetDeepImpl()
 
 proc rawInsert[X, A, B](t: var X, data: var KeyValuePairSeq[A, B],
-                     key: A, val: sink B, hc: Hash, h: Hash) =
+                     key: sink A, val: sink B, hc: Hash, h: Hash) =
   rawInsertImpl()
 
 template checkIfInitialized() =
