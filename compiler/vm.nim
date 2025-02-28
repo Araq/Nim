@@ -1054,6 +1054,13 @@ proc rawExecute(c: PCtx, start: int, tos: PStackFrame): TFullReg =
       var r = newNode(nkRange)
       r.add regs[rb].regToNode
       r.add regs[rc].regToNode
+      # mirror what nimsets does to get element type:
+      let settype = regs[ra].node.typ
+      assert settype.kind == tySet
+      let elemType = settype[0]
+      # regToNode can construct a node with no type:
+      if r[0].typ.isNil: r[0].typ() = elemType
+      if r[1].typ.isNil: r[1].typ() = elemType
       regs[ra].node.add r.copyTree
     of opcExcl:
       decodeB(rkNode)
