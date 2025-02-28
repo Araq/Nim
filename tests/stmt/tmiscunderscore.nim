@@ -13,3 +13,8 @@ block:
   type _ = float
   doAssert not (compiles do:
     let x: _ = 3)
+
+block: # bug #24339
+  const r = (0, 0)
+  for _ in r.fields:
+    let _ = 0

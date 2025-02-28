@@ -37,3 +37,30 @@ block: # bug #16771
   a.foo b
   doAssert a.n == 42
   doAssert b.n == 1
+
+block: # bug #24683
+  block:
+    var v = newSeq[int](100)
+    v[99]= 444
+    v.setLen(5)
+    v.setLen(100)
+    doAssert v[99] == 0
+
+  when not defined(js):
+    block:
+      var 
+        x = @[1, 2, 3, 4, 45, 56, 67, 999, 88, 777]
+
+      x.setLen(0) # zero-fills 1mb of released data
+
+      type
+        TGenericSeq = object
+          len, reserved: int
+        PGenericSeq = ptr TGenericSeq
+
+      when defined(gcRefc):
+        cast[PGenericSeq](x).len = 10
+      else:
+        cast[ptr int](addr x)[] = 10
+
+      doAssert x == @[1, 2, 3, 4, 45, 56, 67, 999, 88, 777]

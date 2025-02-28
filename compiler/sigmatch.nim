@@ -1424,7 +1424,8 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
           return isNone
 
       if fRange.rangeHasUnresolvedStatic:
-        if aRange.kind in {tyGenericParam} and aRange.reduceToBase() == aRange:
+        if (aRange.kind in {tyGenericParam} and aRange.reduceToBase() == aRange) or
+            (aRange.kind == tyRange and aRange.rangeHasUnresolvedStatic):
           return
         return inferStaticsInRange(c, fRange, a)
       elif c.c.matchedConcept != nil and aRange.rangeHasUnresolvedStatic:

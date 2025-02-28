@@ -2944,7 +2944,14 @@ proc semTupleFieldsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType
     typ.n.add newSymNode(f)
     n[i][0] = newSymNode(f)
     result.add n[i]
+  let oldType = n.typ
   result.typ() = typ
+  if oldType != nil and not hasEmpty(oldType): # see hasEmpty comment above
+    # convert back to old type
+    let conversion = indexTypesMatch(c, oldType, typ, result)
+    # ignore matching error, the goal is just to keep the original type info
+    if conversion != nil:
+      result = conversion
 
 proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
   result = n                  # we don't modify n, but compute the type:
@@ -2963,9 +2970,19 @@ proc semTuplePositionsConstr(c: PContext, n: PNode, flags: TExprFlags; expectedT
       # hasEmpty/nil check is to not break existing code like
       # `const foo = [(1, {}), (2, {false})]`,
       # `const foo = if true: (0, nil) else: (1, new(int))`
-      n[i] = fitNode(c, expectedElemType, n[i], n[i].info)
+      let conversion = indexTypesMatch(c, expectedElemType, n[i].typ, n[i])
+      # ignore matching error, full tuple will be matched later which may call converter, see #24609
+      if conversion != nil:
+        n[i] = conversion
     addSonSkipIntLit(typ, n[i].typ.skipTypes({tySink}), c.idgen)
+  let oldType = n.typ
   result.typ() = typ
+  if oldType != nil and not hasEmpty(oldType): # see hasEmpty comment above
+    # convert back to old type
+    let conversion = indexTypesMatch(c, oldType, typ, result)
+    # ignore matching error, the goal is just to keep the original type info
+    if conversion != nil:
+      result = conversion
 
 include semobjconstr
 
@@ -3054,9 +3071,12 @@ proc semExport(c: PContext, n: PNode): PNode =
         s = nextOverloadIter(o, c, a)
 
 proc semTupleConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PType = nil): PNode =
-  var tupexp = semTuplePositionsConstr(c, n, flags, expectedType)
+  result = semTuplePositionsConstr(c, n, flags, expectedType)
+  var tupexp = result
+  while tupexp.kind == nkHiddenSubConv: tupexp = tupexp[1] 
   var isTupleType: bool = false
   if tupexp.len > 0: # don't interpret () as type
+    internalAssert c.config, tupexp.kind == nkTupleConstr
     isTupleType = tupexp[0].typ.kind == tyTypeDesc
     # check if either everything or nothing is tyTypeDesc
     for i in 1..<tupexp.len:
@@ -3066,8 +3086,6 @@ proc semTupleConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
     result = n
     var typ = semTypeNode(c, n, nil).skipTypes({tyTypeDesc})
     result.typ() = makeTypeDesc(c, typ)
-  else:
-    result = tupexp
 
 proc isExplicitGenericCall(c: PContext, n: PNode): bool =
   ## checks if a call node `n` is a routine call with explicit generic params

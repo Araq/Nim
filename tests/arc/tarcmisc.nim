@@ -33,6 +33,7 @@ copying
 123
 42
 @["", "d", ""]
+mutate: 1
 ok
 destroying variable: 20
 destroying variable: 10
@@ -882,3 +883,18 @@ proc test_18070() = # bug #18070
   doAssert msg == "", "expected empty string but got: " & $msg
 
 test_18070()
+
+type AnObject = tuple
+  a: string
+  b: int
+  c: int
+
+proc mutate(a: sink AnObject) =
+  `=wasMoved`(a)
+  echo "mutate: 1"
+
+# echo "Value is: ", obj.value
+proc bar =
+  mutate(("1.2", 0, 0))
+
+bar()

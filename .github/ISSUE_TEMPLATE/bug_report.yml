@@ -11,22 +11,22 @@ body:
       Reports with a reproducible example or detailed information will likely receive fixes faster.
 
 - type: textarea
+  id: nim-version
+  attributes:
+    label: Nim Version
+    description: |
+      Can be obtained from `nim -v` on the command line along with the OS/architecture.
+      For development versions, including the commit hash may help.
+  validations:
+    required: true
+
+- type: textarea
   id: description
   attributes:
     label: Description
     description: |
       Describe the problem. Code example can be given here.
     placeholder: Bug reports with reproducible code or detailed information will be fixed faster.
-  validations:
-    required: true
-    
-- type: textarea
-  id: nim-version
-  attributes:
-    label: Nim Version
-    description: |
-      Can be obtained from `nim -v` on the command line along with the OS/architecture.
-      For development versions, make sure to include the commit hash.
   validations:
     required: true
 
