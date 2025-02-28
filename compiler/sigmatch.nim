@@ -334,8 +334,10 @@ proc sumGeneric(t: PType, ignoreModifiers = false): int =
     of tyGenericBody:
       t = t.typeBodyImpl
     of tyGenericInst:
-      t = t.skipModifier
       inc result
+      for i in 1 ..< t.len - 1:
+        inc result, sumGeneric(t[i])
+      break
     of tyStatic:
       t = t.skipModifier
       if not ignoreModifiers:
