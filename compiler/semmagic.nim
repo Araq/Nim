@@ -55,7 +55,7 @@ proc semTypeOf(c: PContext; n: PNode): PNode =
   result.add typExpr
   if typExpr.typ.kind == tyFromExpr:
     typExpr.typ.flags.incl tfNonConstExpr
-  result.typ() = makeTypeDesc(c, typExpr.typ)
+  result.typ() = makeTypeDesc(c, typExpr.typ.skipTypes({tyStatic}))
 
 type
   SemAsgnMode = enum asgnNormal, noOverloadedSubscript, noOverloadedAsgn

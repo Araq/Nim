@@ -110,6 +110,10 @@ when defined(js):
       }
       if (Number.isSafeInteger(`a`))
         `result` = `a` === 0 && 1 / `a` < 0 ? "-0.0" : `a`+".0";
+      else if (isNaN(`a`)) // Number.isNaN is since ES6
+        `result` = "nan";  // or it'll be "NaN"
+      else if (!isFinite(`a`)) // Number.isFinite newer but unnecessary here
+        `result` = `a` > 0 ? "inf" : "-inf";  // or it'll be [-]Infinity
       else {
         `result` = `a`+"";
         if(nimOnlyDigitsOrMinus(`result`)){

@@ -161,3 +161,21 @@ typedef struct { int base; } S;
 
   var t = newT()
   doAssert t.s.base == 1
+
+type QObject* {.inheritable, pure.} = object
+  h*: pointer
+
+proc `=destroy`(self: var QObject) =discard
+
+proc `=copy`(dest: var QObject, source: QObject) {.error.}
+
+type QAbstractItemModel* = object of QObject
+
+type VTable = ref object
+  inst:  QAbstractItemModel
+
+proc g() =
+  var x: VTable = VTable()
+  x.inst = QAbstractItemModel()
+
+g()

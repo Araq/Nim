@@ -6,7 +6,9 @@ import std/oserrors
 
 import ospaths2, osfiles
 import oscommon
-export dirExists, PathComponent
+import std/staticos
+when supportedSystem:
+  export dirExists, PathComponent
 
 
 when defined(nimPreviewSlimSystem):
@@ -19,9 +21,6 @@ elif defined(windows):
   import std/[winlean, times]
 elif defined(posix):
   import std/[posix, times]
-
-else:
-  {.error: "OS module not ported to your operating system!".}
 
 
 when weirdTarget:
@@ -151,10 +150,6 @@ iterator walkDirs*(pattern: string): string {.tags: [ReadDirEffect], noWeirdTarg
     let paths = toSeq(walkDirs("lib/pure/*")) # works on Windows too
     assert "lib/pure/concurrency".unixToNativePath in paths
   walkCommon(pattern, isDir)
-
-proc staticWalkDir(dir: string; relative: bool): seq[
-                  tuple[kind: PathComponent, path: string]] =
-  discard
 
 iterator walkDir*(dir: string; relative = false, checkDir = false,
                   skipSpecial = false):
@@ -324,7 +319,6 @@ iterator walkDirRec*(dir: string,
       # permissions), it'll abort iteration and there would be no way to
       # continue iteration.
       # Future work can provide a way to customize this and do error reporting.
-
 
 proc rawRemoveDir(dir: string) {.noWeirdTarget.} =
   when defined(windows):
