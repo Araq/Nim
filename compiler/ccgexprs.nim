@@ -368,14 +368,17 @@ proc genAssignment(p: BProc, dest, src: TLoc, flags: TAssignmentFlags) =
       elif dest.storage == OnHeap:
         let rd = rdLoc(dest)
         let rs = rdLoc(src)
-        # we use a temporary to care for the dreaded self assignment:
-        var tmp: TLoc = getTemp(p, ty)
-        let rtmp = rdLoc(tmp)
-        p.s(cpsStmts).addAssignment(rtmp, rd)
-        p.s(cpsStmts).addAssignmentWithValue(rd):
-          p.s(cpsStmts).addCall(cgsymValue(p.module, "copyStringRC1"), rs)
-        p.s(cpsStmts).addSingleIfStmt(rtmp):
-          p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCunrefNoCycle"), rtmp)
+        if dest.lode.typ.kind == tySink:
+          p.s(cpsStmts).addAssignment(rd, rs)
+        else:
+          # we use a temporary to care for the dreaded self assignment:
+          var tmp: TLoc = getTemp(p, ty)
+          let rtmp = rdLoc(tmp)
+          p.s(cpsStmts).addAssignment(rtmp, rd)
+          p.s(cpsStmts).addAssignmentWithValue(rd):
+            p.s(cpsStmts).addCall(cgsymValue(p.module, "copyStringRC1"), rs)
+          p.s(cpsStmts).addSingleIfStmt(rtmp):
+            p.s(cpsStmts).addCallStmt(cgsymValue(p.module, "nimGCunrefNoCycle"), rtmp)
       else:
         let rad = addrLoc(p.config, dest)
         let rs = rdLoc(src)
