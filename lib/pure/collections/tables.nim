@@ -677,7 +677,7 @@ template withValue*[A, B](t: var Table[A, B], key: A,
     body2
 
 
-iterator pairs*[A, B](t: Table[A, B]): (A, B) =
+iterator pairs*[A, B](t: Table[A, B]): (lent A, lent B) =
   ## Iterates over any `(key, value)` pair in the table `t`.
   ##
   ## See also:
@@ -1139,7 +1139,7 @@ proc `==`*[A, B](s, t: TableRef[A, B]): bool =
 
 
 
-iterator pairs*[A, B](t: TableRef[A, B]): (A, B) =
+iterator pairs*[A, B](t: TableRef[A, B]): (lent A, lent B) =
   ## Iterates over any `(key, value)` pair in the table `t`.
   ##
   ## See also:
@@ -1727,7 +1727,7 @@ proc `==`*[A, B](s, t: OrderedTable[A, B]): bool =
 
 
 
-iterator pairs*[A, B](t: OrderedTable[A, B]): (A, B) =
+iterator pairs*[A, B](t: OrderedTable[A, B]): (lent A, lent B) =
   ## Iterates over any `(key, value)` pair in the table `t` in insertion
   ## order.
   ##
@@ -2150,7 +2150,7 @@ proc `==`*[A, B](s, t: OrderedTableRef[A, B]): bool =
 
 
 
-iterator pairs*[A, B](t: OrderedTableRef[A, B]): (A, B) =
+iterator pairs*[A, B](t: OrderedTableRef[A, B]): (lent A, lent B) =
   ## Iterates over any `(key, value)` pair in the table `t` in insertion
   ## order.
   ##
@@ -2564,7 +2564,7 @@ proc `==`*[A](s, t: CountTable[A]): bool =
   equalsImpl(s, t)
 
 
-iterator pairs*[A](t: CountTable[A]): (A, int) =
+iterator pairs*[A](t: CountTable[A]): (lent A, int) =
   ## Iterates over any `(key, value)` pair in the table `t`.
   ##
   ## See also:
@@ -2845,7 +2845,7 @@ proc `==`*[A](s, t: CountTableRef[A]): bool =
   else: result = s[] == t[]
 
 
-iterator pairs*[A](t: CountTableRef[A]): (A, int) =
+iterator pairs*[A](t: CountTableRef[A]): (lent A, int) =
   ## Iterates over any `(key, value)` pair in the table `t`.
   ##
   ## See also:
