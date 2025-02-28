@@ -4,9 +4,86 @@ include system/inclrtl
 import std/envvars
 import std/private/ospaths2
 
+
+when defined(unix):  # XXX: suitable?
+  import std/posix
+
+  proc getPwDir(p: ptr Passwd, res: var string): bool =
+    let cstr = p.pw_dir
+    if cstr.isNil:
+      return
+
+    res = $cstr
+    result = true
+
+  const DEFAULT_BUFFER_SIZE = 1024
+  proc getHomeDir*(username: string): string {.rtl, extern: "nos$1OfUser",
+    tags: [ReadEnvEffect, ReadIOEffect].} =
+    ## Returns the home directory of the user `username`.
+    ## 
+    ## Returns an empty string if `pwd.getpwnam(username).pw_dir` is `NULL`
+    ## (Most likely under vxworks)
+    ## 
+    ## This proc is wrapped by the `expandTilde proc`_
+    ## for the convenience of processing paths coming from user configuration files.
+    ##
+    # replace "~username" with `pwd.getpwnam(username).pw_dir`
+    # translated from CPython's pwd.getpwnam, a.k.a. pwd_getpwnam_impl in Modules/pwdmodule.c
+    let name_chars = cstring username 
+
+    var
+      nomem = false
+      p: ptr Passwd = nil
+
+    when declared(getpwnam_r) and declared(SC_GETPW_R_SIZE_MAX) and
+        declared(reallocShared):
+      var
+        buf: cstring = nil
+        bufsize = sysconf(SC_GETPW_R_SIZE_MAX)
+      if bufsize == -1:
+        bufsize = DEFAULT_BUFFER_SIZE
+
+      var pwd: Passwd
+      while true:
+        let buf2 = cast[cstring](reallocShared(buf, bufsize))
+        if buf2.isNil:
+          p = nil
+          nomem = true
+          break
+
+        buf = buf2
+        let status = getpwnam_r(name_chars, pwd.addr, buf, bufsize, p.addr)
+        if status != 0:
+          p = nil
+        if not p.isNil or status != ERANGE:
+          break
+
+        if bufsize > int.high shr 1:
+          nomem = true
+          break
+
+        bufsize = bufsize shl 1
+      defer: deallocShared buf
+    else:
+      p = getpwnam(name_chars)
+
+    if p.isNil:
+      if nomem:
+        raise newException(OutOfMemDefect, "")
+      #else: ...KeyError "getpwnam(): name not found: " & username.repr
+      # XXX: do not raise KeyError, as it used to raise no CatchableError.
+      #  e.g. `osproc.findExe(data.sysCommand, true, ExeExts)` expects so
+    else:
+      result = ""
+      if not getPwDir(p, result):
+        return
+
+
 proc getHomeDir*(): string {.rtl, extern: "nos$1",
   tags: [ReadEnvEffect, ReadIOEffect].} =
   ## Returns the home directory of the current user.
+  ## 
+  ## Returns an empty string if failed to get an valid result
   ##
   ## This proc is wrapped by the `expandTilde proc`_
   ## for the convenience of processing paths coming from user configuration files.
@@ -22,8 +99,22 @@ proc getHomeDir*(): string {.rtl, extern: "nos$1",
     import std/os
     assert getHomeDir() == expandTilde("~")
 
-  when defined(windows): return getEnv("USERPROFILE") & "\\"
-  else: return getEnv("HOME") & "/"
+  template ret(res) =
+    result = res
+    if result != "":
+      result.add DirSep
+    return
+  when defined(windows): ret getEnv("USERPROFILE")
+  elif declared(getpwuid):
+    if existsEnv("HOME"):
+      ret getEnv("HOME")
+    let pwd = getpwuid(getuid())
+    if pwd.isNil:
+      return
+    let cstr = pwd.pw_dir
+    if cstr.isNil: return
+    ret $cstr
+  else: ret getEnv("HOME")
 
 proc getDataDir*(): string {.rtl, extern: "nos$1"
   tags: [ReadEnvEffect, ReadIOEffect].} =
