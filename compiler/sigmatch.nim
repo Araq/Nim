@@ -421,9 +421,10 @@ proc cmpCandidates*(a, b: TCandidate, isFormal=true): int =
   result = cmpInheritancePenalty(a.inheritancePenalty, b.inheritancePenalty)
   if result != 0: return
   if isFormal:
-    # check for generic subclass relation
-    result = checkGeneric(a, b)
-    if result != 0: return
+    if false:
+      # check for generic subclass relation
+      result = checkGeneric(a, b)
+      if result != 0: return
     # prefer more specialized generic over more general generic:
     result = complexDisambiguation(a.callee, b.callee)
   if result != 0: return
